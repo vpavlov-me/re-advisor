@@ -19,7 +19,6 @@ import {
   Linkedin,
   Twitter,
   Edit,
-  Camera,
   Shield,
   Bell,
   CreditCard,
@@ -51,6 +50,8 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { supabase } from "@/lib/supabaseClient";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { updateProfileAvatar, removeProfileAvatar } from "@/lib/supabase/storage";
 
 // Zod Validation Schemas
 const profileSchema = z.object({
@@ -93,6 +94,7 @@ interface Profile {
   linkedin: string;
   twitter: string;
   bio: string;
+  avatar_url: string | null;
   joined_date: string;
   completion_percentage: number;
 }
@@ -437,14 +439,22 @@ export default function ProfilePage() {
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                        {profile.first_name?.[0]}{profile.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button size="icon" variant="outline" className="absolute bottom-0 right-0 h-8 w-8 rounded-full">
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                    <AvatarUpload
+                      currentAvatarUrl={profile.avatar_url}
+                      fallbackName={`${profile.first_name} ${profile.last_name}`}
+                      size="xl"
+                      onUpload={async (file) => {
+                        const newUrl = await updateProfileAvatar(profile.id, file);
+                        setProfile({ ...profile, avatar_url: newUrl });
+                        toast.success('Avatar updated successfully');
+                        return newUrl;
+                      }}
+                      onRemove={async () => {
+                        await removeProfileAvatar(profile.id);
+                        setProfile({ ...profile, avatar_url: null });
+                        toast.success('Avatar removed');
+                      }}
+                    />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground">{profile.first_name} {profile.last_name}</h2>
                   <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>

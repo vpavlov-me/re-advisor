@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -21,22 +22,14 @@ import {
   AlertCircle,
   ArrowRight,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabaseClient";
 
 // Current plan
@@ -56,13 +49,14 @@ const usageStats = [
   { label: "Storage Used", used: 2.4, limit: 10, unit: "GB", icon: BarChart3 },
 ];
 
-// Available plans
+// Available plans - with Stripe price IDs
 const plans = [
   {
     id: "starter",
     name: "Starter",
     price: "$49",
     period: "month",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || "price_starter",
     description: "Perfect for new advisors getting started",
     features: [
       { text: "Up to 5 family clients", included: true },
@@ -82,6 +76,7 @@ const plans = [
     name: "Professional",
     price: "$99",
     period: "month",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PROFESSIONAL_PRICE_ID || "price_professional",
     description: "For established advisors growing their practice",
     features: [
       { text: "Up to 15 family clients", included: true },
@@ -101,6 +96,7 @@ const plans = [
     name: "Enterprise",
     price: "$249",
     period: "month",
+    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || "price_enterprise",
     description: "For large practices and advisory firms",
     features: [
       { text: "Unlimited family clients", included: true },
@@ -134,6 +130,7 @@ const settingsNav = [
 ];
 
 export default function SubscriptionPage() {
+  const searchParams = useSearchParams();
   const [activePlanId, setActivePlanId] = useState("professional");
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -142,6 +139,24 @@ export default function SubscriptionPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
   const [usageData, setUsageData] = useState(usageStats);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+
+  // Handle Stripe redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    const plan = searchParams.get('plan');
+    
+    if (success === 'true' && plan) {
+      toast.success(`Successfully subscribed to ${plans.find(p => p.id === plan)?.name} plan!`);
+      setActivePlanId(plan);
+      // Clean URL
+      window.history.replaceState({}, '', '/subscription');
+    } else if (canceled === 'true') {
+      toast.info('Checkout was canceled.');
+      window.history.replaceState({}, '', '/subscription');
+    }
+  }, [searchParams]);
 
   const activePlan = plans.find(p => p.id === activePlanId) || plans[1];
   const selectedPlan = selectedPlanId ? plans.find(p => p.id === selectedPlanId) : null;
@@ -153,6 +168,20 @@ export default function SubscriptionPage() {
       if (!user) {
         setIsLoading(false);
         return;
+      }
+
+      // Fetch user's Stripe customer ID and current plan
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('stripe_customer_id, subscription_plan')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.stripe_customer_id) {
+        setStripeCustomerId(profile.stripe_customer_id);
+      }
+      if (profile?.subscription_plan) {
+        setActivePlanId(profile.subscription_plan);
       }
 
       // Fetch actual usage data from Supabase
@@ -182,45 +211,71 @@ export default function SubscriptionPage() {
   const handleUpgrade = async (planId: string) => {
     setIsUpgrading(planId);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ plan_id: planId })
-        .eq('id', 'current');
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) throw new Error("Plan not found");
 
-      // Always update locally for demo
-      setActivePlanId(planId);
-      setIsUpgradeOpen(false);
-      setSelectedPlanId(null);
-      toast.success(`Successfully upgraded to ${plans.find(p => p.id === planId)?.name} plan!`);
+      // Call Stripe Checkout API
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          successUrl: `${window.location.origin}/subscription?success=true&plan=${planId}`,
+          cancelUrl: `${window.location.origin}/subscription?canceled=true`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      }
     } catch (error) {
-      console.error("Error upgrading plan:", error);
-      // Fallback for demo
-      setActivePlanId(planId);
-      setIsUpgradeOpen(false);
-      setSelectedPlanId(null);
-      toast.success(`Successfully upgraded to ${plans.find(p => p.id === planId)?.name} plan!`);
+      console.error("Error initiating checkout:", error);
+      toast.error("Failed to start checkout. Please try again.");
     } finally {
       setIsUpgrading(null);
     }
   };
 
-  const handleCancelPlan = async () => {
+  const handleManageBilling = async () => {
     setIsCancelling(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setIsCancelOpen(false);
-      toast.success("Subscription cancellation scheduled. You will have access until the end of your billing period.");
+      // Call Stripe Portal API
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          returnUrl: `${window.location.origin}/subscription`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.url) {
+        // Redirect to Stripe Customer Portal
+        window.location.href = data.url;
+      }
     } catch (error) {
-      console.error("Error cancelling plan:", error);
-      toast.error("Failed to cancel subscription. Please try again.");
+      console.error("Error opening billing portal:", error);
+      toast.error("Failed to open billing portal. Please try again.");
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  const handleCancelPlan = async () => {
+    // Cancellation is now handled via Stripe Customer Portal
+    handleManageBilling();
   };
 
   const openUpgradeDialog = (planId: string) => {
@@ -304,35 +359,23 @@ export default function SubscriptionPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline">Cancel Plan</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Cancel Subscription?</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to cancel? You will lose access to premium features
-                            at the end of your current billing period.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setIsCancelOpen(false)} disabled={isCancelling}>
-                            Keep Plan
-                          </Button>
-                          <Button variant="destructive" onClick={handleCancelPlan} disabled={isCancelling}>
-                            {isCancelling ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Cancelling...
-                              </>
-                            ) : (
-                              "Confirm Cancellation"
-                            )}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleManageBilling}
+                      disabled={isCancelling}
+                    >
+                      {isCancelling ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          Manage Billing
+                        </>
+                      )}
+                    </Button>
                     <Button onClick={() => openUpgradeDialog("enterprise")}>Upgrade Plan</Button>
                   </div>
                 </div>

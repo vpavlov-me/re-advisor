@@ -158,6 +158,8 @@ export default function HomePage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [userName, setUserName] = useState("Advisor");
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState(revenueChartData);
+  const [activityData, setActivityData] = useState(activityChartData);
 
   const fetchData = async () => {
     setLoading(true);
@@ -272,6 +274,89 @@ export default function HomePage() {
             preview: c.last_message,
             unread: c.unread_count
           })));
+        }
+
+        // Fetch Revenue Chart Data (last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        const { data: monthlyRevenue } = await supabase
+          .from('transactions')
+          .select('amount, created_at')
+          .eq('advisor_id', user.id)
+          .eq('type', 'income')
+          .gte('created_at', sixMonthsAgo.toISOString());
+
+        if (monthlyRevenue && monthlyRevenue.length > 0) {
+          // Group by month
+          const revenueByMonth: Record<string, number> = {};
+          const consultsByMonth: Record<string, number> = {};
+          
+          monthlyRevenue.forEach((t: any) => {
+            const date = new Date(t.created_at);
+            const monthKey = date.toLocaleString('en-US', { month: 'short' });
+            const amount = parseFloat(t.amount?.replace(/[^0-9.-]+/g, "") || "0");
+            revenueByMonth[monthKey] = (revenueByMonth[monthKey] || 0) + amount;
+            consultsByMonth[monthKey] = (consultsByMonth[monthKey] || 0) + 1;
+          });
+
+          // Convert to chart format
+          const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
+          const currentMonth = new Date().getMonth();
+          const last6Months = [];
+          for (let i = 5; i >= 0; i--) {
+            const monthIndex = (currentMonth - i + 12) % 12;
+            last6Months.push(months[monthIndex]);
+          }
+
+          const newChartData = last6Months.map(month => ({
+            month,
+            revenue: revenueByMonth[month] || 0,
+            consultations: consultsByMonth[month] || 0
+          }));
+          
+          if (newChartData.some(d => d.revenue > 0)) {
+            setChartData(newChartData);
+          }
+        }
+
+        // Fetch Activity Chart Data (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const { data: weeklyConsultations } = await supabase
+          .from('consultations')
+          .select('date, status')
+          .eq('advisor_id', user.id)
+          .gte('date', sevenDaysAgo.toISOString().split('T')[0]);
+
+        if (weeklyConsultations && weeklyConsultations.length > 0) {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const activityByDay: Record<string, { scheduled: number; completed: number }> = {};
+          
+          days.forEach(day => {
+            activityByDay[day] = { scheduled: 0, completed: 0 };
+          });
+
+          weeklyConsultations.forEach((c: any) => {
+            const date = new Date(c.date);
+            const dayName = days[date.getDay()];
+            if (c.status === 'scheduled') {
+              activityByDay[dayName].scheduled++;
+            } else if (c.status === 'completed') {
+              activityByDay[dayName].completed++;
+            }
+          });
+
+          const newActivityData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+            day,
+            scheduled: activityByDay[day].scheduled,
+            completed: activityByDay[day].completed
+          }));
+
+          if (newActivityData.some(d => d.scheduled > 0 || d.completed > 0)) {
+            setActivityData(newActivityData);
+          }
         }
       }
     } catch (error) {
@@ -444,7 +529,7 @@ export default function HomePage() {
             <CardContent>
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueChartData}>
+                  <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -509,7 +594,7 @@ export default function HomePage() {
             <CardContent>
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activityChartData} barGap={4}>
+                  <BarChart data={activityData} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis 
                       dataKey="day" 
