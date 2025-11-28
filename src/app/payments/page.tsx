@@ -208,8 +208,19 @@ export default function PaymentsPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch Payment Methods
-        const { data: methods, error: methodsError } = await supabase.from('payment_methods').select('*');
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch Payment Methods for this advisor
+        const { data: methods, error: methodsError } = await supabase
+          .from('payment_methods')
+          .select('*')
+          .eq('advisor_id', user.id)
+          .order('is_default', { ascending: false });
         if (methodsError) throw methodsError;
         
         if (methods && methods.length > 0) {
@@ -223,8 +234,12 @@ export default function PaymentsPage() {
           })));
         }
 
-        // Fetch Bank Accounts
-        const { data: banks, error: banksError } = await supabase.from('bank_accounts').select('*');
+        // Fetch Bank Accounts for this advisor
+        const { data: banks, error: banksError } = await supabase
+          .from('bank_accounts')
+          .select('*')
+          .eq('advisor_id', user.id)
+          .order('is_default', { ascending: false });
         if (banksError) throw banksError;
         
         if (banks && banks.length > 0) {
@@ -237,8 +252,12 @@ export default function PaymentsPage() {
           })));
         }
 
-        // Fetch Transactions
-        const { data: txs, error: txsError } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+        // Fetch Transactions for this advisor
+        const { data: txs, error: txsError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('advisor_id', user.id)
+          .order('date', { ascending: false });
         if (txsError) throw txsError;
         
         if (txs && txs.length > 0) {
@@ -248,8 +267,35 @@ export default function PaymentsPage() {
             description: t.description,
             amount: t.amount,
             status: t.status,
-            type: t.type
+            type: t.type,
+            invoiceId: t.invoice_id
           })));
+          // Calculate balance from pending income
+          const pendingBalance = txs
+            .filter((t: any) => t.type === 'income' && t.status === 'completed')
+            .reduce((sum: number, t: any) => {
+              const amt = parseFloat(t.amount.replace(/[^0-9.-]+/g, '')) || 0;
+              return sum + amt;
+            }, 0);
+          // Subtract payouts
+          const payoutsTotal = txs
+            .filter((t: any) => t.type === 'payout' && t.status === 'completed')
+            .reduce((sum: number, t: any) => {
+              const amt = parseFloat(t.amount.replace(/[^0-9.-]+/g, '')) || 0;
+              return sum + amt;
+            }, 0);
+          setBalance(Math.max(0, pendingBalance - payoutsTotal));
+        }
+
+        // Check Stripe Connect status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('stripe_customer_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.stripe_customer_id) {
+          setIsStripeConnected(true);
         }
       } catch (error) {
         console.error("Error fetching payment data:", error);
@@ -275,7 +321,11 @@ export default function PaymentsPage() {
   const onAddCard = async (data: CardFormData) => {
     setIsAddingCard(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const method = {
+        advisor_id: user.id,
         type: "card",
         brand: detectCardBrand(data.number),
         last4: data.number.replace(/\s/g, '').slice(-4),
@@ -328,7 +378,11 @@ export default function PaymentsPage() {
   const onAddBank = async (data: BankFormData) => {
     setIsAddingBank(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const account = {
+        advisor_id: user.id,
         bank_name: data.bankName,
         account_type: data.accountType,
         last4: data.accountNumber.slice(-4),
@@ -463,16 +517,22 @@ export default function PaymentsPage() {
     
     setIsPayoutProcessing(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const amountStr = `+$${balance.toFixed(2)}`;
+      const invoiceId = `PAY-${Date.now().toString(36).toUpperCase()}`;
       const newTx = {
+        advisor_id: user.id,
         date: new Date().toISOString(),
         description: "Payout - Manual Request",
         amount: amountStr,
         status: "completed",
-        type: "payout"
+        type: "payout",
+        invoice_id: invoiceId
       };
 
       const { data } = await supabase.from('transactions').insert([newTx]).select();
@@ -483,11 +543,13 @@ export default function PaymentsPage() {
         description: data[0].description,
         amount: data[0].amount,
         status: data[0].status,
-        type: data[0].type
+        type: data[0].type,
+        invoiceId: data[0].invoice_id
       } : { 
         ...newTx, 
         id: Date.now(), 
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        invoiceId
       };
 
       setTransactions([savedTx, ...transactions]);
@@ -558,6 +620,137 @@ export default function PaymentsPage() {
       toast.error("Failed to export transactions");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Generate and download mock invoice
+  const handleDownloadInvoice = async (tx: any) => {
+    try {
+      // Generate invoice number from transaction id
+      const invoiceNumber = tx.invoiceId || `INV-${String(tx.id).padStart(6, '0')}`;
+      
+      // Create HTML invoice content
+      const invoiceHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Invoice ${invoiceNumber}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+            .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
+            .invoice-info { text-align: right; }
+            .invoice-number { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+            .date { color: #6b7280; }
+            .divider { border-top: 1px solid #e5e7eb; margin: 30px 0; }
+            .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
+            .party { flex: 1; }
+            .party-label { font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
+            .party-name { font-weight: 600; margin-bottom: 4px; }
+            .party-details { color: #6b7280; font-size: 14px; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .items-table th { text-align: left; padding: 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+            .items-table td { padding: 16px 12px; border-bottom: 1px solid #e5e7eb; }
+            .amount { text-align: right; }
+            .totals { margin-left: auto; width: 300px; }
+            .total-row { display: flex; justify-content: space-between; padding: 8px 0; }
+            .total-row.final { font-weight: bold; font-size: 18px; border-top: 2px solid #111; padding-top: 16px; margin-top: 8px; }
+            .status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+            .status.completed { background: #dcfce7; color: #166534; }
+            .status.pending { background: #fef9c3; color: #854d0e; }
+            .footer { margin-top: 60px; text-align: center; color: #6b7280; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">Family Office Advisor</div>
+            <div class="invoice-info">
+              <div class="invoice-number">${invoiceNumber}</div>
+              <div class="date">${tx.date}</div>
+            </div>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <div class="parties">
+            <div class="party">
+              <div class="party-label">From</div>
+              <div class="party-name">Family Office Advisor Platform</div>
+              <div class="party-details">
+                123 Business Avenue<br>
+                New York, NY 10001<br>
+                United States
+              </div>
+            </div>
+            <div class="party">
+              <div class="party-label">To</div>
+              <div class="party-name">Advisor Account</div>
+              <div class="party-details">
+                Transaction ID: ${tx.id}<br>
+                Type: ${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
+              </div>
+            </div>
+          </div>
+          
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th class="amount">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${tx.description}</td>
+                <td>${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</td>
+                <td><span class="status ${tx.status}">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}</span></td>
+                <td class="amount">${tx.amount}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span>${tx.amount}</span>
+            </div>
+            <div class="total-row">
+              <span>Platform Fee</span>
+              <span>$0.00</span>
+            </div>
+            <div class="total-row final">
+              <span>Total</span>
+              <span>${tx.amount}</span>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Open in new window for printing/saving as PDF
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(invoiceHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        // Auto-trigger print dialog after a short delay
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      }
+      
+      toast.success("Invoice opened for download");
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast.error("Failed to generate invoice");
     }
   };
 
@@ -1145,12 +1338,17 @@ export default function PaymentsPage() {
                                 {tx.amount}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                  Completed
+                                <Badge variant="secondary" className={tx.status === 'completed' ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                                  {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" title="Download Invoice">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  title="Download Invoice"
+                                  onClick={() => handleDownloadInvoice(tx)}
+                                >
                                   <Download className="h-4 w-4" />
                                 </Button>
                               </TableCell>

@@ -368,6 +368,40 @@ export interface ConstitutionSection {
   created_at: string;
 }
 
+// Push Notifications
+export interface PushSubscription {
+  id: number;
+  user_id: string;
+  endpoint: string;
+  p256dh_key: string;
+  auth_key: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationPreferences {
+  id: number;
+  user_id: string;
+  push_enabled: boolean;
+  push_messages: boolean;
+  push_consultations: boolean;
+  push_payments: boolean;
+  push_updates: boolean;
+  push_alerts: boolean;
+  email_enabled: boolean;
+  email_messages: boolean;
+  email_consultations: boolean;
+  email_payments: boolean;
+  email_weekly_digest: boolean;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database helper type for Supabase queries
 export interface Database {
   public: {
@@ -506,6 +540,16 @@ export interface Database {
         Row: ConstitutionSection;
         Insert: Omit<ConstitutionSection, 'id' | 'created_at'>;
         Update: Partial<ConstitutionSection>;
+      };
+      push_subscriptions: {
+        Row: PushSubscription;
+        Insert: Omit<PushSubscription, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<PushSubscription>;
+      };
+      notification_preferences: {
+        Row: NotificationPreferences;
+        Insert: Omit<NotificationPreferences, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<NotificationPreferences>;
       };
     };
   };

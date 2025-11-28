@@ -6,12 +6,12 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { ProtectedRoute } from "@/components/providers/protected-route";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { Toaster } from "@/components/ui/toaster";
+import { PushNotificationPrompt } from "@/components/notifications/push-notification-prompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
 // Get base path from environment
 const basePath = process.env.NODE_ENV === 'production' ? '/re-advisor' : '';
-const isProd = process.env.NODE_ENV === 'production';
 
 export const metadata: Metadata = {
   title: "RE:Advisor | Dashboard",
@@ -61,30 +61,42 @@ export default function RootLayout({
           <AuthProvider>
             <ProtectedRoute>
               <LayoutWrapper>{children}</LayoutWrapper>
+              <PushNotificationPrompt />
             </ProtectedRoute>
           </AuthProvider>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
-        {isProd && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                if ('serviceWorker' in navigator) {
-                  window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/re-advisor/sw.js', { scope: '/re-advisor/' }).then(
-                      function(registration) {
-                        console.log('ServiceWorker registration successful');
-                      },
-                      function(err) {
-                        console.log('ServiceWorker registration failed: ', err);
-                      }
-                    );
-                  });
-                }
-              `,
-            }}
-          />
-        )}
+        {/* Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  var swPath = '${basePath}/sw.js';
+                  var swScope = '${basePath}/';
+                  navigator.serviceWorker.register(swPath, { scope: swScope }).then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful');
+                      
+                      // Check for updates
+                      registration.addEventListener('updatefound', function() {
+                        var newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', function() {
+                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('New content available; please refresh.');
+                          }
+                        });
+                      });
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

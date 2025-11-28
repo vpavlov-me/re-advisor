@@ -7,7 +7,6 @@ import {
   Home, 
   ChevronRight, 
   Bell,
-  Mail,
   MessageSquare,
   Calendar,
   DollarSign,
@@ -15,22 +14,15 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  Settings,
-  Smartphone,
-  Monitor,
-  ToggleLeft,
-  ToggleRight,
   Loader2,
   Trash2,
   RefreshCw,
   BellOff
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabaseClient";
+import { NotificationSettings } from "@/components/notifications/notification-settings";
 
 interface Notification {
   id: number;
@@ -58,56 +51,6 @@ const mockNotifications: Notification[] = [
   { id: 4, type: "family", title: "New Connection Request", description: "The Johnson family wants to connect with you", created_at: new Date(Date.now() - 86400000).toISOString(), read: true },
   { id: 5, type: "system", title: "Security Alert", description: "New login detected from Chrome on Mac", created_at: new Date(Date.now() - 86400000 * 2).toISOString(), read: true },
   { id: 6, type: "consultation", title: "Consultation Completed", description: "Session with the Roye family has been marked as complete", created_at: new Date(Date.now() - 86400000 * 3).toISOString(), read: true },
-];
-
-// Notification settings
-const notificationSettings = [
-  {
-    category: "Messages",
-    icon: MessageSquare,
-    settings: [
-      { label: "New messages", email: true, push: true, sms: false },
-      { label: "Message replies", email: true, push: true, sms: false },
-      { label: "Mentioned in conversation", email: true, push: true, sms: true },
-    ],
-  },
-  {
-    category: "Consultations",
-    icon: Calendar,
-    settings: [
-      { label: "Consultation reminders", email: true, push: true, sms: true },
-      { label: "Consultation requests", email: true, push: true, sms: false },
-      { label: "Consultation changes", email: true, push: true, sms: true },
-      { label: "Consultation reviews", email: true, push: false, sms: false },
-    ],
-  },
-  {
-    category: "Payments",
-    icon: DollarSign,
-    settings: [
-      { label: "Payment received", email: true, push: true, sms: false },
-      { label: "Payment pending", email: true, push: true, sms: false },
-      { label: "Payout processed", email: true, push: false, sms: false },
-    ],
-  },
-  {
-    category: "Families",
-    icon: Users,
-    settings: [
-      { label: "New connection requests", email: true, push: true, sms: false },
-      { label: "Family updates", email: true, push: false, sms: false },
-    ],
-  },
-  {
-    category: "System",
-    icon: Settings,
-    settings: [
-      { label: "Security alerts", email: true, push: true, sms: true },
-      { label: "Account updates", email: true, push: false, sms: false },
-      { label: "Product updates", email: true, push: false, sms: false },
-      { label: "Tips and tutorials", email: false, push: false, sms: false },
-    ],
-  },
 ];
 
 function getNotificationIcon(type: "message" | "consultation" | "payment" | "system" | "family") {
@@ -130,12 +73,6 @@ function getNotificationColor(type: "message" | "consultation" | "payment" | "sy
     family: "bg-orange-100 text-orange-600",
   };
   return colors[type];
-}
-
-function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle?: () => void }) {
-  return (
-    <Switch checked={enabled} onCheckedChange={onToggle} />
-  );
 }
 
 // Group notifications by date
@@ -192,19 +129,10 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [markingReadId, setMarkingReadId] = useState<number | null>(null);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  
-  // Notification settings state
-  const [settings, setSettings] = useState(notificationSettings);
-  const [channels, setChannels] = useState({
-    email: true,
-    push: true,
-    sms: false
-  });
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -396,42 +324,6 @@ export default function NotificationsPage() {
       setIsClearing(false);
       setShowClearDialog(false);
     }
-  };
-
-  const handleToggleSetting = (categoryIndex: number, settingIndex: number, channel: 'email' | 'push' | 'sms') => {
-    setSettings(prev => {
-      const newSettings = [...prev];
-      const setting = { ...newSettings[categoryIndex].settings[settingIndex] };
-      setting[channel] = !setting[channel];
-      newSettings[categoryIndex] = {
-        ...newSettings[categoryIndex],
-        settings: [
-          ...newSettings[categoryIndex].settings.slice(0, settingIndex),
-          setting,
-          ...newSettings[categoryIndex].settings.slice(settingIndex + 1)
-        ]
-      };
-      return newSettings;
-    });
-  };
-
-  const handleSaveSettings = async () => {
-    setIsSavingSettings(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Notification preferences saved");
-    } catch (error) {
-      toast.error("Failed to save preferences");
-    } finally {
-      setIsSavingSettings(false);
-    }
-  };
-
-  const handleResetSettings = () => {
-    setSettings(notificationSettings);
-    setChannels({ email: true, push: true, sms: false });
-    toast.success("Settings reset to defaults");
   };
 
   const renderNotificationItem = (notification: Notification) => {
@@ -637,107 +529,8 @@ export default function NotificationsPage() {
           </TabsContent>
 
           {/* Settings */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Notification Channels</CardTitle>
-                <CardDescription>Choose how you want to receive notifications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">Email</p>
-                      <p className="text-xs text-muted-foreground">logan.roy@advisor.com</p>
-                    </div>
-                    <Toggle 
-                      enabled={channels.email} 
-                      onToggle={() => setChannels(prev => ({ ...prev, email: !prev.email }))}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                    <Smartphone className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">Push</p>
-                      <p className="text-xs text-muted-foreground">Mobile & Desktop</p>
-                    </div>
-                    <Toggle 
-                      enabled={channels.push}
-                      onToggle={() => setChannels(prev => ({ ...prev, push: !prev.push }))}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">SMS</p>
-                      <p className="text-xs text-muted-foreground">+1 (555) 123-4567</p>
-                    </div>
-                    <Toggle 
-                      enabled={channels.sms}
-                      onToggle={() => setChannels(prev => ({ ...prev, sms: !prev.sms }))}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {settings.map((section, categoryIndex) => (
-              <Card key={section.category}>
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2">
-                    <section.icon className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-base">{section.category}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-4">
-                    {section.settings.map((setting, settingIndex) => (
-                      <div key={settingIndex} className="flex items-center justify-between py-2">
-                        <span className="text-sm text-foreground">{setting.label}</span>
-                        <div className="flex items-center gap-6">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-12">Email</span>
-                            <Toggle 
-                              enabled={setting.email}
-                              onToggle={() => handleToggleSetting(categoryIndex, settingIndex, 'email')}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-12">Push</span>
-                            <Toggle 
-                              enabled={setting.push}
-                              onToggle={() => handleToggleSetting(categoryIndex, settingIndex, 'push')}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-12">SMS</span>
-                            <Toggle 
-                              enabled={setting.sms}
-                              onToggle={() => handleToggleSetting(categoryIndex, settingIndex, 'sms')}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={handleResetSettings}>Reset to Defaults</Button>
-              <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
-                {isSavingSettings ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Preferences"
-                )}
-              </Button>
-            </div>
+          <TabsContent value="settings">
+            <NotificationSettings />
           </TabsContent>
         </Tabs>
       </div>
