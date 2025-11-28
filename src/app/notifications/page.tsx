@@ -324,7 +324,7 @@ export default function NotificationsPage() {
                 <CardDescription>Choose how you want to receive notifications</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
                     <Mail className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1">

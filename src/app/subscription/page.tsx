@@ -169,7 +169,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Sidebar */}
           <div>
             <Card>
@@ -290,7 +290,7 @@ export default function SubscriptionPage() {
                 <CardDescription>Compare plans and choose the best one for your needs</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {plans.map((plan) => {
                     const isCurrent = plan.id === activePlanId;
                     return (

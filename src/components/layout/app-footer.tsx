@@ -5,12 +5,13 @@ import { Settings } from "lucide-react";
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
-    <div className={`relative h-8 w-32 ${className || ''}`}>
+    <div className={`flex items-center ${className || ''}`}>
       <Image 
         src="/logo.svg" 
         alt="RE:Advisor Logo" 
-        fill
-        className="object-contain object-left"
+        width={87}
+        height={31}
+        className="object-contain"
       />
     </div>
   );

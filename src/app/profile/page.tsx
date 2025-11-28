@@ -347,7 +347,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="container py-6">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Column - Profile Info */}
           <div className="space-y-6">
             {/* Profile Card */}

@@ -260,14 +260,14 @@ export default function HomePage() {
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm">
               <Home className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Home</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
               <span className="text-foreground font-medium">Dashboard</span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="hidden lg:flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <span className="font-medium">Last Updated:</span>
                 <span>{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -287,6 +287,10 @@ export default function HomePage() {
                 <Keyboard className="h-4 w-4" />
               </div>
             </div>
+            {/* Mobile refresh button */}
+            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -294,27 +298,27 @@ export default function HomePage() {
       <div className="container py-6 space-y-6">
         {/* Welcome Banner */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-wrap items-center gap-2 text-2xl">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-wrap items-center gap-2 text-lg sm:text-2xl">
               <span className="text-muted-foreground">Welcome Back,</span>
               <div className="flex items-center gap-1.5">
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback>{userName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                  <AvatarFallback className="text-xs">{userName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium text-foreground">{userName}</span>
               </div>
               <span className="text-muted-foreground">You Have</span>
               <div className="flex items-center gap-1 text-foreground">
-                <Calendar className="h-5 w-5" />
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="font-medium">{consultations.length} Meetings</span>
               </div>
               <div className="flex items-center gap-1 text-foreground">
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="font-medium">0 tasks today</span>
               </div>
-              <span className="text-muted-foreground">and</span>
+              <span className="text-muted-foreground hidden sm:inline">and</span>
               <div className="flex items-center gap-1 text-foreground">
-                <DollarSign className="h-5 w-5" />
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="font-medium">Monthly revenue is {stats.find(s => s.label === "Monthly revenue")?.value}</span>
               </div>
             </div>
@@ -335,12 +339,12 @@ export default function HomePage() {
 
             {/* Onboarding Steps Grid */}
             <div className="space-y-3">
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {profileStepsRow1.map((step) => (
                   <OnboardingCard key={step.id} step={step} />
                 ))}
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {profileStepsRow2.map((step) => (
                   <OnboardingCard key={step.id} step={step} />
                 ))}
@@ -363,18 +367,18 @@ export default function HomePage() {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Card key={stat.label}>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-[10px] bg-primary/10 flex items-center justify-center">
-                    <stat.icon className="h-6 w-6 text-primary" />
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-[10px] bg-primary/10 flex items-center justify-center">
+                    <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-2xl font-semibold text-foreground">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                    <Link href={stat.href} className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">
+                    <div className="text-xl sm:text-2xl font-semibold text-foreground">{stat.value}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
+                    <Link href={stat.href} className="text-xs sm:text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                       See More <ChevronRight className="h-3 w-3" />
                     </Link>
                   </div>
@@ -385,9 +389,9 @@ export default function HomePage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Upcoming Consultations - 2 columns */}
-          <div className="col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">

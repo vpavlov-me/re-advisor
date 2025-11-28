@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { AppHeader } from "@/components/layout/app-header";
-import { AppFooter } from "@/components/layout/app-footer";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { ProtectedRoute } from "@/components/providers/protected-route";
+import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,9 +30,11 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <AppHeader />
-          <main className="flex-1">{children}</main>
-          <AppFooter />
+          <AuthProvider>
+            <ProtectedRoute>
+              <LayoutWrapper>{children}</LayoutWrapper>
+            </ProtectedRoute>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

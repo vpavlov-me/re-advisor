@@ -3,8 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { Bell, Menu, X, User, Settings, CreditCard, Crown, LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +16,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/components/providers/auth-provider";
+import { signOut } from "@/lib/auth";
+import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 
 const navItems = [
   { label: "Dashboard", href: "/" },
@@ -28,12 +31,13 @@ const navItems = [
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
-    <div className={cn("relative h-8 w-32", className)}>
+    <div className={cn("flex items-center", className)}>
       <Image 
         src="/logo.svg" 
         alt="RE:Advisor Logo" 
-        fill
-        className="object-contain object-left"
+        width={87}
+        height={31}
+        className="object-contain"
         priority
       />
     </div>
@@ -42,7 +46,38 @@ function Logo({ className }: { className?: string }) {
 
 export function AppHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [loggingOut, setLoggingOut] = React.useState(false);
+
+  // Get user initials for avatar fallback
+  const userInitials = React.useMemo(() => {
+    if (!user?.user_metadata) return "U";
+    const firstName = user.user_metadata.first_name || "";
+    const lastName = user.user_metadata.last_name || "";
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
+  }, [user]);
+
+  // Get user display name
+  const userName = React.useMemo(() => {
+    if (!user?.user_metadata) return "User";
+    const firstName = user.user_metadata.first_name || "";
+    const lastName = user.user_metadata.last_name || "";
+    return `${firstName} ${lastName}`.trim() || user.email?.split("@")[0] || "User";
+  }, [user]);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
@@ -74,27 +109,22 @@ export function AppHeader() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <Link href="/notifications">
-            <Button variant="ghost" size="icon" className="relative h-9 w-9">
-              <Bell className="h-5 w-5 text-gray-500" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
-            </Button>
-          </Link>
+          {/* Notifications Dropdown */}
+          <NotificationsDropdown />
 
           {/* User Avatar with Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="h-9 w-9 cursor-pointer border border-gray-200">
-                <AvatarImage src="/avatar.jpg" alt="Logan Roy" />
-                <AvatarFallback className="bg-orange-100 text-orange-600 text-sm font-medium">LR</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url || "/avatar.jpg"} alt={userName} />
+                <AvatarFallback className="bg-orange-100 text-orange-600 text-sm font-medium">{userInitials}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Logan Roy</p>
-                  <p className="text-xs text-muted-foreground">logan.roy@advisor.com</p>
+                  <p className="text-sm font-medium">{userName}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email || "user@example.com"}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -123,9 +153,17 @@ export function AppHeader() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive cursor-pointer"
+                onClick={handleLogout}
+                disabled={loggingOut}
+              >
+                {loggingOut ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="mr-2 h-4 w-4" />
+                )}
+                {loggingOut ? "Logging out..." : "Log out"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

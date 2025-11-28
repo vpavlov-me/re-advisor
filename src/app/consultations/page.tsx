@@ -696,7 +696,7 @@ export default function ConsultationsPage() {
 
       <div className="container py-6 space-y-6">
         {/* Overview Metrics */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {overviewMetrics.map((metric) => (
             <Card key={metric.label}>
               <CardContent className="p-4">
@@ -736,9 +736,9 @@ export default function ConsultationsPage() {
             </TabsList>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
             {/* Main Content - 3 columns */}
-            <div className="col-span-3">
+            <div className="lg:col-span-3">
               <Card>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">

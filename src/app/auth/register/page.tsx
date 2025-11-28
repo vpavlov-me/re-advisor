@@ -1,21 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
-import { Mail, Lock, Eye, User, Building2, Phone, ArrowRight, Check, CreditCard } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff, Building2, Phone, ArrowRight, Check, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/components/providers/auth-provider";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <span className="text-2xl font-medium text-foreground">(</span>
-      <span className="text-2xl font-bold text-primary">RE:</span>
-      <span className="text-2xl font-medium text-foreground">Advisor</span>
+      <Image 
+        src="/logo.svg" 
+        alt="RE:Advisor Logo" 
+        width={120}
+        height={42}
+        className="object-contain"
+        priority
+      />
     </div>
   );
 }
@@ -29,8 +37,103 @@ const benefits = [
   "Secure payment processing",
 ];
 
+// Password validation
+function validatePassword(password: string) {
+  const checks = {
+    length: password.length >= 8,
+    number: /\d/.test(password),
+    symbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+  };
+  return checks;
+}
+
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register, loginWithGoogle, loginWithApple, loginWithLinkedIn } = useAuth();
+  
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"basic" | "pro">("pro");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const passwordChecks = validatePassword(password);
+  const isPasswordValid = Object.values(passwordChecks).every(Boolean);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!termsAccepted) {
+      setError("Please accept the Terms of Service and Privacy Policy.");
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError("Please ensure your password meets all requirements.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error, needsVerification } = await register({
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        company,
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          setError("This email is already registered. Please sign in instead.");
+        } else {
+          setError(error.message);
+        }
+      } else if (needsVerification) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setError(null);
+    const { error } = await loginWithGoogle();
+    if (error) {
+      setError("Failed to sign up with Google. Please try again.");
+    }
+  };
+
+  const handleAppleSignup = async () => {
+    setError(null);
+    const { error } = await loginWithApple();
+    if (error) {
+      setError("Failed to sign up with Apple. Please try again.");
+    }
+  };
+
+  const handleLinkedInSignup = async () => {
+    setError(null);
+    const { error } = await loginWithLinkedIn();
+    if (error) {
+      setError("Failed to sign up with LinkedIn. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -72,146 +175,232 @@ export default function RegisterPage() {
           </div>
 
           <Card>
-            <CardContent className="p-6 space-y-4">
-              {/* Name */}
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-6">
+              <form onSubmit={handleRegister} className="space-y-4">
+                {/* Error Alert */}
+                {error && (
+                  <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Name */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-1.5">
+                      First name
+                    </label>
+                    <Input 
+                      placeholder="Logan"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-1.5">
+                      Last name
+                    </label>
+                    <Input 
+                      placeholder="Roy"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1.5">
-                    First name
+                    Email address
                   </label>
-                  <Input placeholder="Logan" />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      className="pl-10"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
+
+                {/* Phone */}
                 <div>
                   <label className="text-sm font-medium text-foreground block mb-1.5">
-                    Last name
+                    Phone number
                   </label>
-                  <Input placeholder="Roy" />
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      type="tel" 
+                      placeholder="+1 (555) 000-0000" 
+                      className="pl-10"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Email */}
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    type="email" 
-                    placeholder="you@example.com" 
-                    className="pl-10"
-                  />
+                {/* Company */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">
+                    Company / Organization
+                    <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Your company name" 
+                      className="pl-10"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Phone */}
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
-                  Phone number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    type="tel" 
-                    placeholder="+1 (555) 000-0000" 
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Company */}
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
-                  Company / Organization
-                  <span className="text-muted-foreground font-normal ml-1">(optional)</span>
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Your company name" 
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    type="password" 
-                    placeholder="Create a strong password" 
-                    className="pl-10 pr-10"
-                  />
-                  <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Must be at least 8 characters with a number and symbol
-                </p>
-              </div>
-
-              {/* Terms */}
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="terms" className="rounded border-border mt-1" />
-                <label htmlFor="terms" className="text-sm text-muted-foreground">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>
-                  {" "}and{" "}
-                  <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
-                </label>
-              </div>
-
-              {/* Subscription Selection */}
-              <div className="space-y-3 pt-2">
-                <label className="text-sm font-medium text-foreground block">Select Subscription Plan</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div 
-                    className={`cursor-pointer rounded-lg border p-3 relative ${selectedPlan === "basic" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"}`}
-                    onClick={() => setSelectedPlan("basic")}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-medium text-sm">Basic</span>
-                      {selectedPlan === "basic" && <Check className="h-4 w-4 text-primary" />}
-                    </div>
-                    <div className="text-2xl font-bold">$0<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
-                    <p className="text-xs text-muted-foreground mt-1">Profile & Basic Access</p>
+                {/* Password */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1.5">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a strong password" 
+                      className="pl-10 pr-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
                   
-                  <div 
-                    className={`cursor-pointer rounded-lg border p-3 relative ${selectedPlan === "pro" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"}`}
-                    onClick={() => setSelectedPlan("pro")}
-                  >
-                    <div className="absolute -top-2 -right-2">
-                      <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 h-5">POPULAR</Badge>
+                  {/* Password Requirements */}
+                  {password && (
+                    <div className="mt-2 space-y-1">
+                      <div className={`flex items-center gap-2 text-xs ${passwordChecks.length ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <Check className={`h-3 w-3 ${passwordChecks.length ? 'opacity-100' : 'opacity-30'}`} />
+                        At least 8 characters
+                      </div>
+                      <div className={`flex items-center gap-2 text-xs ${passwordChecks.number ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <Check className={`h-3 w-3 ${passwordChecks.number ? 'opacity-100' : 'opacity-30'}`} />
+                        Contains a number
+                      </div>
+                      <div className={`flex items-center gap-2 text-xs ${passwordChecks.symbol ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <Check className={`h-3 w-3 ${passwordChecks.symbol ? 'opacity-100' : 'opacity-30'}`} />
+                        Contains a symbol
+                      </div>
+                      <div className={`flex items-center gap-2 text-xs ${passwordChecks.uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <Check className={`h-3 w-3 ${passwordChecks.uppercase ? 'opacity-100' : 'opacity-30'}`} />
+                        Contains uppercase letter
+                      </div>
                     </div>
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-medium text-sm">Professional</span>
-                      {selectedPlan === "pro" && <Check className="h-4 w-4 text-primary" />}
+                  )}
+                </div>
+
+                {/* Terms */}
+                <div className="flex items-start gap-2">
+                  <input 
+                    type="checkbox" 
+                    id="terms" 
+                    className="rounded border-border mt-1"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    disabled={loading}
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground">
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>
+                    {" "}and{" "}
+                    <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                  </label>
+                </div>
+
+                {/* Subscription Selection */}
+                <div className="space-y-3 pt-2">
+                  <label className="text-sm font-medium text-foreground block">Select Subscription Plan</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div 
+                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "basic" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${loading ? "opacity-50 pointer-events-none" : ""}`}
+                      onClick={() => !loading && setSelectedPlan("basic")}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-sm">Basic</span>
+                        {selectedPlan === "basic" && <Check className="h-4 w-4 text-primary" />}
+                      </div>
+                      <div className="text-2xl font-bold">$0<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                      <p className="text-xs text-muted-foreground mt-1">Profile & Basic Access</p>
                     </div>
-                    <div className="text-2xl font-bold">$49<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
-                    <p className="text-xs text-muted-foreground mt-1">Marketplace & Tools</p>
+                    
+                    <div 
+                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "pro" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${loading ? "opacity-50 pointer-events-none" : ""}`}
+                      onClick={() => !loading && setSelectedPlan("pro")}
+                    >
+                      <div className="absolute -top-2 -right-2">
+                        <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 h-5">POPULAR</Badge>
+                      </div>
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-sm">Professional</span>
+                        {selectedPlan === "pro" && <Check className="h-4 w-4 text-primary" />}
+                      </div>
+                      <div className="text-2xl font-bold">$49<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                      <p className="text-xs text-muted-foreground mt-1">Marketplace & Tools</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Create Account Button */}
-              <Button className="w-full" size="lg" asChild>
-                <Link href="/onboarding">
-                  Create account
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
+                {/* Create Account Button */}
+                <Button className="w-full" size="lg" type="submit" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Create account
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </form>
 
-              <Separator className="my-4" />
+              <Separator className="my-6" />
 
               {/* Social Login */}
               <div className="space-y-3">
-                <Button variant="outline" className="w-full" size="lg">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleGoogleSignup}
+                  disabled={loading}
+                >
                   <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -220,13 +409,25 @@ export default function RegisterPage() {
                   </svg>
                   Continue with Google
                 </Button>
-                <Button variant="outline" className="w-full" size="lg">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleAppleSignup}
+                  disabled={loading}
+                >
                    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.37-1.54 1.81.07 3.2 1.06 4.06 2.09-3.53 1.97-2.93 6.67.6 8.06-.53 1.42-1.24 2.8-2.11 3.62zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                    </svg>
                    Continue with Apple
                 </Button>
-                <Button variant="outline" className="w-full" size="lg">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleLinkedInSignup}
+                  disabled={loading}
+                >
                    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                    </svg>
