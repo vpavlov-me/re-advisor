@@ -63,8 +63,29 @@ import {
 // Advisor roles
 type AdvisorRole = "external-consul" | "consultant" | "personal-advisor";
 
+type Family = {
+  id: number;
+  name: string;
+  members: number;
+  role: AdvisorRole;
+  meetings: { upcoming: number; nextDate: string | null };
+  payment: "pending" | "paid" | "no-invoices";
+  status: "active" | "pending" | "inactive";
+  lastContact: string;
+  industry: string;
+  location: string;
+  email: string;
+  phone: string;
+  since: string;
+  description: string;
+  membersList: { name: string; role: string; avatar: string; email: string; }[];
+  tasks: { id: number; title: string; dueDate: string; priority: string; completed: boolean; }[];
+  services: { name: string; status: string; progress: number; price: string; startDate: string; }[];
+  consultations: { title: string; date: string; time: string; status: string; }[];
+};
+
 // Families data with extended info per Epic-013
-const families = [
+const families: Family[] = [
   {
     id: 1,
     name: "Roye Family",

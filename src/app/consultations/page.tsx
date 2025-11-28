@@ -47,9 +47,39 @@ import {
   SheetTitle,
   SheetDescription 
 } from "@/components/ui/sheet";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AvailabilitySettings } from "./AvailabilitySettings";
+import { Label } from "@/components/ui/label";
+
+// Define Consultation Type
+type Consultation = {
+  id: number;
+  title: string;
+  family: string;
+  type: string;
+  date: string;
+  time: string;
+  duration: string;
+  status: "scheduled" | "confirmed" | "pending" | "completed" | "cancelled";
+  paymentStatus: "paid" | "awaiting" | "overdue";
+  price: string;
+  members: { name: string; initials: string; role: string; }[];
+  moreMembers: number;
+  meetingLink?: string;
+  location?: string;
+  agenda: string[];
+  notes: string;
+  documents: { name: string; size: string; }[];
+};
 
 // Overview metrics
 const overviewMetrics = [
@@ -60,7 +90,7 @@ const overviewMetrics = [
 ];
 
 // Consultations data with extended info
-const allConsultations = [
+const allConsultations: Consultation[] = [
   {
     id: 1,
     title: "Constitution Workshop",

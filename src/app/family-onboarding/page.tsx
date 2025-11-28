@@ -5,8 +5,6 @@ import {
   ChevronRight, 
   ChevronLeft, 
   Check, 
-  Play, 
-  Pause, 
   BookOpen, 
   Users, 
   Scale, 
@@ -22,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -131,9 +128,7 @@ export default function FamilyOnboardingPage() {
     if (currentStep < wizardSteps.length) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Finish
       console.log("Constitution Completed:", constitutionData);
-      // Redirect or show success
       alert("Constitution Draft Created!");
     }
   };
@@ -238,6 +233,7 @@ export default function FamilyOnboardingPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
+
             <h1 className="text-2xl font-bold text-slate-900">Family Constitution Setup</h1>
             <p className="text-slate-500">Drafting your family's guiding principles</p>
           </div>
@@ -377,6 +373,6 @@ export default function FamilyOnboardingPage() {
           </Card>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }

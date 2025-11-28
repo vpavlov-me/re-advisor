@@ -46,9 +46,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
+import { LucideIcon } from "lucide-react";
+
+type ProfileStep = {
+  id: number;
+  label: string;
+  icon: LucideIcon;
+  status: "completed" | "current" | "pending" | "locked";
+  href: string;
+};
 
 // Profile setup steps - Row 1
-const initialProfileStepsRow1 = [
+const initialProfileStepsRow1: ProfileStep[] = [
   { id: 1, label: "Account & Security", icon: Lock, status: "completed" as const, href: "/settings" },
   { id: 2, label: "Basic Profile", icon: User, status: "current" as const, href: "/profile" },
   { id: 3, label: "Credentials", icon: KeyRound, status: "pending" as const, href: "/profile" },
@@ -56,7 +65,7 @@ const initialProfileStepsRow1 = [
 ];
 
 // Profile setup steps - Row 2
-const initialProfileStepsRow2 = [
+const initialProfileStepsRow2: ProfileStep[] = [
   { id: 5, label: "Services & Pricing", icon: Briefcase, status: "pending" as const, href: "/services" },
   { id: 6, label: "Payments", icon: CreditCard, status: "pending" as const, href: "/payments" },
   { id: 7, label: "KYC Verification", icon: IdCard, status: "locked" as const, href: "/settings" },
@@ -167,8 +176,8 @@ function OnboardingCard({ step }: { step: { id: number; label: string; icon: Rea
 
 export default function HomePage() {
   const [stats, setStats] = useState(initialStats);
-  const [profileStepsRow1, setProfileStepsRow1] = useState(initialProfileStepsRow1);
-  const [profileStepsRow2, setProfileStepsRow2] = useState(initialProfileStepsRow2);
+  const [profileStepsRow1, setProfileStepsRow1] = useState<ProfileStep[]>(initialProfileStepsRow1);
+  const [profileStepsRow2, setProfileStepsRow2] = useState<ProfileStep[]>(initialProfileStepsRow2);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
