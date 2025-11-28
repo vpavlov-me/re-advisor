@@ -147,7 +147,7 @@ function ConsultationCard({
   onCancel,
   onDelete
 }: { 
-  consultation: typeof allConsultations[0];
+  consultation: Consultation;
   onViewDetails: () => void;
   onCancel: (id: number) => void;
   onDelete: (id: number) => void;
@@ -532,7 +532,7 @@ export default function ConsultationsPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const openConsultationDetail = (consultation: typeof allConsultations[0]) => {
+  const openConsultationDetail = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
     setIsSheetOpen(true);
   };
