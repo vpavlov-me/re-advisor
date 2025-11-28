@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -195,8 +196,10 @@ export default function ProfilePage() {
       if (error) throw error;
       
       setProfile(editProfileForm);
+      toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error saving profile:', error);
+      toast.error('Failed to update profile');
     }
   };
 
@@ -212,8 +215,10 @@ export default function ProfilePage() {
       if (error) throw error;
       
       setProfile({ ...profile, bio: bioForm });
+      toast.success('Bio updated successfully');
     } catch (error) {
       console.error('Error saving bio:', error);
+      toast.error('Failed to update bio');
     }
   };
 
@@ -240,9 +245,11 @@ export default function ProfilePage() {
       if (data) {
         setCredentialsList([...credentialsList, data]);
         setNewCredential({ name: "", issuer: "", year: "", id: "" });
+        toast.success('Credential added successfully');
       }
     } catch (error) {
       console.error('Error adding credential:', error);
+      toast.error('Failed to add credential');
     }
   };
 
@@ -263,8 +270,10 @@ export default function ProfilePage() {
 
       setCredentialsList(credentialsList.map(c => c.id === editingCredential.id ? editingCredential : c));
       setEditingCredential(null);
+      toast.success('Credential updated successfully');
     } catch (error) {
       console.error('Error updating credential:', error);
+      toast.error('Failed to update credential');
     }
   };
 
@@ -279,8 +288,10 @@ export default function ProfilePage() {
 
       setCredentialsList(credentialsList.filter(c => c.id !== id));
       setEditingCredential(null);
+      toast.success('Credential deleted');
     } catch (error) {
       console.error('Error deleting credential:', error);
+      toast.error('Failed to delete credential');
     }
   };
 
@@ -300,8 +311,10 @@ export default function ProfilePage() {
 
       setExpertiseList([...expertiseList, area]);
       if (typeof areaToAdd !== 'string') setNewExpertise("");
+      toast.success('Expertise area added');
     } catch (error) {
       console.error('Error adding expertise:', error);
+      toast.error('Failed to add expertise');
     }
   };
 
@@ -318,8 +331,10 @@ export default function ProfilePage() {
       if (error) throw error;
 
       setExpertiseList(expertiseList.filter(i => i !== item));
+      toast.success('Expertise area removed');
     } catch (error) {
       console.error('Error removing expertise:', error);
+      toast.error('Failed to remove expertise');
     }
   };
 

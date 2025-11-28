@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -32,7 +33,8 @@ import {
   CalendarClock,
   XCircle,
   Eye,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -482,17 +484,19 @@ export default function ConsultationsPage() {
         .update({ status: 'cancelled' })
         .eq('id', id);
 
-      if (!error) {
-        setConsultations(prev => prev.map(c => 
-          c.id === id ? { ...c, status: "cancelled" } : c
-        ));
-        // If the cancelled one is currently open in sheet, update it too
-        if (selectedConsultation?.id === id) {
-          setSelectedConsultation(prev => prev ? { ...prev, status: "cancelled" } : null);
-        }
+      if (error) throw error;
+      
+      setConsultations(prev => prev.map(c => 
+        c.id === id ? { ...c, status: "cancelled" } : c
+      ));
+      // If the cancelled one is currently open in sheet, update it too
+      if (selectedConsultation?.id === id) {
+        setSelectedConsultation(prev => prev ? { ...prev, status: "cancelled" } : null);
       }
+      toast.success('Consultation cancelled');
     } catch (error) {
       console.error("Error cancelling consultation:", error);
+      toast.error('Failed to cancel consultation');
     }
   };
 
@@ -573,8 +577,10 @@ export default function ConsultationsPage() {
         } as Consultation;
         setConsultations([fallbackConsultation, ...consultations]);
       }
+      toast.success('Consultation scheduled successfully');
     } catch (error) {
       console.error("Error creating consultation:", error);
+      toast.error('Failed to schedule consultation');
     }
 
     setIsScheduleOpen(false);

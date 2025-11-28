@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ProtectedRoute } from "@/components/providers/protected-route";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
               <LayoutWrapper>{children}</LayoutWrapper>
             </ProtectedRoute>
           </AuthProvider>
+          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

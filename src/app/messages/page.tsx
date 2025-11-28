@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -24,7 +25,8 @@ import {
   Users,
   X,
   ChevronDown,
-  UserPlus
+  UserPlus,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -214,9 +216,12 @@ export default function MessagesPage() {
   const [newConvStep, setNewConvStep] = useState<"family" | "participants">("family");
   const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<any | null>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         // Fetch Families
         const { data: familiesData } = await supabase
@@ -269,6 +274,8 @@ export default function MessagesPage() {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -318,6 +325,7 @@ export default function MessagesPage() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
 
+    setSending(true);
     const tempId = Date.now();
     const newMsg = {
       id: tempId,
@@ -343,11 +351,15 @@ export default function MessagesPage() {
         }]);
 
       if (error) {
-        console.error("Error sending message:", error);
-        // Revert optimistic update if needed
+        // Revert optimistic update
+        setMessagesList(prev => prev.filter(m => m.id !== tempId));
+        throw error;
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error('Failed to send message');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -377,36 +389,54 @@ export default function MessagesPage() {
     );
   };
 
-  const handleStartConversation = () => {
-    const newId = Math.max(...conversations.map(c => c.id)) + 1;
+  const handleStartConversation = async () => {
     const familyName = selectedFamilyForConv?.name || "Unknown Family";
     
     type FamilyMember = { id: number; name: string; role: string; avatar: string; online: boolean };
     
-    const newConversation = {
-      id: newId,
-      title: "New Conversation", // Could be dynamic based on input
-      familyId: selectedFamilyForConv?.id || 0,
-      familyName: familyName,
-      participants: selectedFamilyForConv?.members
-        .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
-        .map((m: FamilyMember) => m.name) || [],
-      lastMessage: "Started a new conversation",
-      lastMessageTime: "Just now",
-      unread: 0,
-      pinned: false,
-      online: true,
-    };
+    setSending(true);
+    try {
+      // Create conversation in Supabase
+      const { data: convData, error: convError } = await supabase
+        .from('conversations')
+        .insert([{
+          title: "New Conversation",
+          family_id: selectedFamilyForConv?.id,
+          last_message: "Started a new conversation",
+          last_message_time: new Date().toISOString(),
+          unread_count: 0,
+          pinned: false
+        }])
+        .select()
+        .single();
 
-    // In a real app, we would fetch the conversation details
-    // For now, we'll just add it to the list and select it
-    // Note: We can't easily update the 'conversations' const, so we should move it to state
-    // But since I can't refactor the whole file to state easily in one go without reading it all again,
-    // I will assume 'conversations' is state or I will make it state.
-    
-    // Wait, 'conversations' is a const outside the component. I need to move it to state.
-    setConversationsList([newConversation, ...conversationsList]);
-    setIsNewConversationOpen(false);
+      if (convError) throw convError;
+
+      const newConversation = {
+        id: convData?.id || Math.max(...conversations.map(c => c.id)) + 1,
+        title: "New Conversation",
+        familyId: selectedFamilyForConv?.id || 0,
+        familyName: familyName,
+        participants: selectedFamilyForConv?.members
+          .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
+          .map((m: FamilyMember) => m.name) || [],
+        lastMessage: "Started a new conversation",
+        lastMessageTime: "Just now",
+        unread: 0,
+        pinned: false,
+        online: true,
+      };
+
+      setConversationsList([newConversation, ...conversationsList]);
+      setSelectedConversation(newConversation);
+      setIsNewConversationOpen(false);
+      toast.success('Conversation created');
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast.error('Failed to create conversation');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

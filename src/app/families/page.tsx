@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -31,7 +32,9 @@ import {
   UserPlus,
   ListTodo,
   ChevronDown,
-  ChevronLeft
+  ChevronLeft,
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -321,9 +324,12 @@ export default function FamiliesPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [familiesList, setFamiliesList] = useState<Family[]>(families);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchFamilies = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('families')
@@ -337,6 +343,7 @@ export default function FamiliesPage() {
         
         if (error) {
           console.log("Supabase error (using mock data):", error.message);
+          setLoading(false);
           return;
         }
 
@@ -391,6 +398,8 @@ export default function FamiliesPage() {
         }
       } catch (error) {
         console.error("Error fetching families:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -421,26 +430,50 @@ export default function FamiliesPage() {
     description: ""
   });
 
-  const handleProposeService = () => {
+  const handleProposeService = async () => {
     if (!selectedFamily || !newProposal.name || !newProposal.price) return;
 
-    const service = {
-      name: newProposal.name,
-      status: "Pending" as const,
-      progress: 0,
-      price: `$${newProposal.price}`,
-      startDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    };
+    setSaving(true);
+    try {
+      const service = {
+        name: newProposal.name,
+        status: "Pending" as const,
+        progress: 0,
+        price: `$${newProposal.price}`,
+        startDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      };
 
-    const updatedFamily = {
-      ...selectedFamily,
-      services: [service, ...selectedFamily.services]
-    };
+      // Save to Supabase
+      const { error } = await supabase
+        .from('services')
+        .insert([{
+          family_id: selectedFamily.id,
+          name: newProposal.name,
+          status: 'Pending',
+          progress: 0,
+          price: `$${newProposal.price}`,
+          description: newProposal.description,
+          start_date: new Date().toISOString()
+        }]);
 
-    setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
-    setSelectedFamily(updatedFamily);
-    setIsProposeServiceDialogOpen(false);
-    setNewProposal({ name: "", price: "", description: "" });
+      if (error) throw error;
+
+      const updatedFamily = {
+        ...selectedFamily,
+        services: [service, ...selectedFamily.services]
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsProposeServiceDialogOpen(false);
+      setNewProposal({ name: "", price: "", description: "" });
+      toast.success('Service proposal sent successfully');
+    } catch (error) {
+      console.error('Error proposing service:', error);
+      toast.error('Failed to send service proposal');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Schedule Consultation State
@@ -451,30 +484,52 @@ export default function FamiliesPage() {
     time: ""
   });
 
-  const handleScheduleConsultation = () => {
+  const handleScheduleConsultation = async () => {
     if (!selectedFamily || !newConsultation.title || !newConsultation.date) return;
 
-    const consultation = {
-      title: newConsultation.title,
-      date: new Date(newConsultation.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      time: newConsultation.time || "10:00 AM",
-      status: "scheduled" as const
-    };
+    setSaving(true);
+    try {
+      const consultation = {
+        title: newConsultation.title,
+        date: new Date(newConsultation.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        time: newConsultation.time || "10:00 AM",
+        status: "scheduled" as const
+      };
 
-    const updatedFamily = {
-      ...selectedFamily,
-      consultations: [consultation, ...selectedFamily.consultations],
-      meetings: {
-        ...selectedFamily.meetings,
-        upcoming: selectedFamily.meetings.upcoming + 1,
-        nextDate: selectedFamily.meetings.upcoming === 0 ? consultation.date : selectedFamily.meetings.nextDate
-      }
-    };
+      // Save to Supabase
+      const { error } = await supabase
+        .from('consultations')
+        .insert([{
+          family_id: selectedFamily.id,
+          title: consultation.title,
+          date: newConsultation.date,
+          time: consultation.time,
+          status: 'scheduled'
+        }]);
 
-    setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
-    setSelectedFamily(updatedFamily);
-    setIsScheduleDialogOpen(false);
-    setNewConsultation({ title: "", date: "", time: "" });
+      if (error) throw error;
+
+      const updatedFamily = {
+        ...selectedFamily,
+        consultations: [consultation, ...selectedFamily.consultations],
+        meetings: {
+          ...selectedFamily.meetings,
+          upcoming: selectedFamily.meetings.upcoming + 1,
+          nextDate: selectedFamily.meetings.upcoming === 0 ? consultation.date : selectedFamily.meetings.nextDate
+        }
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsScheduleDialogOpen(false);
+      setNewConsultation({ title: "", date: "", time: "" });
+      toast.success('Consultation scheduled successfully');
+    } catch (error) {
+      console.error('Error scheduling consultation:', error);
+      toast.error('Failed to schedule consultation');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Create Invoice State
@@ -485,98 +540,199 @@ export default function FamiliesPage() {
     dueDate: ""
   });
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = async () => {
     if (!selectedFamily || !newInvoice.amount || !newInvoice.dueDate) return;
     
-    // In a real app, this would create an invoice record.
-    // For now, we'll just update the payment status of the family to "pending" if it wasn't already.
-    
-    const updatedFamily = {
-      ...selectedFamily,
-      payment: "pending" as const
-    };
+    setSaving(true);
+    try {
+      // Save invoice to Supabase
+      const { error } = await supabase
+        .from('transactions')
+        .insert([{
+          family_id: selectedFamily.id,
+          type: 'invoice',
+          amount: parseFloat(newInvoice.amount),
+          status: 'pending',
+          due_date: newInvoice.dueDate,
+          description: newInvoice.serviceId ? `Invoice for ${newInvoice.serviceId}` : 'Service invoice'
+        }]);
 
-    setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
-    setSelectedFamily(updatedFamily);
-    setIsInvoiceDialogOpen(false);
-    setNewInvoice({ serviceId: "", amount: "", dueDate: "" });
+      if (error) throw error;
+      
+      const updatedFamily = {
+        ...selectedFamily,
+        payment: "pending" as const
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsInvoiceDialogOpen(false);
+      setNewInvoice({ serviceId: "", amount: "", dueDate: "" });
+      toast.success('Invoice created successfully');
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast.error('Failed to create invoice');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleInviteFamily = (e: React.FormEvent) => {
+  const handleInviteFamily = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newFamily = {
-      id: Math.max(...familiesList.map(f => f.id)) + 1,
-      name: inviteForm.familyName || `${inviteForm.contactName}'s Family`,
-      members: 1,
-      role: inviteForm.role as AdvisorRole,
-      meetings: { upcoming: 0, nextDate: null },
-      payment: "no-invoices" as const,
-      status: "pending" as const,
-      lastContact: "Just now",
-      industry: "Unknown",
-      location: "Unknown",
-      email: inviteForm.contactEmail,
-      phone: "",
-      since: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-      description: "New family invitation sent.",
-      membersList: [
-        { 
-          name: inviteForm.contactName, 
-          role: "Primary Contact", 
-          avatar: inviteForm.contactName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(), 
-          email: inviteForm.contactEmail 
-        }
-      ],
-      tasks: [],
-      services: [],
-      consultations: [],
-    };
+    setSaving(true);
+    try {
+      const familyName = inviteForm.familyName || `${inviteForm.contactName}'s Family`;
+      
+      // Create family in Supabase
+      const { data: familyData, error: familyError } = await supabase
+        .from('families')
+        .insert([{
+          name: familyName,
+          role: inviteForm.role,
+          status: 'pending',
+          email: inviteForm.contactEmail,
+          payment_status: 'no-invoices',
+          description: 'New family invitation sent.'
+        }])
+        .select()
+        .single();
 
-    setFamiliesList([newFamily, ...familiesList]);
-    setIsInviteDialogOpen(false);
-    setInviteForm({
-      familyName: "",
-      contactName: "",
-      contactEmail: "",
-      role: "consultant",
-      message: ""
-    });
+      if (familyError) throw familyError;
+
+      // Add primary contact as family member
+      if (familyData) {
+        await supabase
+          .from('family_members')
+          .insert([{
+            family_id: familyData.id,
+            name: inviteForm.contactName,
+            email: inviteForm.contactEmail,
+            role: 'Primary Contact'
+          }]);
+      }
+
+      const newFamily: Family = {
+        id: familyData?.id || Math.max(...familiesList.map(f => f.id)) + 1,
+        name: familyName,
+        members: 1,
+        role: inviteForm.role as AdvisorRole,
+        meetings: { upcoming: 0, nextDate: null },
+        payment: "no-invoices" as const,
+        status: "pending" as const,
+        lastContact: "Just now",
+        industry: "Unknown",
+        location: "Unknown",
+        email: inviteForm.contactEmail,
+        phone: "",
+        since: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        description: "New family invitation sent.",
+        membersList: [
+          { 
+            name: inviteForm.contactName, 
+            role: "Primary Contact", 
+            avatar: inviteForm.contactName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(), 
+            email: inviteForm.contactEmail 
+          }
+        ],
+        tasks: [],
+        services: [],
+        consultations: [],
+      };
+
+      setFamiliesList([newFamily, ...familiesList]);
+      setIsInviteDialogOpen(false);
+      setInviteForm({
+        familyName: "",
+        contactName: "",
+        contactEmail: "",
+        role: "consultant",
+        message: ""
+      });
+      toast.success('Family invitation sent successfully');
+    } catch (error) {
+      console.error('Error inviting family:', error);
+      toast.error('Failed to send invitation');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!selectedFamily || !newTask.title) return;
 
-    const task = {
-      id: Math.random(),
-      title: newTask.title,
-      dueDate: new Date(newTask.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      priority: newTask.priority,
-      completed: false
-    };
+    setSaving(true);
+    try {
+      // Save task to Supabase
+      const { data: taskData, error } = await supabase
+        .from('tasks')
+        .insert([{
+          family_id: selectedFamily.id,
+          title: newTask.title,
+          due_date: newTask.dueDate,
+          priority: newTask.priority,
+          completed: false
+        }])
+        .select()
+        .single();
 
-    const updatedFamily = {
-      ...selectedFamily,
-      tasks: [task, ...selectedFamily.tasks]
-    };
+      if (error) throw error;
 
-    setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
-    setSelectedFamily(updatedFamily);
-    setIsAddTaskDialogOpen(false);
-    setNewTask({ title: "", dueDate: "", priority: "medium" });
+      const task = {
+        id: taskData?.id || Math.random(),
+        title: newTask.title,
+        dueDate: new Date(newTask.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        priority: newTask.priority,
+        completed: false
+      };
+
+      const updatedFamily = {
+        ...selectedFamily,
+        tasks: [task, ...selectedFamily.tasks]
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsAddTaskDialogOpen(false);
+      setNewTask({ title: "", dueDate: "", priority: "medium" });
+      toast.success('Task added successfully');
+    } catch (error) {
+      console.error('Error adding task:', error);
+      toast.error('Failed to add task');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleTaskCompletion = (taskId: number) => {
+  const toggleTaskCompletion = async (taskId: number) => {
     if (!selectedFamily) return;
 
-    const updatedTasks = selectedFamily.tasks.map(t => 
-      t.id === taskId ? { ...t, completed: !t.completed } : t
-    );
+    const task = selectedFamily.tasks.find(t => t.id === taskId);
+    if (!task) return;
 
-    const updatedFamily = { ...selectedFamily, tasks: updatedTasks };
-    setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
-    setSelectedFamily(updatedFamily);
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: !task.completed })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      const updatedTasks = selectedFamily.tasks.map(t => 
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      );
+
+      const updatedFamily = { ...selectedFamily, tasks: updatedTasks };
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      toast.success(task.completed ? 'Task reopened' : 'Task completed');
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Failed to update task');
+    }
   };
+
   const openFamilyWorkspace = (family: typeof families[0]) => {
     setSelectedFamily(family);
     setWorkspaceTab("overview");
