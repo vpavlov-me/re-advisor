@@ -48,30 +48,8 @@ import {
   SheetDescription 
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AvailabilitySettings } from "./AvailabilitySettings";
 
 // Overview metrics
 const overviewMetrics = [
@@ -381,6 +359,7 @@ export default function ConsultationsPage() {
   const [selectedConsultation, setSelectedConsultation] = useState<typeof allConsultations[0] | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
   
   // Schedule Form State
   const [scheduleForm, setScheduleForm] = useState({
@@ -550,10 +529,16 @@ export default function ConsultationsPage() {
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
               <span className="text-foreground font-medium">Consultations</span>
             </div>
-            <Button onClick={() => setIsScheduleOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Schedule Consultation
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setIsAvailabilityOpen(true)}>
+                <CalendarClock className="h-4 w-4 mr-2" />
+                Availability
+              </Button>
+              <Button onClick={() => setIsScheduleOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Schedule Consultation
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -1055,6 +1040,19 @@ export default function ConsultationsPage() {
             <Button variant="outline" onClick={() => setIsScheduleOpen(false)}>Cancel</Button>
             <Button onClick={handleSchedule}>Schedule</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Availability Settings Dialog */}
+      <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Availability Settings</DialogTitle>
+            <DialogDescription>
+              Set your weekly recurring availability for consultations.
+            </DialogDescription>
+          </DialogHeader>
+          <AvailabilitySettings />
         </DialogContent>
       </Dialog>
     </div>

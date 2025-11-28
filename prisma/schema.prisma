@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model Family {
@@ -98,22 +98,6 @@ model Resource {
   category    String?
   description String?
   isFeatured  Boolean  @default(false)
-  folder      String?
-  sharedWithCount Int @default(0)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Task {
-  id        String   @id @default(cuid())
-  title     String
-  dueDate   DateTime?
-  priority  String   @default("medium") // high, medium, low
-  completed Boolean  @default(false)
-  
-  familyId  String?
-  family    Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,9 +107,34 @@ model ConstitutionTemplate {
   id          String   @id @default(cuid())
   title       String
   description String?
-  sections    Json     // Stores the 12 sections as a JSON object
-  isDraft     Boolean  @default(true)
+  sections    Json     // Array of sections with title, content, status
+  isDefault   Boolean  @default(false)
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AvailabilitySlot {
+  id           String    @id @default(cuid())
+  dayOfWeek    Int       // 0=Sunday, 1=Monday, etc.
+  startTime    String    // "09:00"
+  endTime      String    // "17:00"
+  isRecurring  Boolean   @default(true)
+  specificDate DateTime? // If not recurring, specific date
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  title     String
+  status    String   @default("todo")
+  dueDate   DateTime?
+  
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
