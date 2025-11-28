@@ -15,6 +15,9 @@ export type FamilyStatus = 'active' | 'pending' | 'inactive';
 export type Priority = 'low' | 'medium' | 'high';
 export type NotificationType = 'message' | 'alert' | 'update' | 'consultation' | 'payment';
 export type TransactionType = 'income' | 'payout' | 'fee' | 'subscription';
+export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
+export type ResourceType = 'document' | 'article' | 'video' | 'podcast' | 'template' | 'guide' | 'link' | 'checklist' | 'learning-path';
+export type LearningPathDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export interface Profile {
   id: string;
@@ -35,6 +38,10 @@ export interface Profile {
   completion_percentage: number;
   is_first_login: boolean;
   onboarding_progress: number;
+  onboarding_step: number;
+  onboarding_completed: boolean;
+  onboarding_skipped: boolean;
+  onboarding_completed_at: string | null;
   profile_status: ProfileStatus;
   stripe_account_id: string | null;
   stripe_account_status: StripeAccountStatus;
@@ -271,6 +278,96 @@ export interface BlockedDate {
   created_at: string;
 }
 
+// Family Invitations
+export interface FamilyInvitation {
+  id: string;
+  family_id: number;
+  invited_by: string;
+  email: string;
+  role: string;
+  invite_code: string;
+  status: InvitationStatus;
+  message: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  accepted_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Knowledge Resources
+export interface KnowledgeResource {
+  id: number;
+  advisor_id: string;
+  title: string;
+  description: string | null;
+  type: ResourceType;
+  category: string;
+  content: string | null;
+  file_url: string | null;
+  external_url: string | null;
+  thumbnail_url: string | null;
+  is_featured: boolean;
+  is_published: boolean;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResourceShare {
+  id: number;
+  resource_id: number;
+  family_id: number;
+  shared_by: string;
+  shared_at: string;
+}
+
+export interface LearningPath {
+  id: number;
+  advisor_id: string;
+  title: string;
+  description: string | null;
+  difficulty: LearningPathDifficulty;
+  estimated_duration_minutes: number | null;
+  is_published: boolean;
+  thumbnail_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LearningPathStep {
+  id: number;
+  learning_path_id: number;
+  resource_id: number | null;
+  title: string;
+  description: string | null;
+  content: string | null;
+  step_order: number;
+  estimated_duration_minutes: number | null;
+  created_at: string;
+}
+
+export interface ConstitutionTemplate {
+  id: number;
+  advisor_id: string;
+  title: string;
+  description: string | null;
+  is_default: boolean;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConstitutionSection {
+  id: number;
+  template_id: number;
+  section_number: number;
+  title: string;
+  content: string | null;
+  is_required: boolean;
+  created_at: string;
+}
+
 // Database helper type for Supabase queries
 export interface Database {
   public: {
@@ -374,6 +471,41 @@ export interface Database {
         Row: BlockedDate;
         Insert: Omit<BlockedDate, 'id' | 'created_at'>;
         Update: Partial<BlockedDate>;
+      };
+      family_invitations: {
+        Row: FamilyInvitation;
+        Insert: Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<FamilyInvitation>;
+      };
+      knowledge_resources: {
+        Row: KnowledgeResource;
+        Insert: Omit<KnowledgeResource, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<KnowledgeResource>;
+      };
+      resource_shares: {
+        Row: ResourceShare;
+        Insert: Omit<ResourceShare, 'id' | 'shared_at'>;
+        Update: Partial<ResourceShare>;
+      };
+      learning_paths: {
+        Row: LearningPath;
+        Insert: Omit<LearningPath, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<LearningPath>;
+      };
+      learning_path_steps: {
+        Row: LearningPathStep;
+        Insert: Omit<LearningPathStep, 'id' | 'created_at'>;
+        Update: Partial<LearningPathStep>;
+      };
+      constitution_templates: {
+        Row: ConstitutionTemplate;
+        Insert: Omit<ConstitutionTemplate, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<ConstitutionTemplate>;
+      };
+      constitution_sections: {
+        Row: ConstitutionSection;
+        Insert: Omit<ConstitutionSection, 'id' | 'created_at'>;
+        Update: Partial<ConstitutionSection>;
       };
     };
   };

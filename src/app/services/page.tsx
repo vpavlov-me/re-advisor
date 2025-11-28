@@ -70,14 +70,6 @@ const DURATIONS = ["30 min", "1 hour", "1.5 hours", "2 hours", "4 hours", "Full 
 // Services data
 const initialServices: Service[] = [];
 
-// Stats
-const stats = [
-  { label: "Active Services", value: "3", icon: Eye, change: "+1 this month" },
-  { label: "Total Clients", value: "6", icon: Users, change: "+2 this month" },
-  { label: "Total Revenue", value: "$38,000", icon: DollarSign, change: "+15% from last month" },
-  { label: "Avg. Rating", value: "4.8", icon: Star, change: "Based on 25 reviews" },
-];
-
 type Service = {
   id: string | number;
   name: string;
@@ -132,6 +124,40 @@ export default function ServicesPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Computed stats from real data
+  const stats = [
+    { 
+      label: "Active Services", 
+      value: services.filter(s => s.status === "active").length.toString(), 
+      icon: Eye, 
+      change: services.length > 0 ? `${services.length} total` : "No services yet"
+    },
+    { 
+      label: "Total Clients", 
+      value: services.reduce((sum, s) => sum + s.activeClients, 0).toString(), 
+      icon: Users, 
+      change: "Across all services"
+    },
+    { 
+      label: "Total Revenue", 
+      value: services.length > 0 
+        ? `$${services.reduce((sum, s) => sum + parseFloat(s.totalRevenue.replace(/[^0-9.]/g, '') || '0'), 0).toLocaleString()}`
+        : "$0", 
+      icon: DollarSign, 
+      change: services.length > 0 ? "From all services" : "No revenue yet"
+    },
+    { 
+      label: "Avg. Rating", 
+      value: services.filter(s => s.rating > 0).length > 0
+        ? (services.reduce((sum, s) => sum + s.rating, 0) / services.filter(s => s.rating > 0).length).toFixed(1)
+        : "-", 
+      icon: Star, 
+      change: services.reduce((sum, s) => sum + s.reviews, 0) > 0 
+        ? `Based on ${services.reduce((sum, s) => sum + s.reviews, 0)} reviews`
+        : "No reviews yet"
+    },
+  ];
 
   useEffect(() => {
     fetchServices();

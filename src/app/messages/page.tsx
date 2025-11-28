@@ -235,7 +235,8 @@ export default function MessagesPage() {
   const [conversationsList, setConversationsList] = useState<any[]>(conversations);
   const [messagesList, setMessagesList] = useState<Message[]>(messages);
   const [familiesList, setFamiliesList] = useState<any[]>(familiesData);
-  const [selectedConversation, setSelectedConversation] = useState<any>(conversations[0]);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   
   const [newMessage, setNewMessage] = useState("");
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
@@ -294,7 +295,7 @@ export default function MessagesPage() {
     }, 2000);
   }, [isTyping]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (advisorId: string) => {
     try {
       // Fetch Families
       const { data: familiesData } = await supabase
@@ -303,7 +304,8 @@ export default function MessagesPage() {
           id, 
           name,
           members:family_members(id, name, role)
-        `);
+        `)
+        .eq('advisor_id', advisorId);
       
       if (familiesData) {
         const mappedFamilies = familiesData.map((f: any) => ({
@@ -320,43 +322,77 @@ export default function MessagesPage() {
         setFamiliesList(mappedFamilies);
       }
 
-      // Fetch Conversations
+      // Fetch Conversations via families (conversations are linked to families)
       const { data: conversationsData } = await supabase
         .from('conversations')
         .select(`
           *,
-          family:families(name)
+          family:families!inner(name, advisor_id)
         `)
+        .eq('family.advisor_id', advisorId)
         .order('last_message_time', { ascending: false });
 
       if (conversationsData && conversationsData.length > 0) {
         const mappedConversations = conversationsData.map((c: any) => ({
           id: c.id,
-          title: c.title,
+          title: c.title || "Untitled Conversation",
           familyId: c.family_id,
           familyName: c.family?.name || "Unknown",
           participants: [],
-          lastMessage: c.last_message,
-          lastMessageTime: c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+          lastMessage: c.last_message || "No messages yet",
+          lastMessageTime: c.last_message_time ? formatMessageTime(c.last_message_time) : "",
           unread: c.unread_count || 0,
           pinned: c.pinned || false,
           online: false
         }));
         setConversationsList(mappedConversations);
         setSelectedConversation(mappedConversations[0]);
+      } else {
+        // No real data, show empty state
+        setConversationsList([]);
+        setSelectedConversation(null);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   }, []);
 
+  // Helper function to format message time
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await fetchData();
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        await fetchData(user.id);
+      }
+      
       setLoading(false);
     };
     init();
+  }, [fetchData]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!selectedConversation) return;
 
     // Set up real-time subscription for new messages
     const messagesChannel = supabase
@@ -366,27 +402,30 @@ export default function MessagesPage() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages'
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
         },
         (payload) => {
           const newMsg = payload.new as any;
-          // Only add if it's for the current conversation
-          if (newMsg.conversation_id === selectedConversation?.id) {
-            const formattedMsg: Message = {
-              id: newMsg.id,
-              sender: newMsg.sender_name || "Unknown",
-              content: newMsg.content,
-              time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              isOwn: newMsg.is_own || false,
-              status: 'delivered'
-            };
-            setMessagesList(prev => [...prev, formattedMsg]);
-            
-            if (!newMsg.is_own) {
-              toast.info(`New message from ${formattedMsg.sender}`, {
-                description: formattedMsg.content.substring(0, 50) + (formattedMsg.content.length > 50 ? '...' : '')
-              });
-            }
+          const formattedMsg: Message = {
+            id: newMsg.id,
+            sender: newMsg.sender_name || "Unknown",
+            content: newMsg.content,
+            time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isOwn: newMsg.sender_id === userId,
+            status: 'delivered'
+          };
+          
+          // Only add if not already in list (avoid duplicates from optimistic update)
+          setMessagesList(prev => {
+            if (prev.some(m => m.id === formattedMsg.id)) return prev;
+            return [...prev, formattedMsg];
+          });
+          
+          if (!formattedMsg.isOwn) {
+            toast.info(`New message from ${formattedMsg.sender}`, {
+              description: formattedMsg.content.substring(0, 50) + (formattedMsg.content.length > 50 ? '...' : '')
+            });
           }
         }
       )
@@ -408,7 +447,7 @@ export default function MessagesPage() {
             prev.map(c => c.id === updated.id ? {
               ...c,
               lastMessage: updated.last_message,
-              lastMessageTime: updated.last_message_time ? new Date(updated.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : c.lastMessageTime,
+              lastMessageTime: updated.last_message_time ? formatMessageTime(updated.last_message_time) : c.lastMessageTime,
               unread: updated.unread_count
             } : c)
           );
@@ -420,11 +459,12 @@ export default function MessagesPage() {
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(conversationsChannel);
     };
-  }, [fetchData, selectedConversation?.id]);
+  }, [selectedConversation?.id, userId]);
 
   const handleRefresh = async () => {
+    if (!userId) return;
     setIsRefreshing(true);
-    await fetchData();
+    await fetchData(userId);
     if (selectedConversation) {
       await fetchMessages(selectedConversation.id);
     }
@@ -480,7 +520,7 @@ export default function MessagesPage() {
   });
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation || !userId) return;
 
     setSending(true);
     const tempId = Date.now();
@@ -502,10 +542,11 @@ export default function MessagesPage() {
         .from('messages')
         .insert([{
           conversation_id: selectedConversation.id,
+          sender_id: userId,
           content: newMsg.content,
           sender_name: "You",
           is_own: true,
-          status: 'sent',
+          read: false,
           created_at: new Date().toISOString()
         }])
         .select()
@@ -520,6 +561,15 @@ export default function MessagesPage() {
           : m
       ));
 
+      // Update conversation's last message in DB
+      await supabase
+        .from('conversations')
+        .update({
+          last_message: newMsg.content,
+          last_message_time: new Date().toISOString()
+        })
+        .eq('id', selectedConversation.id);
+
       // Simulate delivery after a moment
       setTimeout(() => {
         setMessagesList(prev => prev.map(m => 
@@ -529,7 +579,7 @@ export default function MessagesPage() {
         ));
       }, 1000);
 
-      // Update conversation's last message
+      // Update conversation's last message locally
       setConversationsList(prev => prev.map(c => 
         c.id === selectedConversation.id 
           ? { ...c, lastMessage: newMsg.content, lastMessageTime: "Just now" }

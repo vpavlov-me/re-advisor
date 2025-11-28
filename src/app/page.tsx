@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
+import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
 import {
   AreaChart,
   Area,
@@ -62,6 +63,11 @@ import {
   Bar
 } from 'recharts';
 
+// Icon mapping for dynamic rendering
+const iconMap: Record<string, LucideIcon> = {
+  Lock, User, KeyRound, Map, Briefcase, CreditCard, IdCard, UserCheck
+};
+
 type ProfileStep = {
   id: number;
   label: string;
@@ -70,49 +76,12 @@ type ProfileStep = {
   href: string;
 };
 
-// Profile setup steps - Row 1
-const initialProfileStepsRow1: ProfileStep[] = [
-  { id: 1, label: "Account & Security", icon: Lock, status: "completed" as const, href: "/settings" },
-  { id: 2, label: "Basic Profile", icon: User, status: "current" as const, href: "/profile" },
-  { id: 3, label: "Credentials", icon: KeyRound, status: "pending" as const, href: "/profile" },
-  { id: 4, label: "Expertise Mapping", icon: Map, status: "pending" as const, href: "/profile" },
-];
-
-// Profile setup steps - Row 2
-const initialProfileStepsRow2: ProfileStep[] = [
-  { id: 5, label: "Services & Pricing", icon: Briefcase, status: "pending" as const, href: "/services" },
-  { id: 6, label: "Payments", icon: CreditCard, status: "pending" as const, href: "/payments" },
-  { id: 7, label: "KYC Verification", icon: IdCard, status: "locked" as const, href: "/settings" },
-  { id: 8, label: "Review & Submit", icon: UserCheck, status: "locked" as const, href: "/profile" },
-];
-
 // Stats data
 const initialStats = [
   { label: "Family Clients", value: "0", icon: Users, href: "/families" },
   { label: "Services", value: "0", icon: Briefcase, href: "/services" },
   { label: "Active consultations", value: "0", icon: MessageSquare, href: "/consultations" },
   { label: "Monthly revenue", value: "$0.00", icon: DollarSign, href: "/payments" },
-];
-
-// Revenue chart data (last 6 months)
-const revenueChartData = [
-  { month: 'Jun', revenue: 2400, consultations: 12 },
-  { month: 'Jul', revenue: 3200, consultations: 16 },
-  { month: 'Aug', revenue: 2800, consultations: 14 },
-  { month: 'Sep', revenue: 4100, consultations: 19 },
-  { month: 'Oct', revenue: 3600, consultations: 17 },
-  { month: 'Nov', revenue: 4800, consultations: 22 },
-];
-
-// Consultation activity data (last 7 days)
-const activityChartData = [
-  { day: 'Mon', scheduled: 3, completed: 2 },
-  { day: 'Tue', scheduled: 5, completed: 4 },
-  { day: 'Wed', scheduled: 2, completed: 2 },
-  { day: 'Thu', scheduled: 4, completed: 3 },
-  { day: 'Fri', scheduled: 6, completed: 5 },
-  { day: 'Sat', scheduled: 1, completed: 1 },
-  { day: 'Sun', scheduled: 0, completed: 0 },
 ];
 
 // Onboarding Step Card
@@ -151,15 +120,16 @@ function OnboardingCard({ step }: { step: { id: number; label: string; icon: Rea
 
 export default function HomePage() {
   const [stats, setStats] = useState(initialStats);
-  const [profileStepsRow1, setProfileStepsRow1] = useState<ProfileStep[]>(initialProfileStepsRow1);
-  const [profileStepsRow2, setProfileStepsRow2] = useState<ProfileStep[]>(initialProfileStepsRow2);
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [consultations, setConsultations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [userName, setUserName] = useState("Advisor");
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState(revenueChartData);
-  const [activityData, setActivityData] = useState(activityChartData);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [activityData, setActivityData] = useState<any[]>([]);
+  const [hasRevenueData, setHasRevenueData] = useState(false);
+  const [hasActivityData, setHasActivityData] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -167,6 +137,10 @@ export default function HomePage() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Sync and fetch onboarding progress
+        const { progress } = await syncOnboardingProgress(user.id);
+        setOnboardingProgress(progress);
+        
         // Fetch Profile
         const { data: profile } = await supabase
           .from('profiles')
@@ -213,13 +187,6 @@ export default function HomePage() {
           { label: "Active consultations", value: consultationsCount?.toString() || "0", icon: MessageSquare, href: "/consultations" },
           { label: "Monthly revenue", value: `$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: DollarSign, href: "/payments" },
         ]);
-
-        // Update Onboarding Steps based on data
-        if ((servicesCount || 0) > 0) {
-          setProfileStepsRow2(prev => prev.map(step => 
-            step.label === "Services & Pricing" ? { ...step, status: "completed" } : step
-          ));
-        }
 
         // Fetch Upcoming Consultations
         const { data: upcomingConsultations } = await supabase
@@ -288,6 +255,7 @@ export default function HomePage() {
           .gte('created_at', sixMonthsAgo.toISOString());
 
         if (monthlyRevenue && monthlyRevenue.length > 0) {
+          setHasRevenueData(true);
           // Group by month
           const revenueByMonth: Record<string, number> = {};
           const consultsByMonth: Record<string, number> = {};
@@ -315,9 +283,10 @@ export default function HomePage() {
             consultations: consultsByMonth[month] || 0
           }));
           
-          if (newChartData.some(d => d.revenue > 0)) {
-            setChartData(newChartData);
-          }
+          setChartData(newChartData);
+        } else {
+          setHasRevenueData(false);
+          setChartData([]);
         }
 
         // Fetch Activity Chart Data (last 7 days)
@@ -331,6 +300,7 @@ export default function HomePage() {
           .gte('date', sevenDaysAgo.toISOString().split('T')[0]);
 
         if (weeklyConsultations && weeklyConsultations.length > 0) {
+          setHasActivityData(true);
           const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           const activityByDay: Record<string, { scheduled: number; completed: number }> = {};
           
@@ -354,9 +324,10 @@ export default function HomePage() {
             completed: activityByDay[day].completed
           }));
 
-          if (newActivityData.some(d => d.scheduled > 0 || d.completed > 0)) {
-            setActivityData(newActivityData);
-          }
+          setActivityData(newActivityData);
+        } else {
+          setHasActivityData(false);
+          setActivityData([]);
         }
       }
     } catch (error) {
@@ -365,6 +336,44 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+  // Convert onboarding progress to ProfileStep format for UI
+  const getProfileSteps = (): { row1: ProfileStep[]; row2: ProfileStep[] } => {
+    if (!onboardingProgress) {
+      return {
+        row1: ONBOARDING_STEPS.slice(0, 4).map((step, i) => ({
+          id: i + 1,
+          label: step.title,
+          icon: iconMap[step.icon] || User,
+          status: i === 0 ? 'current' : 'pending' as const,
+          href: step.href
+        })),
+        row2: ONBOARDING_STEPS.slice(4).map((step, i) => ({
+          id: i + 5,
+          label: step.title,
+          icon: iconMap[step.icon] || User,
+          status: 'locked' as const,
+          href: step.href
+        }))
+      };
+    }
+
+    const allSteps = onboardingProgress.steps.map((step, i) => ({
+      id: i + 1,
+      label: step.config.title,
+      icon: iconMap[step.config.icon] || User,
+      status: getStepStatus(step, onboardingProgress.steps),
+      href: step.config.href
+    }));
+
+    return {
+      row1: allSteps.slice(0, 4),
+      row2: allSteps.slice(4)
+    };
+  };
+
+  const { row1: profileStepsRow1, row2: profileStepsRow2 } = getProfileSteps();
+  const completionPercentage = onboardingProgress?.percentage || 0;
 
   useEffect(() => {
     fetchData();
@@ -477,12 +486,12 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">Status:</span>
-                <Badge variant="secondary">Draft</Badge>
-                <span className="text-sm text-muted-foreground">· Completion: 10%</span>
+                <Badge variant="secondary">{completionPercentage >= 60 ? 'Ready' : 'Draft'}</Badge>
+                <span className="text-sm text-muted-foreground">· Completion: {completionPercentage}%</span>
               </div>
               <span className="text-sm text-muted-foreground">Submission requires ≥ 60% completeness.</span>
             </div>
-            <Progress value={10} className="mt-3 h-1.5" />
+            <Progress value={completionPercentage} className="mt-3 h-1.5" />
           </CardContent>
         </Card>
 
@@ -518,56 +527,66 @@ export default function HomePage() {
                   <CardTitle className="text-base">Revenue Overview</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">Last 6 months</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 text-green-600">
-                    <TrendingUp className="h-4 w-4" />
-                    <span className="text-sm font-medium">+18%</span>
+                {hasRevenueData && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-green-600">
+                      <TrendingUp className="h-4 w-4" />
+                      <span className="text-sm font-medium">+18%</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis 
-                      dataKey="month" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      tickFormatter={(value) => `$${value/1000}k`}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              {hasRevenueData ? (
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false} 
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        tickFormatter={(value) => `$${value/1000}k`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        fillOpacity={1} 
+                        fill="url(#colorRevenue)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
+                  <DollarSign className="h-12 w-12 mb-3 opacity-30" />
+                  <p className="text-sm font-medium">No revenue data yet</p>
+                  <p className="text-xs mt-1">Complete your first paid consultation to see stats</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -579,46 +598,56 @@ export default function HomePage() {
                   <CardTitle className="text-base">Weekly Activity</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">Scheduled vs Completed</p>
                 </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span className="text-muted-foreground">Scheduled</span>
+                {hasActivityData && (
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                      <span className="text-muted-foreground">Scheduled</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Completed</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-muted-foreground">Completed</span>
-                  </div>
-                </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activityData} barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis 
-                      dataKey="day" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar dataKey="scheduled" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {hasActivityData ? (
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={activityData} barGap={4}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis 
+                        dataKey="day" 
+                        axisLine={false} 
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="scheduled" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
+                  <Calendar className="h-12 w-12 mb-3 opacity-30" />
+                  <p className="text-sm font-medium">No activity this week</p>
+                  <p className="text-xs mt-1">Schedule consultations to see your weekly activity</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

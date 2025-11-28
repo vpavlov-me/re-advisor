@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -86,72 +86,16 @@ interface Resource {
   type: ResourceType;
   category: string;
   updatedAt: string;
-  sharedWith: number; // count of families
+  sharedWith: number;
   isFeatured: boolean;
   description: string;
   folder?: string;
 }
 
-// Mock Data
-const initialResources: Resource[] = [
-  {
-    id: "1",
-    title: "Family Constitution Template v2.0",
-    type: "constitution-template",
-    category: "Governance",
-    updatedAt: "2024-01-15",
-    sharedWith: 3,
-    isFeatured: true,
-    description: "Standard 12-section constitution template for new families."
-  },
-  {
-    id: "2",
-    title: "Succession Planning Guide",
-    type: "guide",
-    category: "Succession",
-    updatedAt: "2023-12-10",
-    sharedWith: 5,
-    isFeatured: true,
-    description: "Step-by-step guide for starting succession conversations."
-  },
-  {
-    id: "3",
-    title: "Quarterly Review Checklist",
-    type: "checklist",
-    category: "Operations",
-    updatedAt: "2024-01-05",
-    sharedWith: 2,
-    isFeatured: false,
-    description: "Checklist for preparing quarterly family council meetings."
-  },
-  {
-    id: "4",
-    title: "Intro to Family Governance",
-    type: "video",
-    category: "Education",
-    updatedAt: "2023-11-20",
-    sharedWith: 8,
-    isFeatured: false,
-    description: "15-minute video explaining the basics of governance."
-  },
-  {
-    id: "5",
-    title: "Conflict Resolution Framework",
-    type: "document",
-    category: "Conflict",
-    updatedAt: "2024-01-18",
-    sharedWith: 1,
-    isFeatured: false,
-    description: "PDF framework for managing inter-family conflicts."
-  },
-];
-
-const families = [
-  { id: "f1", name: "Roye Family" },
-  { id: "f2", name: "Corleone Family" },
-  { id: "f3", name: "Soprano Family" },
-  { id: "f4", name: "Bluth Family" },
-];
+interface Family {
+  id: number;
+  name: string;
+}
 
 const getIconForType = (type: ResourceType) => {
   switch (type) {
@@ -164,76 +108,109 @@ const getIconForType = (type: ResourceType) => {
     case "link": return LinkIcon;
     case "checklist": return CheckSquare;
     case "learning-path": return GraduationCap;
-    case "constitution-template": return Star; // Special icon
+    case "constitution-template": return Star;
     default: return File;
   }
 };
 
 export default function KnowledgeCenterPage() {
   const router = useRouter();
-  const [resources, setResources] = useState<Resource[]>(initialResources);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [families, setFamilies] = useState<Family[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [selectedFamilies, setSelectedFamilies] = useState<number[]>([]);
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  
+
+  const fetchData = useCallback(async (advisorId: string) => {
+    try {
+      // Fetch resources
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from('knowledge_resources')
+        .select(`
+          *,
+          shares:resource_shares(count)
+        `)
+        .eq('advisor_id', advisorId);
+      
+      if (resourcesError) throw resourcesError;
+      
+      // Fetch constitution templates
+      const { data: templatesData } = await supabase
+        .from('constitution_templates')
+        .select('*')
+        .eq('advisor_id', advisorId);
+
+      // Fetch families for sharing
+      const { data: familiesData } = await supabase
+        .from('families')
+        .select('id, name')
+        .eq('advisor_id', advisorId);
+
+      if (familiesData) {
+        setFamilies(familiesData);
+      }
+
+      let allResources: Resource[] = [];
+
+      if (resourcesData) {
+        allResources = resourcesData.map((r: any) => ({
+          id: r.id.toString(),
+          title: r.title,
+          type: r.type as ResourceType,
+          category: r.category || "General",
+          updatedAt: r.updated_at ? new Date(r.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sharedWith: r.shares?.[0]?.count || 0,
+          isFeatured: r.is_featured || false,
+          description: r.description || ""
+        }));
+      }
+
+      if (templatesData) {
+        const templates = templatesData.map((t: any) => ({
+          id: `ct-${t.id}`,
+          title: t.title,
+          type: "constitution-template" as ResourceType,
+          category: "Governance",
+          updatedAt: t.updated_at ? new Date(t.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: t.description || "Constitution Template"
+        }));
+        allResources = [...allResources, ...templates];
+      }
+
+      setResources(allResources);
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+      toast.error("Failed to load resources");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchResources = async () => {
-      setIsLoading(true);
-      try {
-        const { data: resourcesData, error: resourcesError } = await supabase
-          .from('Resource')
-          .select('*');
-        
-        if (resourcesError) throw resourcesError;
-        
-        const { data: templatesData, error: templatesError } = await supabase
-          .from('ConstitutionTemplate')
-          .select('*');
-
-        if (templatesError) throw templatesError;
-
-        let allResources: Resource[] = [];
-
-        if (resourcesData) {
-          allResources = [...allResources, ...resourcesData as unknown as Resource[]];
-        }
-
-        if (templatesData) {
-          const templates = templatesData.map((t: any) => ({
-            id: t.id,
-            title: t.title,
-            type: "constitution-template" as ResourceType,
-            category: "Governance",
-            updatedAt: t.created_at ? new Date(t.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            sharedWith: 0,
-            isFeatured: false,
-            description: t.description || "Constitution Template"
-          }));
-          allResources = [...allResources, ...templates];
-        }
-
-        if (allResources.length > 0) {
-          setResources(allResources);
-        }
-      } catch (error) {
-        console.error("Error fetching resources:", error);
-        toast.error("Failed to load resources");
-      } finally {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        fetchData(user.id);
+      } else {
         setIsLoading(false);
       }
     };
-
-    fetchResources();
-  }, []);
+    getUser();
+  }, [fetchData]);
   
   // Form state
   const [newResourceType, setNewResourceType] = useState<string>("");
@@ -289,94 +266,117 @@ export default function KnowledgeCenterPage() {
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!userId) {
+      toast.error("You must be logged in to create resources");
+      return;
+    }
+
     if (newResourceType === "constitution-template") {
       router.push("/knowledge/constitution/create");
       return;
     }
 
-    const newResourceObj = {
-      title: newResource.title || "New Resource",
-      description: newResource.description || "No description provided",
-      type: newResource.type,
-      category: newResource.category,
-      updatedAt: new Date().toISOString().split('T')[0],
-      sharedWith: 0,
-      isFeatured: false
-    };
-
     setIsSaving(true);
     try {
       const { data, error } = await supabase
-        .from('Resource')
-        .insert([newResourceObj])
+        .from('knowledge_resources')
+        .insert([{
+          advisor_id: userId,
+          title: newResource.title || "New Resource",
+          description: newResource.description || "",
+          type: newResource.type,
+          category: newResource.category,
+          is_featured: false,
+          is_published: true
+        }])
         .select();
 
       if (error) throw error;
 
-      if (data) {
-        setResources([data[0] as unknown as Resource, ...resources]);
-        toast.success("Resource created successfully!");
-      } else {
-        // Fallback for demo if DB fails or is not set up
-        const resource: Resource = {
-          ...newResourceObj,
-          id: Math.random().toString(36).substr(2, 9),
+      if (data && data[0]) {
+        const newRes: Resource = {
+          id: data[0].id.toString(),
+          title: data[0].title,
+          type: data[0].type as ResourceType,
+          category: data[0].category,
+          updatedAt: new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: data[0].description || ""
         };
-        setResources([resource, ...resources]);
+        setResources([newRes, ...resources]);
         toast.success("Resource created successfully!");
       }
     } catch (error) {
       console.error("Error creating resource:", error);
-      // Fallback for demo
-      const resource: Resource = {
-        ...newResourceObj,
-        id: Math.random().toString(36).substr(2, 9),
-      };
-      setResources([resource, ...resources]);
-      toast.success("Resource created successfully!");
+      toast.error("Failed to create resource");
     } finally {
       setIsSaving(false);
+      setIsCreateDialogOpen(false);
+      setNewResource({
+        title: "",
+        description: "",
+        type: "document",
+        category: "Governance"
+      });
+      setUploadedFileName(null);
     }
-
-    setIsCreateDialogOpen(false);
-    setNewResource({
-      title: "",
-      description: "",
-      type: "document",
-      category: "Governance"
-    });
-    setUploadedFileName(null);
   };
 
   const handleShareResource = async () => {
-    if (!selectedResource) return;
+    if (!selectedResource || !userId || selectedFamilies.length === 0) return;
     
     setIsSharing(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // Get numeric ID from string (remove 'ct-' prefix if constitution template)
+      const resourceId = selectedResource.id.startsWith('ct-') 
+        ? null 
+        : parseInt(selectedResource.id);
+
+      if (resourceId) {
+        // Insert share records for each selected family
+        const shares = selectedFamilies.map(familyId => ({
+          resource_id: resourceId,
+          family_id: familyId,
+          shared_by: userId
+        }));
+
+        const { error } = await supabase
+          .from('resource_shares')
+          .upsert(shares, { onConflict: 'resource_id,family_id' });
+
+        if (error) throw error;
+      }
+
       // Update local state
       setResources(resources.map(r => 
         r.id === selectedResource.id 
-          ? { ...r, sharedWith: r.sharedWith + 1 } 
+          ? { ...r, sharedWith: r.sharedWith + selectedFamilies.length } 
           : r
       ));
-      toast.success(`"${selectedResource.title}" shared successfully!`);
+      toast.success(`"${selectedResource.title}" shared with ${selectedFamilies.length} families!`);
     } catch (error) {
       console.error("Error sharing resource:", error);
       toast.error("Failed to share resource");
     } finally {
       setIsSharing(false);
       setIsShareDialogOpen(false);
+      setSelectedFamilies([]);
     }
   };
 
   const toggleFeatured = async (id: string) => {
     const resource = resources.find(r => r.id === id);
-    if (!resource) return;
+    if (!resource || id.startsWith('ct-')) return;
     
     try {
+      const { error } = await supabase
+        .from('knowledge_resources')
+        .update({ is_featured: !resource.isFeatured })
+        .eq('id', parseInt(id));
+
+      if (error) throw error;
+
       setResources(resources.map(r => 
         r.id === id ? { ...r, isFeatured: !r.isFeatured } : r
       ));
@@ -390,16 +390,43 @@ export default function KnowledgeCenterPage() {
     }
   };
 
-  const handleDuplicate = (resource: Resource) => {
-    const duplicatedResource: Resource = {
-      ...resource,
-      id: Math.random().toString(36).substr(2, 9),
-      title: `${resource.title} (Copy)`,
-      sharedWith: 0,
-      isFeatured: false
-    };
-    setResources([duplicatedResource, ...resources]);
-    toast.success("Resource duplicated successfully!");
+  const handleDuplicate = async (resource: Resource) => {
+    if (!userId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('knowledge_resources')
+        .insert([{
+          advisor_id: userId,
+          title: `${resource.title} (Copy)`,
+          description: resource.description,
+          type: resource.type,
+          category: resource.category,
+          is_featured: false,
+          is_published: true
+        }])
+        .select();
+
+      if (error) throw error;
+
+      if (data && data[0]) {
+        const duplicatedResource: Resource = {
+          id: data[0].id.toString(),
+          title: data[0].title,
+          type: data[0].type as ResourceType,
+          category: data[0].category,
+          updatedAt: new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: data[0].description || ""
+        };
+        setResources([duplicatedResource, ...resources]);
+        toast.success("Resource duplicated successfully!");
+      }
+    } catch (error) {
+      console.error("Error duplicating resource:", error);
+      toast.error("Failed to duplicate resource");
+    }
   };
 
   const confirmDeleteResource = (resource: Resource) => {
@@ -412,20 +439,27 @@ export default function KnowledgeCenterPage() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('Resource')
-        .delete()
-        .eq('id', selectedResource.id);
-
-      if (error) throw error;
+      // Handle constitution templates differently
+      if (selectedResource.id.startsWith('ct-')) {
+        const templateId = parseInt(selectedResource.id.replace('ct-', ''));
+        const { error } = await supabase
+          .from('constitution_templates')
+          .delete()
+          .eq('id', templateId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('knowledge_resources')
+          .delete()
+          .eq('id', parseInt(selectedResource.id));
+        if (error) throw error;
+      }
       
       setResources(resources.filter(r => r.id !== selectedResource.id));
       toast.success("Resource deleted successfully!");
     } catch (error) {
       console.error("Error deleting resource:", error);
-      // Fallback for demo
-      setResources(resources.filter(r => r.id !== selectedResource.id));
-      toast.success("Resource deleted successfully!");
+      toast.error("Failed to delete resource");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -876,37 +910,53 @@ export default function KnowledgeCenterPage() {
           <DialogHeader>
             <DialogTitle>Share Resource</DialogTitle>
             <DialogDescription>
-              Select families to share "{selectedResource?.title}" with.
+              Select families to share &quot;{selectedResource?.title}&quot; with.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <Label>Select Families</Label>
-              <div className="border rounded-md p-4 space-y-3 max-h-[200px] overflow-y-auto">
-                {families.map((family) => (
-                  <div key={family.id} className="flex items-center space-x-2">
-                    <Checkbox id={family.id} />
-                    <label
-                      htmlFor={family.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {family.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
+              {families.length === 0 ? (
+                <div className="border rounded-md p-4 text-center text-muted-foreground">
+                  No families found. Create a family first.
+                </div>
+              ) : (
+                <div className="border rounded-md p-4 space-y-3 max-h-[200px] overflow-y-auto">
+                  {families.map((family) => (
+                    <div key={family.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`family-${family.id}`}
+                        checked={selectedFamilies.includes(family.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedFamilies([...selectedFamilies, family.id]);
+                          } else {
+                            setSelectedFamilies(selectedFamilies.filter(id => id !== family.id));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`family-${family.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {family.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsShareDialogOpen(false)} disabled={isSharing}>Cancel</Button>
-            <Button onClick={handleShareResource} disabled={isSharing}>
+            <Button type="button" variant="outline" onClick={() => { setIsShareDialogOpen(false); setSelectedFamilies([]); }} disabled={isSharing}>Cancel</Button>
+            <Button onClick={handleShareResource} disabled={isSharing || selectedFamilies.length === 0}>
               {isSharing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Sharing...
                 </>
               ) : (
-                "Share"
+                `Share with ${selectedFamilies.length} ${selectedFamilies.length === 1 ? 'family' : 'families'}`
               )}
             </Button>
           </DialogFooter>
