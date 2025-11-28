@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   twitter TEXT,
   bio TEXT,
   avatar_url TEXT,
+  stripe_customer_id TEXT UNIQUE, -- Stripe customer ID for payments
   joined_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   completion_percentage INTEGER DEFAULT 0,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -455,4 +456,48 @@ CREATE POLICY "Advisors can manage their subscription" ON subscriptions FOR ALL 
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+
+-- ============================================
+-- STORAGE BUCKETS
+-- ============================================
+
+-- Create avatars bucket (run this in Supabase Dashboard SQL Editor)
+-- Note: Storage buckets are managed via Supabase Dashboard or API
+-- This is a reference for the bucket configuration:
+--
+-- INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+-- VALUES (
+--   'avatars',
+--   'avatars',
+--   true,
+--   5242880, -- 5MB
+--   ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+-- );
+--
+-- Storage Policies for avatars bucket:
+
+-- Policy: Allow authenticated users to upload their own avatar
+-- CREATE POLICY "Users can upload own avatar" ON storage.objects
+-- FOR INSERT WITH CHECK (
+--   bucket_id = 'avatars' AND
+--   auth.uid()::text = (storage.foldername(name))[1]
+-- );
+
+-- Policy: Allow authenticated users to update their own avatar
+-- CREATE POLICY "Users can update own avatar" ON storage.objects
+-- FOR UPDATE USING (
+--   bucket_id = 'avatars' AND
+--   auth.uid()::text = (storage.foldername(name))[1]
+-- );
+
+-- Policy: Allow authenticated users to delete their own avatar
+-- CREATE POLICY "Users can delete own avatar" ON storage.objects
+-- FOR DELETE USING (
+--   bucket_id = 'avatars' AND
+--   auth.uid()::text = (storage.foldername(name))[1]
+-- );
+
+-- Policy: Allow public read access for avatars
+-- CREATE POLICY "Anyone can view avatars" ON storage.objects
+-- FOR SELECT USING (bucket_id = 'avatars');
 
