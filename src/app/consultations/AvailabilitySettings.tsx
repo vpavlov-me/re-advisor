@@ -117,11 +117,6 @@ export function AvailabilitySettings() {
       setSaving(false);
     }
   };
-      alert("Error saving availability.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const toggleDay = (dayIndex: number, enabled: boolean) => {
     setSchedule(prev => prev.map((day, i) => 
