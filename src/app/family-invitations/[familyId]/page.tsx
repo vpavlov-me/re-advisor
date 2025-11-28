@@ -1,10 +1,10 @@
-import AcceptInvitePage from "./client";
+import InvitationsClient from "./client";
 
 // Required for static export - generate placeholder paths
 export async function generateStaticParams() {
-  return [{ code: 'placeholder' }];
+  return [{ familyId: 'placeholder' }];
 }
 
 export default function Page() {
-  return <AcceptInvitePage />;
+  return <InvitationsClient />;
 }
