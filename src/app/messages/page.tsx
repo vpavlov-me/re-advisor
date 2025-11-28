@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
   ChevronRight, 
@@ -201,15 +202,109 @@ const currentConversation = {
 };
 
 export default function MessagesPage() {
-  const [conversationsList, setConversationsList] = useState(conversations);
-  const [messagesList, setMessagesList] = useState(messages);
+  const [conversationsList, setConversationsList] = useState<any[]>(conversations);
+  const [messagesList, setMessagesList] = useState<any[]>(messages);
+  const [familiesList, setFamiliesList] = useState<any[]>(familiesData);
+  const [selectedConversation, setSelectedConversation] = useState<any>(conversations[0]);
+  
   const [newMessage, setNewMessage] = useState("");
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newConvStep, setNewConvStep] = useState<"family" | "participants">("family");
-  const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<typeof familiesData[0] | null>(null);
+  const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<any | null>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Families
+        const { data: familiesData } = await supabase
+          .from('Family')
+          .select(`
+            id, 
+            name,
+            members:FamilyMember(id, name, role)
+          `);
+        
+        if (familiesData) {
+          const mappedFamilies = familiesData.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            members: f.members?.map((m: any) => ({
+              id: m.id,
+              name: m.name,
+              role: m.role,
+              avatar: m.name.substring(0, 2).toUpperCase(),
+              online: false // Mock online status
+            })) || []
+          }));
+          setFamiliesList(mappedFamilies);
+        }
+
+        // Fetch Conversations
+        const { data: conversationsData } = await supabase
+          .from('Conversation')
+          .select(`
+            *,
+            family:Family(name)
+          `)
+          .order('last_message_time', { ascending: false });
+
+        if (conversationsData && conversationsData.length > 0) {
+          const mappedConversations = conversationsData.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            familyId: c.family_id,
+            familyName: c.family?.name || "Unknown",
+            participants: [], // We'd need a join table for this, skipping for now
+            lastMessage: c.last_message,
+            lastMessageTime: c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+            unread: c.unread_count || 0,
+            pinned: c.pinned || false,
+            online: false
+          }));
+          setConversationsList(mappedConversations);
+          setSelectedConversation(mappedConversations[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation.id);
+    }
+  }, [selectedConversation]);
+
+  const fetchMessages = async (conversationId: number) => {
+    try {
+      const { data: messagesData } = await supabase
+        .from('Message')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (messagesData) {
+        const mappedMessages = messagesData.map((m: any) => ({
+          id: m.id,
+          sender: m.sender_name || "Unknown", // Assuming sender_name is stored or we join
+          content: m.content,
+          time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOwn: m.is_own || false // Assuming a flag or check against current user
+        }));
+        setMessagesList(mappedMessages);
+      } else {
+        setMessagesList([]); // Clear if no messages found (or keep mock if we want fallback)
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
   // Filter conversations
   const filteredConversations = conversationsList.filter(conv => {
@@ -220,31 +315,40 @@ export default function MessagesPage() {
     return matchesFamily && matchesSearch;
   });
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
 
+    const tempId = Date.now();
     const newMsg = {
-      id: messagesList.length + 1,
+      id: tempId,
       sender: "You",
       content: newMessage,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isOwn: true,
     };
 
+    // Optimistic update
     setMessagesList([...messagesList, newMsg]);
     setNewMessage("");
 
-    // Simulate reply
-    setTimeout(() => {
-      const replyMsg = {
-        id: messagesList.length + 2,
-        sender: "Clara Harrington",
-        content: "That's a great point. Let's discuss this further in our next meeting.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isOwn: false,
-      };
-      setMessagesList(prev => [...prev, replyMsg]);
-    }, 3000);
+    try {
+      const { error } = await supabase
+        .from('Message')
+        .insert([{
+          conversation_id: selectedConversation.id,
+          content: newMsg.content,
+          sender_name: "You", // Simplified
+          is_own: true,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) {
+        console.error("Error sending message:", error);
+        // Revert optimistic update if needed
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const handleOpenNewConversation = () => {
@@ -336,7 +440,7 @@ export default function MessagesPage() {
                       <Button variant="outline" size="sm">
                         <Filter className="h-4 w-4 mr-2" />
                         {selectedFamilyFilter 
-                          ? familiesData.find(f => f.id === selectedFamilyFilter)?.name 
+                          ? familiesList.find(f => f.id === selectedFamilyFilter)?.name 
                           : "All Families"}
                         <ChevronDown className="h-3 w-3 ml-2" />
                       </Button>
@@ -349,7 +453,7 @@ export default function MessagesPage() {
                         All Families
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {familiesData.map((family) => (
+                      {familiesList.map((family) => (
                         <DropdownMenuItem 
                           key={family.id}
                           onClick={() => setSelectedFamilyFilter(family.id)}
@@ -388,8 +492,9 @@ export default function MessagesPage() {
                           </div>
                         )}
                         <div 
+                          onClick={() => setSelectedConversation(conv)}
                           className={`p-3 rounded-[10px] cursor-pointer transition-colors ${
-                            conv.id === 1 ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
+                            selectedConversation?.id === conv.id ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
                           }`}
                         >
                           <div className="flex items-start gap-3">
@@ -443,18 +548,21 @@ export default function MessagesPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>CP</AvatarFallback>
+                      <AvatarFallback>{selectedConversation?.title.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="font-semibold text-foreground">{currentConversation.title}</h2>
+                      <h2 className="font-semibold text-foreground">{selectedConversation?.title || "Select a conversation"}</h2>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {currentConversation.participants.map((p, i) => (
-                          <span key={p.name} className="flex items-center gap-1">
-                            {p.online && <Circle className="h-2 w-2 fill-green-500 text-green-500" />}
-                            {p.name}
-                            {i < currentConversation.participants.length - 1 && ","}
-                          </span>
-                        ))}
+                        {selectedConversation?.participants && selectedConversation.participants.length > 0 ? (
+                          selectedConversation.participants.map((p: any, i: number) => (
+                            <span key={i} className="flex items-center gap-1">
+                              {p}
+                              {i < selectedConversation.participants.length - 1 && ","}
+                            </span>
+                          ))
+                        ) : (
+                          <span>{selectedConversation?.familyName}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -563,7 +671,7 @@ export default function MessagesPage() {
             <div className="space-y-4 py-4">
               <p className="text-sm text-muted-foreground">Select a family to start a conversation:</p>
               <div className="space-y-2">
-                {familiesData.map((family) => (
+                {familiesList.map((family) => (
                   <div
                     key={family.id}
                     onClick={() => handleSelectFamily(family)}

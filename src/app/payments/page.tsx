@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
   ChevronRight, 
@@ -104,9 +105,9 @@ const settingsNav = [
 ];
 
 export default function PaymentsPage() {
-  const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods);
-  const [bankAccountsList, setBankAccountsList] = useState(bankAccounts);
-  const [transactions, setTransactions] = useState(initialTransactions);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>(initialPaymentMethods);
+  const [bankAccountsList, setBankAccountsList] = useState<any[]>(bankAccounts);
+  const [transactions, setTransactions] = useState<any[]>(initialTransactions);
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddMethodOpen, setIsAddMethodOpen] = useState(false);
   const [isAddBankOpen, setIsAddBankOpen] = useState(false);
@@ -116,48 +117,157 @@ export default function PaymentsPage() {
   const [isPayoutProcessing, setIsPayoutProcessing] = useState(false);
   const [isStripeConnected, setIsStripeConnected] = useState(false);
 
-  const handleAddCard = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Payment Methods
+        const { data: methods } = await supabase.from('PaymentMethod').select('*');
+        if (methods && methods.length > 0) {
+          setPaymentMethods(methods.map((m: any) => ({
+            id: m.id,
+            type: m.type,
+            brand: m.brand,
+            last4: m.last4,
+            expiry: m.expiry,
+            isDefault: m.is_default
+          })));
+        }
+
+        // Fetch Bank Accounts
+        const { data: banks } = await supabase.from('BankAccount').select('*');
+        if (banks && banks.length > 0) {
+          setBankAccountsList(banks.map((b: any) => ({
+            id: b.id,
+            bankName: b.bank_name,
+            accountType: b.account_type,
+            last4: b.last4,
+            isDefault: b.is_default
+          })));
+        }
+
+        // Fetch Transactions
+        const { data: txs } = await supabase.from('Transaction').select('*').order('date', { ascending: false });
+        if (txs && txs.length > 0) {
+          setTransactions(txs.map((t: any) => ({
+            id: t.id,
+            date: new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            description: t.description,
+            amount: t.amount,
+            status: t.status,
+            type: t.type
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching payment data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleAddCard = async () => {
     const method = {
-      id: paymentMethods.length + 1,
-      type: "card" as const,
+      type: "card",
       brand: "Visa", // Mock detection
       last4: newCard.number.slice(-4),
       expiry: newCard.expiry,
-      isDefault: false,
+      is_default: false,
     };
-    setPaymentMethods([...paymentMethods, method]);
+
+    try {
+      const { data, error } = await supabase.from('PaymentMethod').insert([method]).select();
+      
+      if (data) {
+        const newMethod = {
+          id: data[0].id,
+          type: data[0].type,
+          brand: data[0].brand,
+          last4: data[0].last4,
+          expiry: data[0].expiry,
+          isDefault: data[0].is_default
+        };
+        setPaymentMethods([...paymentMethods, newMethod]);
+      } else {
+        // Fallback
+        setPaymentMethods([...paymentMethods, { ...method, id: Date.now(), isDefault: false }]);
+      }
+    } catch (error) {
+      console.error("Error adding card:", error);
+    }
+
     setIsAddMethodOpen(false);
     setNewCard({ number: "", expiry: "", cvc: "", name: "" });
   };
 
-  const handleAddBank = () => {
+  const handleAddBank = async () => {
     const account = {
-      id: bankAccountsList.length + 1,
-      bankName: newBank.bankName,
-      accountType: newBank.accountType,
+      bank_name: newBank.bankName,
+      account_type: newBank.accountType,
       last4: newBank.accountNumber.slice(-4),
-      isDefault: false,
+      is_default: false,
     };
-    setBankAccountsList([...bankAccountsList, account]);
+
+    try {
+      const { data, error } = await supabase.from('BankAccount').insert([account]).select();
+      
+      if (data) {
+        const newAccount = {
+          id: data[0].id,
+          bankName: data[0].bank_name,
+          accountType: data[0].account_type,
+          last4: data[0].last4,
+          isDefault: data[0].is_default
+        };
+        setBankAccountsList([...bankAccountsList, newAccount]);
+      } else {
+        // Fallback
+        setBankAccountsList([...bankAccountsList, { ...account, id: Date.now(), bankName: account.bank_name, accountType: account.account_type, isDefault: false }]);
+      }
+    } catch (error) {
+      console.error("Error adding bank:", error);
+    }
+
     setIsAddBankOpen(false);
     setNewBank({ bankName: "", accountType: "Checking", accountNumber: "", routingNumber: "" });
   };
 
-  const handleRequestPayout = () => {
+  const handleRequestPayout = async () => {
     setIsPayoutProcessing(true);
-    setTimeout(() => {
-      setBalance(0);
-      setIsPayoutProcessing(false);
-      // Add transaction
+    
+    // Simulate API call
+    setTimeout(async () => {
+      const amountStr = `+$${balance.toFixed(2)}`;
       const newTx = {
-        id: transactions.length + 1,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: new Date().toISOString(),
         description: "Payout - Manual Request",
-        amount: `+$${balance.toFixed(2)}`,
-        status: "completed" as const,
+        amount: amountStr,
+        status: "completed",
         type: "payout"
       };
-      setTransactions([newTx, ...transactions]);
+
+      try {
+        const { data } = await supabase.from('Transaction').insert([newTx]).select();
+        
+        if (data) {
+          const savedTx = {
+            id: data[0].id,
+            date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            description: data[0].description,
+            amount: data[0].amount,
+            status: data[0].status,
+            type: data[0].type
+          };
+          setTransactions([savedTx, ...transactions]);
+        } else {
+           // Fallback
+           setTransactions([{ ...newTx, id: Date.now(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }, ...transactions]);
+        }
+      } catch (error) {
+        console.error("Error requesting payout:", error);
+      }
+
+      setBalance(0);
+      setIsPayoutProcessing(false);
     }, 2000);
   };
 

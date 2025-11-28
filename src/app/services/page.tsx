@@ -132,10 +132,31 @@ export default function ServicesPage() {
       const { data, error } = await supabase
         .from('Service')
         .select('*')
-        .order('createdAt', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      if (data) setServices(data);
+      if (error) {
+        console.log("Supabase error (using mock data if needed):", error.message);
+        return;
+      }
+      
+      if (data) {
+        const mappedServices: Service[] = data.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          priceModel: s.price_model,
+          priceAmount: s.price_amount,
+          price: s.price,
+          duration: s.duration,
+          category: s.category,
+          status: s.status,
+          activeClients: s.active_clients || 0,
+          totalRevenue: s.total_revenue || "$0",
+          rating: s.rating || 0,
+          reviews: s.reviews || 0
+        }));
+        setServices(mappedServices);
+      }
     } catch (error) {
       console.error("Error fetching services:", error);
     }
@@ -195,9 +216,14 @@ export default function ServicesPage() {
 
     const formattedPrice = `$${formData.priceAmount}`; // Simple formatting
     const serviceData = {
-      ...formData,
+      name: formData.name,
+      description: formData.description,
+      price_model: formData.priceModel,
+      price_amount: parseFloat(formData.priceAmount) || 0,
       price: formattedPrice,
-      priceAmount: parseFloat(formData.priceAmount) || 0,
+      duration: formData.duration,
+      category: formData.category,
+      status: formData.status
     };
     
     try {
@@ -218,15 +244,31 @@ export default function ServicesPage() {
           .single();
       }
 
-      const { data: savedService, error } = result;
+      const { data: savedData, error } = result;
 
       if (error) throw error;
 
-      if (savedService) {
+      if (savedData) {
+        const mappedService: Service = {
+          id: savedData.id,
+          name: savedData.name,
+          description: savedData.description,
+          priceModel: savedData.price_model,
+          priceAmount: savedData.price_amount,
+          price: savedData.price,
+          duration: savedData.duration,
+          category: savedData.category,
+          status: savedData.status,
+          activeClients: savedData.active_clients || 0,
+          totalRevenue: savedData.total_revenue || "$0",
+          rating: savedData.rating || 0,
+          reviews: savedData.reviews || 0
+        };
+
         if (editingService) {
-          setServices(services.map(s => s.id === editingService.id ? savedService : s));
+          setServices(services.map(s => s.id === editingService.id ? mappedService : s));
         } else {
-          setServices([savedService, ...services]);
+          setServices([mappedService, ...services]);
         }
         setIsSheetOpen(false);
       }

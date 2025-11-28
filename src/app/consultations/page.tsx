@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
   ChevronRight, 
@@ -385,11 +386,75 @@ function ConsultationCard({
 }
 
 export default function ConsultationsPage() {
-  const [consultations, setConsultations] = useState(allConsultations);
-  const [selectedConsultation, setSelectedConsultation] = useState<typeof allConsultations[0] | null>(null);
+  const [consultations, setConsultations] = useState<Consultation[]>(allConsultations);
+  const [families, setFamilies] = useState<{id: number, name: string}[]>([]);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Families for the dropdown
+        const { data: familiesData } = await supabase
+          .from('Family')
+          .select('id, name');
+        
+        if (familiesData) {
+          setFamilies(familiesData);
+        }
+
+        // Fetch Consultations
+        const { data: consultationsData, error } = await supabase
+          .from('Consultation')
+          .select(`
+            *,
+            family:Family(name),
+            members:ConsultationMember(
+              member:FamilyMember(name, role)
+            )
+          `)
+          .order('date', { ascending: true });
+
+        if (error) {
+          console.log("Supabase error (using mock data):", error.message);
+          return;
+        }
+
+        if (consultationsData && consultationsData.length > 0) {
+          const mappedConsultations: Consultation[] = consultationsData.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            family: c.family?.name || "Unknown Family",
+            type: c.type,
+            date: new Date(c.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            time: c.time,
+            duration: c.duration || "1 hour",
+            status: c.status,
+            paymentStatus: c.payment_status || "awaiting",
+            price: c.price || "$0",
+            members: c.members?.map((m: any) => ({
+              name: m.member.name,
+              initials: m.member.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+              role: m.member.role
+            })) || [],
+            moreMembers: 0, // simplified for now
+            meetingLink: c.meeting_link,
+            location: c.location,
+            agenda: c.agenda || [],
+            notes: c.notes || "",
+            documents: c.documents || []
+          }));
+          setConsultations(mappedConsultations);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
   
   // Schedule Form State
   const [scheduleForm, setScheduleForm] = useState({
@@ -410,13 +475,24 @@ export default function ConsultationsPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(["Video Call", "In-Person"]);
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string[]>(["paid", "awaiting", "overdue"]);
 
-  const handleCancelConsultation = (id: number) => {
-    setConsultations(prev => prev.map(c => 
-      c.id === id ? { ...c, status: "cancelled" } : c
-    ));
-    // If the cancelled one is currently open in sheet, update it too
-    if (selectedConsultation?.id === id) {
-      setSelectedConsultation(prev => prev ? { ...prev, status: "cancelled" } : null);
+  const handleCancelConsultation = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('Consultation')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+
+      if (!error) {
+        setConsultations(prev => prev.map(c => 
+          c.id === id ? { ...c, status: "cancelled" } : c
+        ));
+        // If the cancelled one is currently open in sheet, update it too
+        if (selectedConsultation?.id === id) {
+          setSelectedConsultation(prev => prev ? { ...prev, status: "cancelled" } : null);
+        }
+      }
+    } catch (error) {
+      console.error("Error cancelling consultation:", error);
     }
   };
 
@@ -429,33 +505,78 @@ export default function ConsultationsPage() {
     }
   };
 
-  const handleSchedule = () => {
+  const handleSchedule = async () => {
     if (!scheduleForm.family || !scheduleForm.date || !scheduleForm.time || !scheduleForm.topic) {
       return; // Basic validation
     }
 
-    const newId = Math.max(...consultations.map(c => c.id)) + 1;
-    const newConsultation = {
-      id: newId,
+    const selectedFamily = families.find(f => f.id.toString() === scheduleForm.family);
+    const familyName = selectedFamily ? selectedFamily.name : "Unknown Family";
+
+    const newConsultationObj = {
       title: scheduleForm.topic,
-      family: scheduleForm.family === "roye" ? "Roye Family" : "Blackwell Family", // Simple mapping
-      type: scheduleForm.type as "Video Call" | "In-Person",
-      date: new Date(scheduleForm.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      time: scheduleForm.time, // Should format this better in real app
-      duration: "1 hour", // Default
-      status: "scheduled" as const,
-      paymentStatus: "awaiting" as const,
-      price: "$500", // Default
-      members: [], // Empty for now
-      moreMembers: 0,
-      meetingLink: scheduleForm.type === "Video Call" ? "https://zoom.us/j/..." : undefined,
-      location: scheduleForm.type === "In-Person" ? "TBD" : undefined,
+      family_id: parseInt(scheduleForm.family),
+      type: scheduleForm.type,
+      date: scheduleForm.date,
+      time: scheduleForm.time,
+      duration: "1 hour",
+      status: "scheduled",
+      payment_status: "awaiting",
+      price: "$500",
+      meeting_link: scheduleForm.type === "Video Call" ? "https://zoom.us/j/..." : null,
+      location: scheduleForm.type === "In-Person" ? "TBD" : null,
       agenda: [],
       notes: "",
-      documents: [],
+      documents: []
     };
 
-    setConsultations([newConsultation, ...consultations]);
+    try {
+      const { data, error } = await supabase
+        .from('Consultation')
+        .insert([newConsultationObj])
+        .select();
+
+      if (data) {
+        const newConsultation: Consultation = {
+          id: data[0].id,
+          title: data[0].title,
+          family: familyName,
+          type: data[0].type,
+          date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          time: data[0].time,
+          duration: data[0].duration,
+          status: data[0].status,
+          paymentStatus: data[0].payment_status,
+          price: data[0].price,
+          members: [],
+          moreMembers: 0,
+          meetingLink: data[0].meeting_link,
+          location: data[0].location,
+          agenda: data[0].agenda || [],
+          notes: data[0].notes || "",
+          documents: data[0].documents || []
+        };
+        setConsultations([newConsultation, ...consultations]);
+      } else {
+        // Fallback
+        const newId = Math.max(...consultations.map(c => c.id)) + 1;
+        const fallbackConsultation: Consultation = {
+          ...newConsultationObj,
+          id: newId,
+          family: familyName,
+          date: new Date(scheduleForm.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          paymentStatus: "awaiting",
+          members: [],
+          moreMembers: 0,
+          meetingLink: newConsultationObj.meeting_link || undefined,
+          location: newConsultationObj.location || undefined,
+        } as Consultation;
+        setConsultations([fallbackConsultation, ...consultations]);
+      }
+    } catch (error) {
+      console.error("Error creating consultation:", error);
+    }
+
     setIsScheduleOpen(false);
     setScheduleForm({
       family: "",
@@ -1019,8 +1140,9 @@ export default function ConsultationsPage() {
                 onChange={(e) => setScheduleForm({...scheduleForm, family: e.target.value})}
               >
                 <option value="">Select family...</option>
-                <option value="roye">Roye Family</option>
-                <option value="blackwell">Blackwell Family</option>
+                {families.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
               </select>
             </div>
             <div className="grid gap-2">
