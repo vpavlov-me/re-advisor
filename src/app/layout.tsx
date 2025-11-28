@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 // Get base path from environment
 const basePath = process.env.NODE_ENV === 'production' ? '/re-advisor' : '';
+const isProd = process.env.NODE_ENV === 'production';
 
 export const metadata: Metadata = {
   title: "RE:Advisor | Dashboard",
@@ -64,25 +65,26 @@ export default function RootLayout({
           </AuthProvider>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  var basePath = '${basePath}';
-                  navigator.serviceWorker.register(basePath + '/sw.js', { scope: basePath + '/' }).then(
-                    function(registration) {
-                      console.log('ServiceWorker registration successful');
-                    },
-                    function(err) {
-                      console.log('ServiceWorker registration failed: ', err);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
+        {isProd && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/re-advisor/sw.js', { scope: '/re-advisor/' }).then(
+                      function(registration) {
+                        console.log('ServiceWorker registration successful');
+                      },
+                      function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                      }
+                    );
+                  });
+                }
+              `,
+            }}
+          />
+        )}
       </body>
     </html>
   );
