@@ -28,10 +28,14 @@ const navItems = [
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center", className)}>
-      <span className="text-lg font-medium text-gray-900">(</span>
-      <span className="text-lg font-bold text-primary">RE:</span>
-      <span className="text-lg font-medium text-gray-900">Advisor</span>
+    <div className={cn("relative h-8 w-32", className)}>
+      <Image 
+        src="/logo.svg" 
+        alt="RE:Advisor Logo" 
+        fill
+        className="object-contain object-left"
+        priority
+      />
     </div>
   );
 }

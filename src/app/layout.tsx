@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "RE:Advisor | Dashboard",
   description: "A platform for trusted professionals to support family governance processes",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

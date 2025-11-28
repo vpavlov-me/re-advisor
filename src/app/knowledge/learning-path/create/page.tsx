@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   ChevronLeft, 
   Save, 
@@ -62,6 +64,7 @@ type Module = {
 };
 
 export default function CreateLearningPathPage() {
+  const router = useRouter();
   const [title, setTitle] = useState("Untitled Learning Path");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("governance");
@@ -70,8 +73,34 @@ export default function CreateLearningPathPage() {
   ]);
   const [activeModuleId, setActiveModuleId] = useState<string>("m1");
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const activeModule = modules.find(m => m.id === activeModuleId);
+
+  const handleSave = async (asDraft = true) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('LearningPath')
+        .insert([{
+          title,
+          description,
+          category,
+          modules,
+          // isDraft: asDraft // Assuming schema supports it
+        }]);
+
+      if (error) throw error;
+
+      alert(asDraft ? "Draft saved successfully!" : "Learning Path published successfully!");
+      router.push("/knowledge");
+    } catch (error) {
+      console.error("Error saving learning path:", error);
+      alert("Failed to save learning path. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const addModule = () => {
     const newId = `m${modules.length + 1}`;
@@ -132,11 +161,11 @@ export default function CreateLearningPathPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => handleSave(true)} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
               Save Draft
             </Button>
-            <Button>
+            <Button onClick={() => handleSave(false)} disabled={isSaving}>
               <Upload className="h-4 w-4 mr-2" />
               Publish
             </Button>

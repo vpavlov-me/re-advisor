@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
   ChevronRight, 
@@ -319,7 +320,82 @@ export default function FamiliesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
-  const [familiesList, setFamiliesList] = useState(families);
+  const [familiesList, setFamiliesList] = useState<Family[]>(families);
+
+  useEffect(() => {
+    const fetchFamilies = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('Family')
+          .select(`
+            *,
+            members:FamilyMember(*),
+            tasks:Task(*),
+            services:Service(*),
+            consultations:Consultation(*)
+          `);
+        
+        if (error) {
+          console.log("Supabase error (using mock data):", error.message);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const mappedFamilies: Family[] = data.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            members: f.members?.length || 0,
+            role: (f.role as AdvisorRole) || "consultant",
+            meetings: { 
+              upcoming: f.consultations?.filter((c: any) => c.status === 'scheduled').length || 0, 
+              nextDate: f.consultations?.find((c: any) => c.status === 'scheduled')?.date || null 
+            },
+            payment: (f.payment_status as any) || "pending",
+            status: (f.status as any) || "active",
+            lastContact: f.last_contact ? new Date(f.last_contact).toLocaleDateString() : "Recently",
+            industry: f.industry || "Unknown",
+            location: f.location || "Unknown",
+            email: f.email || "",
+            phone: f.phone || "",
+            since: f.created_at ? new Date(f.created_at).toLocaleDateString() : "Recently",
+            description: f.description || "",
+            membersList: f.members?.map((m: any) => ({
+              name: m.name,
+              role: m.role,
+              avatar: m.name.substring(0, 2).toUpperCase(),
+              email: m.email
+            })) || [],
+            tasks: f.tasks?.map((t: any) => ({
+              id: t.id,
+              title: t.title,
+              dueDate: t.due_date,
+              priority: t.priority,
+              completed: t.completed
+            })) || [],
+            services: f.services?.map((s: any) => ({
+              name: s.name,
+              status: s.status,
+              progress: s.progress,
+              price: s.price,
+              startDate: s.start_date
+            })) || [],
+            consultations: f.consultations?.map((c: any) => ({
+              title: c.title,
+              date: c.date,
+              time: c.time,
+              status: c.status
+            })) || []
+          }));
+          
+          setFamiliesList(mappedFamilies);
+        }
+      } catch (error) {
+        console.error("Error fetching families:", error);
+      }
+    };
+
+    fetchFamilies();
+  }, []);
 
   // Invite Form State
   const [inviteForm, setInviteForm] = useState({

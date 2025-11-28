@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
   ChevronRight, 
@@ -174,6 +175,48 @@ export default function KnowledgeCenterPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const { data: resourcesData } = await supabase
+          .from('Resource')
+          .select('*');
+        
+        const { data: templatesData } = await supabase
+          .from('ConstitutionTemplate')
+          .select('*');
+
+        let allResources: Resource[] = [];
+
+        if (resourcesData) {
+          allResources = [...allResources, ...resourcesData as unknown as Resource[]];
+        }
+
+        if (templatesData) {
+          const templates = templatesData.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            type: "constitution-template" as ResourceType,
+            category: "Governance",
+            updatedAt: t.created_at ? new Date(t.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            sharedWith: 0,
+            isFeatured: false,
+            description: t.description || "Constitution Template"
+          }));
+          allResources = [...allResources, ...templates];
+        }
+
+        if (allResources.length > 0) {
+          setResources(allResources);
+        }
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+      }
+    };
+
+    fetchResources();
+  }, []);
+  
   // Form state
   const [newResourceType, setNewResourceType] = useState<string>("");
   const [categories, setCategories] = useState(["Governance", "Succession", "Wealth Management", "Conflict Resolution"]);
@@ -225,7 +268,7 @@ export default function KnowledgeCenterPage() {
     return matchesSearch && matchesType;
   });
 
-  const handleCreateResource = (e: React.FormEvent) => {
+  const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (newResourceType === "constitution-template") {
@@ -233,8 +276,7 @@ export default function KnowledgeCenterPage() {
       return;
     }
 
-    const resource: Resource = {
-      id: Math.random().toString(36).substr(2, 9),
+    const newResourceObj = {
       title: newResource.title || "New Resource",
       description: newResource.description || "No description provided",
       type: newResource.type,
@@ -244,7 +286,26 @@ export default function KnowledgeCenterPage() {
       isFeatured: false
     };
 
-    setResources([resource, ...resources]);
+    try {
+      const { data, error } = await supabase
+        .from('Resource')
+        .insert([newResourceObj])
+        .select();
+
+      if (data) {
+        setResources([data[0] as unknown as Resource, ...resources]);
+      } else {
+        // Fallback for demo if DB fails or is not set up
+        const resource: Resource = {
+          ...newResourceObj,
+          id: Math.random().toString(36).substr(2, 9),
+        };
+        setResources([resource, ...resources]);
+      }
+    } catch (error) {
+      console.error("Error creating resource:", error);
+    }
+
     setIsCreateDialogOpen(false);
     setNewResource({
       title: "",
