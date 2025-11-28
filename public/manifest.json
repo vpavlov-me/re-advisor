@@ -2,14 +2,15 @@
   "name": "Family Advisor Portal",
   "short_name": "Advisor",
   "description": "Professional family advisory and wealth management platform",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "./favicon.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "maskable any"
@@ -21,19 +22,19 @@
       "name": "Families",
       "short_name": "Families",
       "description": "View your family clients",
-      "url": "/families"
+      "url": "./families"
     },
     {
       "name": "Messages",
       "short_name": "Messages",
       "description": "Check your messages",
-      "url": "/messages"
+      "url": "./messages"
     },
     {
       "name": "Consultations",
       "short_name": "Consults",
       "description": "View upcoming consultations",
-      "url": "/consultations"
+      "url": "./consultations"
     }
   ],
   "related_applications": [],

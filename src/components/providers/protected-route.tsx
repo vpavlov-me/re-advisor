@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-provider";
 
@@ -8,16 +10,37 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { loading } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Client-side auth check (fallback for static export where middleware doesn't run)
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      const loginUrl = `/auth/login?redirect=${encodeURIComponent(pathname)}`;
+      router.replace(loginUrl);
+    }
+  }, [loading, isAuthenticated, pathname, router]);
 
   // Show loading state while checking auth
-  // Middleware handles all redirects, we just need to wait for auth to initialize
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show nothing (redirect will happen)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Redirecting to login...</p>
         </div>
       </div>
     );
