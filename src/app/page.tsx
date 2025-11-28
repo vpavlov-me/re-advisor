@@ -204,7 +204,7 @@ export default function HomePage() {
           .limit(4);
 
         if (upcomingConsultations) {
-          setConsultations(upcomingConsultations.map(c => ({
+          setConsultations(upcomingConsultations.map((c: any) => ({
             id: c.id,
             title: c.title,
             family: c.families?.name || "Unknown Family",
@@ -229,7 +229,7 @@ export default function HomePage() {
           .limit(3);
 
         if (recentConversations) {
-          setMessages(recentConversations.map(c => ({
+          setMessages(recentConversations.map((c: any) => ({
             id: c.id,
             title: c.title || c.families?.name || "Conversation",
             sender: c.families?.name || "Family Member", // Simplified

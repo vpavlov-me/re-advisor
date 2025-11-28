@@ -311,7 +311,7 @@ export default function MessagesPage() {
     const matchesFamily = selectedFamilyFilter === null || conv.familyId === selectedFamilyFilter;
     const matchesSearch = searchQuery === "" || 
       conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.participants.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()));
+      conv.participants.some((p: string) => p.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesFamily && matchesSearch;
   });
 
@@ -365,7 +365,7 @@ export default function MessagesPage() {
 
   const handleAddEntireFamily = () => {
     if (selectedFamilyForConv) {
-      setSelectedParticipants(selectedFamilyForConv.members.map(m => m.id));
+      setSelectedParticipants(selectedFamilyForConv.members.map((m: { id: number }) => m.id));
     }
   };
 
@@ -381,14 +381,16 @@ export default function MessagesPage() {
     const newId = Math.max(...conversations.map(c => c.id)) + 1;
     const familyName = selectedFamilyForConv?.name || "Unknown Family";
     
+    type FamilyMember = { id: number; name: string; role: string; avatar: string; online: boolean };
+    
     const newConversation = {
       id: newId,
       title: "New Conversation", // Could be dynamic based on input
       familyId: selectedFamilyForConv?.id || 0,
       familyName: familyName,
       participants: selectedFamilyForConv?.members
-        .filter(m => selectedParticipants.includes(m.id))
-        .map(m => m.name) || [],
+        .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
+        .map((m: FamilyMember) => m.name) || [],
       lastMessage: "Started a new conversation",
       lastMessageTime: "Just now",
       unread: 0,
@@ -501,7 +503,7 @@ export default function MessagesPage() {
                             <div className="relative">
                               <Avatar className="h-10 w-10">
                                 <AvatarFallback>
-                                  {conv.title.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                                  {conv.title.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                                 </AvatarFallback>
                               </Avatar>
                               {conv.online && (
@@ -601,7 +603,7 @@ export default function MessagesPage() {
                         {!message.isOwn && (
                           <Avatar className="h-8 w-8 shrink-0">
                             <AvatarFallback className="text-xs">
-                              {message.sender.split(" ").map(n => n[0]).join("")}
+                              {message.sender.split(" ").map((n: string) => n[0]).join("")}
                             </AvatarFallback>
                           </Avatar>
                         )}
@@ -713,7 +715,7 @@ export default function MessagesPage() {
               <p className="text-sm text-muted-foreground">Select participants for the conversation:</p>
               
               <div className="space-y-2">
-                {selectedFamilyForConv?.members.map((member) => (
+                {selectedFamilyForConv?.members.map((member: { id: number; name: string; role: string; avatar: string; online: boolean }) => (
                   <div
                     key={member.id}
                     onClick={() => toggleParticipant(member.id)}
