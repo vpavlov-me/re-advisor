@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission, Vision & Values Workshop - Interactive Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .stage-indicator {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .timer {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .participants-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lang-selector {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Stage Navigation */
+        .stage-nav {
+            background: #f8f9fa;
+            padding: 16px 32px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .stage-nav-item {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stage-nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .stage-nav-item:hover:not(.active) {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .stage-nav-item.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 24px;
+            padding: 32px;
+            min-height: 600px;
+        }
+
+        /* Left Panel - Facilitator */
+        .facilitator-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .facilitator-panel h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #495057;
+        }
+
+        .facilitator-section {
+            margin-bottom: 20px;
+        }
+
+        .facilitator-section h4 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .progress-stat {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .tip-list {
+            list-style: none;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .tip-list li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tip-list li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Center Canvas */
+        .main-canvas {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e9ecef;
+        }
+
+        .canvas-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .canvas-header h2 {
+            font-size: 22px;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .canvas-subtitle {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* Right Panel - Participants */
+        .participants-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .participants-list {
+            margin-bottom: 20px;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.online { background: #28a745; }
+        .status-dot.away { background: #ffc107; }
+
+        .chat-box {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .chat-sender {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .auto-save {
+            color: #28a745;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Screen 0 - Orientation */
+        .orientation-screen {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hero-section h1 {
+            font-size: 36px;
+            color: #212529;
+            margin-bottom: 16px;
+        }
+
+        .roadmap-visual {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 32px 0;
+            position: relative;
+        }
+
+        .roadmap-visual::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            z-index: 0;
+        }
+
+        .roadmap-stage {
+            flex: 1;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .roadmap-stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .roadmap-stage .stage-number {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            line-height: 32px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .roadmap-stage h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+
+        .roadmap-stage p {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .info-panel h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-list {
+            list-style: none;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .info-list li {
+            padding-left: 24px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .info-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .roles-panel {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .prep-section {
+            background: #d1ecf1;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .prep-checklist {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .prep-checklist li {
+            padding: 8px;
+            margin-bottom: 4px;
+        }
+
+        .prep-checklist input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin: 16px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover {
+            background: #f8f9fa;
+            border-color: #764ba2;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        /* Timeline Screen */
+        .timeline-container {
+            position: relative;
+            height: 400px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 32px 20px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, white 100%);
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 4px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+        }
+
+        .timeline-events {
+            display: flex;
+            gap: 120px;
+            padding: 0 40px;
+            position: relative;
+            min-width: 100%;
+        }
+
+        .timeline-decade {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .decade-marker {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .decade-label {
+            position: absolute;
+            top: 40px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .timeline-event-card {
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timeline-event-card:hover {
+            transform: translateX(-50%) translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-event-card h4 {
+            font-size: 14px;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .timeline-event-card p {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .event-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .add-event-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        /* Values Discovery Screen */
+        .values-board {
+            display: grid;
+            gap: 24px;
+        }
+
+        .values-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .values-section h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #212529;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .value-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .value-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .value-card.selected {
+            border-color: #667eea;
+            background: #e7f5ff;
+        }
+
+        .value-card h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+
+        .value-card .votes {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .final-values-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            min-height: 200px;
+            background: white;
+        }
+
+        .final-values-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .final-value-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-value {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #212529;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .facilitator-panel,
+            .participants-panel {
+                display: none;
+            }
+
+            .info-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .stage-content {
+            display: none;
+        }
+
+        .stage-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <h1>Воркшоп: Миссия, Видение и Ценности</h1>
+                <div class="stage-indicator" id="stageIndicator">Этап 0: Ориентация</div>
+            </div>
+            <div class="header-meta">
+                <div class="timer" id="timer">3:30:00</div>
+                <div class="participants-count">
+                    <span>👥</span>
+                    <span id="participantCount">12 из 15</span>
+                </div>
+                <select class="lang-selector">
+                    <option value="ru">RU</option>
+                    <option value="en">EN</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Stage Navigation -->
+        <div class="stage-nav">
+            <div class="stage-nav-item active" data-stage="0">
+                <span>📋</span>
+                <span>Ориентация</span>
+            </div>
+            <div class="stage-nav-item" data-stage="1">
+                <span>🌟</span>
+                <span>Этап 1: Таймлайн семьи</span>
+            </div>
+            <div class="stage-nav-item" data-stage="2">
+                <span>⭐</span>
+                <span>Этап 2: Открытие ценностей</span>
+            </div>
+            <div class="stage-nav-item" data-stage="3">
+                <span>📊</span>
+                <span>Этап 3: Матрица ценностей</span>
+            </div>
+            <div class="stage-nav-item" data-stage="4">
+                <span>🎯</span>
+                <span>Этап 4: Миссия семьи</span>
+            </div>
+            <div class="stage-nav-item" data-stage="5">
+                <span>🔮</span>
+                <span>Этап 5: Видение</span>
+            </div>
+            <div class="stage-nav-item" data-stage="6">
+                <span>🔗</span>
+                <span>Этап 6: Интеграция</span>
+            </div>
+        </div>
+
+        <!-- Stage 0: Orientation -->
+        <div id="stage0" class="stage-content active">
+            <div class="orientation-screen fade-in">
+                <div class="hero-section">
+                    <h1>Добро пожаловать в воркшоп "История, Ценности, Миссия, Видение"</h1>
+                    <p style="font-size: 18px; color: #6c757d; margin-top: 16px;">
+                        Вместе мы создадим фундамент семейной идентичности и определим курс на следующие 10-20 лет
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <p style="color: #6c757d;">Длительность: 3-3.5 часа | До начала: <strong>00:15:30</strong></p>
+                </div>
+
+                <div class="roadmap-visual">
+                    <div class="roadmap-stage">
+                        <div class="stage-number">1</div>
+                        <h3>Таймлайн</h3>
+                        <p>40 мин 🌟</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">2</div>
+                        <h3>Ценности</h3>
+                        <p>45 мин ⭐</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">3</div>
+                        <h3>Матрица</h3>
+                        <p>30 мин</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">4</div>
+                        <h3>Миссия</h3>
+                        <p>35 мин</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">5</div>
+                        <h3>Видение</h3>
+                        <p>40 мин</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">6</div>
+                        <h3>Интеграция</h3>
+                        <p>20 мин</p>
+                    </div>
+                </div>
+
+                <div class="info-panels">
+                    <div class="info-panel">
+                        <h2>🎯 Почему это важно</h2>
+                        <ul class="info-list">
+                            <li>Объединяет цель семьи</li>
+                            <li>Направляет сложные решения</li>
+                            <li>Строит многопоколенное наследие</li>
+                            <li>Укрепляет семейные связи</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            📊 <strong>85%</strong> успешных семейных бизнесов имеют четко сформулированные ценности
+                        </p>
+                    </div>
+
+                    <div class="info-panel">
+                        <h2>🔗 Как будут использованы результаты</h2>
+                        <ul class="info-list">
+                            <li>Интеграция в Семейную Конституцию</li>
+                            <li>Фреймворк принятия решений</li>
+                            <li>Кодекс поведения семьи</li>
+                            <li>Стратегическое планирование</li>
+                            <li>Ежегодный процесс обзора</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            Все результаты автоматически интегрируются в модули платформы!
+                        </p>
+                    </div>
+
+                    <div class="info-panel roles-panel">
+                        <h2>👥 Ваша роль в воркшопе</h2>
+                        <ul class="info-list">
+                            <li><strong>Консультант:</strong> Модератор процесса</li>
+                            <li><strong>Семейный Совет:</strong> Ведут артикуляцию ценностей</li>
+                            <li><strong>Члены семьи:</strong> Делятся историями и опытом</li>
+                            <li><strong>Наблюдатели:</strong> Экспертная перспектива</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            Это коллективное повествование - голос каждого важен!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="prep-section">
+                    <h2 style="margin-bottom: 16px;">📝 Подготовка к воркшопу (опционально, но полезно)</h2>
+                    <ul class="prep-checklist">
+                        <li><input type="checkbox"> Семейные фотографии из разных эпох</li>
+                        <li><input type="checkbox"> Старые семейные документы/письма</li>
+                        <li><input type="checkbox"> Истории от старшего поколения</li>
+                        <li><input type="checkbox"> Личные размышления: "Что делает нашу семью особенной?"</li>
+                        <li><input type="checkbox"> Черновик важных для вас ценностей</li>
+                    </ul>
+                    <div class="upload-zone">
+                        <p style="font-size: 24px; margin-bottom: 8px;">📤</p>
+                        <p><strong>Перетащите файлы сюда</strong> или нажмите для выбора</p>
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">JPG, PNG, PDF (макс 10 MB)</p>
+                    </div>
+                    <p style="font-size: 13px; color: #6c757d; margin-top: 12px;">
+                        💡 <strong>Совет:</strong> Возьмите интервью у старшего поколения перед воркшопом!
+                        Спросите: "Какими ценностями жили наши предки?" и "Каковы были определяющие моменты в нашей семье?"
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary">📝 Пройти предварительный опрос (10 мин)</button>
+                    <button class="btn btn-secondary">🔧 Технический тест</button>
+                    <button class="btn btn-primary" onclick="startWorkshop()">🚀 Я готов начать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 1: Timeline -->
+        <div id="stage1" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Панель модератора</h3>
+
+                    <div class="facilitator-section">
+                        <h4>Прогресс таймлайна:</h4>
+                        <div class="progress-stat">Событий добавлено: 8/15</div>
+                        <div class="progress-stat">Охвачено десятилетий: 4</div>
+                        <div class="progress-stat">Прикреплено фото: 3</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>⏰ Временные ориентиры:</h4>
+                        <div class="progress-stat">Discovery: 15 мин</div>
+                        <div class="progress-stat">Deep dive: 20 мин</div>
+                        <div class="progress-stat">Уроки: 5 мин</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Советы модератора:</h4>
+                        <ul class="tip-list">
+                            <li>Как семья начала бизнес?</li>
+                            <li>Самый большой поворотный момент?</li>
+                            <li>Самый гордый момент?</li>
+                            <li>Самое трудное решение?</li>
+                        </ul>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>🎨 Выявленные темы:</h4>
+                        <div class="progress-stat" style="font-size: 13px;">
+                            • Независимость<br>
+                            • Единство семьи<br>
+                            • Инновации<br>
+                            • Служение обществу
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>🌟 Таймлайн семьи и уроки</h2>
+                        <p class="canvas-subtitle">Создайте интерактивную историю вашей семьи, фиксируя ключевые события, решения и извлеченные уроки</p>
+                    </div>
+
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-events">
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1950е</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1970е</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1990е</div>
+                                <div class="timeline-event-card">
+                                    <div class="event-icon">🏭</div>
+                                    <h4>Основание компании</h4>
+                                    <p><strong>Март 1987</strong></p>
+                                    <p style="margin-top: 8px;">Отказались от инвесторов, сохранили семейный контроль</p>
+                                    <p style="margin-top: 8px; color: #667eea;"><strong>Урок:</strong> Независимость важнее быстрых денег</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">2010е</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">2020е</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="add-event-btn" onclick="openAddEventModal()">➕ Добавить событие на таймлайн</button>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Участники (12)</h3>
+                    <div class="participants-list">
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Мария (печатает...)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Иван (СС)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Елена (СС)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Алексей (Модератор)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot away"></div>
+                            <span>Давид</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 24px;">💬 Чат историй</h3>
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Мария:</div>
+                            <div>Мой отец всегда говорил, что семья превыше всего</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Иван:</div>
+                            <div>Помните, как мы почти все потеряли в 2008?</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Елена:</div>
+                            <div>Именно тогда мы научились стойкости</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Поделитесь своей историей...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 2: Values Discovery -->
+        <div id="stage2" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Прогресс открытия</h3>
+
+                    <div class="facilitator-section">
+                        <h4>Фаза 1: Дивергенция</h4>
+                        <div class="progress-stat">✅ Завершена (15 мин)</div>
+                        <div class="progress-stat">23 ценности предложены</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>Фаза 2: Группировка</h4>
+                        <div class="progress-stat">✅ Завершена (15 мин)</div>
+                        <div class="progress-stat">6 кластеров созданы</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>Фаза 3: Конвергенция</h4>
+                        <div class="progress-stat">⏳ В процессе (15 мин)</div>
+                        <div class="progress-stat">Цель: 5-7 ценностей</div>
+                        <div class="progress-stat">Текущих: 0 финальных</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Советы:</h4>
+                        <ul class="tip-list">
+                            <li>Какие самые важные?</li>
+                            <li>Что не подлежит обсуждению?</li>
+                            <li>Максимум 7, стремитесь к 5</li>
+                            <li>Должны быть аутентичными</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>⭐ Открытие основных ценностей</h2>
+                        <p class="canvas-subtitle">Определите 5-7 основных ценностей семьи через структурированный брейнсторминг</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 67%;"></div>
+                        </div>
+                        <p style="font-size: 14px; color: #6c757d; margin-top: 8px;">Текущая фаза: КОНВЕРГЕНЦИЯ - сузьте с 23 до 5-7 финальных ценностей</p>
+                    </div>
+
+                    <div class="values-board">
+                        <div class="values-section">
+                            <h3>🎨 ИЗ ТЕМ ТАЙМЛАЙНА (автогенерация)</h3>
+                            <div class="values-grid">
+                                <div class="value-card">
+                                    <h4>Независимость</h4>
+                                    <p class="votes">⭐ 4 упоминания в таймлайне</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Добавить</button>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Единство семьи</h4>
+                                    <p class="votes">⭐ 3 упоминания в таймлайне</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Добавить</button>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Долгосрочное мышление</h4>
+                                    <p class="votes">⭐ 3 упоминания в таймлайне</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Добавить</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="values-section">
+                            <h3>💡 ПРЕДЛОЖЕНО СЕМЬЁЙ</h3>
+                            <div class="values-grid">
+                                <div class="value-card">
+                                    <h4>Честность и Порядочность</h4>
+                                    <p class="votes">👍 9 голосов</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Кластер: Честность, Порядочность, Доверие</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Инновации</h4>
+                                    <p class="votes">👍 7 голосов</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Кластер: Инновации, Креативность</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Служение обществу</h4>
+                                    <p class="votes">👍 5 голосов</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Кластер: Благотворительность, Социум</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Стойкость</h4>
+                                    <p class="votes">👍 4 голоса</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Кластер: Стойкость, Упорство</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" style="margin-top: 16px; font-size: 13px;">Посмотреть все 23 предложения →</button>
+                        </div>
+
+                        <div class="values-section">
+                            <h3>🏆 ФИНАЛЬНЫЙ СПИСОК ЦЕННОСТЕЙ (5-7)</h3>
+                            <div class="final-values-zone">
+                                <p style="color: #6c757d; font-size: 14px;">Текущих: 0 ценностей</p>
+                                <p style="color: #6c757d; font-size: 13px; margin-top: 8px;">Перетащите ценности сюда сверху или нажмите [Добавить]</p>
+                                <div class="final-values-list" id="finalValuesList">
+                                    <!-- Final values will appear here -->
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 16px;">➕ Добавить кастомную ценность</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Активных: 12</h3>
+
+                    <div style="margin-top: 20px; background: white; border-radius: 8px; padding: 16px;">
+                        <h4 style="font-size: 14px; margin-bottom: 12px;">🗳️ Активное голосование:</h4>
+                        <p style="font-size: 13px; margin-bottom: 12px;">"Какая ценность важнее всего?"</p>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Честность</span>
+                                <span>9</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 75%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Инновации</span>
+                                <span>7</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 58%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Служение</span>
+                                <span>5</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 42%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 12px;">⏱️ Голосование закрывается через 2:00</p>
+                    </div>
+
+                    <h3 style="margin-top: 24px;">💬 Чат</h3>
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Елена:</div>
+                            <div>Честность всегда была нашим фундаментом</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Иван:</div>
+                            <div>Согласен, но инновации тоже критичны</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Ваше мнение...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stages 3-6 placeholder -->
+        <div id="stage3" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="main-canvas" style="margin: 0 auto; max-width: 800px;">
+                    <div class="canvas-header">
+                        <h2>📊 Этап 3: Матрица ценностей и поведения</h2>
+                        <p class="canvas-subtitle">Определите конкретные поведенческие индикаторы для каждой ценности</p>
+                    </div>
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <p style="font-size: 18px; color: #6c757d;">Этот экран будет содержать:</p>
+                        <ul style="text-align: left; max-width: 500px; margin: 24px auto; line-height: 2;">
+                            <li>Матрицу ценностей с поведенческими индикаторами</li>
+                            <li>Примеры "живем ценностью" vs "не живем"</li>
+                            <li>Интерактивные карточки для каждой ценности</li>
+                            <li>Систему проверки дилемм</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stage4" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="main-canvas" style="margin: 0 auto; max-width: 800px;">
+                    <div class="canvas-header">
+                        <h2>🎯 Этап 4: Заявление о миссии семьи</h2>
+                        <p class="canvas-subtitle">Создайте четкое заявление о цели и воздействии семьи</p>
+                    </div>
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <p style="font-size: 18px; color: #6c757d;">Этот экран будет содержать:</p>
+                        <ul style="text-align: left; max-width: 500px; margin: 24px auto; line-height: 2;">
+                            <li>Структурированный редактор миссии</li>
+                            <li>Шаблоны и примеры заявлений о миссии</li>
+                            <li>Совместное редактирование в реальном времени</li>
+                            <li>Голосование за финальную версию</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stage5" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="main-canvas" style="margin: 0 auto; max-width: 800px;">
+                    <div class="canvas-header">
+                        <h2>🔮 Этап 5: Видение на 10-20 лет</h2>
+                        <p class="canvas-subtitle">Определите стратегическое будущее состояние по 6 измерениям</p>
+                    </div>
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <p style="font-size: 18px; color: #6c757d;">Этот экран будет содержать:</p>
+                        <ul style="text-align: left; max-width: 500px; margin: 24px auto; line-height: 2;">
+                            <li>Canvas видения с 6 измерениями</li>
+                            <li>Интерактивную визуализацию будущего</li>
+                            <li>Временные метки и этапы</li>
+                            <li>Связь с миссией и ценностями</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stage6" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="main-canvas" style="margin: 0 auto; max-width: 800px;">
+                    <div class="canvas-header">
+                        <h2>🔗 Этап 6: Интеграция и следующие шаги</h2>
+                        <p class="canvas-subtitle">Интеграция артефактов в систему управления</p>
+                    </div>
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <p style="font-size: 18px; color: #6c757d;">Этот экран будет содержать:</p>
+                        <ul style="text-align: left; max-width: 500px; margin: 24px auto; line-height: 2;">
+                            <li>Карту интеграции в Конституцию</li>
+                            <li>Предпросмотр всех созданных артефактов</li>
+                            <li>План следующих шагов</li>
+                            <li>Экспорт документации</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="auto-save">
+                <span>💾</span>
+                <span>Автосохранение...</span>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="previousStage()">← Предыдущий этап</button>
+                <button class="btn btn-primary" onclick="nextStage()">Следующий этап →</button>
+            </div>
+            <div style="font-size: 14px; color: #6c757d;">
+                Прогресс: <span id="progressText">0/6</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="addEventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Добавить событие в таймлайн семьи</h2>
+            </div>
+            <form>
+                <div class="form-group">
+                    <label>Название события *</label>
+                    <input type="text" placeholder="Например: Основание компании" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата/Период *</label>
+                    <input type="text" placeholder="Например: Март 1987 или 1990-е" required>
+                </div>
+                <div class="form-group">
+                    <label>Категория события</label>
+                    <select>
+                        <option>Деловая веха</option>
+                        <option>Семейная веха</option>
+                        <option>Преодоленный кризис</option>
+                        <option>Важное решение</option>
+                        <option>Достижение</option>
+                        <option>Смена поколений</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🎯 Ключевое решение или выбор</label>
+                    <textarea placeholder="Какой принципиальный выбор сделала семья?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>🏆 Чем мы гордимся</label>
+                    <textarea placeholder="Что делает этот момент особенным или важным?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📚 Извлеченный урок *</label>
+                    <textarea placeholder="Какая мудрость пришла из этого опыта?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📷 Прикрепить фото или документ</label>
+                    <input type="file" accept="image/*,.pdf">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить и добавить в таймлайн</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentStage = 0;
+        const totalStages = 6;
+
+        // Stage Navigation
+        document.querySelectorAll('.stage-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stage = parseInt(this.dataset.stage);
+                goToStage(stage);
+            });
+        });
+
+        function goToStage(stage) {
+            // Hide all stages
+            document.querySelectorAll('.stage-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show selected stage
+            document.getElementById(`stage${stage}`).classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.stage-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (parseInt(item.dataset.stage) < stage) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+            document.querySelector(`[data-stage="${stage}"]`).classList.add('active');
+
+            currentStage = stage;
+            updateStageIndicator();
+            updateProgress();
+        }
+
+        function nextStage() {
+            if (currentStage < totalStages) {
+                goToStage(currentStage + 1);
+            }
+        }
+
+        function previousStage() {
+            if (currentStage > 0) {
+                goToStage(currentStage - 1);
+            }
+        }
+
+        function updateStageIndicator() {
+            const stageNames = [
+                'Этап 0: Ориентация',
+                'Этап 1: Таймлайн семьи',
+                'Этап 2: Открытие ценностей',
+                'Этап 3: Матрица ценностей',
+                'Этап 4: Миссия семьи',
+                'Этап 5: Видение',
+                'Этап 6: Интеграция'
+            ];
+            document.getElementById('stageIndicator').textContent = stageNames[currentStage];
+        }
+
+        function updateProgress() {
+            document.getElementById('progressText').textContent = `${currentStage}/${totalStages}`;
+            const progressPercent = (currentStage / totalStages) * 100;
+            document.querySelectorAll('.progress-fill').forEach(fill => {
+                fill.style.width = `${progressPercent}%`;
+            });
+        }
+
+        function startWorkshop() {
+            goToStage(1);
+        }
+
+        // Modal functions
+        function openAddEventModal() {
+            document.getElementById('addEventModal').classList.add('active');
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('addEventModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('addEventModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddEventModal();
+            }
+        });
+
+        // Timer countdown
+        let timeLeft = 12600; // 3.5 hours in seconds
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent =
+                    `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        // Auto-save simulation
+        setInterval(() => {
+            const autoSaveElement = document.querySelector('.auto-save span:last-child');
+            autoSaveElement.textContent = 'Сохранено ✓';
+            setTimeout(() => {
+                autoSaveElement.textContent = 'Автосохранение...';
+            }, 2000);
+        }, 10000);
+
+        // Add value to final list (for Stage 2)
+        document.querySelectorAll('.value-card button').forEach(button => {
+            button.addEventListener('click', function() {
+                const valueCard = this.closest('.value-card');
+                const valueName = valueCard.querySelector('h4').textContent;
+                addToFinalList(valueName);
+            });
+        });
+
+        function addToFinalList(valueName) {
+            const finalList = document.getElementById('finalValuesList');
+            const badge = document.createElement('div');
+            badge.className = 'final-value-badge fade-in';
+            badge.innerHTML = `
+                ${valueName}
+                <button class="remove-value" onclick="this.parentElement.remove()">×</button>
+            `;
+            finalList.appendChild(badge);
+        }
+
+        // Roadmap stage hover preview
+        document.querySelectorAll('.roadmap-stage').forEach(stage => {
+            stage.addEventListener('click', function() {
+                const stageNum = Array.from(this.parentElement.children).indexOf(this) + 1;
+                goToStage(stageNum);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 4: Criteria Weighting - Succession Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen">
+
+    <!-- Workshop Header -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl">👔</span>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h1 class="text-lg font-bold text-gray-900">Stage 4 of 9: Selection Criteria & Weights</h1>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">35 min</span>
+                        </div>
+                        <p class="text-xs text-gray-500">Vote on importance of each criterion • Collaborative weighting</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-600 font-semibold">⏱️ 30:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-3">
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-purple-600 transition-all duration-500" style="width: 44%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Stage 4: Selection Criteria & Weights</span>
+                    <span>44% complete</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- Instructions -->
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+            <div class="flex items-start gap-4">
+                <span class="text-4xl">⚖️</span>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Weight Your Selection Criteria</h2>
+                    <p class="text-gray-700 mb-3">
+                        Assign importance weights to each criterion. Total must equal 100%. Higher weight = more important in candidate evaluation.
+                    </p>
+                    <div class="flex items-center gap-4 text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-600 rounded"></div>
+                            <span>Critical (20-30%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-orange-500 rounded"></div>
+                            <span>Important (10-20%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                            <span>Moderate (5-10%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-green-500 rounded"></div>
+                            <span>Minor (<5%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+
+            <!-- Main: Criteria Weighting -->
+            <div class="col-span-2 space-y-4">
+
+                <!-- Criterion 1 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">📊</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-900">Strategic Thinking & Vision</div>
+                                <div class="text-sm text-gray-600">Long-term planning, market foresight, innovation</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-red-600">25%</div>
+                            <div class="text-xs text-gray-500">Critical</div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="50" value="25"
+                           class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           onchange="updateWeight(this, 'strategic')">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0%</span>
+                        <span id="strategic-weight">25%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+
+                <!-- Criterion 2 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">👥</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-900">Leadership & People Management</div>
+                                <div class="text-sm text-gray-600">Team building, talent development, coaching</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-orange-600">20%</div>
+                            <div class="text-xs text-gray-500">Important</div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="50" value="20"
+                           class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           onchange="updateWeight(this, 'leadership')">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0%</span>
+                        <span id="leadership-weight">20%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+
+                <!-- Criterion 3 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">💰</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-900">Financial Acumen</div>
+                                <div class="text-sm text-gray-600">P&L management, ROI focus, capital allocation</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-orange-600">15%</div>
+                            <div class="text-xs text-gray-500">Important</div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="50" value="15"
+                           class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           onchange="updateWeight(this, 'financial')">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0%</span>
+                        <span id="financial-weight">15%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+
+                <!-- Criterion 4 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🤝</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-900">Stakeholder Management</div>
+                                <div class="text-sm text-gray-600">Board, investors, clients, family</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-orange-600">15%</div>
+                            <div class="text-xs text-gray-500">Important</div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="50" value="15"
+                           class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           onchange="updateWeight(this, 'stakeholder')">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0%</span>
+                        <span id="stakeholder-weight">15%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+
+                <!-- Criterion 5 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-600">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🎯</span>
+                            <div>
+                                <div class="text-xl font-bold text-gray-900">Values Alignment & Culture Fit</div>
+                                <div class="text-sm text-gray-600">Family values, cultural stewardship</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-yellow-600">10%</div>
+                            <div class="text-xs text-gray-500">Moderate</div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="50" value="10"
+                           class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           onchange="updateWeight(this, 'values')">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>0%</span>
+                        <span id="values-weight">10%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+
+                <!-- Additional Criteria -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <div class="text-center text-gray-600">
+                        <p class="text-sm mb-2"><strong>5 more criteria</strong> with total weight: <strong>15%</strong></p>
+                        <button class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                            + Expand All Criteria (Innovation 5%, Change Mgmt 4%, Risk Mgmt 3%, Communication 2%, Decision Making 1%)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Total Validation -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-3 border-green-600 rounded-xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-2xl font-bold text-gray-900 mb-2">Total Weight Allocation</div>
+                            <div class="text-sm text-gray-600">All criteria must sum to 100%</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-6xl font-bold text-green-600">100%</div>
+                            <div class="flex items-center gap-2 justify-center mt-2">
+                                <span class="text-2xl text-green-600">✓</span>
+                                <span class="text-sm font-semibold text-green-700">Valid</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voting Panel -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-blue-300">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">👥 Stakeholder Voting</h3>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center justify-between p-3 bg-green-50 border-2 border-green-600 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">OA</div>
+                                <span class="font-semibold">Owner A</span>
+                            </div>
+                            <span class="text-green-600 text-2xl">✓ Approved</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 border-2 border-green-600 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">OB</div>
+                                <span class="font-semibold">Owner B</span>
+                            </div>
+                            <span class="text-green-600 text-2xl">✓ Approved</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 border-2 border-green-600 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">BC</div>
+                                <span class="font-semibold">Board Chair</span>
+                            </div>
+                            <span class="text-green-600 text-2xl">✓ Approved</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-green-50 border-2 border-green-600 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🎉</span>
+                            <div>
+                                <div class="font-bold text-green-900">Consensus Reached!</div>
+                                <div class="text-sm text-green-800">All voting stakeholders approved criteria weights</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="space-y-6">
+
+                <!-- Weight Distribution Chart -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">📊 Weight Distribution</h3>
+
+                    <div class="space-y-2">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold">Strategic Thinking</span>
+                                <span class="font-bold text-red-600">25%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-600" style="width: 25%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold">Leadership</span>
+                                <span class="font-bold text-orange-600">20%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-orange-600" style="width: 20%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold">Financial</span>
+                                <span class="font-bold text-orange-500">15%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-orange-500" style="width: 15%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold">Stakeholder Mgmt</span>
+                                <span class="font-bold text-orange-500">15%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-orange-500" style="width: 15%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold">Values Alignment</span>
+                                <span class="font-bold text-yellow-600">10%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-yellow-600" style="width: 10%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-semibold text-gray-600">Other 5 criteria</span>
+                                <span class="font-bold text-gray-600">15%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-400" style="width: 15%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t-2 border-gray-200">
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>TOTAL:</span>
+                            <span class="text-green-600">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Best Practices -->
+                <div class="bg-blue-50 rounded-xl shadow-lg p-6 border border-blue-200">
+                    <h3 class="text-lg font-bold text-blue-900 mb-3">💡 Weighting Tips</h3>
+                    <ul class="text-sm text-blue-800 space-y-2">
+                        <li>• Top 3-5 criteria should be 60-70% of total</li>
+                        <li>• Avoid too many high weights (dilutes importance)</li>
+                        <li>• Consider future needs, not just today</li>
+                        <li>• Align with strategic priorities</li>
+                    </ul>
+                </div>
+
+                <!-- Benchmarks -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">📈 Industry Benchmarks</h3>
+                    <div class="text-sm space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Strategic thinking:</span>
+                            <span class="font-bold">20-30%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Leadership:</span>
+                            <span class="font-bold">15-25%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-700">Financial:</span>
+                            <span class="font-bold">10-20%</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-3">
+                            Based on 500+ CEO assessments
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="space-y-3">
+                    <button onclick="window.location.href='stage-5-assessment.html'"
+                            class="w-full py-4 bg-primary text-white rounded-xl font-bold hover:bg-orange-600 transition-all shadow-lg">
+                        Lock Weights → Stage 5
+                    </button>
+                    <button onclick="window.location.href='stage-3-role-profiles.html'"
+                            class="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50">
+                        ← Back to Stage 3
+                    </button>
+                    <button class="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200">
+                        💾 Save Draft
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function updateWeight(slider, criterion) {
+            const weight = slider.value;
+            document.getElementById(criterion + '-weight').textContent = weight + '%';
+
+            // In real app: recalculate total, warn if not 100%
+            console.log('Updated ' + criterion + ' to ' + weight + '%');
+        }
+    </script>
+
+</body>
+</html>

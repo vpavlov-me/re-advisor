@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Request Detail - Advisor Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        /* Header */
+        .header {
+            background-color: white;
+            border-bottom: 1px solid #d2d2d7;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav a.active {
+            color: #0066cc;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            max-width: 1400px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #86868b;
+        }
+
+        .breadcrumb a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Page Header Card */
+        .header-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 24px;
+        }
+
+        .family-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .family-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        .family-details h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .family-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+            color: #86868b;
+        }
+
+        .service-id {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f7;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.in-progress {
+            background-color: #d1f4e0;
+            color: #0d7a42;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            margin-top: 24px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .timeline-bar {
+            height: 8px;
+            background: #f5f5f7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .timeline-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34c759 0%, #30d158 100%);
+            transition: width 0.5s;
+        }
+
+        .timeline-dates {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #86868b;
+        }
+
+        /* Layout */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Deliverables Checklist */
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 12px;
+            background: #f9f9fb;
+            border-radius: 8px;
+        }
+
+        .checklist-checkbox {
+            margin-top: 2px;
+        }
+
+        .checklist-item.completed {
+            opacity: 0.7;
+        }
+
+        .checklist-item.completed .checklist-text {
+            text-decoration: line-through;
+        }
+
+        /* Deliverables List */
+        .deliverables-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .deliverable-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 16px;
+            background: #f9f9fb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .deliverable-item:hover {
+            background: #eeeef0;
+        }
+
+        .deliverable-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .deliverable-content {
+            flex: 1;
+        }
+
+        .deliverable-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .deliverable-meta {
+            font-size: 13px;
+            color: #86868b;
+        }
+
+        /* Activity Log */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            background: #f5f5f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: 13px;
+            color: #86868b;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 88px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f9ff;
+        }
+
+        /* Payment Info */
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .payment-divider {
+            height: 1px;
+            background: #d2d2d7;
+            margin: 16px 0;
+        }
+
+        /* Info Box */
+        .info-box {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .info-box.blue {
+            background: #e8f4fd;
+            color: #0052a3;
+            border-left: 4px solid #0066cc;
+        }
+
+        /* Access List */
+        .access-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .access-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9f9fb;
+            border-radius: 8px;
+        }
+
+        .access-badge {
+            padding: 4px 12px;
+            background: #e8f4fd;
+            color: #0066cc;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="#" class="logo">Reluna Advisor Portal</a>
+            <nav class="nav">
+                <a href="#">Dashboard</a>
+                <a href="#">Families</a>
+                <a href="#" class="active">My Services</a>
+                <a href="#">Calendar</a>
+                <a href="#">Profile</a>
+            </nav>
+            <div class="header-right">
+                <div class="user-avatar">SJ</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="#">Dashboard</a>
+        <span>›</span>
+        <a href="#">My Services</a>
+        <span>›</span>
+        <span>Service Detail</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <a href="#" class="back-link">← Back to My Services</a>
+
+        <!-- Header Card -->
+        <div class="header-card">
+            <div class="header-top">
+                <div class="family-info">
+                    <div class="family-avatar">SF</div>
+                    <div class="family-details">
+                        <h1>Succession Planning Advisory</h1>
+                        <div class="family-meta">
+                            <span>👥 Smith Family</span>
+                            <span>•</span>
+                            <span class="service-id">SR-20251015-F123-001</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-badge in-progress">In Progress</div>
+            </div>
+
+            <div class="timeline-section">
+                <div class="timeline-header">
+                    <span style="color: #86868b; font-size: 14px;">Progress</span>
+                    <span style="font-weight: 600;">60% Complete • 23 days remaining</span>
+                </div>
+                <div class="timeline-bar">
+                    <div class="timeline-fill" style="width: 60%;"></div>
+                </div>
+                <div class="timeline-dates">
+                    <span>Started Oct 15, 2025</span>
+                    <span>Due Dec 15, 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Service Details -->
+                <div class="card">
+                    <h2 class="card-title">📋 Service Details</h2>
+
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: #86868b; margin-bottom: 8px;">DESCRIPTION</h3>
+                        <p style="line-height: 1.6; color: #1d1d1f;">
+                            Comprehensive succession planning support including family tree analysis,
+                            wealth transfer strategy, and custom succession documentation.
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: #86868b; margin-bottom: 12px;">DELIVERABLES CHECKLIST</h3>
+                        <div class="checklist">
+                            <div class="checklist-item completed">
+                                <input type="checkbox" class="checklist-checkbox" checked disabled>
+                                <div class="checklist-text">Initial consultation and family assessment</div>
+                            </div>
+                            <div class="checklist-item completed">
+                                <input type="checkbox" class="checklist-checkbox" checked disabled>
+                                <div class="checklist-text">Family tree analysis and wealth mapping</div>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" disabled>
+                                <div class="checklist-text">Draft succession plan with recommendations</div>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" disabled>
+                                <div class="checklist-text">Implementation roadmap and timeline</div>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" disabled>
+                                <div class="checklist-text">Final review meeting and handoff</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 14px; font-weight: 600; color: #86868b; margin-bottom: 8px;">CUSTOM NOTES FROM FAMILY</h3>
+                        <p style="font-style: italic; color: #86868b; line-height: 1.6;">
+                            "Please focus on international aspects of wealth transfer as we have assets
+                            in multiple jurisdictions. Special attention needed for UK and Swiss holdings."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Shared Deliverables -->
+                <div class="card">
+                    <h2 class="card-title">📎 Shared Deliverables</h2>
+
+                    <div class="deliverables-list">
+                        <div class="deliverable-item" onclick="openLink()">
+                            <div class="deliverable-icon">📄</div>
+                            <div class="deliverable-content">
+                                <div class="deliverable-name">Family Tree & Wealth Analysis</div>
+                                <div class="deliverable-meta">Google Doc • Shared 2 days ago</div>
+                            </div>
+                        </div>
+
+                        <div class="deliverable-item" onclick="openLink()">
+                            <div class="deliverable-icon">📊</div>
+                            <div class="deliverable-content">
+                                <div class="deliverable-name">Succession Strategy Presentation</div>
+                                <div class="deliverable-meta">Google Slides • Shared 5 days ago</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="margin-top: 16px;" onclick="uploadDeliverable()">
+                        + Share New Deliverable
+                    </button>
+                </div>
+
+                <!-- Activity History -->
+                <div class="card">
+                    <h2 class="card-title">📜 Activity History</h2>
+
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon">📎</div>
+                            <div class="activity-content">
+                                <div class="activity-text">
+                                    <strong>You</strong> shared a deliverable: Family Tree & Wealth Analysis
+                                </div>
+                                <div class="activity-time">2 days ago • Oct 22, 2025 at 2:30 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">💬</div>
+                            <div class="activity-content">
+                                <div class="activity-text">
+                                    <strong>Smith Family</strong> sent a message
+                                </div>
+                                <div class="activity-time">4 days ago • Oct 20, 2025 at 10:15 AM</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">📎</div>
+                            <div class="activity-content">
+                                <div class="activity-text">
+                                    <strong>You</strong> shared a deliverable: Succession Strategy Presentation
+                                </div>
+                                <div class="activity-time">5 days ago • Oct 19, 2025 at 4:45 PM</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon">🚀</div>
+                            <div class="activity-content">
+                                <div class="activity-text">Service started</div>
+                                <div class="activity-time">9 days ago • Oct 15, 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary" onclick="markDelivered()">
+                            ✓ Mark as Delivered
+                        </button>
+                        <button class="btn btn-secondary" onclick="updateProgress()">
+                            📊 Update Progress
+                        </button>
+                        <button class="btn btn-secondary" onclick="uploadDeliverable()">
+                            📎 Share Deliverable
+                        </button>
+                        <button class="btn btn-secondary" onclick="openChat()">
+                            💬 Send Message
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="card">
+                    <h3 class="card-title">💰 Payment</h3>
+
+                    <div class="payment-row">
+                        <span style="color: #86868b;">Total Amount:</span>
+                        <span style="font-weight: 600;">$5,000</span>
+                    </div>
+                    <div class="payment-row">
+                        <span style="color: #86868b;">Received (Prepay):</span>
+                        <span style="color: #34c759; font-weight: 600;">$3,000 ✓</span>
+                    </div>
+                    <div class="payment-divider"></div>
+                    <div class="payment-row">
+                        <span>Balance Due:</span>
+                        <span style="font-weight: 600;">$2,000</span>
+                    </div>
+
+                    <div class="info-box blue">
+                        Final payment will be released when family confirms service completion.
+                    </div>
+                </div>
+
+                <!-- Family Access -->
+                <div class="card">
+                    <h3 class="card-title">🔓 Your Access</h3>
+
+                    <div class="access-list">
+                        <div class="access-item">
+                            <span style="font-size: 14px;">🏛️ Succession Planning</span>
+                            <span class="access-badge">View + Modify</span>
+                        </div>
+                        <div class="access-item">
+                            <span style="font-size: 14px;">💰 Assets & Wealth</span>
+                            <span class="access-badge">View Only</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d2d2d7; font-size: 13px; color: #86868b;">
+                        <div style="margin-bottom: 4px;"><strong>Granted:</strong> Oct 15, 2025</div>
+                        <div><strong>Expires:</strong> Dec 31, 2025</div>
+                    </div>
+
+                    <button class="btn btn-secondary" style="margin-top: 16px;" onclick="accessFamily()">
+                        🔗 Access Family Portal
+                    </button>
+                </div>
+
+                <!-- Timeline -->
+                <div class="card">
+                    <h3 class="card-title">📅 Timeline</h3>
+
+                    <div style="font-size: 14px; line-height: 2;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #86868b;">Booked:</span>
+                            <span style="font-weight: 600;">Oct 12, 2025</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #86868b;">Started:</span>
+                            <span style="font-weight: 600;">Oct 15, 2025</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #86868b;">Due Date:</span>
+                            <span style="font-weight: 600;">Dec 15, 2025</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #86868b;">Duration:</span>
+                            <span style="font-weight: 600;">6 weeks</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #86868b;">Remaining:</span>
+                            <span style="font-weight: 600; color: #34c759;">23 days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark Delivered Modal -->
+    <div class="modal-overlay" id="deliveredModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Mark Service as Delivered</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: #86868b;">
+                    Have you completed all deliverables for this service?
+                </p>
+
+                <div style="background: #f9f9fb; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Deliverables Status</h3>
+                    <div style="font-size: 14px; color: #86868b;">
+                        <div>✓ 2 of 5 deliverables completed</div>
+                        <div style="margin-top: 4px;">⚠️ 3 deliverables pending</div>
+                    </div>
+                </div>
+
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #856404;">
+                    💡 After marking as delivered, the family will have 30 days to confirm completion.
+                    Auto-confirmation occurs after 30 days if no response.
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeModal('deliveredModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitDelivered()">Mark as Delivered</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function markDelivered() {
+            document.getElementById('deliveredModal').classList.add('active');
+        }
+
+        function submitDelivered() {
+            alert('✓ Service marked as delivered!\n\nNext steps:\n• Family notified\n• Awaiting family confirmation\n• Final payment released upon confirmation\n• Your access will remain active until confirmed');
+            closeModal('deliveredModal');
+        }
+
+        function updateProgress() {
+            alert('Update Progress\n\nOptions:\n• Set progress percentage (currently 60%)\n• Mark milestones as complete\n• Add notes about current status\n• Update estimated completion date');
+        }
+
+        function uploadDeliverable() {
+            alert('Share Deliverable\n\nOptions:\n• Paste external link (Google Drive, Dropbox, etc.)\n• Add text note or update\n• Associate with deliverable checklist item');
+        }
+
+        function openChat() {
+            alert('Opening chat with Smith Family...');
+        }
+
+        function accessFamily() {
+            alert('Accessing Smith Family Portal\n\nYou have access to:\n• Succession Planning (View + Modify)\n• Assets & Wealth (View Only)\n\nAccess expires: Dec 31, 2025');
+        }
+
+        function openLink() {
+            alert('Opening external deliverable link...');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Animate progress bar
+        window.addEventListener('load', () => {
+            const fill = document.querySelector('.timeline-fill');
+            const width = fill.style.width;
+            fill.style.width = '0%';
+            setTimeout(() => fill.style.width = width, 100);
+        });
+
+        // ESC to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal('deliveredModal');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimension Complete - Family Governance Assessment</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/screens.css">
+</head>
+<body>
+    <div class="screen-container">
+        <header class="screen-header">
+            <div class="logo">ReFamily</div>
+            <div class="user-menu">
+                <span class="user-name">Владислав</span>
+                <span class="user-avatar">В</span>
+            </div>
+        </header>
+
+        <main class="screen-content">
+            <div class="completion-screen">
+                <div class="completion-animation">
+                    <div class="checkmark-circle">
+                        <svg class="checkmark" viewBox="0 0 52 52">
+                            <circle class="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <h1>Измерение завершено!</h1>
+                <div class="divider"></div>
+
+                <div class="dimension-completed-info">
+                    <div class="completed-icon" id="completedIcon">👥</div>
+                    <h2 id="completedTitle">Развитие следующего поколения</h2>
+                    <p class="completion-message">
+                        Отличная работа! Вы ответили на все <span id="questionCount">13</span> вопросов в этом разделе.
+                    </p>
+                </div>
+
+                <div class="completion-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="dimProgress">13 / 13</div>
+                        <div class="stat-label">Вопросов завершено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-value" id="commentCount">5</div>
+                        <div class="stat-label">Комментариев добавлено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-value" id="timeSpent">14 мин</div>
+                        <div class="stat-label">Затрачено времени</div>
+                    </div>
+                </div>
+
+                <div class="overall-progress-section">
+                    <h3>Общий прогресс оценки</h3>
+                    <div class="progress-bar-large">
+                        <div class="progress-fill-large" id="overallProgressFill" style="width: 38%"></div>
+                    </div>
+                    <div class="progress-details">
+                        <span class="progress-fraction" id="overallProgressText">40 / 105 вопросов</span>
+                        <span class="progress-percent" id="overallProgressPercent">38%</span>
+                    </div>
+                </div>
+
+                <div class="dimensions-remaining">
+                    <h3>Осталось измерений</h3>
+                    <div class="remaining-dimensions-list" id="remainingDimensions">
+                        <!-- Dynamically filled -->
+                    </div>
+                </div>
+
+                <div class="completion-tip">
+                    <div class="tip-icon">💡</div>
+                    <div class="tip-content">
+                        <h4>Рекомендация</h4>
+                        <p>Вы ответили на <strong>3 измерения из 8</strong>. Рекомендуем сделать короткий перерыв перед продолжением.</p>
+                    </div>
+                </div>
+
+                <div class="completion-actions">
+                    <button class="btn-primary btn-large" onclick="continueAssessment()">
+                        Продолжить оценку →
+                    </button>
+                    <button class="btn-secondary" onclick="takeBreak()">
+                        ☕ Сделать перерыв
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <div class="screen-navigation">
+            <button onclick="location.href='phase2-dashboard.html'" class="btn-secondary">
+                ← К списку разделов
+            </button>
+            <div class="nav-progress">
+                <span class="nav-label">Phase 2: Assessment</span>
+                <span class="nav-step">Измерение <span id="navDimNumber">3</span> завершено</span>
+            </div>
+            <button onclick="continueAssessment()" class="btn-primary">
+                Продолжить →
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .completion-screen {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .completion-animation {
+            margin: 40px 0;
+        }
+
+        .checkmark-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .checkmark {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            stroke-width: 3;
+            stroke: #4CAF50;
+            stroke-miterlimit: 10;
+            animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+        }
+
+        .checkmark-circle-bg {
+            stroke: #4CAF50;
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2;
+            stroke-miterlimit: 10;
+            fill: none;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+
+        @keyframes stroke {
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes scale {
+            0%, 100% {
+                transform: none;
+            }
+            50% {
+                transform: scale3d(1.1, 1.1, 1);
+            }
+        }
+
+        @keyframes fill {
+            100% {
+                box-shadow: inset 0px 0px 0px 60px #4CAF50;
+            }
+        }
+
+        .completion-screen h1 {
+            margin-bottom: 16px;
+            color: var(--success);
+        }
+
+        .dimension-completed-info {
+            margin: 40px 0;
+        }
+
+        .completed-icon {
+            font-size: 80px;
+            margin-bottom: 16px;
+        }
+
+        .dimension-completed-info h2 {
+            margin-bottom: 12px;
+        }
+
+        .completion-message {
+            font-size: 18px;
+            color: var(--gray-700);
+        }
+
+        .completion-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .overall-progress-section {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .overall-progress-section h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .progress-bar-large {
+            width: 100%;
+            height: 16px;
+            background: var(--gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill-large {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 1s ease;
+        }
+
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+
+        .progress-percent {
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .dimensions-remaining {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .dimensions-remaining h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .remaining-dimensions-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .remaining-dim-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remaining-dim-card:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .remaining-dim-icon {
+            font-size: 32px;
+        }
+
+        .remaining-dim-info {
+            flex: 1;
+        }
+
+        .remaining-dim-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .remaining-dim-questions {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .completion-tip {
+            background: var(--warning-light);
+            border-left: 4px solid var(--warning);
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            gap: 16px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .completion-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .completion-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .remaining-dimensions-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script src="../js/prototype.js"></script>
+    <script>
+        // Get dimension from URL
+        const dimId = getQueryParam('dim') || '3';
+        const dimension = getDimension(dimId);
+
+        if (dimension) {
+            document.getElementById('completedIcon').textContent = dimension.icon;
+            document.getElementById('completedIcon').style.color = dimension.color;
+            document.getElementById('completedTitle').textContent = dimension.name;
+            document.getElementById('questionCount').textContent = dimension.questions;
+            document.getElementById('dimProgress').textContent = `${dimension.questions} / ${dimension.questions}`;
+            document.getElementById('navDimNumber').textContent = dimId;
+        }
+
+        // Calculate overall progress (simulate)
+        const totalAnswered = (parseInt(dimId)) * 13; // Simplified calculation
+        const overallPercent = Math.round((totalAnswered / 105) * 100);
+        document.getElementById('overallProgressFill').style.width = overallPercent + '%';
+        document.getElementById('overallProgressText').textContent = `${totalAnswered} / 105 вопросов`;
+        document.getElementById('overallProgressPercent').textContent = overallPercent + '%';
+
+        // Show remaining dimensions
+        const remainingContainer = document.getElementById('remainingDimensions');
+        for (let i = 1; i <= 8; i++) {
+            if (i <= parseInt(dimId)) continue; // Skip completed dimensions
+
+            const dim = getDimension(i.toString());
+            if (!dim) continue;
+
+            const card = document.createElement('div');
+            card.className = 'remaining-dim-card';
+            card.onclick = () => startDimension(i);
+            card.innerHTML = `
+                <div class="remaining-dim-icon" style="color: ${dim.color}">${dim.icon}</div>
+                <div class="remaining-dim-info">
+                    <div class="remaining-dim-name">${dim.name}</div>
+                    <div class="remaining-dim-questions">${dim.questions} вопросов</div>
+                </div>
+            `;
+            remainingContainer.appendChild(card);
+        }
+
+        function continueAssessment() {
+            const nextDim = parseInt(dimId) + 1;
+            if (nextDim <= 8) {
+                location.href = `phase2-dimension-intro.html?dim=${nextDim}`;
+            } else {
+                // All dimensions completed
+                location.href = 'phase4-results.html';
+            }
+        }
+
+        function takeBreak() {
+            if (confirm('Ваш прогресс сохранён. Вы можете вернуться к оценке в любое время.\n\nВернуться к списку разделов?')) {
+                location.href = 'phase2-dashboard.html';
+            }
+        }
+
+        function startDimension(dimId) {
+            location.href = `phase2-dimension-intro.html?dim=${dimId}`;
+        }
+
+        // Simulate comment count
+        document.getElementById('commentCount').textContent = Math.floor(Math.random() * 5) + 3;
+
+        // Simulate time spent
+        const timeMin = Math.floor(dimension.questions * 0.9);
+        document.getElementById('timeSpent').textContent = timeMin + ' мин';
+    </script>
+</body>
+</html>

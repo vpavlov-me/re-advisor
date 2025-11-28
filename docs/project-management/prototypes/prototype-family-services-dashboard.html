@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Portal - Services Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            color: #2d3748;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb span {
+            margin: 0 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Page Title */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+        }
+
+        /* Tabs */
+        .tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 0.5rem;
+            display: inline-flex;
+            gap: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            background: transparent;
+            color: #718096;
+        }
+
+        .tab.active {
+            background: #4299e1;
+            color: white;
+        }
+
+        .tab .count {
+            margin-left: 0.5rem;
+            background: rgba(0,0,0,0.1);
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .tab.active .count {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            background: white;
+        }
+
+        /* Service Cards */
+        .services-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .service-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .service-card.in-progress {
+            border-left-color: #48bb78;
+        }
+
+        .service-card.delivered {
+            border-left-color: #ed8936;
+        }
+
+        .service-card.pending {
+            border-left-color: #ecc94b;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .consultant-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .consultant-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .consultant-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+
+        .consultant-details .badge {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.in-progress {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-badge.delivered {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .status-badge.pending {
+            background: #fefcbf;
+            color: #744210;
+        }
+
+        .service-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+
+        .service-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .meta-icon {
+            color: #718096;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-bottom: 1rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.warning {
+            background: #ed8936;
+        }
+
+        /* Payment Info */
+        .payment-info {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-row:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .payment-status {
+            color: #48bb78;
+        }
+
+        .payment-due {
+            color: #e53e3e;
+        }
+
+        /* Deliverables */
+        .deliverables {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        .new-badge {
+            background: #e53e3e;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Access Info */
+        .access-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        /* Alert Box */
+        .alert-box {
+            background: #feebc8;
+            border-left: 4px solid #ed8936;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-icon {
+            color: #ed8936;
+            font-size: 1.25rem;
+        }
+
+        .alert-text {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #744210;
+            font-weight: 500;
+        }
+
+        /* Card Actions */
+        .card-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover {
+            background: #edf2f7;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="breadcrumb">
+                Family Portal <span>›</span> <strong>Services</strong>
+            </div>
+            <div class="user-info">
+                <div class="notification-bell" onclick="showNotifications()">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </div>
+                <div class="consultant-avatar">JD</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;">John Doe</div>
+                    <div style="font-size: 0.75rem; color: #718096;">Admin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Services</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="showFilters()">
+                    🔍 Filter
+                </button>
+                <button class="btn btn-primary" onclick="goToMarketplace()">
+                    + Find Consultant
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('active')">
+                Active <span class="count">2</span>
+            </button>
+            <button class="tab" onclick="switchTab('pending')">
+                Pending <span class="count">1</span>
+            </button>
+            <button class="tab" onclick="switchTab('completed')">
+                Completed <span class="count">5</span>
+            </button>
+            <button class="tab" onclick="switchTab('all')">
+                All <span class="count">8</span>
+            </button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Consultant:</span>
+                <select>
+                    <option>All Consultants</option>
+                    <option>Sarah Johnson</option>
+                    <option>Michael Chen</option>
+                    <option>David Williams</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Service Type:</span>
+                <select>
+                    <option>All Types</option>
+                    <option>Succession Planning</option>
+                    <option>Constitution Review</option>
+                    <option>Conflict Mediation</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Sort by:</span>
+                <select>
+                    <option>Deadline (Earliest)</option>
+                    <option>Start Date</option>
+                    <option>Consultant Name</option>
+                    <option>Amount</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="services-grid" id="servicesGrid">
+            <!-- Service Card 1 - In Progress -->
+            <div class="service-card in-progress">
+                <div class="card-header">
+                    <div class="consultant-info">
+                        <div class="consultant-avatar">SJ</div>
+                        <div class="consultant-details">
+                            <h3>Sarah Johnson</h3>
+                            <div class="badge">✓ Verified Consultant</div>
+                        </div>
+                    </div>
+                    <div class="status-badge in-progress">In Progress</div>
+                </div>
+
+                <div class="service-title">📋 Succession Planning Advisory</div>
+
+                <div class="service-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        Oct 15 - Dec 15, 2025
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">⏰</span>
+                        <strong style="color: #48bb78;">23 days remaining</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🆔</span>
+                        SR-20251015-F123-001
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        Started 9 days ago
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span>Progress</span>
+                        <span style="font-weight: 600; color: #48bb78;">60% Complete</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 60%;"></div>
+                    </div>
+                </div>
+
+                <div class="payment-info">
+                    <div class="payment-row">
+                        <span style="color: #718096;">Total Amount:</span>
+                        <span>$5,000</span>
+                    </div>
+                    <div class="payment-row">
+                        <span style="color: #718096;">Prepaid:</span>
+                        <span class="payment-status">$3,000 ✓</span>
+                    </div>
+                    <div class="payment-row">
+                        <span>Balance Due on Completion:</span>
+                        <span class="payment-due">$2,000</span>
+                    </div>
+                </div>
+
+                <div class="deliverables">
+                    📎 2 Deliverables shared
+                    <span class="new-badge">NEW</span>
+                </div>
+
+                <div class="access-info">
+                    🔓 Access: Succession module (View+Modify) • Expires Dec 31, 2025
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-small" onclick="viewDetails('SR-20251015-F123-001')">
+                        View Details
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="openChat('Sarah Johnson')">
+                        💬 Chat
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="viewDeliverables()">
+                        📎 Deliverables
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Card 2 - Delivered (Awaiting Confirmation) -->
+            <div class="service-card delivered">
+                <div class="card-header">
+                    <div class="consultant-info">
+                        <div class="consultant-avatar">MC</div>
+                        <div class="consultant-details">
+                            <h3>Michael Chen</h3>
+                            <div class="badge">✓ Verified Consultant</div>
+                        </div>
+                    </div>
+                    <div class="status-badge delivered">Delivered</div>
+                </div>
+
+                <div class="service-title">📋 Constitution Review & Update</div>
+
+                <div class="service-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        Sep 1 - Oct 20, 2025
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">✅</span>
+                        <strong style="color: #48bb78;">Completed early</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🆔</span>
+                        SR-20250901-F123-002
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        Delivered 2 days ago
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span>Progress</span>
+                        <span style="font-weight: 600; color: #48bb78;">100% Complete</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <div class="payment-info">
+                    <div class="payment-row">
+                        <span style="color: #718096;">Total Amount:</span>
+                        <span>$2,500</span>
+                    </div>
+                    <div class="payment-row">
+                        <span>Payment Status:</span>
+                        <span class="payment-status">Paid in Full ✓</span>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text">Awaiting your confirmation to complete this service</span>
+                </div>
+
+                <div class="deliverables">
+                    📎 3 Deliverables shared
+                </div>
+
+                <div class="access-info">
+                    🔓 Access: Constitution module (View+Modify) • Active until confirmed
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn btn-primary btn-small" onclick="confirmCompletion('SR-20250901-F123-002')">
+                        ✓ Confirm Completion
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="viewDeliverables()">
+                        📎 Review Deliverables
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="openChat('Michael Chen')">
+                        💬 Contact
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Card 3 - Pending Confirmation -->
+            <div class="service-card pending">
+                <div class="card-header">
+                    <div class="consultant-info">
+                        <div class="consultant-avatar">DW</div>
+                        <div class="consultant-details">
+                            <h3>David Williams</h3>
+                            <div class="badge">✓ Verified Consultant</div>
+                        </div>
+                    </div>
+                    <div class="status-badge pending">Pending</div>
+                </div>
+
+                <div class="service-title">📋 Family Conflict Mediation Session</div>
+
+                <div class="service-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        Requested: Nov 1, 2025
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">⏰</span>
+                        <strong style="color: #ed8936;">42h to confirm</strong>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🆔</span>
+                        SR-20251022-F123-003
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        Booked 6 hours ago
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    <span class="alert-icon">⏳</span>
+                    <span class="alert-text">Awaiting consultant confirmation (auto-cancels after 48 hours)</span>
+                </div>
+
+                <div class="payment-info">
+                    <div class="payment-row">
+                        <span style="color: #718096;">Total Amount:</span>
+                        <span>$1,800</span>
+                    </div>
+                    <div class="payment-row">
+                        <span>Payment:</span>
+                        <span style="color: #718096;">Will be invoiced after confirmation</span>
+                    </div>
+                </div>
+
+                <div class="access-info">
+                    🔒 Access will be granted: Conflict Resolution module (View+Modify)
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn btn-secondary btn-small" onclick="cancelBooking('SR-20251022-F123-003')">
+                        Cancel Booking
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="openChat('David Williams')">
+                        💬 Contact Consultant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Service Completion</h2>
+                <button class="close-btn" onclick="closeModal('confirmationModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1.5rem; color: #4a5568;">
+                    Are you satisfied with the service provided by <strong>Michael Chen</strong>?
+                </p>
+
+                <div style="background: #f7fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Service Summary</h3>
+                    <div style="font-size: 0.875rem; color: #718096;">
+                        <div style="margin-bottom: 0.25rem;">Constitution Review & Update</div>
+                        <div>3 deliverables completed • All milestones met</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        Would you work with this consultant again?
+                    </label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="recommend" value="yes" checked>
+                            <span>Yes</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="recommend" value="no">
+                            <span>No</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        Feedback (Optional)
+                    </label>
+                    <textarea
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+                        rows="4"
+                        placeholder="Share your experience to help improve service quality..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal('confirmationModal')">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="submitCompletion()">
+                        Confirm & Complete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // In real app, would filter services
+            console.log('Switched to tab:', tab);
+        }
+
+        function viewDetails(serviceId) {
+            alert('Opening detailed view for ' + serviceId + '\n\nThis would show:\n• Full service information\n• Timeline and milestones\n• All deliverables\n• Payment history\n• Activity log\n• Chat history');
+        }
+
+        function openChat(consultant) {
+            alert('Opening chat with ' + consultant);
+        }
+
+        function viewDeliverables() {
+            alert('Showing deliverables:\n\n1. Draft Succession Plan (PDF)\n2. Family Tree Analysis (Google Doc)\n3. Implementation Timeline (Spreadsheet)');
+        }
+
+        function confirmCompletion(serviceId) {
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function submitCompletion() {
+            alert('✓ Service completion confirmed!\n\nNext steps:\n• Consultant access changed to view-only\n• Service marked as completed\n• Confirmation sent to consultant\n\nThank you for your feedback!');
+            closeModal('confirmationModal');
+
+            // Update card UI
+            const card = document.querySelector('.service-card.delivered');
+            card.classList.remove('delivered');
+            card.classList.add('completed');
+        }
+
+        function cancelBooking(serviceId) {
+            if (confirm('Are you sure you want to cancel this booking?\n\nThe consultant will be notified.')) {
+                alert('Booking cancelled. No charges applied.');
+            }
+        }
+
+        function goToMarketplace() {
+            alert('Navigating to Consultant Marketplace...\n\nYou can:\n• Browse consultants by expertise\n• View profiles and ratings\n• Book services directly\n• Send chat inquiries');
+        }
+
+        function showNotifications() {
+            alert('📬 Recent Notifications:\n\n1. Sarah Johnson shared a new deliverable\n2. Michael Chen marked service as delivered\n3. Payment of $3,000 received');
+        }
+
+        function showFilters() {
+            alert('Advanced Filters:\n\n• Date Range\n• Price Range\n• Module/Expertise\n• Consultant Rating\n• Service Status');
+        }
+
+        // Auto-update progress bar animation on load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.progress-fill').forEach(fill => {
+                const width = fill.style.width;
+                fill.style.width = '0%';
+                setTimeout(() => {
+                    fill.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

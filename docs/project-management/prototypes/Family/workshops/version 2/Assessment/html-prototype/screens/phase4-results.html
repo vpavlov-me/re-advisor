@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Dashboard - Family Governance Assessment</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/screens.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="screen-container">
+        <header class="screen-header">
+            <div class="logo">ReFamily</div>
+            <div class="header-actions">
+                <button class="btn-secondary btn-sm" onclick="exportReport()">
+                    📥 Экспорт
+                </button>
+                <div class="user-menu">
+                    <span class="user-name">Владислав</span>
+                    <span class="user-avatar">В</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="screen-content results-content">
+            <div class="results-header">
+                <div class="results-badge">✅ Оценка завершена</div>
+                <h1>Результаты оценки</h1>
+                <div class="divider"></div>
+                <p class="results-subtitle">
+                    Ваша семья завершила комплексную оценку по 8 измерениям семейного управления.
+                    Ниже представлен анализ текущего состояния и рекомендации.
+                </p>
+            </div>
+
+            <!-- Overall Maturity Score -->
+            <div class="maturity-index-card">
+                <div class="maturity-header">
+                    <h2>Индекс зрелости семейного управления</h2>
+                    <div class="maturity-score-large">
+                        <div class="score-number">5.2</div>
+                        <div class="score-max">из 7.0</div>
+                    </div>
+                </div>
+                <div class="maturity-bar">
+                    <div class="maturity-stages">
+                        <div class="stage stage-1">
+                            <span class="stage-label">Начальный</span>
+                            <span class="stage-range">1-2</span>
+                        </div>
+                        <div class="stage stage-2">
+                            <span class="stage-label">Развивающийся</span>
+                            <span class="stage-range">3-4</span>
+                        </div>
+                        <div class="stage stage-3 active">
+                            <span class="stage-label">Зрелый</span>
+                            <span class="stage-range">5-6</span>
+                        </div>
+                        <div class="stage stage-4">
+                            <span class="stage-label">Передовой</span>
+                            <span class="stage-range">7</span>
+                        </div>
+                    </div>
+                    <div class="maturity-indicator" style="left: 74%;">
+                        <div class="indicator-pin">📍</div>
+                        <div class="indicator-label">Ваш результат: 5.2</div>
+                    </div>
+                </div>
+                <p class="maturity-description">
+                    Ваша семья находится на уровне <strong>"Зрелое семейное управление"</strong>.
+                    Это означает наличие развитых структур и процессов с возможностями для дальнейшего улучшения.
+                </p>
+            </div>
+
+            <!-- Radar Chart -->
+            <div class="radar-chart-section">
+                <h2>Оценка по измерениям</h2>
+                <p class="section-subtitle">
+                    Сравнение результатов вашей семьи с другими семьями (средний показатель)
+                </p>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #2196F3;"></span>
+                        <span>Ваша семья</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #FFB74D;"></span>
+                        <span>Средний показатель</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimension Breakdown -->
+            <div class="dimension-breakdown-section">
+                <h2>Детализация по измерениям</h2>
+                <div class="dimension-cards-grid">
+                    <!-- Dimensions dynamically rendered -->
+                    <div class="dimension-result-card high-score">
+                        <div class="dim-header">
+                            <span class="dim-icon" style="color: #4CAF50;">💬</span>
+                            <div class="dim-title-section">
+                                <h3>Коммуникация и доверие</h3>
+                                <div class="dim-score">6.3 / 7.0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 90%; background: #4CAF50;"></div>
+                        </div>
+                        <div class="dim-verdict">
+                            <span class="verdict-icon">✅</span>
+                            <span class="verdict-text">Сильная сторона</span>
+                        </div>
+                        <p class="dim-summary">
+                            Открытая коммуникация и высокий уровень доверия между членами семьи.
+                        </p>
+                        <button class="btn-link" onclick="viewDimensionDetails(1)">
+                            Детали →
+                        </button>
+                    </div>
+
+                    <div class="dimension-result-card medium-score">
+                        <div class="dim-header">
+                            <span class="dim-icon" style="color: #2196F3;">💰</span>
+                            <div class="dim-title-section">
+                                <h3>Финансовая прозрачность</h3>
+                                <div class="dim-score">5.1 / 7.0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 73%; background: #2196F3;"></div>
+                        </div>
+                        <div class="dim-verdict">
+                            <span class="verdict-icon">✓</span>
+                            <span class="verdict-text">Хороший уровень</span>
+                        </div>
+                        <p class="dim-summary">
+                            Финансовая информация доступна, но есть возможности для улучшения.
+                        </p>
+                        <button class="btn-link" onclick="viewDimensionDetails(2)">
+                            Детали →
+                        </button>
+                    </div>
+
+                    <div class="dimension-result-card low-score">
+                        <div class="dim-header">
+                            <span class="dim-icon" style="color: #9C27B0;">👥</span>
+                            <div class="dim-title-section">
+                                <h3>Развитие следующего поколения</h3>
+                                <div class="dim-score">3.8 / 7.0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 54%; background: #FF9800;"></div>
+                        </div>
+                        <div class="dim-verdict">
+                            <span class="verdict-icon">⚠️</span>
+                            <span class="verdict-text">Требует внимания</span>
+                        </div>
+                        <p class="dim-summary">
+                            Образовательные программы и менторство нуждаются в развитии.
+                        </p>
+                        <button class="btn-link" onclick="viewDimensionDetails(3)">
+                            Детали →
+                        </button>
+                    </div>
+
+                    <div class="dimension-result-card medium-score">
+                        <div class="dim-header">
+                            <span class="dim-icon" style="color: #FF9800;">⚖️</span>
+                            <div class="dim-title-section">
+                                <h3>Принятие решений</h3>
+                                <div class="dim-score">4.9 / 7.0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 70%; background: #2196F3;"></div>
+                        </div>
+                        <div class="dim-verdict">
+                            <span class="verdict-icon">✓</span>
+                            <span class="verdict-text">Хороший уровень</span>
+                        </div>
+                        <p class="dim-summary">
+                            Процессы принятия решений работают, но могут быть более формализованы.
+                        </p>
+                        <button class="btn-link" onclick="viewDimensionDetails(4)">
+                            Детали →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Insights -->
+            <div class="key-insights-section">
+                <h2>🔍 Ключевые выводы</h2>
+                <div class="insights-grid">
+                    <div class="insight-card strength">
+                        <div class="insight-header">
+                            <span class="insight-icon">💪</span>
+                            <h3>Сильные стороны</h3>
+                        </div>
+                        <ul class="insight-list">
+                            <li>Высокий уровень доверия и открытая коммуникация</li>
+                            <li>Чёткие ценности и миссия семьи</li>
+                            <li>Регулярные семейные встречи и обсуждения</li>
+                        </ul>
+                    </div>
+
+                    <div class="insight-card opportunity">
+                        <div class="insight-header">
+                            <span class="insight-icon">🎯</span>
+                            <h3>Возможности для роста</h3>
+                        </div>
+                        <ul class="insight-list">
+                            <li>Развитие программ для следующего поколения</li>
+                            <li>Формализация процессов принятия решений</li>
+                            <li>Улучшение системы финансовой отчётности</li>
+                        </ul>
+                    </div>
+
+                    <div class="insight-card priority">
+                        <div class="insight-header">
+                            <span class="insight-icon">🚨</span>
+                            <h3>Приоритеты</h3>
+                        </div>
+                        <ul class="insight-list">
+                            <li>Создать систему менторства для G2/G3</li>
+                            <li>Разработать образовательные программы</li>
+                            <li>Определить процессы для сложных решений</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Family Consensus -->
+            <div class="consensus-preview">
+                <h2>👥 Согласованность ответов семьи</h2>
+                <p class="section-subtitle">
+                    Степень совпадения восприятия среди 5 участников оценки
+                </p>
+                <div class="consensus-indicator">
+                    <div class="consensus-score-circle">
+                        <div class="consensus-number">78%</div>
+                        <div class="consensus-label">Согласованность</div>
+                    </div>
+                    <div class="consensus-description">
+                        <p>
+                            <strong>Высокий уровень согласованности.</strong> Большинство членов семьи
+                            имеют схожее видение текущего состояния семейного управления.
+                        </p>
+                        <p>
+                            В 3 измерениях обнаружены значительные расхождения в восприятии,
+                            что требует дополнительного обсуждения.
+                        </p>
+                        <button class="btn-secondary" onclick="location.href='phase4-consensus.html'">
+                            Посмотреть детальный анализ →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps-section">
+                <h2>📋 Следующие шаги</h2>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>Обсудить результаты</h3>
+                        <p>Запланируйте семейную встречу для обсуждения результатов оценки</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>Выбрать приоритеты</h3>
+                        <p>Определите 3-5 ключевых областей для развития</p>
+                        <button class="btn-primary" onclick="location.href='phase5-priorities.html'">
+                            Перейти к планированию →
+                        </button>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>Создать план действий</h3>
+                        <p>Разработайте конкретные шаги и сроки реализации</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="screen-navigation">
+            <button onclick="location.href='phase2-dashboard.html'" class="btn-secondary">
+                ← К оценке
+            </button>
+            <div class="nav-progress">
+                <span class="nav-label">Phase 4: Results</span>
+                <span class="nav-step">Обзор результатов</span>
+            </div>
+            <button onclick="location.href='phase4-insights.html'" class="btn-primary">
+                Рекомендации AI →
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .results-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .results-badge {
+            display: inline-block;
+            background: var(--success);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .results-subtitle {
+            font-size: 18px;
+            color: var(--gray-700);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Maturity Index */
+        .maturity-index-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 48px;
+        }
+
+        .maturity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .maturity-header h2 {
+            color: white;
+            margin: 0;
+        }
+
+        .maturity-score-large {
+            text-align: right;
+        }
+
+        .score-number {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .score-max {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .maturity-bar {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .maturity-stages {
+            display: flex;
+            gap: 4px;
+        }
+
+        .stage {
+            flex: 1;
+            background: rgba(255,255,255,0.2);
+            padding: 16px 12px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stage.active {
+            background: rgba(255,255,255,0.4);
+            border: 2px solid white;
+        }
+
+        .stage-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stage-range {
+            display: block;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .maturity-indicator {
+            position: absolute;
+            top: -50px;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .indicator-pin {
+            font-size: 32px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .indicator-label {
+            font-size: 12px;
+            font-weight: 600;
+            background: white;
+            color: var(--gray-900);
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            margin-top: 4px;
+        }
+
+        .maturity-description {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.95;
+            margin: 0;
+        }
+
+        /* Radar Chart */
+        .radar-chart-section {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 32px;
+        }
+
+        .chart-container {
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        /* Dimension Cards */
+        .dimension-breakdown-section {
+            margin-bottom: 48px;
+        }
+
+        .dimension-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .dimension-result-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+
+        .dimension-result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .dimension-result-card.high-score {
+            border-color: var(--success);
+        }
+
+        .dimension-result-card.low-score {
+            border-color: var(--warning);
+        }
+
+        .dim-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dim-icon {
+            font-size: 36px;
+        }
+
+        .dim-title-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }
+
+        .dim-score {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .score-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .score-fill {
+            height: 100%;
+            transition: width 1s ease;
+        }
+
+        .dim-verdict {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .dim-summary {
+            color: var(--gray-700);
+            font-size: 14px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        /* Key Insights */
+        .key-insights-section {
+            margin-bottom: 48px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .insight-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .insight-card.strength {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+        }
+
+        .insight-card.opportunity {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        }
+
+        .insight-card.priority {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .insight-icon {
+            font-size: 32px;
+        }
+
+        .insight-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-list li {
+            padding: 8px 0 8px 24px;
+            position: relative;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .insight-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Consensus Preview */
+        .consensus-preview {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 48px;
+        }
+
+        .consensus-indicator {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .consensus-score-circle {
+            flex-shrink: 0;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success), #4CAF50);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .consensus-number {
+            font-size: 48px;
+            font-weight: 700;
+        }
+
+        .consensus-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .consensus-description {
+            flex: 1;
+        }
+
+        .consensus-description p {
+            margin-bottom: 16px;
+            line-height: 1.7;
+            color: var(--gray-800);
+        }
+
+        /* Next Steps */
+        .next-steps-section {
+            background: var(--primary-light);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 40px;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .step-card h3 {
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            color: var(--gray-700);
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .maturity-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+
+            .maturity-score-large {
+                text-align: center;
+            }
+
+            .maturity-stages {
+                flex-wrap: wrap;
+            }
+
+            .consensus-indicator {
+                flex-direction: column;
+            }
+
+            .dimension-cards-grid,
+            .insights-grid,
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script src="../js/prototype.js"></script>
+    <script>
+        // Create radar chart
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: [
+                    'Коммуникация',
+                    'Финансы',
+                    'Следующее поколение',
+                    'Решения',
+                    'Ценности',
+                    'Структуры',
+                    'Владение',
+                    'Идентичность'
+                ],
+                datasets: [{
+                    label: 'Ваша семья',
+                    data: [6.3, 5.1, 3.8, 4.9, 5.8, 5.5, 4.7, 6.1],
+                    backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                    borderColor: '#2196F3',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#2196F3',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#2196F3',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }, {
+                    label: 'Средний показатель',
+                    data: [5.2, 4.8, 4.5, 5.0, 5.3, 4.9, 5.1, 5.4],
+                    backgroundColor: 'rgba(255, 183, 77, 0.2)',
+                    borderColor: '#FFB74D',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#FFB74D',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#FFB74D',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 7,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                }
+            }
+        });
+
+        function viewDimensionDetails(dimId) {
+            showNotification('Детальная информация по измерению', 'info');
+            // In real app, would show modal or navigate to detail page
+        }
+
+        function exportReport() {
+            showNotification('Функция экспорта будет доступна в полной версии', 'info');
+        }
+    </script>
+</body>
+</html>

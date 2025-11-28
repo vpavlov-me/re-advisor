@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Governance Assessment - Prototype</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="prototype-container">
+        <header class="prototype-header">
+            <div class="logo">ReFamily</div>
+            <div class="prototype-badge">INTERACTIVE PROTOTYPE v1.0</div>
+        </header>
+
+        <main class="prototype-content">
+            <div class="hero">
+                <h1>Family Governance Assessment Workshop</h1>
+                <p class="subtitle">Interactive Clickable Prototype</p>
+                <p class="description">
+                    Этот прототип демонстрирует полный пользовательский опыт Assessment Workshop.
+                    Кликайте по кнопкам и элементам для навигации по всем экранам.
+                </p>
+            </div>
+
+            <div class="prototype-info">
+                <div class="info-card">
+                    <div class="info-icon">📊</div>
+                    <div class="info-content">
+                        <h3>105 вопросов</h3>
+                        <p>Оценка по 8 измерениям</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">⏱️</div>
+                    <div class="info-content">
+                        <h3>90-120 минут</h3>
+                        <p>Время прохождения</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🎯</div>
+                    <div class="info-content">
+                        <h3>5 фаз</h3>
+                        <p>От setup до action plan</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="phase-selector">
+                <h2>Выберите фазу для просмотра:</h2>
+
+                <div class="phase-cards">
+                    <div class="phase-card" onclick="location.href='screens/phase1-welcome.html'">
+                        <div class="phase-number">1</div>
+                        <h3>Setup & Context</h3>
+                        <p class="phase-time">5-10 минут</p>
+                        <ul class="phase-screens">
+                            <li>Welcome & Introduction</li>
+                            <li>Role Confirmation</li>
+                            <li>Privacy Settings</li>
+                            <li>Mode Selection</li>
+                        </ul>
+                        <button class="btn-primary">Начать →</button>
+                    </div>
+
+                    <div class="phase-card" onclick="location.href='screens/phase2-dashboard.html'">
+                        <div class="phase-number">2</div>
+                        <h3>Individual Assessment</h3>
+                        <p class="phase-time">60-90 минут</p>
+                        <ul class="phase-screens">
+                            <li>Assessment Dashboard</li>
+                            <li>Dimension Introductions (×8)</li>
+                            <li>Question Screens (105 вопросов)</li>
+                            <li>Progress Tracking</li>
+                        </ul>
+                        <button class="btn-primary">Смотреть →</button>
+                    </div>
+
+                    <div class="phase-card disabled">
+                        <div class="phase-number">3</div>
+                        <h3>Real-time Synthesis</h3>
+                        <p class="phase-time">Автоматически</p>
+                        <ul class="phase-screens">
+                            <li>Backend Processing</li>
+                            <li>Scoring Algorithms</li>
+                            <li>Consensus Analysis</li>
+                            <li>AI Insights Generation</li>
+                        </ul>
+                        <div class="badge">Backend Only</div>
+                    </div>
+
+                    <div class="phase-card" onclick="location.href='screens/phase4-results.html'">
+                        <div class="phase-number">4</div>
+                        <h3>Results & Discussion</h3>
+                        <p class="phase-time">20-30 минут</p>
+                        <ul class="phase-screens">
+                            <li>Results Dashboard</li>
+                            <li>Radar Chart Visualization</li>
+                            <li>Consensus Map</li>
+                            <li>AI Insights</li>
+                        </ul>
+                        <button class="btn-primary">Смотреть →</button>
+                    </div>
+
+                    <div class="phase-card" onclick="location.href='screens/phase5-priorities.html'">
+                        <div class="phase-number">5</div>
+                        <h3>Action Planning</h3>
+                        <p class="phase-time">10-15 минут</p>
+                        <ul class="phase-screens">
+                            <li>Priority Selection</li>
+                            <li>Timeline & Accountability</li>
+                            <li>Export & Sharing</li>
+                        </ul>
+                        <button class="btn-primary">Смотреть →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prototype-guide">
+                <h2>Как использовать прототип</h2>
+                <div class="guide-grid">
+                    <div class="guide-item">
+                        <span class="guide-number">1</span>
+                        <p><strong>Кликайте по кнопкам</strong> для навигации между экранами</p>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-number">2</span>
+                        <p><strong>Заполняйте формы</strong> для демонстрации интерактивности</p>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-number">3</span>
+                        <p><strong>Используйте навигацию</strong> в топ-баре для быстрого перехода</p>
+                    </div>
+                    <div class="guide-item">
+                        <span class="guide-number">4</span>
+                        <p><strong>Обратите внимание</strong> на состояния элементов (hover, disabled)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prototype-notes">
+                <h3>📝 Примечания</h3>
+                <ul>
+                    <li>Это <strong>статический прототип</strong> - данные не сохраняются</li>
+                    <li>Некоторые функции (авто-сохранение, WebSocket) показаны концептуально</li>
+                    <li>Прототип демонстрирует <strong>UX flow</strong> и <strong>визуальный дизайн</strong></li>
+                    <li>Для полной функциональности см. <a href="../data-schema.md">API спецификацию</a></li>
+                </ul>
+            </div>
+
+            <div class="cta-section">
+                <h2>Готовы начать?</h2>
+                <p>Пройдите весь процесс от приветствия до финального action plan</p>
+                <button class="btn-large" onclick="location.href='screens/phase1-welcome.html'">
+                    Начать Assessment Prototype →
+                </button>
+            </div>
+        </main>
+
+        <footer class="prototype-footer">
+            <p>&copy; 2025 ReFamily. Interactive Prototype v1.0</p>
+            <p>
+                <a href="../README.md">Documentation</a> |
+                <a href="../prototype-overview.md">Overview</a> |
+                <a href="https://github.com/Reluna-Family/FG_Docs">GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="js/prototype.js"></script>
+</body>
+</html>

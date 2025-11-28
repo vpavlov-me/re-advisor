@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2: Constitution Builder - Family Constitution Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #FB6428;
+            box-shadow: 0 0 0 3px rgba(251, 100, 40, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-3xl">
+                    ✍️
+                </div>
+                <div class="flex-1">
+                    <div class="font-bold text-gray-900 text-xl">Phase 2: Constitution Builder</div>
+                    <div class="text-sm text-gray-600">Answer in your own words - AI will create professional documents</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Your Progress</span>
+                <span id="progressText">0% complete</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-primary transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Questions for Priority Areas -->
+        <div id="priorityAreasContainer">
+            <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Action Button -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <button id="generateBtn" onclick="generateConstitution()"
+                    disabled
+                    class="w-full py-5 bg-gray-300 text-white rounded-xl font-bold text-xl cursor-not-allowed transition-all">
+                Answer all questions to continue
+            </button>
+            <div class="text-center text-sm text-gray-500 mt-3">
+                AI will generate your constitution based on your responses
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="sections-data.js"></script>
+    <script src="phase2-questions.js"></script>
+    <script src="storage-utils.js"></script>
+
+    <script>
+        let priorityAreas = [];
+        let responses = {};
+
+        window.addEventListener('DOMContentLoaded', function() {
+            priorityAreas = loadPriorityAreas();
+            responses = loadPhase2Responses();
+
+            if (priorityAreas.length === 0) {
+                alert('No priority areas found. Please complete Phase 1 first.');
+                window.location.href = 'phase1-assessment.html';
+                return;
+            }
+
+            renderPriorityAreas();
+            updateProgress();
+        });
+
+        function renderPriorityAreas() {
+            const container = document.getElementById('priorityAreasContainer');
+            container.innerHTML = '';
+
+            priorityAreas.forEach((area, areaIdx) => {
+                const questions = PHASE2_QUESTIONS[area.section.id];
+                if (!questions) return;
+
+                const areaDiv = document.createElement('div');
+                areaDiv.className = 'bg-white rounded-xl shadow-lg p-8 mb-8';
+
+                let questionsHTML = '<div class="space-y-8">';
+                questions.forEach((question, qIdx) => {
+                    const savedAnswer = responses[area.section.id]?.[question.id] || '';
+                    const wordCount = savedAnswer.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    const isAnswered = wordCount >= 10; // Minimum 10 words
+
+                    questionsHTML += `
+                        <div>
+                            <label class="block mb-3">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex-1">
+                                        <span class="text-xs font-medium text-primary bg-orange-50 px-2 py-1 rounded">
+                                            Question ${qIdx + 1} of ${questions.length}
+                                        </span>
+                                        ${isAnswered ? '<span class="text-xs text-green-600 font-medium ml-2">✓ Answered</span>' : ''}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        ${wordCount} words
+                                    </div>
+                                </div>
+                                <div class="text-base font-semibold text-gray-900 mb-3">
+                                    ${question.text}
+                                </div>
+                                <textarea
+                                    id="${area.section.id}-${question.id}"
+                                    rows="6"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg transition-all resize-none"
+                                    placeholder="Share your thoughts in detail... (minimum 10 words)"
+                                    oninput="handleAnswerChange(${area.section.id}, '${question.id}', this.value)"
+                                >${savedAnswer}</textarea>
+                            </label>
+                            ${!isAnswered && wordCount > 0 ?
+                                '<div class="text-xs text-orange-600 mt-1">Please provide more detail (at least 10 words)</div>' :
+                                ''}
+                        </div>
+                    `;
+                });
+                questionsHTML += '</div>';
+
+                areaDiv.innerHTML = `
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="text-4xl">${area.section.icon}</span>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-gray-900">${area.section.title}</h3>
+                            <div class="text-sm text-gray-600">${area.section.description}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Priority ${areaIdx + 1}</div>
+                            <div class="text-sm font-semibold text-gray-700">Score: ${area.score.toFixed(1)}/5</div>
+                        </div>
+                    </div>
+                    ${questionsHTML}
+                `;
+
+                container.appendChild(areaDiv);
+            });
+        }
+
+        function handleAnswerChange(sectionId, questionId, value) {
+            if (!responses[sectionId]) {
+                responses[sectionId] = {};
+            }
+            responses[sectionId][questionId] = value;
+            savePhase2Responses(responses);
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let totalQuestions = 0;
+            let answeredQuestions = 0;
+
+            priorityAreas.forEach(area => {
+                const questions = PHASE2_QUESTIONS[area.section.id];
+                if (!questions) return;
+
+                totalQuestions += questions.length;
+
+                questions.forEach(q => {
+                    const answer = responses[area.section.id]?.[q.id] || '';
+                    const wordCount = answer.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    if (wordCount >= 10) {
+                        answeredQuestions++;
+                    }
+                });
+            });
+
+            const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${Math.round(progress)}% complete (${answeredQuestions}/${totalQuestions} questions)`;
+
+            // Update button state
+            const generateBtn = document.getElementById('generateBtn');
+            if (answeredQuestions === totalQuestions && totalQuestions > 0) {
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                generateBtn.classList.add('bg-primary', 'hover:bg-orange-600', 'shadow-lg', 'hover:shadow-xl');
+                generateBtn.textContent = '🚀 Generate My Family Constitution';
+            } else {
+                generateBtn.disabled = true;
+                generateBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+                generateBtn.classList.remove('bg-primary', 'hover:bg-orange-600', 'shadow-lg', 'hover:shadow-xl');
+                generateBtn.textContent = `Answer all questions to continue (${answeredQuestions}/${totalQuestions})`;
+            }
+        }
+
+        function generateConstitution() {
+            // Verify all questions are answered
+            let allAnswered = true;
+            priorityAreas.forEach(area => {
+                const questions = PHASE2_QUESTIONS[area.section.id];
+                if (!questions) return;
+
+                questions.forEach(q => {
+                    const answer = responses[area.section.id]?.[q.id] || '';
+                    const wordCount = answer.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    if (wordCount < 10) {
+                        allAnswered = false;
+                    }
+                });
+            });
+
+            if (!allAnswered) {
+                alert('Please answer all questions with at least 10 words each.');
+                return;
+            }
+
+            // Save and proceed to generation
+            savePhase2Responses(responses);
+            window.location.href = 'generating.html';
+        }
+    </script>
+</body>
+</html>

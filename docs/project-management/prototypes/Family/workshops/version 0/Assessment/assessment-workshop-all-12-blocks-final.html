@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Workshop - All 12 Blocks - Family Governance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'hsl(24, 96%, 57%)',
+                        background: 'hsl(210, 22%, 97%)',
+                        foreground: 'hsl(222.2, 84%, 4.9%)',
+                        card: 'hsl(0, 0%, 100%)',
+                        muted: 'hsl(210, 40%, 96%)',
+                        'muted-foreground': 'hsl(215.4, 16.3%, 46.9%)',
+                        border: 'hsl(0, 0%, 96%)',
+                        'list-item': '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .block-content { display: none; }
+        .block-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .ai-avatar {
+            background: linear-gradient(135deg, rgba(251, 100, 40, 1) 0%, rgba(251, 100, 40, 0.8) 100%);
+        }
+        .ai-response { display: none; animation: slideDown 0.3s ease; }
+        .ai-response.show { display: block; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-indicator { display: inline-flex; gap: 4px; }
+        .typing-indicator span {
+            width: 8px; height: 8px; border-radius: 50%; background: #FB6428;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-background">
+    <div class="min-h-screen py-4 sm:py-8">
+        <div class="max-w-5xl mx-auto px-4">
+            <!-- Header -->
+            <div class="bg-card rounded-lg shadow-sm mb-6 p-6">
+                <h1 class="text-2xl font-medium text-foreground">Family Assessment Workshop</h1>
+                <p class="text-sm text-muted-foreground mt-2">Live Workshop: <span id="current-block-title">Block 1 of 12</span></p>
+            </div>
+
+            <!-- Workshop Header -->
+            <div class="bg-card rounded-lg shadow-sm p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full ai-avatar flex items-center justify-center">
+                            <span class="text-white text-lg">🤖</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-foreground">AI Facilitator: Archimedes</div>
+                            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span class="w-2 h-2 rounded-full bg-green-500 pulse"></span>
+                                Live Now
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="bg-card rounded-lg shadow-sm p-4 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="text-sm font-medium text-foreground" id="progress-title">Block 1: Communication Patterns</div>
+                    <div class="text-sm text-muted-foreground" id="progress-counter">Block 1 of 12</div>
+                </div>
+                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full transition-all duration-300" style="width: 8%; background: #FB6428;"></div>
+                </div>
+            </div>
+
+            <!-- Block Content Container -->
+            <div id="block-container"></div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 justify-between">
+                <button id="prev-btn" onclick="previousBlock()" class="px-6 py-2 rounded-lg font-medium text-foreground border-2 border-border bg-card hover:bg-muted transition-all">
+                    ← Previous Block
+                </button>
+                <div class="flex gap-3">
+                    <button class="px-6 py-2 rounded-lg font-medium text-foreground border-2 border-border bg-card hover:bg-muted transition-all">
+                        Save Progress
+                    </button>
+                    <button id="next-btn" onclick="nextBlock()" class="px-6 py-2 rounded-lg font-medium text-white transition-all" style="background: #FB6428;" onmouseover="this.style.background='#e5571f'" onmouseout="this.style.background='#FB6428'">
+                        Next Block →
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Block Data Structure
+        const blocks = [
+            {
+                title: "Communication Patterns",
+                intro: "Effective communication is the foundation of strong family governance. Let's explore how your family communicates and identify areas for improvement.",
+                why: "Research shows that 70% of family governance failures stem from poor communication. Families with clear communication channels are 3x more likely to successfully navigate succession and wealth transfer.",
+                dimensions: [
+                    { title: "Frequency & Regularity", desc: "How often does your family communicate formally and informally?" },
+                    { title: "Openness & Transparency", desc: "Are family members comfortable sharing concerns and ideas?" },
+                    { title: "Active Listening", desc: "Do family members truly listen and understand each other?" },
+                    { title: "Channel Diversity", desc: "Multiple channels (in-person, digital, written) for different contexts?" }
+                ],
+                example: "The Johnson Family holds monthly video calls for updates, quarterly in-person meetings for major decisions, and maintains a private family Slack channel for quick questions.",
+                placeholder: "Example: We mostly communicate via WhatsApp group, but important decisions are only discussed during holidays when we meet in person. Sometimes younger family members feel their opinions aren't heard...",
+                aiResponse: {
+                    analysis: "Based on your description, I see <strong>mixed communication patterns</strong>: Regular informal communication via WhatsApp (strength), but important decisions delayed until in-person meetings (challenge). Younger generation feeling unheard is a risk for disengagement.",
+                    rating: "Your situation suggests a rating of <strong>2-3 out of 5</strong>: Rating 2 if younger members feel regularly excluded, Rating 3 if informal channels work well but formal process needs improvement.",
+                    recommendations: [
+                        "Create structured virtual meetings for major decisions (don't wait for holidays)",
+                        "Implement 'voice rounds' where each member shares thoughts before discussion",
+                        "Designate younger member as 'communication liaison' to bridge generational gap"
+                    ]
+                }
+            },
+            {
+                title: "Decision-Making Process",
+                intro: "Clear decision-making processes prevent confusion and ensure all voices are heard appropriately.",
+                why: "Families without defined decision-making frameworks experience 2x more conflicts and 50% longer resolution times for major decisions.",
+                dimensions: [
+                    { title: "Decision Authority", desc: "Who has authority to make which types of decisions?" },
+                    { title: "Voting Procedures", desc: "Are there clear voting mechanisms for major decisions?" },
+                    { title: "Consensus vs Majority", desc: "When is consensus required vs simple majority?" },
+                    { title: "Documentation", desc: "Are decisions documented and tracked?" }
+                ],
+                example: "The Miller Family uses a decision matrix: Minor decisions (<$10k) by any member, medium ($10k-$100k) require Family Council vote, major (>$100k) require unanimous approval.",
+                placeholder: "Example: Major decisions are made informally by the patriarch. There's no clear process, which sometimes leads to confusion about what was actually decided...",
+                aiResponse: {
+                    analysis: "Your description reveals <strong>informal, centralized decision-making</strong>: Patriarch makes decisions (concentration risk), no clear process (confusion risk), lack of documentation (accountability gap).",
+                    rating: "Your situation suggests a rating of <strong>2 out of 5</strong>: The informal nature and centralization indicate significant room for improvement in process formalization.",
+                    recommendations: [
+                        "Create decision rights matrix defining authority levels",
+                        "Implement voting procedures for decisions above certain threshold",
+                        "Document all major decisions with rationale in shared platform"
+                    ]
+                }
+            },
+            {
+                title: "Conflict Resolution",
+                intro: "Healthy families have structured ways to address disagreements before they escalate.",
+                why: "80% of family business failures involve unresolved conflicts. Families with formal conflict resolution mechanisms are 4x more likely to remain united.",
+                dimensions: [
+                    { title: "Conflict Awareness", desc: "Do family members acknowledge conflicts openly?" },
+                    { title: "Mediation Process", desc: "Is there a structured process for mediation?" },
+                    { title: "Third-Party Support", desc: "Are external mediators available when needed?" },
+                    { title: "Resolution Follow-up", desc: "Are resolved conflicts monitored to prevent recurrence?" }
+                ],
+                example: "The Chen Family has a 'cooling-off' protocol: Pause heated discussions for 48 hours, schedule formal mediation with neutral family member, document agreed solutions.",
+                placeholder: "Example: When conflicts arise, family members avoid each other for weeks. There's no formal way to address issues, so resentments build up over time...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>conflict avoidance patterns</strong>: No formal mechanism (risk of escalation), avoidance behavior (resentment buildup), lack of resolution process (unresolved issues).",
+                    rating: "Your situation suggests a rating of <strong>1-2 out of 5</strong>: Avoidance patterns and lack of formal process indicate critical need for conflict resolution framework.",
+                    recommendations: [
+                        "Establish 'cooling-off' protocol with defined timeframes",
+                        "Create mediation process with neutral family member or advisor",
+                        "Schedule regular 'clearing' sessions to address small issues before they grow"
+                    ]
+                }
+            },
+            {
+                title: "Financial Transparency",
+                intro: "Appropriate financial transparency builds trust while respecting privacy boundaries.",
+                why: "Families with clear financial communication report 60% higher trust levels and smoother wealth transitions.",
+                dimensions: [
+                    { title: "Information Sharing", desc: "What financial information is shared with family members?" },
+                    { title: "Reporting Cadence", desc: "How often are financial updates provided?" },
+                    { title: "Education Level", desc: "Do younger members understand family finances?" },
+                    { title: "Privacy Balance", desc: "Is there balance between transparency and privacy?" }
+                ],
+                example: "The Rodriguez Family shares quarterly financial summaries with all members over 21, detailed reports with Family Council, and runs annual financial literacy sessions for next generation.",
+                placeholder: "Example: Parents don't share financial details with children. Adult children have no idea about family wealth, which creates anxiety about the future...",
+                aiResponse: {
+                    analysis: "Your description reveals <strong>financial opacity</strong>: No information sharing (anxiety creation), adult children uninformed (succession risk), lack of education (preparedness gap).",
+                    rating: "Your situation suggests a rating of <strong>1-2 out of 5</strong>: Limited transparency creates anxiety and doesn't prepare next generation for wealth stewardship.",
+                    recommendations: [
+                        "Start with high-level wealth overview for adult children",
+                        "Implement quarterly financial updates with appropriate detail levels",
+                        "Create financial education program for next generation"
+                    ]
+                }
+            },
+            {
+                title: "Roles & Responsibilities",
+                intro: "Clear role definitions prevent overlap, gaps, and confusion about who does what.",
+                why: "Families with documented roles report 70% fewer operational conflicts and clearer accountability.",
+                dimensions: [
+                    { title: "Role Clarity", desc: "Are family governance roles clearly defined?" },
+                    { title: "Written Descriptions", desc: "Are responsibilities documented?" },
+                    { title: "Accountability", desc: "Is there accountability for role performance?" },
+                    { title: "Evolution Process", desc: "How do roles change as family grows?" }
+                ],
+                example: "The Thompson Family maintains a governance charter with defined roles: Family Council Chair, Treasurer, Education Coordinator, each with 2-year terms and documented responsibilities.",
+                placeholder: "Example: There are no formal roles. People just do what they think needs doing, which sometimes means important things get missed or duplicated...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>informal role structure</strong>: No formal roles (coordination challenges), ad-hoc approach (gaps and duplication), lack of accountability (performance issues).",
+                    rating: "Your situation suggests a rating of <strong>2 out of 5</strong>: Informal approach works short-term but creates inefficiency and accountability gaps as family grows.",
+                    recommendations: [
+                        "Define 3-5 core governance roles with clear responsibilities",
+                        "Create simple role descriptions (1-page each)",
+                        "Establish annual role review process with family"
+                    ]
+                }
+            },
+            {
+                title: "Trust & Accountability",
+                intro: "Trust is built through consistent accountability and transparency in actions and commitments.",
+                why: "High-trust families are 3x more likely to successfully navigate generational transitions and major decisions.",
+                dimensions: [
+                    { title: "Promise Keeping", desc: "Do family members follow through on commitments?" },
+                    { title: "Transparency", desc: "Are actions and decisions transparent?" },
+                    { title: "Feedback Culture", desc: "Can members give/receive constructive feedback?" },
+                    { title: "Accountability Mechanisms", desc: "How are people held accountable?" }
+                ],
+                example: "The Davis Family uses commitment tracking: All commitments logged in shared system, monthly reviews of progress, open discussion of challenges without blame.",
+                placeholder: "Example: Sometimes commitments are made but not kept. There's no way to address this without seeming confrontational, so trust has eroded over time...",
+                aiResponse: {
+                    analysis: "Your description reveals <strong>trust erosion patterns</strong>: Broken commitments (credibility loss), no accountability mechanism (pattern continuation), fear of confrontation (issues unaddressed).",
+                    rating: "Your situation suggests a rating of <strong>2 out of 5</strong>: Trust erosion is concerning and needs immediate attention before it causes deeper family fractures.",
+                    recommendations: [
+                        "Implement commitment tracking system (simple shared doc)",
+                        "Create 'no-blame' review sessions focused on learning",
+                        "Establish clear consequences for repeated non-performance"
+                    ]
+                }
+            },
+            {
+                title: "Succession Readiness",
+                intro: "Successful succession requires years of preparation, not last-minute planning.",
+                why: "Only 30% of family businesses survive to second generation, often due to poor succession planning.",
+                dimensions: [
+                    { title: "Succession Plan", desc: "Is there a documented succession plan?" },
+                    { title: "Successor Development", desc: "Are potential successors being developed?" },
+                    { title: "Timeline Clarity", desc: "Are transition timelines clear?" },
+                    { title: "Emergency Preparedness", desc: "What happens in unexpected scenarios?" }
+                ],
+                example: "The Anderson Family has 5-year succession roadmap: Identify potential successors, provide leadership training, gradual responsibility transfer, annual plan reviews.",
+                placeholder: "Example: Succession hasn't been discussed. The current generation leader is aging, but there's no plan for transition. This creates anxiety for everyone...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>succession avoidance</strong>: No plan (uncertainty risk), aging leadership (time pressure), family anxiety (emotional stress), lack of preparation (failure risk).",
+                    rating: "Your situation suggests a rating of <strong>1 out of 5</strong>: Absence of succession planning is critical risk requiring immediate attention.",
+                    recommendations: [
+                        "Start succession conversation now - don't wait for crisis",
+                        "Identify 2-3 potential successors and begin development",
+                        "Create emergency succession plan as first step"
+                    ]
+                }
+            },
+            {
+                title: "Business Involvement",
+                intro: "Clear policies about family member involvement in business prevent confusion and conflict.",
+                why: "Families with clear entry/exit criteria experience 50% fewer conflicts about business roles.",
+                dimensions: [
+                    { title: "Entry Criteria", desc: "What qualifications required for family members to join?" },
+                    { title: "Exit Procedures", desc: "How can family members exit gracefully?" },
+                    { title: "Non-Business Paths", desc: "Are non-business careers equally valued?" },
+                    { title: "Performance Standards", desc: "Are family members held to same standards?" }
+                ],
+                example: "The Park Family requires: 5 years external work experience, relevant qualifications, business need for role, competitive interview process, same performance reviews as non-family.",
+                placeholder: "Example: Any family member can join the business anytime. There's no clear criteria, which has led to some members feeling entitled while others feel there's no room for them...",
+                aiResponse: {
+                    analysis: "Your description reveals <strong>ad-hoc business involvement</strong>: No entry criteria (quality risk), entitlement feelings (merit issues), exclusion concerns (fairness problems), unclear expectations (performance gaps).",
+                    rating: "Your situation suggests a rating of <strong>2 out of 5</strong>: Lack of clear policies creates both entitlement and exclusion issues simultaneously.",
+                    recommendations: [
+                        "Define clear entry requirements (experience, education, business need)",
+                        "Create fair evaluation process for family candidates",
+                        "Establish that non-business careers are equally valued"
+                    ]
+                }
+            },
+            {
+                title: "Education & Development",
+                intro: "Investing in family member development ensures capable future leadership.",
+                why: "Families who invest in development are 4x more likely to have successful multi-generational leadership.",
+                dimensions: [
+                    { title: "Learning Opportunities", desc: "Are development opportunities provided?" },
+                    { title: "Financial Literacy", desc: "Is financial education prioritized?" },
+                    { title: "Leadership Development", desc: "Are leadership skills cultivated?" },
+                    { title: "Mentorship Programs", desc: "Do experienced members mentor younger ones?" }
+                ],
+                example: "The Wong Family funds: Graduate degrees, leadership courses, industry conferences, assigns each young member a senior family mentor, runs quarterly family governance workshops.",
+                placeholder: "Example: Education is each person's responsibility. The family doesn't provide formal development opportunities, though some members seek them independently...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>individual approach to development</strong>: No family investment (unequal development), individual responsibility (capability gaps), lack of coordination (inconsistent preparation).",
+                    rating: "Your situation suggests a rating of <strong>2-3 out of 5</strong>: Individual approach works but misses opportunity for strategic family capability building.",
+                    recommendations: [
+                        "Create education fund for family members' development",
+                        "Implement annual family governance education sessions",
+                        "Establish mentorship program pairing senior and junior members"
+                    ]
+                }
+            },
+            {
+                title: "Philanthropy Alignment",
+                intro: "Shared philanthropic vision strengthens family bonds and creates meaningful legacy.",
+                why: "Families with coordinated giving report 80% stronger family unity and sense of shared purpose.",
+                dimensions: [
+                    { title: "Shared Vision", desc: "Does family have shared philanthropic goals?" },
+                    { title: "Collective Giving", desc: "Are there family giving initiatives?" },
+                    { title: "Next Gen Involvement", desc: "Are younger members engaged in philanthropy?" },
+                    { title: "Impact Measurement", desc: "How is philanthropic impact assessed?" }
+                ],
+                example: "The Garcia Family has family foundation: Annual giving strategy discussions, each member nominates causes, collective decision on major grants, quarterly impact reviews.",
+                placeholder: "Example: Family members give individually to causes they care about. There's no coordination, and we've never discussed creating a shared philanthropic vision...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>individual giving approach</strong>: No coordination (missed synergy), separate causes (fragmented impact), no shared vision (lost bonding opportunity).",
+                    rating: "Your situation suggests a rating of <strong>2-3 out of 5</strong>: Individual approach is fine but family misses opportunity for deeper unity through shared purpose.",
+                    recommendations: [
+                        "Host family discussion about shared values and causes",
+                        "Create small joint giving initiative to start (doesn't require foundation)",
+                        "Involve next generation in philanthropic decision-making"
+                    ]
+                }
+            },
+            {
+                title: "Wealth Philosophy",
+                intro: "Shared understanding of wealth purpose prevents conflicts about money's role in family.",
+                why: "Families with articulated wealth philosophy have 60% fewer conflicts about money use and distribution.",
+                dimensions: [
+                    { title: "Purpose Understanding", desc: "Why does family have wealth? What's it for?" },
+                    { title: "Value Alignment", desc: "Do members agree on wealth's purpose?" },
+                    { title: "Distribution Philosophy", desc: "How should wealth be shared across generations?" },
+                    { title: "Stewardship Mindset", desc: "Do members see themselves as stewards?" }
+                ],
+                example: "The Liu Family wealth statement: 'We are stewards, not owners. Wealth should support family flourishing, enable meaningful work, fund education, and create positive societal impact.'",
+                placeholder: "Example: We've never discussed what wealth is for. Different family members seem to have very different views about using and preserving family assets...",
+                aiResponse: {
+                    analysis: "Your description reveals <strong>implicit wealth assumptions</strong>: No articulated philosophy (misalignment risk), different views (conflict potential), lack of discussion (assumptions unchallenged).",
+                    rating: "Your situation suggests a rating of <strong>2 out of 5</strong>: Unspoken differences about wealth purpose are time-bomb for future conflicts.",
+                    recommendations: [
+                        "Facilitate family conversation about wealth purpose and values",
+                        "Draft simple wealth philosophy statement together",
+                        "Revisit and refine statement annually as family evolves"
+                    ]
+                }
+            },
+            {
+                title: "Family Unity & Values",
+                intro: "Strong shared values create the foundation for everything else in family governance.",
+                why: "Value-aligned families are 5x more likely to maintain unity across generations and major decisions.",
+                dimensions: [
+                    { title: "Shared Values", desc: "Does family have articulated shared values?" },
+                    { title: "Value Living", desc: "Do actions reflect stated values?" },
+                    { title: "Bonding Activities", desc: "Are there regular family bonding experiences?" },
+                    { title: "Conflict Resilience", desc: "Can family weather disagreements?" }
+                ],
+                example: "The Brown Family values: Integrity, Education, Service, Stewardship. Annual family retreat, monthly family dinner, shared service projects, values reflected in governance decisions.",
+                placeholder: "Example: We have strong family bonds through shared history, but we've never articulated our values formally. Sometimes we discover we have different priorities...",
+                aiResponse: {
+                    analysis: "Your description shows <strong>informal value alignment</strong>: Strong bonds (foundation strength), shared history (connection), no articulation (clarity gap), priority differences (potential friction).",
+                    rating: "Your situation suggests a rating of <strong>3-4 out of 5</strong>: Good foundation but would benefit from explicit value articulation and regular reinforcement.",
+                    recommendations: [
+                        "Facilitate values identification workshop with family",
+                        "Create simple family values statement (3-5 core values)",
+                        "Design annual traditions that reinforce key values"
+                    ]
+                }
+            }
+        ];
+
+        let currentBlockIndex = 0;
+
+        function renderBlock(index) {
+            const block = blocks[index];
+            const container = document.getElementById('block-container');
+
+            container.innerHTML = `
+                <div class="bg-card rounded-lg shadow-sm p-6 mb-6 block-content active">
+                    <!-- AI Introduction -->
+                    <div class="flex gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-full ai-avatar flex items-center justify-center flex-shrink-0">
+                            <span class="text-white text-lg">🤖</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-foreground mb-2">AI Facilitator</div>
+                            <div class="text-sm text-foreground leading-relaxed">
+                                <p class="mb-3">Welcome to <strong>Block ${index + 1}: ${block.title}</strong>! 👋</p>
+                                <p>${block.intro}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Didactic Material -->
+                    <div class="bg-list-item rounded-lg p-6 mb-6">
+                        <h3 class="text-base font-medium text-foreground mb-4">📚 Learning Material</h3>
+
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-foreground mb-2">Why This Matters</h4>
+                            <p class="text-sm text-muted-foreground leading-relaxed mb-3">${block.why}</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-foreground mb-3">Key Dimensions</h4>
+                            <div class="space-y-3">
+                                ${block.dimensions.map((dim, i) => `
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(251, 100, 40, 0.1); color: #FB6428;">${i + 1}</div>
+                                        <div>
+                                            <div class="text-sm font-medium text-foreground">${dim.title}</div>
+                                            <div class="text-xs text-muted-foreground">${dim.desc}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="border-2 rounded-lg p-4" style="border-color: #FB6428; background: rgba(251, 100, 40, 0.05);">
+                            <h4 class="text-sm font-medium text-foreground mb-2">💡 Best Practice Example</h4>
+                            <p class="text-xs text-muted-foreground leading-relaxed">${block.example}</p>
+                        </div>
+                    </div>
+
+                    <!-- Personal Reflection Box -->
+                    <div class="bg-list-item rounded-lg p-6 mb-6">
+                        <h3 class="text-base font-medium text-foreground mb-3">💭 Your Personal Thoughts & Context</h3>
+                        <p class="text-sm text-muted-foreground mb-4">
+                            Share your specific examples, concerns, or questions about ${block.title.toLowerCase()} in your family. This helps AI provide personalized guidance.
+                        </p>
+
+                        <textarea
+                            id="reflection-text-${index}"
+                            class="w-full border-2 border-border rounded-lg p-4 text-sm text-foreground focus:border-primary focus:outline-none transition-colors"
+                            rows="5"
+                            placeholder="${block.placeholder}"
+                        ></textarea>
+
+                        <div class="text-xs text-muted-foreground mt-2">
+                            💡 <strong>Tip:</strong> Be specific about patterns, challenges, and examples.
+                        </div>
+                    </div>
+
+                    <!-- Ask AI Button -->
+                    <div class="mb-6">
+                        <button
+                            onclick="consultAI(${index})"
+                            class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all w-full justify-center"
+                            style="background: #FB6428;"
+                            onmouseover="this.style.background='#e5571f'"
+                            onmouseout="this.style.background='#FB6428'">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Ask AI for Guidance
+                        </button>
+                    </div>
+
+                    <!-- AI Response Panel -->
+                    <div id="ai-response-${index}" class="ai-response border-2 rounded-lg p-6 mb-6" style="border-color: #FB6428; background: rgba(251, 100, 40, 0.05);">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full ai-avatar flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-lg">🤖</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-foreground mb-3">AI Consultation</div>
+
+                                <div id="ai-thinking-${index}" class="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                    <div class="typing-indicator">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <span>Analyzing your context...</span>
+                                </div>
+
+                                <div id="ai-analysis-${index}" style="display: none;">
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-foreground mb-2">📊 Analysis of Your Situation</h4>
+                                        <p class="text-sm text-foreground leading-relaxed">${block.aiResponse.analysis}</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-foreground mb-2">🎯 Rating Guidance</h4>
+                                        <p class="text-sm text-foreground leading-relaxed">${block.aiResponse.rating}</p>
+                                    </div>
+
+                                    <div class="border-t-2 border-border pt-4">
+                                        <h4 class="text-sm font-medium text-foreground mb-2">💡 Specific Recommendations</h4>
+                                        <ul class="text-sm text-foreground space-y-2">
+                                            ${block.aiResponse.recommendations.map((rec, i) => `
+                                                <li>${i + 1}. <strong>${rec.split(':')[0] || rec}</strong>${rec.includes(':') ? ':' + rec.split(':')[1] : ''}</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rating Exercise -->
+                    <div class="border-2 border-border rounded-lg p-6">
+                        <h3 class="text-base font-medium text-foreground mb-4">🎯 Exercise: Rate Your ${block.title}</h3>
+
+                        <div class="mb-4">
+                            <p class="text-sm text-muted-foreground mb-4">
+                                On a scale of 1-5, how would you rate ${block.title.toLowerCase()} in your family?
+                            </p>
+
+                            <div class="grid grid-cols-5 gap-2">
+                                ${[1, 2, 3, 4, 5].map(rating => `
+                                    <button class="rating-btn border-2 border-border rounded-lg p-3 text-center hover:border-primary transition-all" onclick="selectRating(this, ${rating}, ${index})">
+                                        <div class="text-lg mb-1">${['😟', '😐', '🙂', '😊', '🤩'][rating - 1]}</div>
+                                        <div class="text-xs font-medium text-foreground">${rating}</div>
+                                        <div class="text-xs text-muted-foreground">${['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][rating - 1]}</div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="bg-list-item rounded-lg p-4 text-sm text-muted-foreground">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg class="w-4 h-4" style="color: #FB6428;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="font-medium text-foreground">Live Voting</span>
+                            </div>
+                            <div class="text-xs">All family members will respond simultaneously. We'll see aggregated results after everyone answers.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = ((currentBlockIndex + 1) / blocks.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-title').textContent = `Block ${currentBlockIndex + 1}: ${blocks[currentBlockIndex].title}`;
+            document.getElementById('progress-counter').textContent = `Block ${currentBlockIndex + 1} of ${blocks.length}`;
+            document.getElementById('current-block-title').textContent = `Block ${currentBlockIndex + 1} of ${blocks.length}`;
+
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentBlockIndex === 0;
+            document.getElementById('prev-btn').style.opacity = currentBlockIndex === 0 ? '0.5' : '1';
+
+            const nextBtn = document.getElementById('next-btn');
+            if (currentBlockIndex === blocks.length - 1) {
+                nextBtn.textContent = 'Complete Workshop ✓';
+            } else {
+                nextBtn.textContent = 'Next Block →';
+            }
+        }
+
+        function nextBlock() {
+            if (currentBlockIndex < blocks.length - 1) {
+                currentBlockIndex++;
+                renderBlock(currentBlockIndex);
+                window.scrollTo(0, 0);
+            } else {
+                alert('Workshop completed! Proceeding to results aggregation...');
+            }
+        }
+
+        function previousBlock() {
+            if (currentBlockIndex > 0) {
+                currentBlockIndex--;
+                renderBlock(currentBlockIndex);
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function selectRating(element, rating, blockIndex) {
+            const container = element.closest('.border-2');
+            container.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.style.borderColor = '';
+                btn.style.background = '';
+            });
+            element.style.borderColor = '#FB6428';
+            element.style.background = 'rgba(251, 100, 40, 0.05)';
+        }
+
+        function consultAI(blockIndex) {
+            const reflectionText = document.getElementById(`reflection-text-${blockIndex}`).value.trim();
+
+            if (!reflectionText) {
+                alert('Please share your thoughts first so AI can provide personalized guidance!');
+                return;
+            }
+
+            const aiResponse = document.getElementById(`ai-response-${blockIndex}`);
+            const aiThinking = document.getElementById(`ai-thinking-${blockIndex}`);
+            const aiAnalysis = document.getElementById(`ai-analysis-${blockIndex}`);
+
+            aiResponse.classList.add('show');
+            aiThinking.style.display = 'flex';
+            aiAnalysis.style.display = 'none';
+
+            setTimeout(() => {
+                aiThinking.style.display = 'none';
+                aiAnalysis.style.display = 'block';
+            }, 2000);
+
+            setTimeout(() => {
+                aiResponse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        // Initialize first block
+        renderBlock(0);
+
+        console.log('Family Governance Assessment Workshop - All 12 Blocks with AI Consultation');
+    </script>
+</body>
+</html>

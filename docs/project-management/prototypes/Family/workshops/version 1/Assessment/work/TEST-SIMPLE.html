@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Navigation</title>
+    <style>
+        body { font-family: Arial; padding: 50px; }
+        .screen { display: none; padding: 30px; border: 2px solid #ddd; margin: 20px 0; }
+        .screen.active { display: block; background: #f0f0f0; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Navigation Test</h1>
+    
+    <div class="screen active" id="screen-0">
+        <h2>Screen 0</h2>
+        <p>This is the first screen</p>
+    </div>
+    
+    <div class="screen" id="screen-1">
+        <h2>Screen 1</h2>
+        <p>This is the second screen</p>
+    </div>
+    
+    <div class="screen" id="screen-2">
+        <h2>Screen 2</h2>
+        <p>This is the third screen</p>
+    </div>
+    
+    <div>
+        <button onclick="previousScreen()">⬅️ Previous</button>
+        <span id="current">Screen 1 of 3</span>
+        <button onclick="nextScreen()">Next ➡️</button>
+    </div>
+    
+    <script>
+        let currentScreen = 0;
+        const totalScreens = 3;
+        const screenIds = ['screen-0', 'screen-1', 'screen-2'];
+        
+        function updateScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenIds[currentScreen]).classList.add('active');
+            document.getElementById('current').textContent = `Screen ${currentScreen + 1} of ${totalScreens}`;
+        }
+        
+        function nextScreen() {
+            if (currentScreen < totalScreens - 1) {
+                currentScreen++;
+                updateScreen();
+            }
+        }
+        
+        function previousScreen() {
+            if (currentScreen > 0) {
+                currentScreen--;
+                updateScreen();
+            }
+        }
+    </script>
+</body>
+</html>

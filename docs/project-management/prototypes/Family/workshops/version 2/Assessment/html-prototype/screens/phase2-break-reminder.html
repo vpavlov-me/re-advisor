@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take a Break - Family Governance Assessment</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/screens.css">
+</head>
+<body>
+    <div class="screen-container">
+        <header class="screen-header">
+            <div class="logo">ReFamily</div>
+            <div class="user-menu">
+                <span class="user-name">Владислав</span>
+                <span class="user-avatar">В</span>
+            </div>
+        </header>
+
+        <main class="screen-content">
+            <div class="break-reminder-screen">
+                <div class="break-icon-large">☕</div>
+
+                <h1>Время сделать перерыв</h1>
+                <div class="divider"></div>
+
+                <p class="break-message">
+                    Вы уже ответили на <strong id="answeredCount">52</strong> вопроса и провели
+                    <strong id="timeSpent">45 минут</strong> в оценке.
+                </p>
+
+                <p class="break-explanation">
+                    Исследования показывают, что короткие перерывы улучшают качество ответов
+                    и помогают сохранять фокус на протяжении длительных опросов.
+                </p>
+
+                <div class="break-suggestions">
+                    <h3>Что можно сделать во время перерыва:</h3>
+                    <div class="suggestions-grid">
+                        <div class="suggestion-card">
+                            <div class="suggestion-icon">🚶</div>
+                            <div class="suggestion-text">Пройтись или размяться</div>
+                        </div>
+                        <div class="suggestion-card">
+                            <div class="suggestion-icon">💧</div>
+                            <div class="suggestion-text">Выпить воды</div>
+                        </div>
+                        <div class="suggestion-card">
+                            <div class="suggestion-icon">🌬️</div>
+                            <div class="suggestion-text">Подышать свежим воздухом</div>
+                        </div>
+                        <div class="suggestion-card">
+                            <div class="suggestion-icon">👁️</div>
+                            <div class="suggestion-text">Отдохнуть глаза от экрана</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-reminder">
+                    <h3>Ваш прогресс сохранён</h3>
+                    <div class="progress-bar-large">
+                        <div class="progress-fill-large" id="progressFill" style="width: 50%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">52 / 105 вопросов (50%)</div>
+                </div>
+
+                <div class="break-options">
+                    <div class="break-option-card">
+                        <div class="option-icon">⏱️</div>
+                        <h4>Короткий перерыв</h4>
+                        <p>5 минут</p>
+                        <button class="btn-secondary" onclick="setBreakTimer(5)">
+                            Установить таймер
+                        </button>
+                    </div>
+                    <div class="break-option-card recommended">
+                        <div class="recommended-badge">Рекомендуется</div>
+                        <div class="option-icon">⏰</div>
+                        <h4>Средний перерыв</h4>
+                        <p>15 минут</p>
+                        <button class="btn-primary" onclick="setBreakTimer(15)">
+                            Установить таймер
+                        </button>
+                    </div>
+                    <div class="break-option-card">
+                        <div class="option-icon">🕐</div>
+                        <h4>Длинный перерыв</h4>
+                        <p>30 минут</p>
+                        <button class="btn-secondary" onclick="setBreakTimer(30)">
+                            Установить таймер
+                        </button>
+                    </div>
+                </div>
+
+                <div class="continue-section">
+                    <p class="continue-note">
+                        Хотите продолжить сейчас? Вы всегда можете взять перерыв позже.
+                    </p>
+                    <button class="btn-secondary btn-large" onclick="continuNow()">
+                        Продолжить без перерыва →
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <div class="screen-navigation">
+            <button onclick="location.href='phase2-dashboard.html'" class="btn-secondary">
+                ← К списку разделов
+            </button>
+            <div class="nav-progress">
+                <span class="nav-label">Phase 2: Assessment</span>
+                <span class="nav-step">Рекомендация перерыва</span>
+            </div>
+            <button onclick="continueNow()" class="btn-primary">
+                Продолжить →
+            </button>
+        </div>
+    </div>
+
+    <!-- Timer Modal -->
+    <div id="timerModal" class="modal" style="display: none;">
+        <div class="modal-content timer-modal">
+            <h2>Таймер перерыва</h2>
+            <div class="timer-display">
+                <div class="timer-circle">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45"/>
+                        <circle class="timer-progress" cx="50" cy="50" r="45" id="timerCircle"/>
+                    </svg>
+                    <div class="timer-text">
+                        <span class="timer-minutes" id="timerMinutes">15</span>
+                        <span class="timer-colon">:</span>
+                        <span class="timer-seconds" id="timerSeconds">00</span>
+                    </div>
+                </div>
+            </div>
+            <p class="timer-message">
+                Мы отправим уведомление, когда время выйдет
+            </p>
+            <div class="timer-actions">
+                <button class="btn-secondary" onclick="cancelTimer()">Отменить</button>
+                <button class="btn-primary" onclick="continueNow()">Продолжить сейчас</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .break-reminder-screen {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .break-icon-large {
+            font-size: 100px;
+            margin: 40px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .break-message {
+            font-size: 20px;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .break-explanation {
+            font-size: 16px;
+            color: var(--gray-700);
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .break-suggestions {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 40px;
+        }
+
+        .break-suggestions h3 {
+            margin-bottom: 24px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .suggestion-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .suggestion-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .suggestion-text {
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+
+        .progress-reminder {
+            background: var(--primary-light);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 40px;
+        }
+
+        .progress-reminder h3 {
+            margin-bottom: 20px;
+        }
+
+        .break-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .break-option-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 32px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .break-option-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .break-option-card.recommended {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .recommended-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .option-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .break-option-card h4 {
+            margin-bottom: 8px;
+        }
+
+        .break-option-card p {
+            color: var(--gray-600);
+            margin-bottom: 20px;
+        }
+
+        .continue-section {
+            border-top: 1px solid var(--gray-200);
+            padding-top: 40px;
+            margin-top: 40px;
+        }
+
+        .continue-note {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 16px;
+        }
+
+        /* Timer Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .timer-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .timer-display {
+            margin: 40px 0;
+        }
+
+        .timer-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timer-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .timer-bg {
+            fill: none;
+            stroke: var(--gray-200);
+            stroke-width: 8;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .timer-colon {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .timer-message {
+            color: var(--gray-700);
+            margin-bottom: 32px;
+        }
+
+        .timer-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .suggestions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .break-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script src="../js/prototype.js"></script>
+    <script>
+        // Simulate progress
+        const answered = 52;
+        const total = 105;
+        const percent = Math.round((answered / total) * 100);
+
+        document.getElementById('answeredCount').textContent = answered;
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressText').textContent = `${answered} / ${total} вопросов (${percent}%)`;
+
+        let timerInterval = null;
+        let remainingSeconds = 0;
+
+        function setBreakTimer(minutes) {
+            remainingSeconds = minutes * 60;
+            document.getElementById('timerModal').style.display = 'flex';
+            updateTimerDisplay();
+            startTimer();
+        }
+
+        function startTimer() {
+            const totalSeconds = remainingSeconds;
+            const circumference = 283; // 2 * PI * 45
+
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    showNotification('Перерыв окончен! Готовы продолжить?', 'success');
+                    setTimeout(() => {
+                        continueNow();
+                    }, 2000);
+                    return;
+                }
+
+                updateTimerDisplay();
+
+                // Update circle progress
+                const progress = remainingSeconds / totalSeconds;
+                const offset = circumference * (1 - progress);
+                document.getElementById('timerCircle').style.strokeDashoffset = offset;
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timerMinutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('timerSeconds').textContent = seconds.toString().padStart(2, '0');
+        }
+
+        function cancelTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timerModal').style.display = 'none';
+        }
+
+        function continueNow() {
+            cancelTimer();
+            // Continue to next dimension or question
+            location.href = 'phase2-dashboard.html';
+        }
+
+        // Simulate time spent
+        document.getElementById('timeSpent').textContent = '45 минут';
+    </script>
+</body>
+</html>

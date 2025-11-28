@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Values, Mission & Vision Workshop - Family Governance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #ea580c;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --radius: 0.5rem;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-steps {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 0.5rem;
+            background: var(--border);
+            border-radius: var(--radius);
+            transition: background 0.3s;
+        }
+
+        .progress-step.completed {
+            background: var(--success);
+        }
+
+        .progress-step.active {
+            background: var(--primary);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--background);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Input */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-help {
+            margin-top: 0.375rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Checkbox */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: var(--background);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            flex: 1;
+            font-size: 0.875rem;
+        }
+
+        .checkbox-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+
+        .alert-warning {
+            background: #fed7aa;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+        }
+
+        /* Timer */
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--background);
+            border-radius: var(--radius);
+            font-weight: 600;
+        }
+
+        /* Participants */
+        .participants-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--background);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .participants-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .participants-count strong {
+            color: var(--primary);
+            font-size: 1.125rem;
+        }
+
+        /* Values List */
+        .values-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .value-category {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .value-category-header {
+            background: var(--background);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .value-category-items {
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .value-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+        }
+
+        .value-tag-count {
+            background: var(--primary);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Voting Results */
+        .voting-results {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .voting-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .voting-rank {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: 600;
+        }
+
+        .voting-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .voting-bar-container {
+            flex: 2;
+            height: 2rem;
+            background: var(--background);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .voting-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Hidden by default */
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step.active {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .info-box p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Definitions */
+        .definitions {
+            display: grid;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .definition-card {
+            padding: 1.25rem;
+            border-left: 4px solid var(--primary);
+            background: var(--background);
+            border-radius: var(--radius);
+        }
+
+        .definition-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .definition-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Mission/Vision Display */
+        .statement-display {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 2rem;
+            border-radius: var(--radius);
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .statement-text {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            font-style: italic;
+        }
+
+        /* Facilitator Panel */
+        .facilitator-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 2px solid var(--primary);
+            padding: 1rem 2rem;
+            box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.1);
+            z-index: 50;
+        }
+
+        .facilitator-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .facilitator-info {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .facilitator-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .facilitator-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .facilitator-info {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Family Governance Platform</div>
+            <div class="user-info">
+                <span class="badge">Участник</span>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">Иван Иванов</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" style="padding-bottom: 6rem;">
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-title">Воркшоп: Ценности, Миссия и Видение</span>
+                <div class="timer">
+                    <span>⏱</span>
+                    <span id="timer">00:00</span>
+                </div>
+            </div>
+            <div class="progress-steps">
+                <div class="progress-step completed" data-step="1"></div>
+                <div class="progress-step active" data-step="2"></div>
+                <div class="progress-step" data-step="3"></div>
+                <div class="progress-step" data-step="4"></div>
+                <div class="progress-step" data-step="5"></div>
+            </div>
+            <div class="progress-labels">
+                <span>Введение</span>
+                <span>Ценности</span>
+                <span>Миссия</span>
+                <span>Видение</span>
+                <span>Завершение</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Introduction -->
+        <div class="step" id="step-1">
+            <div class="info-box">
+                <h2>Добро пожаловать на воркшоп!</h2>
+                <p>Сегодня мы вместе сформулируем ценности, миссию и видение нашей семьи — основу семейной конституции.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">О чем этот воркшоп?</h2>
+                    <p class="card-description">
+                        Мы пройдем через структурированный процесс выявления того, что действительно важно для нашей семьи,
+                        и создадим документ, который будет направлять наши решения в будущем.
+                    </p>
+                </div>
+
+                <div class="definitions">
+                    <div class="definition-card">
+                        <div class="definition-title">💎 Ценности</div>
+                        <div class="definition-text">
+                            Это принципы и убеждения, которые важны для всех членов семьи.
+                            Они определяют, как мы относимся друг к другу и к окружающим.
+                        </div>
+                    </div>
+                    <div class="definition-card">
+                        <div class="definition-title">🎯 Миссия</div>
+                        <div class="definition-text">
+                            Это заявление о предназначении семьи — почему мы существуем как семья,
+                            какую роль играем для своих членов и общества.
+                        </div>
+                    </div>
+                    <div class="definition-card">
+                        <div class="definition-title">🔭 Видение</div>
+                        <div class="definition-text">
+                            Это образ будущего нашей семьи — какими мы хотим стать через 20-50 лет,
+                            какое наследие мы хотим оставить следующим поколениям.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <div>
+                        <strong>Регламент:</strong> Воркшоп займет примерно 2-3 часа.
+                        Каждый этап имеет свой тайминг, но мы можем его корректировать по необходимости.
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="goToStep(2)">Начать воркшоп →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Values - Brainstorm -->
+        <div class="step" id="step-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 2.1: Мозговой штурм ценностей</h2>
+                    <p class="card-description">
+                        Напишите 3-5 слов или коротких фраз, которые описывают важнейшие ценности нашей семьи.
+                        Это может быть что угодно: честность, доверие, образование, традиции, инновации и т.д.
+                    </p>
+                </div>
+
+                <div class="participants-bar">
+                    <div class="participants-count">
+                        Ответили: <strong id="values-responded">0</strong> из <strong>8</strong> участников
+                    </div>
+                    <div class="timer">⏱ Осталось: 5:00</div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>💡</span>
+                    <div>Не бойтесь повторяться с другими участниками — похожие ответы показывают общие приоритеты!</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ценность 1 *</label>
+                    <input type="text" class="form-input" placeholder="Например: Честность" id="value1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ценность 2 *</label>
+                    <input type="text" class="form-input" placeholder="Например: Доверие" id="value2">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ценность 3 *</label>
+                    <input type="text" class="form-input" placeholder="Например: Семья" id="value3">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ценность 4 (опционально)</label>
+                    <input type="text" class="form-input" placeholder="Добавьте еще одну" id="value4">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ценность 5 (опционально)</label>
+                    <input type="text" class="form-input" placeholder="Добавьте еще одну" id="value5">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(1)">← Назад</button>
+                    <button class="btn btn-primary" onclick="submitValues()">Отправить ответы</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Values - Review -->
+        <div class="step" id="step-3">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 2.2: Обзор предложенных ценностей</h2>
+                    <p class="card-description">
+                        AI проанализировал все предложенные ценности, сгруппировал похожие
+                        и выделил наиболее часто упоминаемые.
+                    </p>
+                </div>
+
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <div>Получено <strong>42 ценности</strong> от 8 участников. AI обработал и сгруппировал их в 4 категории.</div>
+                </div>
+
+                <div class="values-list">
+                    <div class="value-category">
+                        <div class="value-category-header">Взаимоотношения</div>
+                        <div class="value-category-items">
+                            <div class="value-tag">
+                                <span>Доверие</span>
+                                <span class="value-tag-count">6</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Честность</span>
+                                <span class="value-tag-count">5</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Уважение</span>
+                                <span class="value-tag-count">4</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Единство</span>
+                                <span class="value-tag-count">3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="value-category">
+                        <div class="value-category-header">Развитие</div>
+                        <div class="value-category-items">
+                            <div class="value-tag">
+                                <span>Образование</span>
+                                <span class="value-tag-count">5</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Инновации</span>
+                                <span class="value-tag-count">2</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Профессионализм</span>
+                                <span class="value-tag-count">2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="value-category">
+                        <div class="value-category-header">Общество</div>
+                        <div class="value-category-items">
+                            <div class="value-tag">
+                                <span>Благотворительность</span>
+                                <span class="value-tag-count">3</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Ответственность</span>
+                                <span class="value-tag-count">2</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Экология</span>
+                                <span class="value-tag-count">2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="value-category">
+                        <div class="value-category-header">Традиции</div>
+                        <div class="value-category-items">
+                            <div class="value-tag">
+                                <span>Наследие</span>
+                                <span class="value-tag-count">4</span>
+                            </div>
+                            <div class="value-tag">
+                                <span>Культура</span>
+                                <span class="value-tag-count">2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(2)">← Назад</button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">Перейти к голосованию →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Values - Voting -->
+        <div class="step" id="step-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 2.3: Голосование за ключевые ценности</h2>
+                    <p class="card-description">
+                        Выберите <strong>5 наиболее важных ценностей</strong> из представленного списка.
+                        Эти ценности станут основой конституции нашей семьи.
+                    </p>
+                </div>
+
+                <div class="participants-bar">
+                    <div class="participants-count">
+                        Проголосовали: <strong id="voting-responded">0</strong> из <strong>8</strong> участников
+                    </div>
+                    <div style="font-weight: 600; color: var(--primary);">
+                        Выбрано: <span id="selected-count">0</span> / 5
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <span>⚠️</span>
+                    <div>Вы можете выбрать ровно 5 ценностей. После выбора нажмите "Подтвердить выбор".</div>
+                </div>
+
+                <div class="checkbox-group" id="values-checkboxes">
+                    <!-- Values will be populated by JavaScript -->
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(3)">← Назад</button>
+                    <button class="btn btn-success" id="confirm-values-btn" disabled onclick="confirmValues()">
+                        Подтвердить выбор
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Values - Results -->
+        <div class="step" id="step-5">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Результаты голосования</h2>
+                    <p class="card-description">
+                        Вот 5 ключевых ценностей, которые выбрала наша семья.
+                    </p>
+                </div>
+
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <div>Все участники завершили голосование. Результаты обработаны.</div>
+                </div>
+
+                <div class="voting-results">
+                    <div class="voting-item">
+                        <div class="voting-rank">1</div>
+                        <div class="voting-name">Честность</div>
+                        <div class="voting-bar-container">
+                            <div class="voting-bar" style="width: 87.5%">7 голосов</div>
+                        </div>
+                    </div>
+                    <div class="voting-item">
+                        <div class="voting-rank">2</div>
+                        <div class="voting-name">Доверие</div>
+                        <div class="voting-bar-container">
+                            <div class="voting-bar" style="width: 75%">6 голосов</div>
+                        </div>
+                    </div>
+                    <div class="voting-item">
+                        <div class="voting-rank">3</div>
+                        <div class="voting-name">Единство</div>
+                        <div class="voting-bar-container">
+                            <div class="voting-bar" style="width: 75%">6 голосов</div>
+                        </div>
+                    </div>
+                    <div class="voting-item">
+                        <div class="voting-rank">4</div>
+                        <div class="voting-name">Уважение</div>
+                        <div class="voting-bar-container">
+                            <div class="voting-bar" style="width: 62.5%">5 голосов</div>
+                        </div>
+                    </div>
+                    <div class="voting-item">
+                        <div class="voting-rank">5</div>
+                        <div class="voting-name">Образование</div>
+                        <div class="voting-bar-container">
+                            <div class="voting-bar" style="width: 62.5%">5 голосов</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="statement-display" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Ключевые ценности семьи Ивановых</h3>
+                    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Честность</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Доверие</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Единство</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Уважение</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Образование</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(4)">← Назад</button>
+                    <button class="btn btn-primary" onclick="goToStep(6)">Перейти к формулированию миссии →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Mission - Brainstorm -->
+        <div class="step" id="step-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 3.1: Формулирование миссии семьи</h2>
+                    <p class="card-description">
+                        Миссия — это заявление о предназначении нашей семьи. Подумайте над вопросами
+                        ниже и предложите свою формулировку миссии (1-3 предложения).
+                    </p>
+                </div>
+
+                <div class="definitions">
+                    <div class="definition-card">
+                        <div class="definition-title">🤔 Вопросы для размышления</div>
+                        <div class="definition-text">
+                            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                <li>Почему для нас важно быть одной семьей?</li>
+                                <li>Какую роль наша семья играет для своих членов и общества?</li>
+                                <li>Что объединяет всех нас?</li>
+                                <li>Как наши ценности проявляются в наших действиях?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>💡</span>
+                    <div>
+                        <strong>Пример миссии:</strong><br>
+                        "Наша семья существует для взаимной поддержки и создания ценности
+                        для общества через семейное дело."
+                    </div>
+                </div>
+
+                <div class="participants-bar">
+                    <div class="participants-count">
+                        Ответили: <strong>0</strong> из <strong>8</strong> участников
+                    </div>
+                    <div class="timer">⏱ Осталось: 7:00</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ваш вариант миссии *</label>
+                    <textarea class="form-textarea" rows="5"
+                              placeholder="Напишите 1-3 предложения о предназначении нашей семьи..."
+                              id="mission-input"></textarea>
+                    <div class="form-help">Максимум 500 символов</div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(5)">← Назад</button>
+                    <button class="btn btn-primary" onclick="submitMission()">Отправить вариант миссии</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: Mission - AI Draft -->
+        <div class="step" id="step-7">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 3.2: Черновик миссии от AI</h2>
+                    <p class="card-description">
+                        На основе ваших ответов и выбранных ценностей, AI предложил следующую формулировку миссии.
+                    </p>
+                </div>
+
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <div>
+                        AI проанализировал 8 ответов участников и выявил общие темы:
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Единство поколений (6 из 8 ответов)</li>
+                            <li>Взаимная поддержка (5 из 8)</li>
+                            <li>Вклад в общество (4 из 8)</li>
+                            <li>Сохранение традиций (3 из 8)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="statement-display">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Предложенная миссия</h3>
+                    <p class="statement-text">
+                        "Миссия нашей семьи — сохранять единство поколений,
+                        поддерживать друг друга в развитии и через семейное дело
+                        приносить пользу обществу, опираясь на наши ценности
+                        честности, доверия и уважения."
+                    </p>
+                </div>
+
+                <div class="card" style="background: var(--background); box-shadow: none;">
+                    <div class="card-header">
+                        <h3 style="font-size: 1.125rem;">💬 Ваши комментарии и предложения</h3>
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-textarea" rows="3"
+                                  placeholder="Что бы вы хотели изменить или дополнить?"
+                                  id="mission-feedback"></textarea>
+                    </div>
+                    <div class="btn-group" style="margin-top: 1rem;">
+                        <button class="btn btn-outline">Отправить комментарий</button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(6)">← Назад</button>
+                    <button class="btn btn-secondary" onclick="alert('Фасилитатор вернет нас к редактированию')">
+                        Требуется доработка
+                    </button>
+                    <button class="btn btn-primary" onclick="goToStep(8)">Перейти к утверждению →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 8: Mission - Approval -->
+        <div class="step" id="step-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 3.3: Утверждение миссии</h2>
+                    <p class="card-description">
+                        После обсуждения и доработок, вот финальная версия миссии нашей семьи.
+                        Пожалуйста, подтвердите ваше согласие.
+                    </p>
+                </div>
+
+                <div class="statement-display">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Финальная миссия семьи Ивановых</h3>
+                    <p class="statement-text">
+                        "Миссия семьи Ивановых — объединяя опыт и ресурсы разных поколений,
+                        воспитывать взаимоподдержку и создавать ценность для общества
+                        через наши совместные начинания."
+                    </p>
+                </div>
+
+                <div class="participants-bar">
+                    <div class="participants-count">
+                        Одобрили: <strong id="mission-approved">0</strong> из <strong>8</strong> участников
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <div>
+                        Для принятия миссии требуется согласие всех участников или
+                        минимум 2/3 голосов (по решению фасилитатора).
+                    </div>
+                </div>
+
+                <div class="card" style="background: var(--background); box-shadow: none; text-align: center;">
+                    <h3 style="margin-bottom: 1.5rem;">Вы согласны с этой миссией?</h3>
+                    <div class="btn-group" style="justify-content: center;">
+                        <button class="btn btn-success" style="min-width: 150px;" onclick="approveMission(true)">
+                            ✓ Одобряю
+                        </button>
+                        <button class="btn btn-outline" style="min-width: 150px;" onclick="approveMission(false)">
+                            Есть возражения
+                        </button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(7)">← Назад</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 9: Vision - Brainstorm -->
+        <div class="step" id="step-9">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Шаг 4.1: Представьте будущее нашей семьи</h2>
+                    <p class="card-description">
+                        Видение — это образ будущего нашей семьи. Подумайте о долгосрочной
+                        перспективе (20-50 лет) и опишите, какой вы видите нашу семью.
+                    </p>
+                </div>
+
+                <div class="definitions">
+                    <div class="definition-card">
+                        <div class="definition-title">🔭 Вопросы для размышления</div>
+                        <div class="definition-text">
+                            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                <li>Какой наша семья станет через 20-50 лет?</li>
+                                <li>Каковы будут отношения между поколениями?</li>
+                                <li>Какую репутацию будет иметь семья?</li>
+                                <li>Что будет с семейным делом/бизнесом?</li>
+                                <li>Какое наследие мы оставим следующим поколениям?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <span>💡</span>
+                    <div>
+                        <strong>Пример видения:</strong><br>
+                        "Через 20 лет семья Ивановых будет лидером в отрасли,
+                        сохраняя крепкие связи между поколениями и внося значительный
+                        вклад в развитие общества."
+                    </div>
+                </div>
+
+                <div class="participants-bar">
+                    <div class="participants-count">
+                        Ответили: <strong>0</strong> из <strong>8</strong> участников
+                    </div>
+                    <div class="timer">⏱ Осталось: 7:00</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ваше видение будущего семьи *</label>
+                    <textarea class="form-textarea" rows="5"
+                              placeholder="Напишите 2-3 предложения о том, какой вы видите нашу семью в будущем..."
+                              id="vision-input"></textarea>
+                    <div class="form-help">Максимум 500 символов</div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="goToStep(8)">← Назад</button>
+                    <button class="btn btn-primary" onclick="submitVision()">Отправить видение</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 10: Final Summary -->
+        <div class="step" id="step-10">
+            <div class="info-box">
+                <h2>🎉 Поздравляем! Воркшоп завершен</h2>
+                <p>Вы успешно сформулировали ценности, миссию и видение вашей семьи.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Результаты воркшопа</h2>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.25rem;">
+                        💎 Наши ценности
+                    </h3>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Честность</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Доверие</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Единство</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Уважение</span>
+                        <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">Образование</span>
+                    </div>
+                </div>
+
+                <div class="statement-display" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="margin-bottom: 1rem; color: white;">🎯 Наша миссия</h3>
+                    <p class="statement-text" style="color: white;">
+                        "Миссия семьи Ивановых — объединяя опыт и ресурсы разных поколений,
+                        воспитывать взаимоподдержку и создавать ценность для общества
+                        через наши совместные начинания."
+                    </p>
+                </div>
+
+                <div class="statement-display" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <h3 style="margin-bottom: 1rem; color: white;">🔭 Наше видение</h3>
+                    <p class="statement-text" style="color: white;">
+                        "Через 20 лет семья Ивановых будет образцом единства поколений,
+                        лидером в своей отрасли и активным участником развития общества,
+                        вдохновляя другие семьи следовать нашему примеру."
+                    </p>
+                </div>
+
+                <div class="alert alert-success">
+                    <span>✓</span>
+                    <div>
+                        <strong>Следующие шаги:</strong>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Результаты будут добавлены в черновик семейной конституции</li>
+                            <li>Вы получите PDF-отчет на email</li>
+                            <li>Документ доступен для просмотра в разделе "Конституция"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-outline" onclick="alert('Скачивание PDF отчета...')">
+                        📄 Скачать отчет
+                    </button>
+                    <button class="btn btn-primary" onclick="alert('Переход в раздел Конституция...')">
+                        Перейти к конституции →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facilitator Panel (Fixed Bottom) -->
+    <div class="facilitator-panel">
+        <div class="facilitator-content">
+            <div class="facilitator-info">
+                <span style="font-weight: 600; color: var(--primary);">Фасилитатор: Анна Иванова</span>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                    Режим: <strong style="color: var(--text-primary);">AI-ассистированный</strong>
+                </span>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                    Участников онлайн: <strong style="color: var(--success);">8/8</strong>
+                </span>
+            </div>
+            <div class="facilitator-controls">
+                <button class="btn btn-outline" onclick="previousStep()">← Предыдущий</button>
+                <button class="btn btn-secondary" onclick="alert('Пауза воркшопа')">⏸ Пауза</button>
+                <button class="btn btn-primary" onclick="nextStep()">Следующий →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 10;
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            goToStep(1);
+            populateValuesCheckboxes();
+            startTimer();
+        });
+
+        // Navigation
+        function goToStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+
+            // Show target step
+            const targetStep = document.getElementById(`step-${stepNumber}`);
+            if (targetStep) {
+                targetStep.classList.add('active');
+                currentStep = stepNumber;
+                updateProgress();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                goToStep(currentStep + 1);
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                goToStep(currentStep - 1);
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progressSteps = document.querySelectorAll('.progress-step');
+            progressSteps.forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('completed', 'active');
+
+                if (stepNum < getProgressStep()) {
+                    step.classList.add('completed');
+                } else if (stepNum === getProgressStep()) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function getProgressStep() {
+            if (currentStep === 1) return 1;
+            if (currentStep >= 2 && currentStep <= 5) return 2;
+            if (currentStep >= 6 && currentStep <= 8) return 3;
+            if (currentStep === 9) return 4;
+            if (currentStep === 10) return 5;
+            return 1;
+        }
+
+        // Values submission
+        function submitValues() {
+            const value1 = document.getElementById('value1').value;
+            const value2 = document.getElementById('value2').value;
+            const value3 = document.getElementById('value3').value;
+
+            if (!value1 || !value2 || !value3) {
+                alert('Пожалуйста, заполните минимум 3 ценности');
+                return;
+            }
+
+            // Simulate response count
+            document.getElementById('values-responded').textContent = '8';
+
+            setTimeout(() => {
+                alert('Ваши ценности отправлены! Ожидаем остальных участников...');
+                setTimeout(() => {
+                    goToStep(3);
+                }, 1000);
+            }, 500);
+        }
+
+        // Populate voting checkboxes
+        function populateValuesCheckboxes() {
+            const values = [
+                { name: 'Честность', count: 5 },
+                { name: 'Доверие', count: 6 },
+                { name: 'Единство', count: 3 },
+                { name: 'Уважение', count: 4 },
+                { name: 'Образование', count: 5 },
+                { name: 'Инновации', count: 2 },
+                { name: 'Профессионализм', count: 2 },
+                { name: 'Благотворительность', count: 3 },
+                { name: 'Ответственность', count: 2 },
+                { name: 'Наследие', count: 4 }
+            ];
+
+            const container = document.getElementById('values-checkboxes');
+            values.forEach((value, index) => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="value-${index}" name="values" value="${value.name}">
+                    <label for="value-${index}" class="checkbox-label">${value.name}</label>
+                    <span class="checkbox-count">упомянуто ${value.count} раз</span>
+                `;
+                container.appendChild(item);
+            });
+
+            // Add change listeners
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateValueSelection);
+            });
+        }
+
+        function updateValueSelection() {
+            const checkboxes = document.querySelectorAll('#values-checkboxes input[type="checkbox"]');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked);
+            const count = checked.length;
+
+            document.getElementById('selected-count').textContent = count;
+            document.getElementById('confirm-values-btn').disabled = count !== 5;
+
+            // Disable unchecked if limit reached
+            checkboxes.forEach(cb => {
+                if (count >= 5 && !cb.checked) {
+                    cb.disabled = true;
+                    cb.parentElement.style.opacity = '0.5';
+                } else {
+                    cb.disabled = false;
+                    cb.parentElement.style.opacity = '1';
+                }
+            });
+        }
+
+        function confirmValues() {
+            document.getElementById('voting-responded').textContent = '8';
+            setTimeout(() => {
+                alert('Ваш выбор принят! Все участники завершили голосование.');
+                setTimeout(() => {
+                    goToStep(5);
+                }, 1000);
+            }, 500);
+        }
+
+        // Mission submission
+        function submitMission() {
+            const mission = document.getElementById('mission-input').value;
+            if (!mission || mission.length < 20) {
+                alert('Пожалуйста, напишите миссию (минимум 20 символов)');
+                return;
+            }
+
+            alert('Ваш вариант миссии отправлен! AI обрабатывает ответы...');
+            setTimeout(() => {
+                goToStep(7);
+            }, 1500);
+        }
+
+        // Mission approval
+        function approveMission(approved) {
+            if (approved) {
+                document.getElementById('mission-approved').textContent = '8';
+                setTimeout(() => {
+                    alert('Миссия утверждена всеми участниками!');
+                    setTimeout(() => {
+                        goToStep(9);
+                    }, 1000);
+                }, 500);
+            } else {
+                const comment = prompt('Пожалуйста, укажите, что вы хотели бы изменить:');
+                if (comment) {
+                    alert('Ваш комментарий отправлен фасилитатору. Миссия будет доработана.');
+                }
+            }
+        }
+
+        // Vision submission
+        function submitVision() {
+            const vision = document.getElementById('vision-input').value;
+            if (!vision || vision.length < 20) {
+                alert('Пожалуйста, опишите видение (минимум 20 символов)');
+                return;
+            }
+
+            alert('Ваше видение отправлено! AI создает финальный документ...');
+            setTimeout(() => {
+                goToStep(10);
+            }, 2000);
+        }
+
+        // Timer
+        let timerSeconds = 0;
+        function startTimer() {
+            setInterval(() => {
+                timerSeconds++;
+                const minutes = Math.floor(timerSeconds / 60);
+                const seconds = timerSeconds % 60;
+                document.getElementById('timer').textContent =
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

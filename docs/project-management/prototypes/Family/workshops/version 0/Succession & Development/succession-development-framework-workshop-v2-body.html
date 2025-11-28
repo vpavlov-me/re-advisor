@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succession & Development Framework Workshop - AI Facilitated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .live-indicator {
+            animation: pulse-slow 2s ease-in-out infinite;
+        }
+        .typing-indicator span {
+            animation: bounce 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        .bg-list-item {
+            background-color: #FAFAFA;
+            border: 1px solid #E5E7EB;
+        }
+        .border-primary {
+            border-color: #667eea;
+        }
+        .bg-orange-50 {
+            background-color: #EEF2FF;
+        }
+        .text-primary {
+            color: #667eea;
+        }
+        .bg-primary {
+            background-color: #667eea;
+        }
+        .hover\:bg-primary-dark:hover {
+            background-color: #5558d9;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- Container -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Succession & Development Framework Workshop</h1>
+                    <p class="text-gray-600 mt-2">AI-facilitated collaborative workshop for CEO and key roles succession planning</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block bg-orange-50 text-primary px-4 py-2 rounded-full text-sm font-semibold">
+                        Workshop with AI
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-700">Workshop Progress</span>
+                <span class="text-sm text-gray-600" id="progress-text">Step 1 of 8</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="progress-bar" class="gradient-primary h-3 rounded-full transition-all duration-500" style="width: 12.5%"></div>
+            </div>
+        </div>
+
+        <!-- Screen 1: Method Selection -->
+        <div id="screen-1" class="screen active">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Choose Your Succession Planning Method</h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Method 1: Workshop with Advisor -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">👨‍💼</div>
+                        <h3 class="text-xl font-bold mb-2">Workshop with Advisor</h3>
+                        <p class="text-gray-600 mb-4">Professional succession planning consultant facilitates family workshop</p>
+                        <div class="text-2xl font-bold text-gray-900">$2,000-5,000</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Expert facilitation</li>
+                            <li>✓ Industry best practices</li>
+                            <li>✓ 3-4 hour session</li>
+                            <li>✓ Succession Policy v1.0</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 2: Workshop with AI (Selected) -->
+                    <div class="border-4 border-primary rounded-lg p-6 bg-orange-50 cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-4xl">🤖</div>
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">SELECTED</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Workshop with AI</h3>
+                        <p class="text-gray-600 mb-4">AI-facilitated collaborative workshop with unlimited guidance for succession planning</p>
+                        <div class="text-2xl font-bold text-primary">Included</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Live collaboration (2-10 participants)</li>
+                            <li>✓ Unlimited AI consultations (Archimedes)</li>
+                            <li>✓ Democratic scheduling</li>
+                            <li>✓ 9 structured blocks (210 min)</li>
+                            <li>✓ Succession Policy v0.9 ready for legal review</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 3: Let AI do this -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">⚡</div>
+                        <h3 class="text-xl font-bold mb-2">Let AI Create Policy</h3>
+                        <p class="text-gray-600 mb-4">AI generates succession policy based on family profile and best practices</p>
+                        <div class="text-2xl font-bold text-gray-900">Free</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Automated generation</li>
+                            <li>✓ 20 minutes</li>
+                            <li>✓ Requires manual review</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 4: Manual -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">✏️</div>
+                        <h3 class="text-xl font-bold mb-2">I'll Do It Manually</h3>
+                        <p class="text-gray-600 mb-4">Use templates and guides to create succession policy independently</p>
+                        <div class="text-2xl font-bold text-gray-900">Free</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Full control</li>
+                            <li>✓ Self-paced</li>
+                            <li>✓ Template library</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button onclick="showScreen(2)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Continue to Workshop Setup →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Workshop Program & Scheduling -->
+        <div id="screen-2" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Succession Planning Workshop - Program & Scheduling</h2>
+
+                <!-- Workshop Goal -->
+                <div class="border-2 border-primary bg-orange-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-3">🎯 Workshop Goal</h3>
+                    <p class="text-gray-700 mb-3">
+                        Согласовать принципы и создать готовый каркас Succession Policy для CEO и ключевых ролей в рамках Family Governance. На выходе: Succession Policy v0.9 готовый к юридическому ревью.
+                    </p>
+                    <div class="flex gap-4 text-sm">
+                        <div><strong>Duration:</strong> 3-3.5 hours</div>
+                        <div><strong>Participants:</strong> Owners, Family Council, Board Chair, HRD, CEO</div>
+                        <div><strong>Mode:</strong> Live & Synchronous Online</div>
+                    </div>
+                </div>
+
+                <!-- Workshop Structure -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">📋 Workshop Structure (9 Blocks, 210 minutes)</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                            <div>
+                                <div class="font-semibold">Открытие и цели</div>
+                                <div class="text-sm text-gray-600">10 min • Context setting</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                            <div>
+                                <div class="font-semibold">Риски и критические роли</div>
+                                <div class="text-sm text-gray-600">15 min • Risk assessment</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                            <div>
+                                <div class="font-semibold">Профиль роли CEO</div>
+                                <div class="text-sm text-gray-600">25 min • Role definition</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                            <div>
+                                <div class="font-semibold">Критерии отбора</div>
+                                <div class="text-sm text-gray-600">35 min • Selection criteria & weights</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">5</div>
+                            <div>
+                                <div class="font-semibold">Оценка кандидатов</div>
+                                <div class="text-sm text-gray-600">40 min • 9-box + scoring</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">6</div>
+                            <div>
+                                <div class="font-semibold">Дорожная карта развития</div>
+                                <div class="text-sm text-gray-600">35 min • Individual Development Plans</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">7</div>
+                            <div>
+                                <div class="font-semibold">Emergency Plan</div>
+                                <div class="text-sm text-gray-600">20 min • 90-day continuity</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">8</div>
+                            <div>
+                                <div class="font-semibold">Процесс и RACI</div>
+                                <div class="text-sm text-gray-600">20 min • Decision rights</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">9</div>
+                            <div>
+                                <div class="font-semibold">Решения и протокол</div>
+                                <div class="text-sm text-gray-600">10 min • Final decisions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workshop Materials -->
+                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">📚 Materials to Prepare Before Workshop</h3>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>CEO and 3-5 key role profiles</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Current org chart and succession plan (if exists)</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Performance reports and 360° feedback (2-3 years)</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Family values map and business mission</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Legal constraints (bylaws, shareholder agreements, trusts)</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Candidate pool (internal + external) with brief CVs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3">Select Workshop Date</h3>
+                    <input type="date" class="border-2 border-gray-300 rounded-lg px-4 py-2 w-full md:w-auto" />
+                </div>
+
+                <!-- Time Slot Selection -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold mb-2">⏰ Proposed Time Slots</h3>
+                    <p class="text-sm text-gray-600 mb-4">Select 2-3 preferred time slots. Family members will vote.</p>
+                    <div class="grid md:grid-cols-4 gap-4">
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Morning</div>
+                            <div class="text-sm text-gray-600">9:00 AM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Late Morning</div>
+                            <div class="text-sm text-gray-600">11:00 AM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Afternoon</div>
+                            <div class="text-sm text-gray-600">2:00 PM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Evening</div>
+                            <div class="text-sm text-gray-600">6:00 PM</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(1)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(3)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Send Invitations & Voting Link →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Voting on Date/Time -->
+        <div id="screen-3" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-6 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center text-green-800 text-2xl">✓</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-green-800">Workshop Invitations Sent!</h3>
+                            <p class="text-green-700">All family members can now vote on preferred date/time</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">🗳️ Vote on Workshop Time</h2>
+
+                <!-- Proposed Date -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-2">Selected Date</h3>
+                    <div class="text-2xl font-bold text-primary">Saturday, November 15, 2025</div>
+                </div>
+
+                <!-- Time Slot Voting -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-4">Time Slot Options</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="border-4 border-primary bg-orange-50 rounded-lg p-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold text-lg">Morning - 9:00 AM</div>
+                                <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">MOST POPULAR</span>
+                            </div>
+                            <div class="text-3xl font-bold text-primary mb-3">7 votes</div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                                <div class="bg-primary h-3 rounded-full" style="width: 70%"></div>
+                            </div>
+                            <div class="flex gap-1 flex-wrap">
+                                <div class="participant-avatar bg-primary text-xs">АИ</div>
+                                <div class="participant-avatar bg-blue-500 text-xs">МП</div>
+                                <div class="participant-avatar bg-purple-500 text-xs">ДС</div>
+                                <div class="participant-avatar bg-pink-500 text-xs">ЕК</div>
+                                <div class="participant-avatar bg-green-500 text-xs">ИМ</div>
+                                <div class="participant-avatar bg-orange-500 text-xs">ОВ</div>
+                                <div class="participant-avatar bg-red-500 text-xs">НЛ</div>
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-gray-300 rounded-lg p-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold text-lg">Afternoon - 2:00 PM</div>
+                            </div>
+                            <div class="text-3xl font-bold text-gray-700 mb-3">2 votes</div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                                <div class="bg-gray-400 h-3 rounded-full" style="width: 20%"></div>
+                            </div>
+                            <div class="flex gap-1 flex-wrap">
+                                <div class="participant-avatar bg-teal-500 text-xs">ТК</div>
+                                <div class="participant-avatar bg-indigo-500 text-xs">ВР</div>
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-gray-300 rounded-lg p-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="font-bold text-lg">Evening - 6:00 PM</div>
+                            </div>
+                            <div class="text-3xl font-bold text-gray-700 mb-3">1 vote</div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                                <div class="bg-gray-400 h-3 rounded-full" style="width: 10%"></div>
+                            </div>
+                            <div class="flex gap-1 flex-wrap">
+                                <div class="participant-avatar bg-yellow-500 text-xs">СА</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participant Status -->
+                <div class="bg-list-item rounded-lg p-6 mb-8">
+                    <h3 class="text-lg font-bold mb-4">Participant Voting Status (10 invited)</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-primary">АИ</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Александр Иванов (Owner)</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-blue-500">МП</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Мария Петрова (Family Council)</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-purple-500">ДС</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Дмитрий Сидоров (Board Chair)</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-pink-500">ЕК</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Елена Козлова (HRD)</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-300">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Voting Deadline:</span>
+                            <span class="font-semibold">48 hours (November 10, 2025 at 9:00 AM)</span>
+                        </div>
+                        <div class="flex justify-between text-sm mt-2">
+                            <span class="text-gray-600">Response Rate:</span>
+                            <span class="font-semibold text-green-600">100% (10/10)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(2)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(4)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Confirm & Schedule Workshop →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Workshop Confirmed & Preparation -->
+        <div id="screen-4" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Succession Planning Workshop Scheduled!</h2>
+                    <div class="text-xl text-gray-600 mb-2">Saturday, November 15, 2025 at 9:00 AM</div>
+                    <div class="text-sm text-gray-500">Duration: 3.5 hours (9:00 AM - 12:30 PM)</div>
+                </div>
+
+                <!-- Workshop Details Card -->
+                <div class="gradient-primary text-white rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold">📅 Workshop Details</h3>
+                        <button class="bg-white text-primary px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                            Add to Calendar (.ICS)
+                        </button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="opacity-80 mb-1">Date & Time:</div>
+                            <div class="font-semibold">Saturday, November 15, 2025 at 9:00 AM - 12:30 PM</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">Location:</div>
+                            <div class="font-semibold">Online via Zoom (link sent via email)</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">Participants:</div>
+                            <div class="font-semibold">10 family members confirmed</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">AI Facilitator:</div>
+                            <div class="font-semibold">Archimedes 🤖</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workshop Checklist -->
+                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">✅ Pre-Workshop Preparation</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" checked disabled />
+                            <div>
+                                <div class="font-semibold">Review succession planning materials</div>
+                                <div class="text-sm text-gray-600">Sent via email on November 8</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" />
+                            <div>
+                                <div class="font-semibold">Prepare candidate assessments (HRD)</div>
+                                <div class="text-sm text-gray-600">360° feedback, performance data</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" />
+                            <div>
+                                <div class="font-semibold">Review legal constraints (Corporate Counsel)</div>
+                                <div class="text-sm text-gray-600">Bylaws, shareholder agreements, trusts</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" />
+                            <div>
+                                <div class="font-semibold">Compile candidate pool with CVs</div>
+                                <div class="text-sm text-gray-600">Internal and external candidates</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- What to Expect -->
+                <div class="bg-list-item rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4">🔮 What to Expect in the Workshop</h3>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="font-semibold mb-2">9 Structured Blocks:</div>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>• Opening & Goals (10 min)</li>
+                                <li>• Risk Assessment (15 min)</li>
+                                <li>• CEO Role Profile (25 min)</li>
+                                <li>• Selection Criteria (35 min)</li>
+                                <li>• Candidate Evaluation (40 min)</li>
+                                <li>• Development Roadmap (35 min)</li>
+                                <li>• Emergency Plan (20 min)</li>
+                                <li>• RACI & Process (20 min)</li>
+                                <li>• Decisions & Protocol (10 min)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">AI Guidance:</div>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>• Unlimited consultations per block</li>
+                                <li>• Personalized recommendations</li>
+                                <li>• Analysis of your family context</li>
+                                <li>• Rating guidance for candidates</li>
+                                <li>• Best practice suggestions</li>
+                            </ul>
+                            <div class="font-semibold mt-4 mb-2">Output:</div>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>• Succession Policy v0.9</li>
+                                <li>• Candidate assessments</li>
+                                <li>• Individual Development Plans</li>
+                                <li>• Emergency Succession Plan</li>
+                                <li>• RACI matrix</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(3)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(5)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Join Workshop (Simulation) →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Live Workshop Room -->
+        <div id="screen-5" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <!-- Workshop Header -->
+                <div class="bg-gradient-primary text-white rounded-lg p-4 mb-6 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl">🤖</div>
+                        <div>
+                            <div class="font-bold text-lg">AI Facilitator: Archimedes</div>
+                            <div class="text-sm opacity-90 flex items-center gap-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full live-indicator"></div>
+                                Live Now
+                            </div>
+                        </div>
+                    </div>
+                    <button class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        Leave Workshop
+                    </button>
+                </div>
+
+                <!-- Progress & Participants -->
+                <div class="grid md:grid-cols-3 gap-6 mb-6">
+                    <div class="md:col-span-2 bg-list-item rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-bold">Block 4: Критерии и веса отбора наследника</div>
+                            <div class="text-sm text-gray-600">Block 4 of 9</div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-primary h-3 rounded-full transition-all duration-500" style="width: 44%"></div>
+                        </div>
+                        <div class="text-xs text-gray-600 mt-1">44% complete • 35 minutes remaining for this block</div>
+                    </div>
+
+                    <div class="bg-list-item rounded-lg p-4">
+                        <div class="font-bold mb-3">👥 Live Now (10)</div>
+                        <div class="flex flex-wrap gap-2">
+                            <div class="participant-avatar bg-primary text-xs">АИ</div>
+                            <div class="participant-avatar bg-blue-500 text-xs">МП</div>
+                            <div class="participant-avatar bg-purple-500 text-xs">ДС</div>
+                            <div class="participant-avatar bg-pink-500 text-xs">ЕК</div>
+                            <div class="participant-avatar bg-green-500 text-xs">ИМ</div>
+                            <div class="participant-avatar bg-orange-500 text-xs">ОВ</div>
+                            <div class="participant-avatar bg-red-500 text-xs">НЛ</div>
+                            <div class="participant-avatar bg-teal-500 text-xs">ТК</div>
+                            <div class="participant-avatar bg-indigo-500 text-xs">ВР</div>
+                            <div class="participant-avatar bg-yellow-500 text-xs">СА</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Introduction -->
+                <div class="flex gap-4 mb-6">
+                    <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                    <div class="flex-1 bg-orange-50 border-2 border-primary rounded-lg p-4">
+                        <div class="font-bold mb-2">Welcome to Block 4: Selection Criteria & Weights! 👋</div>
+                        <p class="text-gray-700">
+                            In this block, we'll define the criteria for evaluating CEO succession candidates and assign weights to each criterion. This ensures objective, transparent decision-making aligned with your family values and business needs.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Didactic Material -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-3">📚 Learning Material: Selection Criteria</h3>
+
+                    <div class="mb-4">
+                        <h4 class="font-semibold mb-2">Why This Matters:</h4>
+                        <p class="text-gray-700 text-sm">
+                            Clear, weighted criteria prevent bias and ensure successors are chosen based on merit, values fit, and capability. Research shows families with documented succession criteria have 3x higher success rates in leadership transitions.
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-semibold mb-2">Key Dimensions:</h4>
+                        <div class="grid md:grid-cols-2 gap-3">
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Values Alignment</div>
+                                    <div class="text-xs text-gray-600">Behavioral fit with family culture, integrity</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Leadership & People Skills</div>
+                                    <div class="text-xs text-gray-600">Team development, delegation, communication</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Strategic Thinking & P&L</div>
+                                    <div class="text-xs text-gray-600">Business acumen, financial literacy, vision</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Track Record</div>
+                                    <div class="text-xs text-gray-600">Past performance, achievements, results</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-primary bg-orange-50 p-4 rounded">
+                        <h4 class="font-semibold mb-2 text-sm">Best Practice Example:</h4>
+                        <p class="text-xs text-gray-700">
+                            A European family business (€500M revenue) used 7 weighted criteria with 20% on values, 20% leadership, 20% strategy, 15% results, 10% stakeholder relations, 10% external experience, 5% risk management. This helped them objectively choose between two strong internal candidates, avoiding family conflict.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Personal Reflection Box -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-2">💭 Your Personal Thoughts & Context</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        Share your specific thoughts about what matters most in choosing your next CEO. What criteria are non-negotiable? What weights reflect your family's priorities?
+                    </p>
+                    <textarea
+                        class="w-full border-2 border-gray-300 rounded-lg p-3 text-sm focus:border-primary focus:outline-none"
+                        rows="5"
+                        placeholder="Example: For us, values alignment is critical because we've seen conflicts when leaders don't share family principles. We also need strong P&L experience since we're expanding internationally. External experience matters less since we prefer promoting from within..."
+                    ></textarea>
+                    <div class="text-xs text-gray-500 mt-2">💡 Minimum 50 characters for AI guidance. Be specific about your priorities and concerns.</div>
+                </div>
+
+                <!-- Ask AI Button -->
+                <button onclick="showAIConsultation()" class="w-full bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-lg font-semibold transition mb-6 flex items-center justify-center gap-2">
+                    <span class="text-xl">🤖</span>
+                    Ask AI for Guidance
+                </button>
+
+                <!-- AI Response Panel (Hidden by default) -->
+                <div id="ai-response-panel" class="border-4 border-primary bg-orange-50 rounded-lg p-6 mb-6 hidden">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-lg">AI Consultation</div>
+                            <div class="text-sm text-gray-600">Personalized analysis based on your context</div>
+                        </div>
+                    </div>
+
+                    <!-- Thinking State -->
+                    <div id="ai-thinking" class="flex items-center gap-3 py-4">
+                        <div class="typing-indicator flex gap-1">
+                            <span class="w-2 h-2 bg-primary rounded-full"></span>
+                            <span class="w-2 h-2 bg-primary rounded-full"></span>
+                            <span class="w-2 h-2 bg-primary rounded-full"></span>
+                        </div>
+                        <span class="text-gray-600">Analyzing your context...</span>
+                    </div>
+
+                    <!-- Analysis State (shown after 2s) -->
+                    <div id="ai-analysis" class="hidden">
+                        <div class="mb-4">
+                            <h4 class="font-semibold mb-2">📊 Analysis of Your Situation</h4>
+                            <div class="text-sm text-gray-700 space-y-2">
+                                <p><strong>Strengths:</strong> Your emphasis on values alignment shows maturity - this prevents cultural mismatch issues common in family business transitions.</p>
+                                <p><strong>Challenge:</strong> Preferring internal promotion may limit candidate pool. Consider balancing "promote from within" (80%) with "external experience requirement" (10%) to preserve flexibility.</p>
+                                <p><strong>Risk:</strong> International expansion needs may require higher weight on strategic thinking (currently standard 20%). Consider 25% given your growth plans.</p>
+                            </div>
+                        </div>
+
+                        <div class="border-t-2 border-primary pt-4 mb-4">
+                            <h4 class="font-semibold mb-2">🎯 Rating Guidance</h4>
+                            <div class="text-sm text-gray-700">
+                                <p><strong>Suggested weight adjustments:</strong></p>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li>Values Alignment: 25% (↑ from 20% - you emphasized this)</li>
+                                    <li>Strategic Thinking & P&L: 25% (↑ from 20% - international expansion)</li>
+                                    <li>Leadership: 20% (standard)</li>
+                                    <li>Track Record: 15% (standard)</li>
+                                    <li>Stakeholder Relations: 10% (standard)</li>
+                                    <li>External Experience: 5% (↓ from 10% - internal preference)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="border-t-2 border-primary pt-4">
+                            <h4 class="font-semibold mb-2">💡 Specific Recommendations</h4>
+                            <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                                <li><strong>Add "International Experience" as sub-criterion</strong> under Strategic Thinking (given expansion plans)</li>
+                                <li><strong>Define "values alignment" behaviorally</strong> - create 5-point scale with specific examples to reduce subjectivity</li>
+                                <li><strong>Consider "Cultural Intelligence" criterion</strong> (5%) if expanding to diverse markets - critical for global leadership</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Exercise -->
+                <div class="border-2 border-primary rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-3">🎯 Exercise: Assign Criterion Weights</h3>
+                    <p class="text-sm text-gray-600 mb-4">Allocate percentage weights to each criterion (must total 100%)</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold text-sm">Values Alignment</span>
+                                <span class="text-primary font-bold">20%</span>
+                            </div>
+                            <input type="range" class="w-full" min="0" max="50" value="20" />
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold text-sm">Leadership & People Skills</span>
+                                <span class="text-primary font-bold">20%</span>
+                            </div>
+                            <input type="range" class="w-full" min="0" max="50" value="20" />
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold text-sm">Strategic Thinking & P&L</span>
+                                <span class="text-primary font-bold">20%</span>
+                            </div>
+                            <input type="range" class="w-full" min="0" max="50" value="20" />
+                        </div>
+                        <div class="border-t pt-3">
+                            <div class="flex justify-between">
+                                <span class="font-bold">Total:</span>
+                                <span class="font-bold text-2xl text-primary">100%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-3 mt-4">
+                        <div class="text-sm">💡 <strong>Live Voting:</strong> All family members respond simultaneously. Your individual weights will be averaged to create family consensus.</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-3">
+                    <button class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        Save Progress
+                    </button>
+                    <button onclick="showScreen(6)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Submit & Continue to Block 5 →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Block Complete & Aggregated Results -->
+        <div id="screen-6" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-6 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center text-green-800 text-2xl">✓</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-green-800">Block 4 Complete: Критерии отбора</h3>
+                            <p class="text-green-700">All family members completed this block</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Family Consensus on Selection Criteria</h2>
+
+                <!-- Family Criteria Weights -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-4">📊 Agreed Criterion Weights</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">1. Values Alignment</span>
+                                <span class="text-2xl font-bold text-primary">22%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 22%"></div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">Range: 18-25% across participants</div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">2. Leadership & People Skills</span>
+                                <span class="text-2xl font-bold text-primary">21%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 21%"></div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">Range: 20-25% across participants</div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">3. Strategic Thinking & P&L</span>
+                                <span class="text-2xl font-bold text-primary">23%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 23%"></div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">Range: 20-25% across participants</div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">4. Track Record (3 years)</span>
+                                <span class="text-2xl font-bold text-primary">15%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">5. Stakeholder Relations</span>
+                                <span class="text-2xl font-bold text-primary">11%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 11%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-semibold">6. External Experience (≥3 years)</span>
+                                <span class="text-2xl font-bold text-primary">8%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-primary h-4 rounded-full" style="width: 8%"></div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">Range: 5-10% across participants</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-gray-300">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold">TOTAL:</span>
+                            <span class="text-3xl font-bold text-green-600">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Participant Votes -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-bold mb-4">Individual Participant Weights</h3>
+                    <div class="text-sm text-gray-600 mb-3">All members' weights visible for transparency</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b-2 border-gray-300">
+                                    <th class="text-left py-2">Participant</th>
+                                    <th class="text-center py-2">Values</th>
+                                    <th class="text-center py-2">Leadership</th>
+                                    <th class="text-center py-2">Strategy</th>
+                                    <th class="text-center py-2">Track Record</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-2 font-semibold">Александр И. (Owner)</td>
+                                    <td class="text-center">25%</td>
+                                    <td class="text-center">20%</td>
+                                    <td class="text-center">25%</td>
+                                    <td class="text-center">15%</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-2 font-semibold">Мария П. (FC)</td>
+                                    <td class="text-center">20%</td>
+                                    <td class="text-center">25%</td>
+                                    <td class="text-center">20%</td>
+                                    <td class="text-center">15%</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-2 font-semibold">Дмитрий С. (Board Chair)</td>
+                                    <td class="text-center">20%</td>
+                                    <td class="text-center">20%</td>
+                                    <td class="text-center">25%</td>
+                                    <td class="text-center">15%</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 font-semibold text-primary">AVERAGE (Family)</td>
+                                    <td class="text-center font-bold text-primary">22%</td>
+                                    <td class="text-center font-bold text-primary">21%</td>
+                                    <td class="text-center font-bold text-primary">23%</td>
+                                    <td class="text-center font-bold text-primary">15%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AI Insight -->
+                <div class="border-4 border-primary bg-orange-50 rounded-lg p-6 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg mb-2">AI Insight: Strong Family Alignment</h4>
+                            <p class="text-gray-700 text-sm">
+                                Your family shows excellent consensus! The narrow ranges (18-25% for Values, 20-25% for Strategy) indicate shared priorities. This reduces risk of conflict during candidate evaluation.
+                                <strong>Key observation:</strong> Higher weight on Values (22%) vs. industry average (18%) reflects your family-first culture - good for long-term stability. Lower External Experience weight (8%) suggests confidence in internal development programs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="bg-list-item rounded-lg p-6 mb-8">
+                    <h3 class="text-lg font-bold mb-2">Workshop Progress</h3>
+                    <div class="text-3xl font-bold text-primary mb-3">4 of 9 blocks completed</div>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="gradient-primary h-4 rounded-full" style="width: 44%"></div>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-2">Next: Block 5 - Candidate Evaluation (40 min)</div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(5)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back to Block 4
+                    </button>
+                    <button class="bg-gray-300 text-gray-600 px-6 py-3 rounded-lg font-semibold cursor-not-allowed mr-3" disabled>
+                        Take a Break (requires consensus)
+                    </button>
+                    <button onclick="showScreen(7)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Continue to Block 5 →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Final Succession Policy Report -->
+        <div id="screen-7" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Succession Policy Complete!</h2>
+                    <p class="text-gray-600">All 9 blocks finished. Your Succession Policy v0.9 is ready for legal review.</p>
+                </div>
+
+                <!-- Overall Summary Card -->
+                <div class="gradient-primary text-white rounded-lg p-6 mb-6">
+                    <h3 class="text-2xl font-bold mb-4">📄 Succession Policy v0.9</h3>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="opacity-80 mb-1">Roles Covered:</div>
+                            <div class="font-semibold">CEO + 4 key positions (CFO, COO, CTO, Commercial Director)</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">Candidate Pool:</div>
+                            <div class="font-semibold">8 candidates (6 internal, 2 external)</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">Ready Now:</div>
+                            <div class="font-semibold">2 candidates (Category A)</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">In Development:</div>
+                            <div class="font-semibold">3 candidates with 12-24 month IDP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Components -->
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">CEO Profile Defined</div>
+                        <div class="text-sm text-gray-600">5 responsibilities, KPIs, competencies</div>
+                    </div>
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">Selection Criteria</div>
+                        <div class="text-sm text-gray-600">7 criteria with agreed weights (100%)</div>
+                    </div>
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">Candidate Assessments</div>
+                        <div class="text-sm text-gray-600">9-box matrix + scoring complete</div>
+                    </div>
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">Development Plans</div>
+                        <div class="text-sm text-gray-600">IDP for top 3 candidates (24 months)</div>
+                    </div>
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">Emergency Plan</div>
+                        <div class="text-sm text-gray-600">90-day continuity (Interim CEO named)</div>
+                    </div>
+                    <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="font-bold mb-1">RACI & Process</div>
+                        <div class="text-sm text-gray-600">Decision rights + annual review calendar</div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">🚀 Immediate Next Steps</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-bold flex-shrink-0">1</div>
+                            <div>
+                                <div class="font-semibold">HRD: Finalize candidate assessments</div>
+                                <div class="text-gray-600">Complete 360° feedback, detailed IDP (10 working days)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-bold flex-shrink-0">2</div>
+                            <div>
+                                <div class="font-semibold">Corporate Counsel: Legal review</div>
+                                <div class="text-gray-600">Align with bylaws, shareholder agreements, trusts (10 working days)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-bold flex-shrink-0">3</div>
+                            <div>
+                                <div class="font-semibold">Board Chair: Approval process</div>
+                                <div class="text-gray-600">Board + Owner approval (next meeting in 3-4 weeks)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-blue-800 font-bold flex-shrink-0">4</div>
+                            <div>
+                                <div class="font-semibold">CEO + HRD: Stakeholder communication</div>
+                                <div class="text-gray-600">Announce to top management, candidates, key partners</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Required -->
+                <div class="border-4 border-primary bg-orange-50 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-3">🔴 Family Council Action Required</h3>
+                    <p class="text-gray-700 mb-4">
+                        Please review the complete Succession Policy and confirm accuracy before finalizing. You can request changes if anything needs adjustment.
+                    </p>
+                    <div class="flex gap-3">
+                        <button class="border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-white transition">
+                            Request Changes
+                        </button>
+                        <button onclick="showScreen(8)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                            Approve & Continue to Next Step →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="bg-list-item rounded-lg p-6">
+                    <h3 class="text-lg font-bold mb-4">📥 Export Succession Policy</h3>
+                    <div class="grid md:grid-cols-3 gap-3">
+                        <button class="border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                            📄 Download PDF
+                        </button>
+                        <button class="border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                            📊 Export Excel (Matrices)
+                        </button>
+                        <button class="border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                            📧 Email to Participants
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 8: Completion -->
+        <div id="screen-8" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
+                    <div class="text-5xl">✅</div>
+                </div>
+
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Succession Planning Workshop Completed! 🎉</h2>
+                <p class="text-xl text-gray-600 mb-8">
+                    Your Succession Policy v0.9 is approved and ready for implementation
+                </p>
+
+                <!-- Progress Circle -->
+                <div class="mb-8">
+                    <div class="text-6xl font-bold text-primary mb-2">100%</div>
+                    <div class="text-gray-600">Family Governance Progress</div>
+                </div>
+
+                <!-- What's Next -->
+                <div class="bg-gradient-primary text-white rounded-lg p-6 mb-6 max-w-2xl mx-auto">
+                    <h3 class="text-xl font-bold mb-3">What's Next?</h3>
+                    <div class="text-left text-sm space-y-2">
+                        <div>✓ Succession Policy v0.9 → v1.0 (after legal review)</div>
+                        <div>✓ Begin Individual Development Plans for top 3 candidates</div>
+                        <div>✓ Schedule first IDP checkpoint (T+6 months)</div>
+                        <div>✓ Annual policy review (12 months from today)</div>
+                        <div>✓ Continue to next Family Governance step</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="showScreen(1)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Restart Demo
+                    </button>
+                    <button class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Continue to Next Family Governance Step →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentScreen = 1;
+
+        function showScreen(screenNumber) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show selected screen
+            document.getElementById(`screen-${screenNumber}`).classList.add('active');
+
+            // Update progress
+            currentScreen = screenNumber;
+            updateProgress();
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function updateProgress() {
+            const percentage = (currentScreen / 8) * 100;
+            document.getElementById('progress-bar').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = `Step ${currentScreen} of 8`;
+        }
+
+        function showAIConsultation() {
+            const panel = document.getElementById('ai-response-panel');
+            panel.classList.remove('hidden');
+
+            // Simulate AI thinking
+            setTimeout(() => {
+                document.getElementById('ai-thinking').classList.add('hidden');
+                document.getElementById('ai-analysis').classList.remove('hidden');
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

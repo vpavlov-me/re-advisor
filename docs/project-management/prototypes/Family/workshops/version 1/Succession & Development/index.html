@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succession & Development Workshop - Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .stage-card {
+            transition: all 0.3s ease;
+        }
+        .stage-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .participant-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl">👔</span>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-900">Succession & Development Workshop</h1>
+                        <p class="text-xs text-gray-500">Session ID: WRK-2025-001 • Oct 29, 2025</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="participant-badge w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">9 of 10 participants</span>
+                    </div>
+                    <select class="text-sm border border-gray-300 rounded-lg px-3 py-1">
+                        <option>🇬🇧 English</option>
+                        <option>🇷🇺 Русский</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Welcome Screen (Screen 0) -->
+        <div id="screen-0" class="space-y-6">
+
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-xl p-12 text-white">
+                <div class="text-center">
+                    <div class="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6">
+                        <span class="text-6xl">👔</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">Succession & Development Workshop</h2>
+                    <p class="text-xl mb-2 opacity-90">Create Your Leadership Continuity Plan</p>
+                    <p class="text-lg opacity-75">3-3.5 hours • 9 stages • Real-time collaboration</p>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div class="mt-8 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                    <div class="flex items-center justify-center gap-2 text-sm">
+                        <span class="text-yellow-300">⏱️</span>
+                        <span>Workshop starts in: <strong class="font-mono">00:15:30</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What We'll Do -->
+            <div class="grid md:grid-cols-3 gap-6">
+
+                <!-- Workshop Roadmap -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span>📋</span> Workshop Roadmap
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">1</span>
+                                    <span class="text-sm font-medium">Kick-off & Objectives</span>
+                                </div>
+                                <span class="text-xs text-gray-500">10 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">2</span>
+                                    <span class="text-sm font-medium">Critical Roles & Risks</span>
+                                </div>
+                                <span class="text-xs text-gray-500">15 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">3</span>
+                                    <span class="text-sm font-medium">CEO & Key Role Profiles</span>
+                                </div>
+                                <span class="text-xs text-gray-500">25 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">4</span>
+                                    <span class="text-sm font-medium">Selection Criteria & Weights</span>
+                                </div>
+                                <span class="text-xs text-gray-500">35 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 cursor-pointer transition-colors border-2 border-yellow-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-yellow-200 text-yellow-800 text-xs font-bold flex items-center justify-center">5</span>
+                                    <span class="text-sm font-medium">Candidate Assessment</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-yellow-700">⭐ 40 min</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">6</span>
+                                    <span class="text-sm font-medium">Development Roadmap</span>
+                                </div>
+                                <span class="text-xs text-gray-500">35 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer transition-colors border border-red-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center">7</span>
+                                    <span class="text-sm font-medium">Emergency Succession Plan</span>
+                                </div>
+                                <span class="text-xs text-gray-500">20 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">8</span>
+                                    <span class="text-sm font-medium">Process, RACI & Comms</span>
+                                </div>
+                                <span class="text-xs text-gray-500">20 min</span>
+                            </div>
+                        </div>
+                        <div class="stage-item p-3 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer transition-colors border border-green-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">9</span>
+                                    <span class="text-sm font-medium">Summary & Protocol</span>
+                                </div>
+                                <span class="text-xs text-gray-500">10 min</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+                        <p class="text-xs text-yellow-800">⭐ = Longest interactive section</p>
+                    </div>
+                </div>
+
+                <!-- Why This Matters -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span>🎯</span> Business Value
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-green-600">✅</span>
+                                <span class="font-semibold text-gray-900">Leadership Continuity</span>
+                            </div>
+                            <ul class="ml-6 text-sm text-gray-600 space-y-1">
+                                <li>→ Smooth CEO transitions</li>
+                                <li>→ No power vacuums or crises</li>
+                                <li>→ Business stability maintained</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-green-600">✅</span>
+                                <span class="font-semibold text-gray-900">Talent Pipeline</span>
+                            </div>
+                            <ul class="ml-6 text-sm text-gray-600 space-y-1">
+                                <li>→ Clear development paths</li>
+                                <li>→ NextGen preparation</li>
+                                <li>→ Internal bench strength</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-green-600">✅</span>
+                                <span class="font-semibold text-gray-900">Risk Mitigation</span>
+                            </div>
+                            <ul class="ml-6 text-sm text-gray-600 space-y-1">
+                                <li>→ Emergency plans ready</li>
+                                <li>→ Key person dependency reduced</li>
+                                <li>→ Board confidence increased</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-green-600">✅</span>
+                                <span class="font-semibold text-gray-900">Value Preservation</span>
+                            </div>
+                            <ul class="ml-6 text-sm text-gray-600 space-y-1">
+                                <li>→ Avoid rushed transitions</li>
+                                <li>→ Maintain institutional knowledge</li>
+                                <li>→ Protect family wealth</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <div class="text-xs font-semibold text-blue-900 mb-2">📊 Success Metrics:</div>
+                        <ul class="text-xs text-blue-800 space-y-1">
+                            <li>• 90% of key roles have identified successors</li>
+                            <li>• 80% reduction in transition disruption</li>
+                            <li>• 2-3 ready candidates per critical role</li>
+                            <li>• NextGen leadership pipeline established</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Platform Integration -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span>🔗</span> Results & Integration
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-purple-600">📊</span>
+                                <span class="font-semibold text-sm text-gray-900">Succession Policy</span>
+                            </div>
+                            <p class="text-xs text-gray-600 ml-6">Deployed to Governance module</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-blue-600">👥</span>
+                                <span class="font-semibold text-sm text-gray-900">Development Plans</span>
+                            </div>
+                            <p class="text-xs text-gray-600 ml-6">Individual roadmaps with milestones</p>
+                        </div>
+                        <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-red-600">⚠️</span>
+                                <span class="font-semibold text-sm text-gray-900">Emergency Protocols</span>
+                            </div>
+                            <p class="text-xs text-gray-600 ml-6">Loaded into Crisis module</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-green-600">📅</span>
+                                <span class="font-semibold text-sm text-gray-900">Review Calendar</span>
+                            </div>
+                            <p class="text-xs text-gray-600 ml-6">Annual reviews scheduled</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-orange-600">🔐</span>
+                                <span class="font-semibold text-sm text-gray-900">RACI Matrix</span>
+                            </div>
+                            <p class="text-xs text-gray-600 ml-6">Decision rights configured</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <p class="text-xs text-gray-700 text-center">
+                            <strong>No manual data entry needed!</strong><br/>
+                            Everything is automated
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Participant Roles -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span>👥</span> Your Role in This Workshop
+                </h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">🎤</span>
+                            <span class="font-bold text-gray-900">Consultant</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• Guides discussion</li>
+                            <li>• Controls timing</li>
+                            <li>• Provides best practices</li>
+                            <li>• Cannot vote on decisions</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">👑</span>
+                            <span class="font-bold text-gray-900">Owners/Shareholders</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• Final approval authority</li>
+                            <li>• Vote on principles</li>
+                            <li>• Approve CEO criteria</li>
+                            <li>• Ultimate decision rights</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">🏛️</span>
+                            <span class="font-bold text-gray-900">Family Council</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• Input on values alignment</li>
+                            <li>• NextGen priorities</li>
+                            <li>• Culture considerations</li>
+                            <li>• Advisory role</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">📋</span>
+                            <span class="font-bold text-gray-900">Board Chair</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• CEO performance view</li>
+                            <li>• Leadership assessment</li>
+                            <li>• Governance alignment</li>
+                            <li>• Vote on criteria</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">👨‍💼</span>
+                            <span class="font-bold text-gray-900">HRD</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• Candidate assessments</li>
+                            <li>• Development programs</li>
+                            <li>• Performance metrics</li>
+                            <li>• Implementation lead</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">💼</span>
+                            <span class="font-bold text-gray-900">CEO (Current)</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 ml-8">
+                            <li>• Successor recommendations</li>
+                            <li>• Role requirements input</li>
+                            <li>• Transition planning</li>
+                            <li>• Development mentorship</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 text-center">
+                        <strong>Real-time collaboration:</strong> You'll see everyone's inputs instantly!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Pre-Workshop Checklist -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <span>✅</span> Materials to Have Ready
+                </h3>
+                <div class="grid md:grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Current organizational chart</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">CEO and key executives job descriptions</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Performance reviews (last 2-3 years)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Family values and mission statement</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Current succession plan (if exists)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Corporate governance documents</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Key person risk assessment</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" class="w-5 h-5 text-primary rounded">
+                        <span class="text-sm text-gray-700">Internal/external candidate pool CVs</span>
+                    </label>
+                </div>
+                <div class="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-primary hover:bg-gray-50 cursor-pointer transition-all">
+                    <span class="text-gray-600">📎 Upload Documents (Optional)</span>
+                    <p class="text-xs text-gray-500 mt-1">🔒 All materials are confidential and encrypted</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <button onclick="window.location.href='stage-1-kickoff.html'"
+                        class="w-full py-5 bg-primary text-white rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl">
+                    🚀 Start Workshop (Facilitator Only)
+                </button>
+
+                <button onclick="alert('Pre-workshop survey opened!')"
+                        class="w-full py-4 bg-blue-100 text-blue-700 rounded-xl font-semibold hover:bg-blue-200 transition-all">
+                    📝 Complete Pre-Workshop Survey (5 min)
+                </button>
+
+                <button onclick="alert('Technical check in progress...')"
+                        class="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                    🔧 Technical Check (Audio, Video, Connection)
+                </button>
+
+                <div class="text-center text-sm text-gray-500 space-y-1">
+                    <p>Professional succession planning made simple.</p>
+                    <p class="text-xs">💾 Your progress is automatically saved and encrypted</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+            <p>Family Governance Platform • Succession & Development Workshop Prototype v1.0</p>
+            <p class="text-xs mt-1">🔒 All data encrypted with family_id • Confidential succession information</p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succession & Development Framework Workshop - Full Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .live-indicator {
+            animation: pulse-slow 2s ease-in-out infinite;
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        .block-content {
+            display: none;
+        }
+        .block-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .block-nav-item {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .block-nav-item.active {
+            background: #EEF2FF;
+            border-color: #667eea;
+        }
+        .block-nav-item.completed {
+            background: #D1FAE5;
+            border-color: #10B981;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- Container -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Succession & Development Framework Workshop</h1>
+                    <p class="text-gray-600 mt-2">AI-facilitated collaborative workshop - Full 9-block experience</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">
+                        Workshop with AI • Live
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workshop Progress -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-700">Workshop Progress</span>
+                <span class="text-sm text-gray-600" id="overall-progress-text">Overall: 0 of 9 blocks</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="overall-progress-bar" class="gradient-primary h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Live Workshop Screen -->
+        <div class="bg-white rounded-lg shadow-sm p-8">
+            <!-- Workshop Header -->
+            <div class="gradient-primary text-white rounded-lg p-4 mb-6 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl">🤖</div>
+                    <div>
+                        <div class="font-bold text-lg">AI Facilitator: Archimedes</div>
+                        <div class="text-sm opacity-90 flex items-center gap-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full live-indicator"></div>
+                            Live Now
+                        </div>
+                    </div>
+                </div>
+                <button class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg font-semibold transition">
+                    Leave Workshop
+                </button>
+            </div>
+
+            <!-- Current Block Info -->
+            <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm text-purple-600 font-semibold">CURRENT BLOCK</div>
+                        <div class="text-xl font-bold text-gray-900" id="current-block-title">Block 1: Открытие и цели</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-600">Duration</div>
+                        <div class="text-lg font-bold text-purple-700" id="current-block-duration">10 minutes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block Navigation Sidebar -->
+            <div class="grid lg:grid-cols-4 gap-6">
+                <!-- Left: Block Navigation -->
+                <div class="lg:col-span-1">
+                    <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Blocks</h3>
+                    <div class="space-y-2">
+                        <div class="block-nav-item active border-2 rounded-lg p-3" onclick="showBlock(1)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">1</div>
+                                <div class="text-sm font-semibold">Открытие</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">10 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(2)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">2</div>
+                                <div class="text-sm font-semibold">Риски и роли</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">15 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(3)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">3</div>
+                                <div class="text-sm font-semibold">Профиль CEO</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">25 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(4)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">4</div>
+                                <div class="text-sm font-semibold">Критерии отбора</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">35 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(5)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">5</div>
+                                <div class="text-sm font-semibold">Оценка кандидатов</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">40 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(6)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">6</div>
+                                <div class="text-sm font-semibold">Дорожная карта</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">35 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(7)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">7</div>
+                                <div class="text-sm font-semibold">Emergency Plan</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">20 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(8)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">8</div>
+                                <div class="text-sm font-semibold">RACI и процесс</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">20 min</div>
+                        </div>
+
+                        <div class="block-nav-item border-2 border-gray-200 rounded-lg p-3" onclick="showBlock(9)">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-xs font-bold">9</div>
+                                <div class="text-sm font-semibold">Протокол</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1">10 min</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Participants -->
+                    <div class="mt-6 bg-gray-50 rounded-lg p-3">
+                        <div class="font-bold text-sm mb-3">👥 Live Now (10)</div>
+                        <div class="flex flex-wrap gap-2">
+                            <div class="participant-avatar bg-purple-500 text-xs">АИ</div>
+                            <div class="participant-avatar bg-blue-500 text-xs">МП</div>
+                            <div class="participant-avatar bg-pink-500 text-xs">ДС</div>
+                            <div class="participant-avatar bg-green-500 text-xs">ЕК</div>
+                            <div class="participant-avatar bg-orange-500 text-xs">ИМ</div>
+                            <div class="participant-avatar bg-red-500 text-xs">ОВ</div>
+                            <div class="participant-avatar bg-teal-500 text-xs">НЛ</div>
+                            <div class="participant-avatar bg-indigo-500 text-xs">ТК</div>
+                            <div class="participant-avatar bg-yellow-500 text-xs">ВР</div>
+                            <div class="participant-avatar bg-cyan-500 text-xs">СА</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Block Content -->
+                <div class="lg:col-span-3">
+                    <!-- Block 1: Открытие и цели -->
+                    <div id="block-1" class="block-content active">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Добро пожаловать в воркшоп Succession Planning! 👋</div>
+                                <p class="text-gray-700 text-sm">
+                                    Сегодня за 3.5 часа мы создадим готовый каркас Succession Policy для CEO и ключевых ролей. Этот документ станет фундаментом для управления преемственностью в вашей семье.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🎯 Цели воркшопа</h3>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li>✓ Определить критические роли, требующие succession planning</li>
+                                <li>✓ Согласовать профили ролей (CEO + 3-5 ключевых позиций)</li>
+                                <li>✓ Создать критерии отбора с весами</li>
+                                <li>✓ Оценить пул кандидатов (внутренних и внешних)</li>
+                                <li>✓ Разработать индивидуальные планы развития (IDP)</li>
+                                <li>✓ Подготовить Emergency Succession Plan на 90 дней</li>
+                                <li>✓ Зафиксировать RACI и процедуры</li>
+                            </ul>
+                        </div>
+
+                        <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold mb-2">📜 Правила воркшопа</h4>
+                            <div class="grid md:grid-cols-2 gap-2 text-sm">
+                                <div>✓ Конфиденциальность</div>
+                                <div>✓ Без отвлечений</div>
+                                <div>✓ Фиксация решений</div>
+                                <div>✓ RACI-ответственность</div>
+                                <div>✓ Уважение ко времени</div>
+                                <div>✓ Конструктивность</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                            <h4 class="font-semibold mb-2">📦 Что получите на выходе</h4>
+                            <p class="text-sm text-gray-700">
+                                <strong>Succession Policy v0.9</strong> - готовая к юридическому ревью политика преемственности, включающая все компоненты: профили ролей, критерии, оценки кандидатов, IDP, Emergency-план, RACI-матрицу.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(1)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 1 → Continue to Block 2
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 2: Риски и критические роли -->
+                    <div id="block-2" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 2: Риски и критические роли</div>
+                                <p class="text-gray-700 text-sm">
+                                    Определим, какие роли критически важны для бизнеса и требуют succession planning. Оценим риски внезапной недоступности ключевых лидеров.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">📚 Learning Material</h3>
+                            <p class="text-sm text-gray-700 mb-3">
+                                <strong>Матрица критичности ролей:</strong> Используем 2 измерения - Impact (влияние на бизнес) и Replaceability (сложность замены). Роли с высоким Impact и низкой Replaceability требуют приоритетного succession planning.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="border-2 border-red-300 bg-red-50 rounded-lg p-3">
+                                    <div class="font-semibold text-sm text-red-800">High Impact + Hard to Replace</div>
+                                    <div class="text-xs text-gray-600 mt-1">CEO, CFO, COO - требуют немедленного succession planning</div>
+                                </div>
+                                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-3">
+                                    <div class="font-semibold text-sm text-yellow-800">High Impact + Easy to Replace</div>
+                                    <div class="text-xs text-gray-600 mt-1">Commercial Director - важен, но замена проще</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-purple-300 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🎯 Exercise: Ранжирование ролей</h3>
+                            <p class="text-sm text-gray-600 mb-3">Выберите 5-6 ролей, которые должны войти в Succession Policy:</p>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-purple-50">
+                                    <input type="checkbox" checked disabled />
+                                    <div>
+                                        <div class="font-semibold">CEO</div>
+                                        <div class="text-xs text-gray-600">Impact: 10/10 • Replaceability: 2/10</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-purple-50">
+                                    <input type="checkbox" checked />
+                                    <div>
+                                        <div class="font-semibold">CFO</div>
+                                        <div class="text-xs text-gray-600">Impact: 9/10 • Replaceability: 3/10</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-purple-50">
+                                    <input type="checkbox" checked />
+                                    <div>
+                                        <div class="font-semibold">COO</div>
+                                        <div class="text-xs text-gray-600">Impact: 8/10 • Replaceability: 4/10</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-purple-50">
+                                    <input type="checkbox" checked />
+                                    <div>
+                                        <div class="font-semibold">CTO</div>
+                                        <div class="text-xs text-gray-600">Impact: 7/10 • Replaceability: 5/10</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(2)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 2 → Continue to Block 3
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 3: Профиль роли CEO -->
+                    <div id="block-3" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 3: Профиль роли CEO (One-Pager)</div>
+                                <p class="text-gray-700 text-sm">
+                                    Определим четкие требования к CEO: цель роли, зоны ответственности, KPI, компетенции, ограничения.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">📋 Template: CEO Profile</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">1. Цель роли (1-2 предложения)</label>
+                                    <textarea class="w-full border-2 rounded-lg p-3 text-sm" rows="2" placeholder="Пример: Обеспечить устойчивый рост компании, сохраняя семейные ценности и стратегическую независимость"></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">2. Топ-5 зон ответственности</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm mb-2" placeholder="1. Стратегия и долгосрочное планирование" />
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm mb-2" placeholder="2. P&L и финансовые результаты" />
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm mb-2" placeholder="3. Управление топ-командой и культурой" />
+                                </div>
+
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">3. KPI на 12-24 месяца</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Revenue growth 15%, EBITDA margin >20%, NPS >50" />
+                                </div>
+
+                                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                                    🤖 Ask AI to Generate CEO Profile
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(3)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 3 → Continue to Block 4
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 4: Критерии отбора (kept from original) -->
+                    <div id="block-4" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 4: Критерии и веса отбора наследника</div>
+                                <p class="text-gray-700 text-sm">
+                                    Определим критерии оценки кандидатов и назначим веса каждому критерию для объективной оценки.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">📚 Key Dimensions</h3>
+                            <div class="grid md:grid-cols-2 gap-3">
+                                <div class="flex gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Values Alignment</div>
+                                        <div class="text-xs text-gray-600">Behavioral fit with family culture</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Leadership Skills</div>
+                                        <div class="text-xs text-gray-600">Team development, communication</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Strategic Thinking</div>
+                                        <div class="text-xs text-gray-600">Business acumen, P&L ownership</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Track Record</div>
+                                        <div class="text-xs text-gray-600">Past performance, results</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-purple-300 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🎯 Exercise: Assign Weights</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="font-semibold text-sm">Values Alignment</span>
+                                        <span class="text-purple-700 font-bold">20%</span>
+                                    </div>
+                                    <input type="range" class="w-full" min="0" max="50" value="20" />
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="font-semibold text-sm">Leadership Skills</span>
+                                        <span class="text-purple-700 font-bold">20%</span>
+                                    </div>
+                                    <input type="range" class="w-full" min="0" max="50" value="20" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(4)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 4 → Continue to Block 5
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 5: Оценка кандидатов -->
+                    <div id="block-5" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 5: Оценка пула кандидатов (9-box + критерии)</div>
+                                <p class="text-gray-700 text-sm">
+                                    Оценим всех кандидатов по матрице 9-box (эффективность × потенциал) и по критериям из Block 4.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">📊 9-Box Matrix</h3>
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-green-800">High Potential<br/>High Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready Now</div>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-green-800">High Potential<br/>Med Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready 12-24m</div>
+                                </div>
+                                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-yellow-800">High Potential<br/>Low Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready 12-24m</div>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-green-800">Med Potential<br/>High Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready 12-24m</div>
+                                </div>
+                                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-yellow-800">Med Potential<br/>Med Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready 12-24m</div>
+                                </div>
+                                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-yellow-800">Med Potential<br/>Low Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready >24m</div>
+                                </div>
+                                <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-yellow-800">Low Potential<br/>High Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Ready >24m</div>
+                                </div>
+                                <div class="border-2 border-red-300 bg-red-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-red-800">Low Potential<br/>Med Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Not Fit</div>
+                                </div>
+                                <div class="border-2 border-red-300 bg-red-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs font-semibold text-red-800">Low Potential<br/>Low Performance</div>
+                                    <div class="text-xs text-gray-600 mt-1">Not Fit</div>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600">Разместите кандидатов в соответствующие ячейки, затем оцените по критериям.</p>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(5)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 5 → Continue to Block 6
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 6: Дорожная карта развития -->
+                    <div id="block-6" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 6: Дорожная карта подготовки наследников (IDP)</div>
+                                <p class="text-gray-700 text-sm">
+                                    Создадим индивидуальные планы развития для топ-кандидатов с контрольными точками и KPI.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🚀 Individual Development Plan Template</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Candidate Name</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Иван Петров" />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Current Role → Target Role</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="COO → CEO" />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Readiness Category</label>
+                                    <select class="w-full border-2 rounded-lg p-2 text-sm">
+                                        <option>Ready in 12-24 months</option>
+                                        <option>Ready now</option>
+                                        <option>Ready >24 months</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Mandatory Development Track</label>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>✓ External role: 24 months (if not completed)</li>
+                                        <li>✓ Internal rotation: 18 months (Finance, Operations, Sales)</li>
+                                        <li>✓ Mentor: Independent Director or external expert</li>
+                                        <li>✓ Quarterly 360° feedback</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Checkpoints (T+6, T+12, T+18, T+24)</label>
+                                    <textarea class="w-full border-2 rounded-lg p-3 text-sm" rows="3" placeholder="T+6: Complete financial rotation, manage $5M budget&#10;T+12: Launch 1 strategic project on time/budget&#10;T+18: 360° leadership score ≥4.0/5.0"></textarea>
+                                </div>
+                                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                                    🤖 Ask AI to Generate IDP
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(6)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 6 → Continue to Block 7
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 7: Emergency Plan -->
+                    <div id="block-7" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 7: Emergency Succession Plan (90 дней)</div>
+                                <p class="text-gray-700 text-sm">
+                                    Подготовим план действий на случай внезапной недоступности CEO (болезнь, смерть, форс-мажор).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 border-2 border-red-400 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🚨 Emergency Plan Template</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Trigger</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" value="CEO unavailable >30 days" readonly />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Interim CEO</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="COO or Independent Director" />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Documentation</label>
+                                    <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" value="Pre-signed appointment letter (kept by corporate counsel)" readonly />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">90-Day Goals</label>
+                                    <textarea class="w-full border-2 rounded-lg p-3 text-sm" rows="3" placeholder="1. Maintain operational stability&#10;2. Transparent stakeholder communication&#10;3. Launch permanent replacement search&#10;4. Manage reputational risks"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm mb-2">Meeting Cadence</label>
+                                    <div class="text-sm text-gray-700 space-y-1">
+                                        <div>• Weekly Board Meeting</div>
+                                        <div>• Weekly Family Council Update</div>
+                                        <div>• Daily Brief to Interim CEO</div>
+                                        <div>• Bi-weekly All-Hands</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(7)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 7 → Continue to Block 8
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 8: RACI и процесс -->
+                    <div id="block-8" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 8: Процесс, RACI и коммуникации</div>
+                                <p class="text-gray-700 text-sm">
+                                    Определим, кто принимает ключевые решения в процессе succession planning (RACI-матрица).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6 overflow-x-auto">
+                            <h3 class="text-lg font-bold mb-3">🔑 RACI Matrix</h3>
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-300">
+                                        <th class="text-left py-2">Decision / Process</th>
+                                        <th class="text-center py-2">Owners</th>
+                                        <th class="text-center py-2">Board</th>
+                                        <th class="text-center py-2">Family Council</th>
+                                        <th class="text-center py-2">HRD</th>
+                                        <th class="text-center py-2">CEO</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2">Select final CEO candidate</td>
+                                        <td class="text-center bg-blue-100 font-bold">A</td>
+                                        <td class="text-center bg-green-100 font-bold">R</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                        <td class="text-center bg-red-100 font-bold">I</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2">Approve Individual Development Plans</td>
+                                        <td class="text-center bg-red-100 font-bold">I</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                        <td class="text-center bg-green-100 font-bold">R</td>
+                                        <td class="text-center bg-blue-100 font-bold">A</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2">Activate Emergency Plan</td>
+                                        <td class="text-center bg-blue-100 font-bold">A</td>
+                                        <td class="text-center bg-green-100 font-bold">R</td>
+                                        <td class="text-center bg-red-100 font-bold">I</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                        <td class="text-center bg-yellow-100 font-bold">C</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="mt-3 text-xs text-gray-600">
+                                R = Responsible | A = Accountable | C = Consulted | I = Informed
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold mb-2">📅 Review Calendar</h4>
+                            <div class="text-sm text-gray-700">
+                                • <strong>Annual review:</strong> Every 12 months (next: November 2026)<br/>
+                                • <strong>Triggers for ad-hoc review:</strong> M&A, ownership change, force majeure
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="completeBlock(8)" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                Complete Block 8 → Continue to Block 9
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Block 9: Протокол и решения -->
+                    <div id="block-9" class="block-content">
+                        <div class="flex gap-4 mb-6">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-xl flex-shrink-0">🤖</div>
+                            <div class="flex-1 bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                                <div class="font-bold mb-2">Block 9: Фиксация решений и протокол</div>
+                                <p class="text-gray-700 text-sm">
+                                    Зафиксируем все ключевые решения в протоколе и распределим домашние задания.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">✅ Key Decisions Summary</h3>
+                            <div class="space-y-2 text-sm text-gray-700">
+                                <div>✓ <strong>Roles under Policy:</strong> CEO + 4 key positions (CFO, COO, CTO, Commercial Director)</div>
+                                <div>✓ <strong>CEO Profile:</strong> One-pager completed with responsibilities, KPIs, competencies</div>
+                                <div>✓ <strong>Selection Criteria:</strong> 7 criteria with weights (total 100%)</div>
+                                <div>✓ <strong>Candidate Pool:</strong> Category A (Ready now), B (12-24m), C (>24m) with assessments</div>
+                                <div>✓ <strong>IDPs:</strong> Development plans for top 3 candidates (24 months)</div>
+                                <div>✓ <strong>Emergency Plan:</strong> 90-day continuity plan with Interim CEO named</div>
+                                <div>✓ <strong>RACI:</strong> Decision rights matrix agreed, annual review scheduled</div>
+                                <div>✓ <strong>Communication Plan:</strong> Internal and external stakeholders mapped</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-3">🏠 Homework Assignments</h3>
+                            <div class="space-y-3 text-sm">
+                                <div>
+                                    <div class="font-semibold">HRD (10 working days):</div>
+                                    <div class="text-gray-700">Finalize candidate assessments, complete 360° feedback, detail IDPs</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Corporate Counsel (10 working days):</div>
+                                    <div class="text-gray-700">Legal review, align with bylaws and shareholder agreements</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Board Chair (3-4 weeks):</div>
+                                    <div class="text-gray-700">Present to Board and Owners for approval at next meeting</div>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">CEO + HRD (after approval):</div>
+                                    <div class="text-gray-700">Communicate to top management, candidates, key partners</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-2 border-purple-400 bg-purple-50 rounded-lg p-6">
+                            <h4 class="font-bold mb-3">📝 Protocol Signatures Required</h4>
+                            <div class="space-y-2">
+                                <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Owner 1: _______________" />
+                                <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Owner 2: _______________" />
+                                <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Board Chair: _______________" />
+                                <input type="text" class="w-full border-2 rounded-lg p-2 text-sm" placeholder="Moderator: _______________" />
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="finishWorkshop()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                                ✅ Complete Workshop & Generate Succession Policy v0.9
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentBlock = 1;
+        let completedBlocks = [];
+
+        const blockData = {
+            1: { title: "Block 1: Открытие и цели", duration: "10 minutes" },
+            2: { title: "Block 2: Риски и критические роли", duration: "15 minutes" },
+            3: { title: "Block 3: Профиль роли CEO", duration: "25 minutes" },
+            4: { title: "Block 4: Критерии отбора", duration: "35 minutes" },
+            5: { title: "Block 5: Оценка кандидатов", duration: "40 minutes" },
+            6: { title: "Block 6: Дорожная карта развития", duration: "35 minutes" },
+            7: { title: "Block 7: Emergency Succession Plan", duration: "20 minutes" },
+            8: { title: "Block 8: RACI и процесс", duration: "20 minutes" },
+            9: { title: "Block 9: Протокол и решения", duration: "10 minutes" }
+        };
+
+        function showBlock(blockNumber) {
+            // Hide all blocks
+            document.querySelectorAll('.block-content').forEach(block => {
+                block.classList.remove('active');
+            });
+
+            // Show selected block
+            document.getElementById(`block-${blockNumber}`).classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.block-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.block-nav-item')[blockNumber - 1].classList.add('active');
+
+            // Update current block info
+            currentBlock = blockNumber;
+            document.getElementById('current-block-title').textContent = blockData[blockNumber].title;
+            document.getElementById('current-block-duration').textContent = blockData[blockNumber].duration;
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function completeBlock(blockNumber) {
+            if (!completedBlocks.includes(blockNumber)) {
+                completedBlocks.push(blockNumber);
+            }
+
+            // Mark as completed
+            document.querySelectorAll('.block-nav-item')[blockNumber - 1].classList.add('completed');
+
+            // Update overall progress
+            const percentage = (completedBlocks.length / 9) * 100;
+            document.getElementById('overall-progress-bar').style.width = percentage + '%';
+            document.getElementById('overall-progress-text').textContent = `Overall: ${completedBlocks.length} of 9 blocks`;
+
+            // Show next block
+            if (blockNumber < 9) {
+                showBlock(blockNumber + 1);
+            }
+        }
+
+        function finishWorkshop() {
+            alert('🎉 Congratulations! Workshop completed!\n\nSuccession Policy v0.9 is ready for legal review.\n\nNext steps:\n1. HRD: Finalize assessments (10 days)\n2. Legal: Review policy (10 days)\n3. Board: Approve at next meeting\n4. Communicate to stakeholders');
+
+            // Mark all as completed
+            for (let i = 1; i <= 9; i++) {
+                if (!completedBlocks.includes(i)) {
+                    completedBlocks.push(i);
+                }
+            }
+
+            document.getElementById('overall-progress-bar').style.width = '100%';
+            document.getElementById('overall-progress-text').textContent = 'Overall: 9 of 9 blocks ✅ COMPLETE';
+        }
+    </script>
+
+</body>
+</html>

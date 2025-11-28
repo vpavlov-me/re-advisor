@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Governance Architecture Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                        card: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .fade-enter-from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .fade-leave-to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+
+        .participant-card {
+            transition: all 0.2s ease;
+        }
+        .participant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stage-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .stage-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(251, 100, 40, 0.15);
+        }
+        .stage-card.active {
+            border-left: 4px solid #FB6428;
+            background: rgba(251, 100, 40, 0.05);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #FB6428;
+            animation: typing 1.4s infinite;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .emoji-reaction {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .emoji-reaction:hover {
+            transform: scale(1.3);
+        }
+
+        .raci-cell {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .raci-cell:hover {
+            background: rgba(251, 100, 40, 0.1);
+        }
+        .raci-cell.selected {
+            background: #FB6428;
+            color: white;
+        }
+
+        .three-circles {
+            position: relative;
+            height: 400px;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: move;
+        }
+
+        .circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .participant-tag {
+            background: white;
+            border: 2px solid #FB6428;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+            position: absolute;
+        }
+
+        .participant-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(251, 100, 40, 0.3);
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .slide-in {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .timer {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chat-message {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .raise-hand {
+            animation: wave 0.5s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+    </style>
+</head>
+<body class="bg-background">
+    <div id="app"></div>
+
+    <script type="module">
+        const { createApp } = Vue;
+
+        const workshopData = {
+            stages: [
+                { id: 0, title: "Workshop Orientation & Setup", duration: 0, icon: "📋" },
+                { id: 1, title: "Kick-off and Objectives", duration: 10, icon: "🎯" },
+                { id: 2, title: "Three Circles Model", duration: 10, icon: "⭕" },
+                { id: 3, title: "Governance Bodies & Roles", duration: 25, icon: "👥" },
+                { id: 4, title: "Decision Rights Matrix (RACI)", duration: 40, icon: "⭐" },
+                { id: 5, title: "Meeting Frequency & Calendar", duration: 20, icon: "📅" },
+                { id: 6, title: "Family Council Elections", duration: 30, icon: "🗳️" },
+                { id: 7, title: "Board Interface", duration: 25, icon: "🏢" },
+                { id: 8, title: "Conflict Escalation", duration: 15, icon: "⚖️" },
+                { id: 9, title: "Secretariat & Documentation", duration: 10, icon: "📝" },
+                { id: 10, title: "Summary & Next Steps", duration: 10, icon: "✅" }
+            ],
+            participants: [
+                { id: 1, name: "Alex", role: "facilitator", status: "online", emoji: "🎤" },
+                { id: 2, name: "Maria", role: "family_council", status: "online", emoji: "👑" },
+                { id: 3, name: "John", role: "family_council", status: "online", emoji: "👑" },
+                { id: 4, name: "Sarah", role: "board", status: "online", emoji: "👔" },
+                { id: 5, name: "David", role: "ceo", status: "online", emoji: "💼" },
+                { id: 6, name: "Emma", role: "observer", status: "away", emoji: "👁️" },
+                { id: 7, name: "Michael", role: "family_council", status: "offline", emoji: "👑" },
+                { id: 8, name: "Lisa", role: "legal", status: "online", emoji: "⚖️" },
+                { id: 9, name: "Robert", role: "family_council", status: "online", emoji: "👨" },
+                { id: 10, name: "Anna", role: "family_council", status: "online", emoji: "👩" },
+                { id: 11, name: "Thomas", role: "board", status: "online", emoji: "🧑‍💼" },
+                { id: 12, name: "Isabella", role: "family_council", status: "online", emoji: "👸" },
+                { id: 13, name: "James", role: "ceo", status: "online", emoji: "👨‍💼" },
+                { id: 14, name: "Sophia", role: "board", status: "online", emoji: "👩‍💼" },
+                { id: 15, name: "William", role: "family_council", status: "online", emoji: "🤴" },
+                { id: 16, name: "Olivia", role: "observer", status: "online", emoji: "👀" }
+            ]
+        };
+
+        createApp({
+            data() {
+                return {
+                    currentStage: 0,
+                    totalStages: 11,
+                    participants: workshopData.participants,
+                    stages: workshopData.stages,
+                    sessionStarted: false,
+                    timer: { minutes: 10, seconds: 0 },
+                    timerRunning: false,
+
+                    // Stage 0 data
+                    materialsChecked: false,
+                    surveyCompleted: false,
+                    zoomVisible: false,
+
+                    // Stage 1 data
+                    groundRulesAccepted: {},
+                    currentSlide: 0,
+                    slides: [
+                        { title: "Workshop Objectives", content: "objectives" },
+                        { title: "Ground Rules", content: "ground_rules" },
+                        { title: "Expected Outputs", content: "outputs" },
+                        { title: "Time Management", content: "time" }
+                    ],
+
+                    // Chat
+                    chatMessages: [
+                        { user: "Maria", message: "Ready to start!", timestamp: "14:00" },
+                        { user: "John", message: "+1", timestamp: "14:00" }
+                    ],
+                    newMessage: "",
+
+                    // Reactions
+                    reactions: { agree: 0, question: 0, time: 0, ready: 0 },
+
+                    // Speaking queue
+                    speakingQueue: [],
+
+                    // Stage 2 - Three Circles
+                    participantPositions: {},
+                    circleAssignments: {
+                        family: [],
+                        ownership: [],
+                        business: []
+                    },
+                    draggedParticipant: null,
+
+                    // Stage 3 - Governance Bodies
+                    customMeetingType: '',
+                    customMeetingFrequency: 'monthly',
+                    governanceBodies: [
+                        { id: 1, name: 'Family Council', icon: '👑', frequency: 'quarterly', description: 'Strategic family governance' },
+                        { id: 2, name: 'Board of Directors', icon: '🏢', frequency: 'monthly', description: 'Business oversight' },
+                        { id: 3, name: 'Management Team', icon: '💼', frequency: 'weekly', description: 'Day-to-day operations' },
+                        { id: 4, name: 'Shareholders Assembly', icon: '📊', frequency: 'annually', description: 'Ownership decisions' }
+                    ],
+
+                    // Stage 5 - Meeting Calendar
+                    calendarMeetings: [
+                        { id: 1, title: 'Family Council Q1', body: 'Family Council', date: '2025-03-15', time: '14:00', duration: 180 },
+                        { id: 2, title: 'Board Meeting Jan', body: 'Board of Directors', date: '2025-01-20', time: '10:00', duration: 120 },
+                        { id: 3, title: 'Shareholders Assembly', body: 'Shareholders Assembly', date: '2025-06-10', time: '09:00', duration: 240 },
+                        { id: 4, title: 'Management Weekly', body: 'Management Team', date: '2025-01-15', time: '09:00', duration: 60 }
+                    ],
+
+                    // Stage 6 - Family Council Elections
+                    termLength: 3,
+                    termLimits: true,
+                    maxConsecutiveTerms: 2,
+
+                    // Stage 7 - Board Interface
+                    reportingFrequency: 'quarterly',
+                    approvalThreshold: '75',
+                    communicationFrequency: 'monthly',
+
+                    // Stage 8 - Conflict Escalation
+                    escalationLevels: '3-level',
+                    mediationType: 'mandatory',
+                    resolutionTimeline: '30',
+
+                    // Stage 9 - Secretariat
+                    secretariatRole: 'professional',
+                    minutesFormat: 'detailed',
+                    publicationDeadline: '7',
+
+                    // Stage 4 - RACI Matrix
+                    raciMatrix: {},
+                    decisions: [
+                        "Strategic Investment >$1M",
+                        "Annual Family Budget",
+                        "Family Council Elections",
+                        "Business CEO Appointment",
+                        "Dividend Distribution Policy",
+                        "Family Constitution Amendment"
+                    ],
+                    roles: ["Family Council", "Board", "CEO", "Individual Members"],
+
+                    // General
+                    parkingLot: []
+                }
+            },
+            computed: {
+                progress() {
+                    return Math.round((this.currentStage / this.totalStages) * 100);
+                },
+                onlineParticipants() {
+                    return this.participants.filter(p => p.status === 'online').length;
+                },
+                currentStageData() {
+                    return this.stages[this.currentStage];
+                },
+                timerDisplay() {
+                    const mins = String(this.timer.minutes).padStart(2, '0');
+                    const secs = String(this.timer.seconds).padStart(2, '0');
+                    return `${mins}:${secs}`;
+                },
+                allGroundRulesAccepted() {
+                    const familyCouncil = this.participants.filter(p => p.role === 'family_council');
+                    return familyCouncil.every(p => this.groundRulesAccepted[p.id]);
+                }
+            },
+            methods: {
+                startWorkshop() {
+                    this.sessionStarted = true;
+                    this.currentStage = 1;
+                    this.startTimer();
+                },
+
+                startTimer() {
+                    if (this.timerRunning) return;
+                    this.timerRunning = true;
+
+                    const interval = setInterval(() => {
+                        if (this.timer.seconds === 0) {
+                            if (this.timer.minutes === 0) {
+                                clearInterval(interval);
+                                this.timerRunning = false;
+                                return;
+                            }
+                            this.timer.minutes--;
+                            this.timer.seconds = 59;
+                        } else {
+                            this.timer.seconds--;
+                        }
+                    }, 1000);
+                },
+
+                nextStage() {
+                    if (this.currentStage < this.totalStages) {
+                        this.currentStage++;
+                        const stageDuration = this.stages[this.currentStage]?.duration || 10;
+                        this.timer = { minutes: stageDuration, seconds: 0 };
+                        this.currentSlide = 0;
+                    }
+                },
+
+                previousStage() {
+                    if (this.currentStage > 0) {
+                        this.currentStage--;
+                        const stageDuration = this.stages[this.currentStage]?.duration || 10;
+                        this.timer = { minutes: stageDuration, seconds: 0 };
+                        this.currentSlide = 0;
+                    }
+                },
+
+                goToStage(stageId) {
+                    this.currentStage = stageId;
+                    const stageDuration = this.stages[stageId]?.duration || 10;
+                    this.timer = { minutes: stageDuration, seconds: 0 };
+                    this.currentSlide = 0;
+                },
+
+                nextSlide() {
+                    if (this.currentSlide < this.slides.length - 1) {
+                        this.currentSlide++;
+                    }
+                },
+
+                previousSlide() {
+                    if (this.currentSlide > 0) {
+                        this.currentSlide--;
+                    }
+                },
+
+                getStatusColor(status) {
+                    return {
+                        'online': 'bg-green-500',
+                        'away': 'bg-yellow-500',
+                        'offline': 'bg-red-500'
+                    }[status] || 'bg-gray-500';
+                },
+
+                getRoleLabel(role) {
+                    return {
+                        'facilitator': 'Facilitator',
+                        'family_council': 'FC',
+                        'board': 'Board',
+                        'ceo': 'CEO',
+                        'observer': 'Observer',
+                        'legal': 'Legal'
+                    }[role] || role;
+                },
+
+                sendMessage() {
+                    if (this.newMessage.trim()) {
+                        this.chatMessages.push({
+                            user: "You",
+                            message: this.newMessage,
+                            timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                        });
+                        this.newMessage = "";
+                        this.$nextTick(() => {
+                            const chatBox = this.$refs.chatBox;
+                            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                        });
+                    }
+                },
+
+                reactWith(emoji) {
+                    this.reactions[emoji]++;
+                    setTimeout(() => {
+                        this.reactions[emoji] = Math.max(0, this.reactions[emoji] - 1);
+                    }, 3000);
+                },
+
+                raiseHand(participantId) {
+                    const participant = this.participants.find(p => p.id === participantId);
+                    if (participant && !this.speakingQueue.includes(participantId)) {
+                        this.speakingQueue.push(participantId);
+                    }
+                },
+
+                removeFromQueue(participantId) {
+                    const index = this.speakingQueue.indexOf(participantId);
+                    if (index > -1) {
+                        this.speakingQueue.splice(index, 1);
+                    }
+                },
+
+                acceptGroundRules(participantId) {
+                    this.groundRulesAccepted[participantId] = true;
+                },
+
+                toggleRaciCell(decision, role, value) {
+                    const key = `${decision}-${role}`;
+                    if (!this.raciMatrix[key]) {
+                        this.raciMatrix[key] = [];
+                    }
+                    const index = this.raciMatrix[key].indexOf(value);
+                    if (index > -1) {
+                        this.raciMatrix[key].splice(index, 1);
+                    } else {
+                        this.raciMatrix[key].push(value);
+                    }
+                },
+
+                hasRaciValue(decision, role, value) {
+                    const key = `${decision}-${role}`;
+                    return this.raciMatrix[key]?.includes(value) || false;
+                },
+
+                addToParkingLot() {
+                    const item = prompt("Enter item for parking lot:");
+                    if (item) {
+                        this.parkingLot.push({ text: item, timestamp: new Date().toLocaleTimeString() });
+                    }
+                },
+
+                // Stage 2: Three Circles - Drag and Drop
+                startDrag(event, participant) {
+                    this.draggedParticipant = participant;
+                    event.dataTransfer.effectAllowed = 'move';
+                },
+
+                drop(event, circle) {
+                    event.preventDefault();
+                    if (this.draggedParticipant) {
+                        // Remove from all circles first
+                        Object.keys(this.circleAssignments).forEach(key => {
+                            const index = this.circleAssignments[key].indexOf(this.draggedParticipant.id);
+                            if (index > -1) {
+                                this.circleAssignments[key].splice(index, 1);
+                            }
+                        });
+
+                        // Add to target circle
+                        if (!this.circleAssignments[circle].includes(this.draggedParticipant.id)) {
+                            this.circleAssignments[circle].push(this.draggedParticipant.id);
+                        }
+
+                        this.draggedParticipant = null;
+                    }
+                },
+
+                removeFromCircle(circle, participantId) {
+                    const index = this.circleAssignments[circle].indexOf(participantId);
+                    if (index > -1) {
+                        this.circleAssignments[circle].splice(index, 1);
+                    }
+                },
+
+                getParticipantById(id) {
+                    return this.participants.find(p => p.id === id) || {};
+                },
+
+                toggleZoom() {
+                    this.zoomVisible = !this.zoomVisible;
+                },
+
+                addCustomMeetingType() {
+                    if (this.customMeetingType.trim()) {
+                        this.governanceBodies.push({
+                            id: this.governanceBodies.length + 1,
+                            name: this.customMeetingType,
+                            icon: '🔷',
+                            frequency: this.customMeetingFrequency,
+                            description: 'Custom governance body',
+                            custom: true
+                        });
+                        this.customMeetingType = '';
+                        this.customMeetingFrequency = 'monthly';
+                    }
+                },
+
+                updateBodyFrequency(bodyId, frequency) {
+                    const body = this.governanceBodies.find(b => b.id === bodyId);
+                    if (body) {
+                        body.frequency = frequency;
+                    }
+                },
+
+                removeCustomBody(bodyId) {
+                    this.governanceBodies = this.governanceBodies.filter(b => b.id !== bodyId);
+                },
+
+                exportToICS(meeting) {
+                    const dateTime = meeting.date.replace(/-/g, '') + 'T' + meeting.time.replace(':', '') + '00';
+                    const endDate = new Date(meeting.date + ' ' + meeting.time);
+                    endDate.setMinutes(endDate.getMinutes() + meeting.duration);
+                    const endDateTime = endDate.toISOString().replace(/[-:]/g, '').split('.')[0];
+
+                    const icsContent = [
+                        'BEGIN:VCALENDAR',
+                        'VERSION:2.0',
+                        'PRODID:-//Family Governance Workshop//EN',
+                        'CALSCALE:GREGORIAN',
+                        'BEGIN:VEVENT',
+                        `UID:${meeting.id}@familygovernance.com`,
+                        `DTSTAMP:${dateTime}`,
+                        `DTSTART:${dateTime}`,
+                        `DTEND:${endDateTime}`,
+                        `SUMMARY:${meeting.title}`,
+                        `DESCRIPTION:${meeting.body} - Family Governance Meeting`,
+                        'LOCATION:Family Office',
+                        'STATUS:CONFIRMED',
+                        'END:VEVENT',
+                        'END:VCALENDAR'
+                    ].join('\r\n');
+
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = `${meeting.title.replace(/\s/g, '_')}.ics`;
+                    link.click();
+                },
+
+                exportAllMeetings() {
+                    this.calendarMeetings.forEach(meeting => {
+                        setTimeout(() => this.exportToICS(meeting), 100);
+                    });
+                }
+            },
+            mounted() {
+                // Initialize ground rules acceptance
+                this.participants.forEach(p => {
+                    this.groundRulesAccepted[p.id] = false;
+                });
+            },
+            template: `
+                <div class="min-h-screen">
+                    <!-- Header -->
+                    <div class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+                        <div class="max-w-7xl mx-auto px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h1 class="text-2xl font-bold text-gray-900">
+                                        Decision Making & Conflict Resolution Workshop
+                                    </h1>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Stage {{ currentStage }} of {{ totalStages - 1 }}: {{ currentStageData.title }}
+                                        <span v-if="currentStage > 0"> | ⏱️ {{ timerDisplay }}</span>
+                                        | 👥 {{ onlineParticipants }} online
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <button @click="toggleZoom"
+                                            class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                                        </svg>
+                                        {{ zoomVisible ? 'Hide' : 'Show' }} Meeting
+                                    </button>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-500">Progress</div>
+                                        <div class="text-lg font-bold text-primary">{{ progress }}%</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mt-4 bg-gray-200 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full progress-bar"
+                                     :style="{ width: progress + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="max-w-7xl mx-auto px-6 py-6">
+                        <div class="grid grid-cols-12 gap-6">
+                            <!-- Left Sidebar - Stage Navigation (20%) -->
+                            <div class="col-span-3">
+                                <div class="bg-white rounded-lg shadow-sm p-4 sticky top-24">
+                                    <h3 class="font-semibold text-gray-900 mb-3">Workshop Stages</h3>
+                                    <div class="space-y-2">
+                                        <div v-for="stage in stages" :key="stage.id"
+                                             @click="goToStage(stage.id)"
+                                             class="stage-card p-3 rounded-lg border cursor-pointer"
+                                             :class="{ 'active': currentStage === stage.id }">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xl">{{ stage.icon }}</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-sm font-medium text-gray-900 truncate">
+                                                        {{ stage.title }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500" v-if="stage.duration > 0">
+                                                        {{ stage.duration }} min
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Center Content (55%) -->
+                            <div class="col-span-6">
+                                <!-- Stage 0: Orientation -->
+                                <div v-if="currentStage === 0" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <div class="text-center mb-8">
+                                            <h2 class="text-3xl font-bold text-gray-900 mb-3">
+                                                Welcome to the Workshop
+                                            </h2>
+                                            <p class="text-gray-600">
+                                                Family Governance Architecture Session
+                                            </p>
+                                            <div class="mt-4 inline-flex items-center gap-2 text-sm text-gray-500">
+                                                <span>Session ID: WS-2025-001</span>
+                                                <span>•</span>
+                                                <span>{{ new Date().toLocaleDateString() }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- What We'll Do -->
+                                        <div class="mb-6 p-6 bg-blue-50 rounded-lg">
+                                            <h3 class="font-semibold text-gray-900 mb-3">📍 Workshop Roadmap</h3>
+                                            <div class="space-y-2 text-sm">
+                                                <div v-for="stage in stages.slice(1)" :key="stage.id" class="flex items-center gap-2">
+                                                    <span>{{ stage.icon }}</span>
+                                                    <span>{{ stage.title }}</span>
+                                                    <span class="text-gray-500">({{ stage.duration }} min)</span>
+                                                    <span v-if="stage.duration >= 40" class="text-primary">⭐</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Why This Matters -->
+                                        <div class="mb-6 p-6 bg-green-50 rounded-lg">
+                                            <h3 class="font-semibold text-gray-900 mb-3">🎯 Business Value</h3>
+                                            <div class="space-y-3 text-sm">
+                                                <div>
+                                                    <div class="font-medium">✅ Clarity in Decision-Making</div>
+                                                    <div class="text-gray-600 ml-5">Everyone knows WHO decides WHAT</div>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium">✅ Conflict Prevention</div>
+                                                    <div class="text-gray-600 ml-5">Clear escalation procedures</div>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium">✅ Governance Maturity</div>
+                                                    <div class="text-gray-600 ml-5">Professional family governance structure</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pre-Workshop Checklist -->
+                                        <div class="mb-6 p-6 bg-yellow-50 rounded-lg">
+                                            <h3 class="font-semibold text-gray-900 mb-3">✅ Materials to Have Ready</h3>
+                                            <div class="space-y-2">
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" v-model="materialsChecked" class="rounded">
+                                                    <span class="text-sm">Current organizational chart</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" class="rounded">
+                                                    <span class="text-sm">Draft family values and mission</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" class="rounded">
+                                                    <span class="text-sm">Calendar of existing meetings</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" class="rounded">
+                                                    <span class="text-sm">Corporate documents</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Meeting Access Hint -->
+                                        <div class="mb-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-8 h-8 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                                                </svg>
+                                                <div class="flex-1">
+                                                    <div class="font-semibold text-gray-900 mb-1">📹 Video Meeting Available</div>
+                                                    <div class="text-sm text-gray-700 mb-2">Click <strong>"Show Meeting"</strong> button in the header to join the Zoom-like interface with all 16 participants</div>
+                                                    <div class="text-xs text-gray-600">✓ Accessible from any workshop stage</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-center gap-4">
+                                            <button @click="startWorkshop"
+                                                    class="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-opacity-90 transition">
+                                                I'm Ready to Start
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 1: Kick-off -->
+                                <div v-if="currentStage === 1" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <!-- Slide Navigation -->
+                                        <div class="flex items-center justify-between mb-6">
+                                            <button @click="previousSlide"
+                                                    :disabled="currentSlide === 0"
+                                                    class="px-4 py-2 border rounded-lg disabled:opacity-50">
+                                                ← Previous
+                                            </button>
+                                            <div class="text-sm text-gray-600">
+                                                Slide {{ currentSlide + 1 }} of {{ slides.length }}
+                                            </div>
+                                            <button @click="nextSlide"
+                                                    :disabled="currentSlide === slides.length - 1"
+                                                    class="px-4 py-2 border rounded-lg disabled:opacity-50">
+                                                Next →
+                                            </button>
+                                        </div>
+
+                                        <!-- Objectives Slide -->
+                                        <div v-if="currentSlide === 0" class="slide-in">
+                                            <h2 class="text-2xl font-bold text-gray-900 mb-6">🎯 Workshop Objectives</h2>
+                                            <div class="space-y-4">
+                                                <div class="p-4 bg-blue-50 rounded-lg">
+                                                    <div class="font-semibold mb-2">1. Create Governance Blueprint</div>
+                                                    <div class="text-sm text-gray-600">→ Clear roles and rights</div>
+                                                </div>
+                                                <div class="p-4 bg-green-50 rounded-lg">
+                                                    <div class="font-semibold mb-2">2. Define Decision Matrix (RACI)</div>
+                                                    <div class="text-sm text-gray-600">→ Who decides what</div>
+                                                </div>
+                                                <div class="p-4 bg-yellow-50 rounded-lg">
+                                                    <div class="font-semibold mb-2">3. Establish Conflict Escalation</div>
+                                                    <div class="text-sm text-gray-600">→ Clear resolution path</div>
+                                                </div>
+                                                <div class="p-4 bg-purple-50 rounded-lg">
+                                                    <div class="font-semibold mb-2">4. Build Governance Calendar</div>
+                                                    <div class="text-sm text-gray-600">→ Meeting rhythm</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ground Rules Slide -->
+                                        <div v-if="currentSlide === 1" class="slide-in">
+                                            <h2 class="text-2xl font-bold text-gray-900 mb-6">📋 Ground Rules</h2>
+                                            <div class="space-y-3 mb-6">
+                                                <div class="p-4 border-l-4 border-primary bg-gray-50 rounded">
+                                                    <div class="font-medium">✅ Confidentiality</div>
+                                                    <div class="text-sm text-gray-600">What's discussed stays in the family</div>
+                                                </div>
+                                                <div class="p-4 border-l-4 border-primary bg-gray-50 rounded">
+                                                    <div class="font-medium">✅ One agenda</div>
+                                                    <div class="text-sm text-gray-600">Stay focused on governance architecture</div>
+                                                </div>
+                                                <div class="p-4 border-l-4 border-primary bg-gray-50 rounded">
+                                                    <div class="font-medium">✅ All voices heard</div>
+                                                    <div class="text-sm text-gray-600">Everyone's input matters</div>
+                                                </div>
+                                                <div class="p-4 border-l-4 border-primary bg-gray-50 rounded">
+                                                    <div class="font-medium">✅ Decision documentation</div>
+                                                    <div class="text-sm text-gray-600">All decisions recorded in protocol</div>
+                                                </div>
+                                                <div class="p-4 border-l-4 border-primary bg-gray-50 rounded">
+                                                    <div class="font-medium">✅ Time respect</div>
+                                                    <div class="text-sm text-gray-600">We'll stick to schedule</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="p-4 bg-yellow-50 rounded-lg">
+                                                <label class="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox"
+                                                           @change="acceptGroundRules(2)"
+                                                           class="w-5 h-5 rounded border-primary">
+                                                    <span class="font-medium">I agree to these ground rules</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Expected Outputs Slide -->
+                                        <div v-if="currentSlide === 2" class="slide-in">
+                                            <h2 class="text-2xl font-bold text-gray-900 mb-6">📦 Expected Outputs</h2>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">📊</div>
+                                                    <div class="font-semibold">Governance Blueprint</div>
+                                                    <div class="text-sm text-gray-600">v0.9</div>
+                                                </div>
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">⭐</div>
+                                                    <div class="font-semibold">RACI Matrix</div>
+                                                    <div class="text-sm text-gray-600">Decision Rights</div>
+                                                </div>
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">📜</div>
+                                                    <div class="font-semibold">Family Council Charter</div>
+                                                    <div class="text-sm text-gray-600">Elections & Terms</div>
+                                                </div>
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">📅</div>
+                                                    <div class="font-semibold">Meeting Calendar</div>
+                                                    <div class="text-sm text-gray-600">Annual Schedule</div>
+                                                </div>
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">⚖️</div>
+                                                    <div class="font-semibold">Escalation Procedure</div>
+                                                    <div class="text-sm text-gray-600">4-Level Path</div>
+                                                </div>
+                                                <div class="p-4 border-2 border-primary rounded-lg text-center">
+                                                    <div class="text-3xl mb-2">📝</div>
+                                                    <div class="font-semibold">Secretariat Rules</div>
+                                                    <div class="text-sm text-gray-600">Documentation</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Time Management Slide -->
+                                        <div v-if="currentSlide === 3" class="slide-in">
+                                            <h2 class="text-2xl font-bold text-gray-900 mb-6">⏰ Time Management</h2>
+                                            <div class="space-y-2">
+                                                <div v-for="stage in stages.slice(1)" :key="stage.id"
+                                                     class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                    <span class="text-xl">{{ stage.icon }}</span>
+                                                    <div class="flex-1">
+                                                        <div class="font-medium text-sm">{{ stage.title }}</div>
+                                                    </div>
+                                                    <div class="text-sm text-gray-600">{{ stage.duration }} min</div>
+                                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                                        <div class="bg-primary h-2 rounded-full"
+                                                             :style="{ width: (stage.duration / 40 * 100) + '%' }"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-6 p-4 bg-blue-50 rounded-lg text-center">
+                                                <div class="font-semibold">Total Duration: 3-3.5 hours</div>
+                                                <div class="text-sm text-gray-600">With breaks as needed</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 2: Three Circles Model -->
+                                <div v-if="currentStage === 2" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">⭕ Three Circles Model</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Drag participants from the pool below to assign them to one or more circles
+                                        </p>
+
+                                        <!-- Participants Pool - Draggable -->
+                                        <div class="mb-6 p-5 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
+                                            <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                <span class="text-2xl">👥</span>
+                                                <span>Participants Pool (Drag to Assign)</span>
+                                            </h3>
+                                            <div class="grid grid-cols-5 gap-3">
+                                                <div v-for="participant in participants.filter(p => p.role !== 'facilitator')" :key="participant.id"
+                                                     draggable="true"
+                                                     @dragstart="startDrag($event, participant)"
+                                                     class="cursor-move px-3 py-2.5 bg-white border-2 border-gray-300 hover:border-primary rounded-lg hover:shadow-lg transition flex flex-col items-center gap-1">
+                                                    <span class="text-2xl">{{ participant.emoji }}</span>
+                                                    <span class="text-xs font-medium text-gray-700 text-center">{{ participant.name }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Three Overlapping Circles with Drop Zones -->
+                                        <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 mb-6" style="height: 650px;">
+                                            <!-- Family Circle -->
+                                            <div @drop="drop($event, 'family')"
+                                                 @dragover.prevent
+                                                 @dragenter.prevent
+                                                 class="circle absolute transition-all hover:scale-105"
+                                                 style="width: 380px; height: 380px; left: 40px; top: 80px; border: 5px solid #FB6428; background: rgba(251, 100, 40, 0.12); border-radius: 50%; display: flex; align-items: flex-start; justify-content: center; flex-direction: column; padding: 30px;">
+                                                <div class="text-center w-full mb-4">
+                                                    <div class="text-5xl mb-2">👨‍👩‍👧‍👦</div>
+                                                    <h3 class="font-bold text-primary text-xl">FAMILY</h3>
+                                                    <div class="text-xs text-gray-600 mt-1">{{ circleAssignments.family.length }} members</div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2 justify-center w-full overflow-y-auto max-h-48">
+                                                    <div v-for="pid in circleAssignments.family" :key="pid"
+                                                         class="px-2.5 py-1.5 bg-white rounded-lg border-2 border-primary text-xs flex items-center gap-1.5 shadow-sm">
+                                                        <span class="text-lg">{{ getParticipantById(pid).emoji }}</span>
+                                                        <span class="font-medium">{{ getParticipantById(pid).name }}</span>
+                                                        <button @click="removeFromCircle('family', pid)" class="text-red-500 hover:text-red-700 font-bold">×</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Ownership Circle -->
+                                            <div @drop="drop($event, 'ownership')"
+                                                 @dragover.prevent
+                                                 @dragenter.prevent
+                                                 class="circle absolute transition-all hover:scale-105"
+                                                 style="width: 380px; height: 380px; right: 40px; top: 80px; border: 5px solid #3B82F6; background: rgba(59, 130, 246, 0.12); border-radius: 50%; display: flex; align-items: flex-start; justify-content: center; flex-direction: column; padding: 30px;">
+                                                <div class="text-center w-full mb-4">
+                                                    <div class="text-5xl mb-2">💼</div>
+                                                    <h3 class="font-bold text-blue-600 text-xl">OWNERSHIP</h3>
+                                                    <div class="text-xs text-gray-600 mt-1">{{ circleAssignments.ownership.length }} members</div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2 justify-center w-full overflow-y-auto max-h-48">
+                                                    <div v-for="pid in circleAssignments.ownership" :key="pid"
+                                                         class="px-2.5 py-1.5 bg-white rounded-lg border-2 border-blue-500 text-xs flex items-center gap-1.5 shadow-sm">
+                                                        <span class="text-lg">{{ getParticipantById(pid).emoji }}</span>
+                                                        <span class="font-medium">{{ getParticipantById(pid).name }}</span>
+                                                        <button @click="removeFromCircle('ownership', pid)" class="text-red-500 hover:text-red-700 font-bold">×</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Business Circle -->
+                                            <div @drop="drop($event, 'business')"
+                                                 @dragover.prevent
+                                                 @dragenter.prevent
+                                                 class="circle absolute transition-all hover:scale-105"
+                                                 style="width: 380px; height: 380px; left: 50%; top: 310px; transform: translateX(-50%); border: 5px solid #10B981; background: rgba(16, 185, 129, 0.12); border-radius: 50%; display: flex; align-items: flex-start; justify-content: center; flex-direction: column; padding: 30px;">
+                                                <div class="text-center w-full mb-4">
+                                                    <div class="text-5xl mb-2">🏢</div>
+                                                    <h3 class="font-bold text-green-600 text-xl">BUSINESS</h3>
+                                                    <div class="text-xs text-gray-600 mt-1">{{ circleAssignments.business.length }} members</div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2 justify-center w-full overflow-y-auto max-h-48">
+                                                    <div v-for="pid in circleAssignments.business" :key="pid"
+                                                         class="px-2.5 py-1.5 bg-white rounded-lg border-2 border-green-500 text-xs flex items-center gap-1.5 shadow-sm">
+                                                        <span class="text-lg">{{ getParticipantById(pid).emoji }}</span>
+                                                        <span class="font-medium">{{ getParticipantById(pid).name }}</span>
+                                                        <button @click="removeFromCircle('business', pid)" class="text-red-500 hover:text-red-700 font-bold">×</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Central Overlap Info -->
+                                            <div class="absolute" style="left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 10;">
+                                                <div class="bg-white rounded-xl shadow-xl p-4 border-3 border-gray-400 text-center">
+                                                    <div class="text-sm font-bold text-gray-800">Overlap Zone</div>
+                                                    <div class="text-xs text-gray-600 mt-1">People can belong to multiple circles</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Summary -->
+                                        <div class="p-4 bg-gray-100 rounded-lg mb-6">
+                                            <h3 class="font-semibold mb-2">📊 Distribution Summary</h3>
+                                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-primary">{{ circleAssignments.family.length }}</div>
+                                                    <div class="text-gray-600">in Family</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-blue-600">{{ circleAssignments.ownership.length }}</div>
+                                                    <div class="text-gray-600">in Ownership</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="text-2xl font-bold text-green-600">{{ circleAssignments.business.length }}</div>
+                                                    <div class="text-gray-600">in Business</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4 bg-yellow-50 rounded-lg">
+                                            <div class="font-semibold mb-2">💡 Key Insight</div>
+                                            <div class="text-sm text-gray-600">
+                                                Most conflicts arise in the overlapping areas. People can belong to multiple circles. Clear governance defines how these circles interact.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 4: RACI Matrix -->
+                                <div v-if="currentStage === 4" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">⭐ Decision Rights Matrix (RACI)</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Define who is Responsible, Accountable, Consulted, and Informed for each decision
+                                        </p>
+
+                                        <div class="mb-4 flex gap-2">
+                                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded text-sm font-medium">R - Responsible</span>
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-medium">A - Accountable</span>
+                                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">C - Consulted</span>
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-medium">I - Informed</span>
+                                        </div>
+
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full border-collapse">
+                                                <thead>
+                                                    <tr class="bg-gray-100">
+                                                        <th class="border p-3 text-left font-semibold">Decision Type</th>
+                                                        <th v-for="role in roles" :key="role" class="border p-3 text-center font-semibold text-sm">
+                                                            {{ role }}
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="decision in decisions" :key="decision">
+                                                        <td class="border p-3 font-medium text-sm">{{ decision }}</td>
+                                                        <td v-for="role in roles" :key="role" class="border p-2">
+                                                            <div class="flex gap-1 justify-center">
+                                                                <button v-for="raciValue in ['R', 'A', 'C', 'I']" :key="raciValue"
+                                                                        @click="toggleRaciCell(decision, role, raciValue)"
+                                                                        class="raci-cell w-8 h-8 rounded font-semibold text-xs"
+                                                                        :class="{
+                                                                            'selected': hasRaciValue(decision, role, raciValue),
+                                                                            'bg-red-100 text-red-800': raciValue === 'R' && hasRaciValue(decision, role, raciValue),
+                                                                            'bg-green-100 text-green-800': raciValue === 'A' && hasRaciValue(decision, role, raciValue),
+                                                                            'bg-blue-100 text-blue-800': raciValue === 'C' && hasRaciValue(decision, role, raciValue),
+                                                                            'bg-yellow-100 text-yellow-800': raciValue === 'I' && hasRaciValue(decision, role, raciValue),
+                                                                            'bg-gray-50 text-gray-400': !hasRaciValue(decision, role, raciValue)
+                                                                        }">
+                                                                    {{ raciValue }}
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                                            <div class="text-sm text-gray-600">
+                                                💡 Tip: Each decision should have exactly one "A" (Accountable) person or group
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 8: Conflict Escalation -->
+                                <div v-if="currentStage === 8" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">⚖️ Conflict Escalation Procedure</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Define clear steps for resolving conflicts at different levels. Customize escalation structure and timelines.
+                                        </p>
+
+                                        <!-- Configuration Options -->
+                                        <div class="mb-8 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                                            <h3 class="font-bold text-gray-900 mb-4">⚙️ Escalation Configuration</h3>
+
+                                            <!-- Escalation Levels -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Escalation Levels</label>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div @click="escalationLevels = '3-level'"
+                                                         class="p-4 border-2 rounded-lg cursor-pointer transition"
+                                                         :class="escalationLevels === '3-level' ? 'border-purple-500 bg-purple-500 text-white' : 'border-gray-300 hover:border-purple-500'">
+                                                        <div class="font-bold text-center">3-Level System</div>
+                                                        <div class="text-xs text-center mt-1">Direct → Mediation → Arbitration</div>
+                                                    </div>
+                                                    <div @click="escalationLevels = '4-level'"
+                                                         class="p-4 border-2 rounded-lg cursor-pointer transition"
+                                                         :class="escalationLevels === '4-level' ? 'border-purple-500 bg-purple-500 text-white' : 'border-gray-300 hover:border-purple-500'">
+                                                        <div class="font-bold text-center">4-Level System</div>
+                                                        <div class="text-xs text-center mt-1">Direct → Council → Advisors → Arbitration</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mediation Type -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Mediation Approach</label>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div @click="mediationType = 'mandatory'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="mediationType === 'mandatory' ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-300 hover:border-orange-500'">
+                                                        <div class="font-bold">Mandatory</div>
+                                                        <div class="text-xs mt-1">Must complete each level</div>
+                                                    </div>
+                                                    <div @click="mediationType = 'voluntary'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="mediationType === 'voluntary' ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-300 hover:border-orange-500'">
+                                                        <div class="font-bold">Voluntary</div>
+                                                        <div class="text-xs mt-1">Can skip levels</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Resolution Timeline -->
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                    Maximum Resolution Timeline (days per level)
+                                                </label>
+                                                <div class="flex items-center gap-4">
+                                                    <input v-model="resolutionTimeline" type="range" min="7" max="60" step="7"
+                                                           class="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
+                                                    <div class="px-4 py-2 bg-purple-600 text-white rounded-lg font-bold min-w-[80px] text-center">
+                                                        {{ resolutionTimeline }} days
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 flex justify-between text-xs text-gray-600">
+                                                    <span>Fast (7 days)</span>
+                                                    <span>Standard (30 days)</span>
+                                                    <span>Extended (60 days)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Escalation Levels Display -->
+                                        <div class="space-y-4 mb-6">
+                                            <div class="p-6 border-l-4 border-green-500 bg-green-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <span class="text-2xl">1️⃣</span>
+                                                    <span class="font-bold text-lg">Direct Discussion</span>
+                                                </div>
+                                                <div class="ml-11 text-sm text-gray-700">
+                                                    Parties attempt to resolve the issue directly through respectful conversation
+                                                </div>
+                                                <div class="ml-11 mt-2 text-xs text-gray-600">Timeline: {{ Math.floor(resolutionTimeline / 4) }} days</div>
+                                            </div>
+
+                                            <div class="p-6 border-l-4 border-yellow-500 bg-yellow-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <span class="text-2xl">2️⃣</span>
+                                                    <span class="font-bold text-lg">Family Council Mediation</span>
+                                                </div>
+                                                <div class="ml-11 text-sm text-gray-700">
+                                                    Family Council facilitates structured mediation with trained mediator
+                                                </div>
+                                                <div class="ml-11 mt-2 text-xs text-gray-600">Timeline: {{ Math.floor(resolutionTimeline / 2) }} days</div>
+                                            </div>
+
+                                            <div v-if="escalationLevels === '4-level'" class="p-6 border-l-4 border-orange-500 bg-orange-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <span class="text-2xl">3️⃣</span>
+                                                    <span class="font-bold text-lg">External Advisor Panel</span>
+                                                </div>
+                                                <div class="ml-11 text-sm text-gray-700">
+                                                    Panel of trusted external advisors (lawyer, accountant, consultant) provides binding recommendation
+                                                </div>
+                                                <div class="ml-11 mt-2 text-xs text-gray-600">Timeline: {{ resolutionTimeline }} days</div>
+                                            </div>
+
+                                            <div class="p-6 border-l-4 border-red-500 bg-red-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <span class="text-2xl">{{ escalationLevels === '4-level' ? '4️⃣' : '3️⃣' }}</span>
+                                                    <span class="font-bold text-lg">Formal Arbitration</span>
+                                                </div>
+                                                <div class="ml-11 text-sm text-gray-700">
+                                                    Professional arbitration per Family Constitution rules - legally binding
+                                                </div>
+                                                <div class="ml-11 mt-2 text-xs text-gray-600">Timeline: As needed</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4 bg-blue-50 rounded-lg">
+                                            <div class="font-semibold mb-2">📋 Documentation Required</div>
+                                            <div class="text-sm text-gray-600">
+                                                All conflict escalations must be logged in the Conflict Resolution module with full audit trail.
+                                                {{ mediationType === 'mandatory' ? 'Each level must be attempted before escalation.' : 'Parties may choose to skip levels if mutually agreed.' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 3: Governance Bodies & Roles -->
+                                <div v-if="currentStage === 3" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">👥 Governance Bodies & Roles</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Define the key governance bodies in your family enterprise and their roles. Customize meeting frequencies and add custom bodies as needed.
+                                        </p>
+
+                                        <!-- Add Custom Meeting Type -->
+                                        <div class="mb-8 p-5 bg-blue-50 rounded-lg border-2 border-blue-200">
+                                            <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                <span class="text-xl">➕</span>
+                                                <span>Add Custom Governance Body</span>
+                                            </h3>
+                                            <div class="flex gap-3">
+                                                <input v-model="customMeetingType"
+                                                       type="text"
+                                                       placeholder="e.g., Investment Committee, Philanthropy Council"
+                                                       class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none">
+                                                <select v-model="customMeetingFrequency"
+                                                        class="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none">
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="biweekly">Bi-weekly</option>
+                                                    <option value="monthly">Monthly</option>
+                                                    <option value="quarterly">Quarterly</option>
+                                                    <option value="biannual">Bi-annual</option>
+                                                    <option value="annually">Annually</option>
+                                                    <option value="adhoc">Ad-hoc</option>
+                                                </select>
+                                                <button @click="addCustomMeetingType"
+                                                        class="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition">
+                                                    Add Body
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Governance Bodies Grid -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                            <div v-for="body in governanceBodies" :key="body.id"
+                                                 class="border-2 rounded-lg p-6 hover:shadow-lg transition"
+                                                 :class="{ 'border-blue-400 bg-blue-50': body.custom }">
+                                                <div class="flex items-center justify-between mb-4">
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="text-4xl">{{ body.icon }}</span>
+                                                        <div>
+                                                            <h3 class="text-lg font-bold">{{ body.name }}</h3>
+                                                            <p class="text-sm text-gray-600">{{ body.description }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button v-if="body.custom"
+                                                            @click="removeCustomBody(body.id)"
+                                                            class="text-red-500 hover:text-red-700 font-bold text-xl">
+                                                        ×
+                                                    </button>
+                                                </div>
+
+                                                <div v-if="!body.custom" class="text-sm text-gray-700 space-y-1 mb-4">
+                                                    <div v-if="body.id === 1">
+                                                        <div>• Set family vision and values</div>
+                                                        <div>• Approve major family decisions</div>
+                                                        <div>• Elect board representatives</div>
+                                                        <div>• Manage family conflicts</div>
+                                                    </div>
+                                                    <div v-if="body.id === 2">
+                                                        <div>• Business strategy approval</div>
+                                                        <div>• CEO appointment and oversight</div>
+                                                        <div>• Financial oversight</div>
+                                                        <div>• Risk management</div>
+                                                    </div>
+                                                    <div v-if="body.id === 3">
+                                                        <div>• Execute business strategy</div>
+                                                        <div>• Daily operations management</div>
+                                                        <div>• Report to Board</div>
+                                                        <div>• Team leadership</div>
+                                                    </div>
+                                                    <div v-if="body.id === 4">
+                                                        <div>• Approve constitutional changes</div>
+                                                        <div>• Major ownership decisions</div>
+                                                        <div>• Dividend policy approval</div>
+                                                        <div>• Board election</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="pt-3 border-t flex items-center gap-2">
+                                                    <strong class="text-sm text-gray-700">Meeting Frequency:</strong>
+                                                    <select :value="body.frequency"
+                                                            @change="updateBodyFrequency(body.id, $event.target.value)"
+                                                            class="text-sm px-3 py-1 border border-gray-300 rounded focus:border-primary focus:outline-none">
+                                                        <option value="weekly">Weekly</option>
+                                                        <option value="biweekly">Bi-weekly</option>
+                                                        <option value="monthly">Monthly</option>
+                                                        <option value="quarterly">Quarterly</option>
+                                                        <option value="biannual">Bi-annual</option>
+                                                        <option value="annually">Annually</option>
+                                                        <option value="adhoc">Ad-hoc</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Key Insights -->
+                                        <div class="p-4 bg-yellow-50 rounded-lg">
+                                            <div class="font-semibold mb-2">💡 Key Principles</div>
+                                            <ul class="text-sm text-gray-700 space-y-1">
+                                                <li>• <strong>Clear separation:</strong> Family governance vs. Business governance</li>
+                                                <li>• <strong>Defined authority:</strong> Each body has specific decision rights</li>
+                                                <li>• <strong>Regular communication:</strong> Coordinate through meetings and reports</li>
+                                                <li>• <strong>Accountability:</strong> Clear reporting lines and oversight</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 5: Meeting Frequency & Calendar -->
+                                <div v-if="currentStage === 5" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">📅 Meeting Frequency & Calendar</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Establish a regular meeting rhythm for all governance bodies. Export meetings to Google Calendar or Outlook.
+                                        </p>
+
+                                        <!-- Export All Button -->
+                                        <div class="mb-6 flex justify-end">
+                                            <button @click="exportAllMeetings"
+                                                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2 transition">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                                </svg>
+                                                Export All to Calendar (.ics)
+                                            </button>
+                                        </div>
+
+                                        <!-- Upcoming Meetings Calendar -->
+                                        <div class="mb-8 p-5 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
+                                            <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                <span class="text-2xl">📆</span>
+                                                <span>Scheduled Meetings</span>
+                                            </h3>
+                                            <div class="space-y-3">
+                                                <div v-for="meeting in calendarMeetings" :key="meeting.id"
+                                                     class="bg-white rounded-lg p-4 border-2 border-gray-200 hover:shadow-lg transition">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex-1">
+                                                            <div class="flex items-center gap-3 mb-2">
+                                                                <div class="text-2xl">
+                                                                    {{ meeting.body.includes('Family') ? '👑' : meeting.body.includes('Board') ? '🏢' : meeting.body.includes('Shareholders') ? '📊' : '💼' }}
+                                                                </div>
+                                                                <div>
+                                                                    <h4 class="font-bold text-gray-900">{{ meeting.title }}</h4>
+                                                                    <p class="text-sm text-gray-600">{{ meeting.body }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center gap-4 text-sm text-gray-700">
+                                                                <span class="flex items-center gap-1">
+                                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
+                                                                    </svg>
+                                                                    {{ meeting.date }}
+                                                                </span>
+                                                                <span class="flex items-center gap-1">
+                                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+                                                                    </svg>
+                                                                    {{ meeting.time }} ({{ meeting.duration }} min)
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <button @click="exportToICS(meeting)"
+                                                                class="px-4 py-2 bg-primary hover:bg-opacity-90 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                                            </svg>
+                                                            Export .ics
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Meeting Types Reference -->
+                                        <div class="space-y-4 mb-8">
+                                            <h3 class="font-bold text-gray-900">Typical Meeting Patterns</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="border-2 rounded-lg p-4">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <span class="text-2xl">👑</span>
+                                                        <h4 class="font-bold">Family Council</h4>
+                                                    </div>
+                                                    <p class="text-sm text-gray-600">Quarterly • 3 hours</p>
+                                                    <p class="text-xs text-gray-500 mt-2">Strategic family decisions, values alignment</p>
+                                                </div>
+                                                <div class="border-2 rounded-lg p-4">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <span class="text-2xl">🏢</span>
+                                                        <h4 class="font-bold">Board Meeting</h4>
+                                                    </div>
+                                                    <p class="text-sm text-gray-600">Monthly • 2 hours</p>
+                                                    <p class="text-xs text-gray-500 mt-2">Financial review, strategy, CEO oversight</p>
+                                                </div>
+                                                <div class="border-2 rounded-lg p-4">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <span class="text-2xl">📊</span>
+                                                        <h4 class="font-bold">Shareholders Assembly</h4>
+                                                    </div>
+                                                    <p class="text-sm text-gray-600">Annual • 4 hours</p>
+                                                    <p class="text-xs text-gray-500 mt-2">Annual report, dividends, board elections</p>
+                                                </div>
+                                                <div class="border-2 rounded-lg p-4">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <span class="text-2xl">💼</span>
+                                                        <h4 class="font-bold">Management Team</h4>
+                                                    </div>
+                                                    <p class="text-sm text-gray-600">Weekly • 1 hour</p>
+                                                    <p class="text-xs text-gray-500 mt-2">Operations, team coordination</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Best Practices -->
+                                        <div class="bg-yellow-50 rounded-lg p-6">
+                                            <div class="font-semibold mb-3">📋 Best Practices for Meeting Scheduling</div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                                                <div>
+                                                    <div class="font-medium mb-2">✅ Do:</div>
+                                                    <ul class="space-y-1 ml-4">
+                                                        <li>• Schedule meetings well in advance</li>
+                                                        <li>• Send agenda 1 week before</li>
+                                                        <li>• Respect time zones</li>
+                                                        <li>• Build in buffer time</li>
+                                                    </ul>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium mb-2">❌ Avoid:</div>
+                                                    <ul class="space-y-1 ml-4">
+                                                        <li>• Last-minute changes</li>
+                                                        <li>• Overlapping meetings</li>
+                                                        <li>• Holiday periods</li>
+                                                        <li>• Back-to-back sessions</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 6: Family Council Elections -->
+                                <div v-if="currentStage === 6" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">🗳️ Family Council Elections</h2>
+                                        <p class="text-gray-600 mb-8">
+                                            Define the election process for Family Council members
+                                        </p>
+
+                                        <!-- Election Process Steps -->
+                                        <div class="space-y-4 mb-8">
+                                            <div class="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                                                <div class="text-3xl">📝</div>
+                                                <div class="flex-1">
+                                                    <h3 class="font-bold mb-1">1. Nomination Phase (2 weeks)</h3>
+                                                    <p class="text-sm text-gray-700">Family members nominate candidates including self-nominations. Candidates must accept nomination.</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-start gap-4 p-4 bg-green-50 rounded-lg">
+                                                <div class="text-3xl">🎤</div>
+                                                <div class="flex-1">
+                                                    <h3 class="font-bold mb-1">2. Candidate Presentations (1 week)</h3>
+                                                    <p class="text-sm text-gray-700">Each candidate presents their vision and qualifications (10 min presentation + Q&A).</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-start gap-4 p-4 bg-purple-50 rounded-lg">
+                                                <div class="text-3xl">🗳️</div>
+                                                <div class="flex-1">
+                                                    <h3 class="font-bold mb-1">3. Voting Period (1 week)</h3>
+                                                    <p class="text-sm text-gray-700">Secret ballot voting. Each eligible voter ranks their top candidates.</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-start gap-4 p-4 bg-yellow-50 rounded-lg">
+                                                <div class="text-3xl">📢</div>
+                                                <div class="flex-1">
+                                                    <h3 class="font-bold mb-1">4. Results Announcement (1 day)</h3>
+                                                    <p class="text-sm text-gray-700">Results announced at family meeting. New council members officially installed.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Eligibility Criteria -->
+                                        <div class="mb-6 p-6 bg-gray-50 rounded-lg">
+                                            <h3 class="font-semibold mb-3">Eligibility Criteria</h3>
+                                            <ul class="text-sm text-gray-700 space-y-2">
+                                                <li>✓ Family member (blood or marriage)</li>
+                                                <li>✓ 18+ years old</li>
+                                                <li>✓ Good standing in family</li>
+                                                <li>✓ No conflict of interest</li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- Term Configuration - Interactive -->
+                                        <div class="mb-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
+                                            <h3 class="font-bold text-gray-900 mb-4">⚙️ Term Configuration</h3>
+
+                                            <!-- Term Length Selection -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Term Length</label>
+                                                <div class="grid grid-cols-4 gap-3">
+                                                    <div @click="termLength = 2"
+                                                         class="p-4 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="termLength === 2 ? 'border-primary bg-primary text-white' : 'border-gray-300 hover:border-primary'">
+                                                        <div class="text-2xl font-bold mb-1">2 years</div>
+                                                        <div class="text-xs">Short</div>
+                                                    </div>
+                                                    <div @click="termLength = 3"
+                                                         class="p-4 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="termLength === 3 ? 'border-primary bg-primary text-white' : 'border-gray-300 hover:border-primary'">
+                                                        <div class="text-2xl font-bold mb-1">3 years</div>
+                                                        <div class="text-xs">Standard</div>
+                                                    </div>
+                                                    <div @click="termLength = 4"
+                                                         class="p-4 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="termLength === 4 ? 'border-primary bg-primary text-white' : 'border-gray-300 hover:border-primary'">
+                                                        <div class="text-2xl font-bold mb-1">4 years</div>
+                                                        <div class="text-xs">Extended</div>
+                                                    </div>
+                                                    <div @click="termLength = 5"
+                                                         class="p-4 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="termLength === 5 ? 'border-primary bg-primary text-white' : 'border-gray-300 hover:border-primary'">
+                                                        <div class="text-2xl font-bold mb-1">5 years</div>
+                                                        <div class="text-xs">Long</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Term Limits Toggle -->
+                                            <div class="mb-6">
+                                                <label class="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" v-model="termLimits" class="w-5 h-5 text-primary rounded">
+                                                    <span class="text-sm font-semibold text-gray-700">Enable Term Limits</span>
+                                                </label>
+                                            </div>
+
+                                            <!-- Max Consecutive Terms -->
+                                            <div v-if="termLimits" class="mb-4">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Maximum Consecutive Terms</label>
+                                                <div class="grid grid-cols-4 gap-3">
+                                                    <div @click="maxConsecutiveTerms = 1"
+                                                         class="p-3 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="maxConsecutiveTerms === 1 ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="text-xl font-bold">1</div>
+                                                    </div>
+                                                    <div @click="maxConsecutiveTerms = 2"
+                                                         class="p-3 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="maxConsecutiveTerms === 2 ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="text-xl font-bold">2</div>
+                                                    </div>
+                                                    <div @click="maxConsecutiveTerms = 3"
+                                                         class="p-3 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="maxConsecutiveTerms === 3 ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="text-xl font-bold">3</div>
+                                                    </div>
+                                                    <div @click="maxConsecutiveTerms = 4"
+                                                         class="p-3 border-2 rounded-lg text-center cursor-pointer transition"
+                                                         :class="maxConsecutiveTerms === 4 ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="text-xl font-bold">4</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Summary -->
+                                            <div class="mt-4 p-3 bg-white rounded border border-gray-300">
+                                                <div class="text-sm text-gray-700">
+                                                    <strong>Selected Configuration:</strong>
+                                                    {{ termLength }}-year terms<span v-if="termLimits">, maximum {{ maxConsecutiveTerms }} consecutive term<span v-if="maxConsecutiveTerms > 1">s</span></span><span v-else>, no term limits</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 7: Board Interface -->
+                                <div v-if="currentStage === 7" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">🏢 Board Interface</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Define how Family Council and Board of Directors interact. Customize reporting frequency, approval thresholds, and communication patterns.
+                                        </p>
+
+                                        <!-- Interactive Configuration -->
+                                        <div class="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                                            <h3 class="font-bold text-gray-900 mb-4">⚙️ Interface Configuration</h3>
+
+                                            <!-- Reporting Frequency -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Reporting Frequency</label>
+                                                <select v-model="reportingFrequency" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none">
+                                                    <option value="monthly">Monthly - Detailed reports every month</option>
+                                                    <option value="quarterly">Quarterly - Comprehensive quarterly reviews</option>
+                                                    <option value="biannual">Bi-annual - Semi-annual detailed reports</option>
+                                                    <option value="annual">Annual - Yearly comprehensive review</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Approval Threshold -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                    Approval Threshold (% of Family Council votes required)
+                                                </label>
+                                                <div class="flex items-center gap-4">
+                                                    <input v-model="approvalThreshold" type="range" min="50" max="100" step="5"
+                                                           class="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
+                                                    <div class="px-4 py-2 bg-primary text-white rounded-lg font-bold min-w-[80px] text-center">
+                                                        {{ approvalThreshold }}%
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 flex justify-between text-xs text-gray-600">
+                                                    <span>Simple Majority (50%)</span>
+                                                    <span>Supermajority (75%)</span>
+                                                    <span>Unanimous (100%)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Communication Frequency -->
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Regular Communication Frequency</label>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div @click="communicationFrequency = 'weekly'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="communicationFrequency === 'weekly' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Weekly</div>
+                                                        <div class="text-xs mt-1">High touch</div>
+                                                    </div>
+                                                    <div @click="communicationFrequency = 'biweekly'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="communicationFrequency === 'biweekly' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Bi-weekly</div>
+                                                        <div class="text-xs mt-1">Regular</div>
+                                                    </div>
+                                                    <div @click="communicationFrequency = 'monthly'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="communicationFrequency === 'monthly' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Monthly</div>
+                                                        <div class="text-xs mt-1">Standard</div>
+                                                    </div>
+                                                    <div @click="communicationFrequency = 'quarterly'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="communicationFrequency === 'quarterly' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Quarterly</div>
+                                                        <div class="text-xs mt-1">Minimal</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Interface Areas -->
+                                        <div class="space-y-6 mb-8">
+                                            <div class="border-l-4 border-primary p-6 bg-gray-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-3">
+                                                    <span class="text-3xl">📊</span>
+                                                    <h3 class="text-lg font-bold">Reporting Requirements</h3>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-3">What Board reports to Family Council:</p>
+                                                <ul class="text-sm text-gray-700 space-y-1 ml-4">
+                                                    <li>• {{ reportingFrequency.charAt(0).toUpperCase() + reportingFrequency.slice(1) }} financial reports</li>
+                                                    <li>• Strategic initiative updates</li>
+                                                    <li>• Risk management summary</li>
+                                                    <li>• Major decisions requiring approval ({{ approvalThreshold }}% threshold)</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="border-l-4 border-green-500 p-6 bg-gray-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-3">
+                                                    <span class="text-3xl">✅</span>
+                                                    <h3 class="text-lg font-bold">Approval Requirements</h3>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-3">What needs {{ approvalThreshold }}% Family Council approval:</p>
+                                                <ul class="text-sm text-gray-700 space-y-1 ml-4">
+                                                    <li>• Annual budget over $X million</li>
+                                                    <li>• Major investments and acquisitions</li>
+                                                    <li>• CEO compensation packages</li>
+                                                    <li>• Board composition changes</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="border-l-4 border-blue-500 p-6 bg-gray-50 rounded-r-lg">
+                                                <div class="flex items-center gap-3 mb-3">
+                                                    <span class="text-3xl">💬</span>
+                                                    <h3 class="text-lg font-bold">Communication Channels</h3>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-3">{{ communicationFrequency.charAt(0).toUpperCase() + communicationFrequency.slice(1) }} communication pattern:</p>
+                                                <ul class="text-sm text-gray-700 space-y-1 ml-4">
+                                                    <li>• Joint {{ reportingFrequency }} meetings</li>
+                                                    <li>• {{ communicationFrequency.charAt(0).toUpperCase() + communicationFrequency.slice(1) }} written updates</li>
+                                                    <li>• Emergency communication protocol</li>
+                                                    <li>• Annual strategy retreat</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Key Principle -->
+                                        <div class="p-4 bg-yellow-50 rounded-lg">
+                                            <div class="font-semibold mb-2">💡 Key Principle</div>
+                                            <p class="text-sm text-gray-700">
+                                                Family Council sets <strong>strategic direction and values</strong>, while Board manages <strong>business operations and execution</strong>. Clear boundaries prevent conflicts.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 9: Secretariat & Documentation -->
+                                <div v-if="currentStage === 9" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-4">📝 Secretariat & Documentation</h2>
+                                        <p class="text-gray-600 mb-6">
+                                            Define secretariat functions and documentation standards. Choose your approach and requirements.
+                                        </p>
+
+                                        <!-- Configuration Options -->
+                                        <div class="mb-8 p-6 bg-gradient-to-br from-green-50 to-teal-50 rounded-lg border-2 border-green-200">
+                                            <h3 class="font-bold text-gray-900 mb-4">⚙️ Secretariat Configuration</h3>
+
+                                            <!-- Secretariat Role -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Secretariat Role Assignment</label>
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <div @click="secretariatRole = 'professional'"
+                                                         class="p-4 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="secretariatRole === 'professional' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Professional</div>
+                                                        <div class="text-xs mt-1">Dedicated staff</div>
+                                                    </div>
+                                                    <div @click="secretariatRole = 'family-member'"
+                                                         class="p-4 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="secretariatRole === 'family-member' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">Family Member</div>
+                                                        <div class="text-xs mt-1">Rotating volunteer</div>
+                                                    </div>
+                                                    <div @click="secretariatRole = 'external'"
+                                                         class="p-4 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="secretariatRole === 'external' ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-green-500'">
+                                                        <div class="font-bold">External Service</div>
+                                                        <div class="text-xs mt-1">Outsourced</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Minutes Format -->
+                                            <div class="mb-6">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">Meeting Minutes Format</label>
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <div @click="minutesFormat = 'summary'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="minutesFormat === 'summary' ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 hover:border-blue-500'">
+                                                        <div class="font-bold">Summary</div>
+                                                        <div class="text-xs mt-1">Key decisions only</div>
+                                                    </div>
+                                                    <div @click="minutesFormat = 'detailed'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="minutesFormat === 'detailed' ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 hover:border-blue-500'">
+                                                        <div class="font-bold">Detailed</div>
+                                                        <div class="text-xs mt-1">Full discussion</div>
+                                                    </div>
+                                                    <div @click="minutesFormat = 'verbatim'"
+                                                         class="p-3 border-2 rounded-lg cursor-pointer transition text-center"
+                                                         :class="minutesFormat === 'verbatim' ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 hover:border-blue-500'">
+                                                        <div class="font-bold">Verbatim</div>
+                                                        <div class="text-xs mt-1">Word-for-word</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Publication Deadline -->
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                                    Minutes Publication Deadline (days after meeting)
+                                                </label>
+                                                <select v-model="publicationDeadline" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary focus:outline-none">
+                                                    <option value="2">2 days - Fast turnaround</option>
+                                                    <option value="7">7 days - Standard</option>
+                                                    <option value="14">14 days - Extended</option>
+                                                    <option value="30">30 days - Flexible</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Secretariat Functions -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                            <div class="border-2 rounded-lg p-6">
+                                                <div class="text-3xl mb-3">📋</div>
+                                                <h3 class="font-bold mb-3">Meeting Preparation</h3>
+                                                <ul class="text-sm text-gray-700 space-y-1">
+                                                    <li>• Prepare agenda</li>
+                                                    <li>• Distribute materials 1 week in advance</li>
+                                                    <li>• Coordinate logistics</li>
+                                                    <li>• Set up technology</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="border-2 rounded-lg p-6">
+                                                <div class="text-3xl mb-3">📝</div>
+                                                <h3 class="font-bold mb-3">Documentation</h3>
+                                                <ul class="text-sm text-gray-700 space-y-1">
+                                                    <li>• Record minutes</li>
+                                                    <li>• Track decisions and action items</li>
+                                                    <li>• Maintain official records</li>
+                                                    <li>• Archive documents securely</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="border-2 rounded-lg p-6">
+                                                <div class="text-3xl mb-3">✅</div>
+                                                <h3 class="font-bold mb-3">Follow-up</h3>
+                                                <ul class="text-sm text-gray-700 space-y-1">
+                                                    <li>• Circulate minutes within 48 hours</li>
+                                                    <li>• Track action item completion</li>
+                                                    <li>• Remind owners of deadlines</li>
+                                                    <li>• Report on status</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="border-2 rounded-lg p-6">
+                                                <div class="text-3xl mb-3">📚</div>
+                                                <h3 class="font-bold mb-3">Governance Support</h3>
+                                                <ul class="text-sm text-gray-700 space-y-1">
+                                                    <li>• Maintain Family Constitution</li>
+                                                    <li>• Track policy changes</li>
+                                                    <li>• Ensure compliance</li>
+                                                    <li>• Provide governance guidance</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- Documentation Standards -->
+                                        <div class="p-6 bg-blue-50 rounded-lg">
+                                            <h3 class="font-semibold mb-3">📄 Documentation Standards</h3>
+                                            <div class="text-sm text-gray-700 space-y-2">
+                                                <p><strong>All meeting minutes must include:</strong></p>
+                                                <ul class="ml-4 space-y-1">
+                                                    <li>• Date, time, location, and attendees</li>
+                                                    <li>• Agenda items discussed</li>
+                                                    <li>• Decisions made with voting results</li>
+                                                    <li>• Action items with owners and deadlines</li>
+                                                    <li>• Next meeting date</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage 10: Summary & Next Steps -->
+                                <div v-if="currentStage === 10" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-6">✅ Summary & Next Steps</h2>
+
+                                        <!-- Workshop Completion -->
+                                        <div class="text-center mb-8 p-8 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg">
+                                            <div class="text-6xl mb-4">🎉</div>
+                                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Workshop Completed!</h3>
+                                            <p class="text-gray-600">You've built a comprehensive governance framework</p>
+                                        </div>
+
+                                        <!-- Summary Cards -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                            <div class="p-6 border-l-4 border-primary bg-gray-50 rounded-r-lg">
+                                                <div class="text-2xl mb-2">📊</div>
+                                                <h3 class="font-bold mb-2">Governance Blueprint</h3>
+                                                <p class="text-sm text-gray-600">Clear structure with defined bodies and roles</p>
+                                            </div>
+
+                                            <div class="p-6 border-l-4 border-primary bg-gray-50 rounded-r-lg">
+                                                <div class="text-2xl mb-2">⭐</div>
+                                                <h3 class="font-bold mb-2">RACI Matrix</h3>
+                                                <p class="text-sm text-gray-600">Decision rights clearly assigned</p>
+                                            </div>
+
+                                            <div class="p-6 border-l-4 border-primary bg-gray-50 rounded-r-lg">
+                                                <div class="text-2xl mb-2">📅</div>
+                                                <h3 class="font-bold mb-2">Meeting Calendar</h3>
+                                                <p class="text-sm text-gray-600">Regular rhythm established</p>
+                                            </div>
+
+                                            <div class="p-6 border-l-4 border-primary bg-gray-50 rounded-r-lg">
+                                                <div class="text-2xl mb-2">⚖️</div>
+                                                <h3 class="font-bold mb-2">Conflict Resolution</h3>
+                                                <p class="text-sm text-gray-600">4-level escalation procedure</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Constitution Mapping -->
+                                        <div class="mb-8 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+                                            <h3 class="font-bold text-gray-900 mb-4">📜 Constitution Article Mapping</h3>
+                                            <p class="text-sm text-gray-600 mb-4">Your workshop decisions will be incorporated into these Constitution sections:</p>
+
+                                            <div class="space-y-3">
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">👥</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article III: Governance Bodies</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 3: Governance structure, roles, meeting frequencies</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">⭐</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article IV: Decision-Making Authority</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 4: RACI matrix, approval thresholds</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">📅</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article V: Meeting Procedures</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 5: Meeting calendar, frequencies, agendas</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">🗳️</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article VI: Elections & Term Limits</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 6: Election process, term lengths ({{ termLength }} years), limits</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">🏢</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article VII: Board-Family Council Interface</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 7: Reporting ({{ reportingFrequency }}), approval ({{ approvalThreshold }}%), communication</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">⚖️</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article VIII: Conflict Resolution</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 8: {{ escalationLevels }} escalation, {{ mediationType }} mediation, {{ resolutionTimeline }}-day timeline</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                                                    <div class="text-2xl flex-shrink-0">📝</div>
+                                                    <div class="flex-1">
+                                                        <div class="font-semibold text-sm">Article IX: Documentation Standards</div>
+                                                        <div class="text-xs text-gray-600 mt-1">← Stage 9: Secretariat ({{ secretariatRole }}), {{ minutesFormat }} minutes, {{ publicationDeadline }}-day publication</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Next Steps -->
+                                        <div class="p-6 bg-yellow-50 rounded-lg mb-6">
+                                            <h3 class="font-semibold mb-4">🚀 Next Steps</h3>
+                                            <div class="space-y-3 text-sm text-gray-700">
+                                                <div class="flex items-start gap-3">
+                                                    <span class="font-bold text-primary">1.</span>
+                                                    <span><strong>Review & Approve:</strong> Circulate governance blueprint to all stakeholders for final review</span>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <span class="font-bold text-primary">2.</span>
+                                                    <span><strong>Update Constitution:</strong> Incorporate decisions into Family Constitution document</span>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <span class="font-bold text-primary">3.</span>
+                                                    <span><strong>Deploy to Platform:</strong> All configurations automatically saved to your Family Governance Portal</span>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <span class="font-bold text-primary">4.</span>
+                                                    <span><strong>Schedule First Meetings:</strong> Begin implementing meeting calendar</span>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <span class="font-bold text-primary">5.</span>
+                                                    <span><strong>Conduct Elections:</strong> If needed, run Family Council elections</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="flex gap-4 justify-center">
+                                            <button class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-opacity-90">
+                                                📥 Download Governance Blueprint
+                                            </button>
+                                            <button class="px-6 py-3 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-orange-50">
+                                                📧 Email Summary to Participants
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Summary/Other Stages -->
+                                <div v-if="![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(currentStage)" class="space-y-6">
+                                    <div class="bg-white rounded-lg shadow-sm p-8">
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                                            {{ currentStageData.icon }} {{ currentStageData.title }}
+                                        </h2>
+                                        <div class="p-8 bg-gray-50 rounded-lg text-center">
+                                            <div class="text-6xl mb-4">{{ currentStageData.icon }}</div>
+                                            <p class="text-gray-600">
+                                                This stage is under development. Use navigation to explore other stages.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Navigation Buttons -->
+                                <div v-if="currentStage > 0" class="flex justify-between mt-6">
+                                    <button @click="previousStage"
+                                            class="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50">
+                                        ← Previous Stage
+                                    </button>
+                                    <button @click="nextStage"
+                                            :disabled="currentStage >= totalStages - 1"
+                                            class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50">
+                                        Next Stage →
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right Sidebar - Participants & Chat (25%) -->
+                            <div class="col-span-3">
+                                <div class="space-y-4 sticky top-24">
+                                    <!-- Participants Panel -->
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <h3 class="font-semibold text-gray-900 mb-3">👥 Participants ({{ participants.length }})</h3>
+                                        <div class="space-y-2">
+                                            <div v-for="participant in participants" :key="participant.id"
+                                                 class="participant-card flex items-center gap-3 p-2 rounded-lg border">
+                                                <span :class="[getStatusColor(participant.status), 'w-2 h-2 rounded-full']"></span>
+                                                <span class="text-lg">{{ participant.emoji }}</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-sm truncate">{{ participant.name }}</div>
+                                                    <div class="text-xs text-gray-500">{{ getRoleLabel(participant.role) }}</div>
+                                                </div>
+                                                <button v-if="participant.id !== 1"
+                                                        @click="raiseHand(participant.id)"
+                                                        class="text-xs px-2 py-1 border rounded hover:bg-gray-50">
+                                                    ✋
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reactions -->
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <h3 class="font-semibold text-gray-900 mb-3">😊 Quick Reactions</h3>
+                                        <div class="flex gap-2">
+                                            <button @click="reactWith('agree')"
+                                                    class="emoji-reaction flex items-center gap-1 px-3 py-2 border rounded-lg hover:bg-gray-50">
+                                                👍 <span class="text-xs">{{ reactions.agree }}</span>
+                                            </button>
+                                            <button @click="reactWith('question')"
+                                                    class="emoji-reaction flex items-center gap-1 px-3 py-2 border rounded-lg hover:bg-gray-50">
+                                                ❓ <span class="text-xs">{{ reactions.question }}</span>
+                                            </button>
+                                            <button @click="reactWith('time')"
+                                                    class="emoji-reaction flex items-center gap-1 px-3 py-2 border rounded-lg hover:bg-gray-50">
+                                                ⏰ <span class="text-xs">{{ reactions.time }}</span>
+                                            </button>
+                                            <button @click="reactWith('ready')"
+                                                    class="emoji-reaction flex items-center gap-1 px-3 py-2 border rounded-lg hover:bg-gray-50">
+                                                ✅ <span class="text-xs">{{ reactions.ready }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Speaking Queue -->
+                                    <div v-if="speakingQueue.length > 0" class="bg-white rounded-lg shadow-sm p-4">
+                                        <h3 class="font-semibold text-gray-900 mb-3">🎤 Speaking Queue</h3>
+                                        <div class="space-y-2">
+                                            <div v-for="participantId in speakingQueue" :key="participantId"
+                                                 class="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
+                                                <span class="raise-hand text-xl">✋</span>
+                                                <span class="flex-1 text-sm">
+                                                    {{ participants.find(p => p.id === participantId)?.name }}
+                                                </span>
+                                                <button @click="removeFromQueue(participantId)"
+                                                        class="text-xs text-gray-500 hover:text-gray-700">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Chat -->
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <h3 class="font-semibold text-gray-900 mb-3">💬 Chat</h3>
+                                        <div ref="chatBox" class="space-y-2 mb-3 max-h-64 overflow-y-auto">
+                                            <div v-for="(msg, index) in chatMessages" :key="index"
+                                                 class="chat-message text-sm p-2 bg-gray-50 rounded-lg">
+                                                <div class="font-medium text-xs text-gray-600">
+                                                    {{ msg.user }} <span class="text-gray-400">{{ msg.timestamp }}</span>
+                                                </div>
+                                                <div class="text-gray-900">{{ msg.message }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <input v-model="newMessage"
+                                                   @keyup.enter="sendMessage"
+                                                   type="text"
+                                                   placeholder="Type message..."
+                                                   class="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                            <button @click="sendMessage"
+                                                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90">
+                                                →
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Parking Lot -->
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h3 class="font-semibold text-gray-900">🅿️ Parking Lot</h3>
+                                            <button @click="addToParkingLot"
+                                                    class="text-xs px-2 py-1 border rounded hover:bg-gray-50">
+                                                + Add
+                                            </button>
+                                        </div>
+                                        <div v-if="parkingLot.length === 0" class="text-sm text-gray-500 text-center py-2">
+                                            No items yet
+                                        </div>
+                                        <div v-else class="space-y-2">
+                                            <div v-for="(item, index) in parkingLot" :key="index"
+                                                 class="text-sm p-2 bg-yellow-50 rounded border-l-2 border-yellow-500">
+                                                {{ item.text }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Zoom Interface Panel -->
+                    <div v-if="zoomVisible" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" @click.self="toggleZoom">
+                        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-auto" @click.stop>
+                            <!-- Zoom Panel Header -->
+                            <div class="bg-gray-900 text-white p-4 rounded-t-xl flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span class="font-medium">Family Governance Workshop • Live</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs text-gray-400">🔒 End-to-end encrypted</span>
+                                    <button @click="toggleZoom" class="text-white hover:text-gray-300 text-2xl leading-none">&times;</button>
+                                </div>
+                            </div>
+
+                            <!-- Zoom Content -->
+                            <div class="p-6 bg-gray-900">
+                                <!-- Video Grid with All 16 Participants -->
+                                <div class="grid grid-cols-4 gap-3 mb-4">
+                                    <!-- Facilitator - Alex -->
+                                    <div class="relative bg-gray-800 rounded-lg aspect-video flex items-center justify-center border-2 border-primary">
+                                        <div class="text-4xl">🎤</div>
+                                        <div class="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
+                                            Alex <span class="text-primary">(Host)</span>
+                                        </div>
+                                        <div class="absolute top-1 right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded animate-pulse">REC</div>
+                                    </div>
+
+                                    <!-- All Other Participants -->
+                                    <div v-for="participant in participants.filter(p => p.id !== 1)" :key="participant.id"
+                                         class="relative bg-gray-800 rounded-lg aspect-video flex items-center justify-center"
+                                         :class="{ 'opacity-50 bg-gray-700': participant.status === 'offline' || participant.status === 'away' }">
+                                        <div class="text-3xl">{{ participant.emoji }}</div>
+                                        <div class="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white text-xs px-2 py-0.5 rounded">
+                                            {{ participant.name }}
+                                            <span v-if="participant.status !== 'online'" class="text-yellow-400">({{ participant.status }})</span>
+                                        </div>
+                                        <!-- Muted Icon for David -->
+                                        <div v-if="participant.id === 5" class="absolute top-1 right-1">
+                                            <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0v-.5A1.5 1.5 0 0114.5 6c.526 0 .988.27 1.256.721a6.012 6.012 0 011.912 2.706A1 1 0 0118 9v.5a2 2 0 01-2 2h-.5a1.5 1.5 0 01-1.5-1.5v-1A1.5 1.5 0 0012.5 8h-5A1.5 1.5 0 006 9.5v1A1.5 1.5 0 014.5 11.5H4a2 2 0 01-2-2V9a1 1 0 01.332-1.973z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Zoom Controls Bar -->
+                                <div class="bg-gray-800 rounded-lg p-3 flex items-center justify-between">
+                                    <div class="flex gap-2">
+                                        <button class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1.5 transition">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"/>
+                                            </svg>
+                                            Mute
+                                        </button>
+                                        <button class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1.5 transition">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/>
+                                            </svg>
+                                            Stop Video
+                                        </button>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1.5 transition">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                            </svg>
+                                            Participants ({{ onlineParticipants }})
+                                        </button>
+                                        <button class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1.5 transition">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"/>
+                                            </svg>
+                                            Chat
+                                        </button>
+                                        <button class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-xs flex items-center gap-1.5 transition font-medium">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/>
+                                            </svg>
+                                            Share Screen
+                                        </button>
+                                    </div>
+                                    <button class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white text-xs font-medium transition">
+                                        Leave
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-white border-t border-gray-200 shadow-sm mt-8">
+                        <div class="max-w-7xl mx-auto px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <button class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                                        ⏸️ Pause
+                                    </button>
+                                    <span class="text-sm text-gray-600">💾 Auto-saving...</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Session ID: WS-2025-001 | {{ new Date().toLocaleDateString() }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).mount('#app');
+    </script>
+</body>
+</html>

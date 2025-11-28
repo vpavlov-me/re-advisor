@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1: Assessment - Family Constitution Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .question-option {
+            transition: all 0.2s ease;
+        }
+        .question-option:hover:not(.selected) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(251, 100, 40, 0.15);
+        }
+        .question-option.selected {
+            border-color: #FB6428;
+            background: rgba(251, 100, 40, 0.1);
+        }
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen py-8 px-4">
+    <div class="max-w-5xl mx-auto">
+
+        <!-- Progress Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <div id="sectionIcon" class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-3xl">
+                        💬
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900 text-lg">Phase 1: Assessment</div>
+                        <div id="sectionTitle" class="text-sm text-gray-600">Communication Patterns</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div id="sectionNumber" class="text-3xl font-bold text-primary">1/12</div>
+                    <div class="text-xs text-gray-500">sections</div>
+                </div>
+            </div>
+
+            <div id="sectionDescription" class="text-sm text-gray-600 mb-4">
+                How your family talks, listens, and shares information
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>Overall Progress</span>
+                    <span id="progressText">5 of 60 questions</span>
+                </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="progress-bar h-full bg-primary" style="width: 8%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <div id="questionsContainer" class="space-y-8">
+                <!-- Questions will be rendered here dynamically -->
+            </div>
+
+            <!-- Navigation -->
+            <div class="mt-8 flex justify-between items-center pt-6 border-t">
+                <button id="prevBtn" onclick="previousSection()"
+                        class="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-all">
+                    ← Previous Section
+                </button>
+
+                <button id="nextBtn" onclick="nextSection()"
+                        class="px-6 py-3 rounded-lg font-semibold text-white transition-all bg-gray-300 cursor-not-allowed">
+                    Next Section →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Progress Map -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="text-sm font-semibold text-gray-700 mb-3">Section Progress</div>
+            <div class="grid grid-cols-6 md:grid-cols-12 gap-2">
+                <div v-for="i in 12" class="section-dot aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all bg-gray-100 text-gray-400">
+                    1
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="sections-data.js"></script>
+    <script src="storage-utils.js"></script>
+
+    <script>
+        let currentSectionIndex = 0;
+        let responses = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Load saved responses or create new array
+            responses = loadPhase1Responses();
+            currentSectionIndex = loadCurrentSection();
+
+            renderSection();
+            updateProgress();
+            updateSectionMap();
+        });
+
+        function renderSection() {
+            const section = SECTIONS[currentSectionIndex];
+            const container = document.getElementById('questionsContainer');
+
+            // Update header
+            document.getElementById('sectionIcon').textContent = section.icon;
+            document.getElementById('sectionTitle').textContent = section.title;
+            document.getElementById('sectionDescription').textContent = section.description;
+            document.getElementById('sectionNumber').textContent = `${currentSectionIndex + 1}/12`;
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Render all 5 questions
+            section.questions.forEach((question, qIdx) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'pb-8 border-b last:border-b-0 last:pb-0';
+
+                const savedAnswer = responses[currentSectionIndex][qIdx];
+
+                let optionsHTML = '';
+
+                if (question.type === 'scale') {
+                    // Scale options (1-5)
+                    optionsHTML = '<div class="grid grid-cols-5 gap-3">';
+                    question.options.forEach((option, idx) => {
+                        const isSelected = savedAnswer === idx;
+                        optionsHTML += `
+                            <button onclick="selectAnswer(${qIdx}, ${idx})"
+                                    class="question-option border-2 rounded-lg p-4 text-center ${isSelected ? 'selected' : 'border-gray-200'}">
+                                <div class="text-2xl font-bold text-primary mb-2">${idx + 1}</div>
+                                <div class="text-xs text-gray-600 leading-tight">${option}</div>
+                            </button>
+                        `;
+                    });
+                    optionsHTML += '</div>';
+                } else if (question.type === 'yesno') {
+                    // Yes/No options
+                    optionsHTML = '<div class="grid grid-cols-3 gap-4">';
+                    question.options.forEach((option, idx) => {
+                        const isSelected = savedAnswer === idx;
+                        optionsHTML += `
+                            <button onclick="selectAnswer(${qIdx}, ${idx})"
+                                    class="question-option border-2 rounded-lg p-5 text-center ${isSelected ? 'selected' : 'border-gray-200'}">
+                                <div class="font-semibold text-gray-900">${option}</div>
+                            </button>
+                        `;
+                    });
+                    optionsHTML += '</div>';
+                } else if (question.type === 'choice') {
+                    // Choice options
+                    optionsHTML = '<div class="space-y-3">';
+                    question.options.forEach((option, idx) => {
+                        const isSelected = savedAnswer === idx;
+                        optionsHTML += `
+                            <button onclick="selectAnswer(${qIdx}, ${idx})"
+                                    class="question-option w-full border-2 rounded-lg p-4 text-left ${isSelected ? 'selected' : 'border-gray-200'}">
+                                <div class="font-medium text-gray-900">${option}</div>
+                            </button>
+                        `;
+                    });
+                    optionsHTML += '</div>';
+                }
+
+                const answered = savedAnswer !== null;
+
+                questionDiv.innerHTML = `
+                    <div class="mb-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-medium text-primary bg-orange-50 px-2 py-1 rounded">
+                                Question ${qIdx + 1}/5
+                            </span>
+                            ${answered ? '<span class="text-xs text-green-600 font-medium">✓ Answered</span>' : ''}
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">${question.text}</h3>
+                    </div>
+                    ${optionsHTML}
+                `;
+
+                container.appendChild(questionDiv);
+            });
+
+            // Update navigation buttons
+            updateNavigationButtons();
+        }
+
+        function selectAnswer(questionIndex, answerIndex) {
+            responses[currentSectionIndex][questionIndex] = answerIndex;
+            savePhase1Responses(responses);
+            renderSection();
+            updateProgress();
+            updateSectionMap();
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Previous button
+            if (currentSectionIndex === 0) {
+                prevBtn.style.display = 'none';
+            } else {
+                prevBtn.style.display = 'block';
+            }
+
+            // Next button
+            const allAnswered = responses[currentSectionIndex].every(r => r !== null);
+            if (allAnswered) {
+                nextBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                nextBtn.classList.add('bg-primary', 'hover:bg-orange-600');
+                nextBtn.disabled = false;
+
+                if (currentSectionIndex === 11) {
+                    nextBtn.textContent = 'Complete Assessment ✓';
+                } else {
+                    nextBtn.textContent = 'Next Section →';
+                }
+            } else {
+                nextBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+                nextBtn.classList.remove('bg-primary', 'hover:bg-orange-600');
+                nextBtn.disabled = true;
+                nextBtn.textContent = 'Answer all questions to continue';
+            }
+        }
+
+        function previousSection() {
+            if (currentSectionIndex > 0) {
+                currentSectionIndex--;
+                saveCurrentSection(currentSectionIndex);
+                renderSection();
+                updateProgress();
+                updateSectionMap();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function nextSection() {
+            const allAnswered = responses[currentSectionIndex].every(r => r !== null);
+            if (!allAnswered) return;
+
+            if (currentSectionIndex < 11) {
+                currentSectionIndex++;
+                saveCurrentSection(currentSectionIndex);
+                renderSection();
+                updateProgress();
+                updateSectionMap();
+                window.scrollTo(0, 0);
+            } else {
+                // Complete Phase 1
+                completePhase1();
+            }
+        }
+
+        function completePhase1() {
+            savePhase1Responses(responses);
+            window.location.href = 'phase1-results.html';
+        }
+
+        function updateProgress() {
+            const totalQuestions = 60;
+            const answeredQuestions = responses.flat().filter(r => r !== null).length;
+            const progress = (answeredQuestions / totalQuestions) * 100;
+
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${answeredQuestions} of ${totalQuestions} questions`;
+        }
+
+        function updateSectionMap() {
+            const dots = document.querySelectorAll('.section-dot');
+            dots.forEach((dot, idx) => {
+                const sectionComplete = responses[idx].every(r => r !== null);
+                const isCurrent = idx === currentSectionIndex;
+
+                dot.textContent = sectionComplete ? '✓' : (idx + 1);
+
+                if (sectionComplete) {
+                    dot.className = 'section-dot aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all bg-green-100 text-green-700';
+                } else if (isCurrent) {
+                    dot.className = 'section-dot aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all bg-primary text-white ring-2 ring-primary ring-offset-2';
+                } else {
+                    dot.className = 'section-dot aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all bg-gray-100 text-gray-400';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

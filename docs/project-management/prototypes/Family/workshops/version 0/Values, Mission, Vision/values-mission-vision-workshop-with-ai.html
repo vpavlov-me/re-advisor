@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission, Vision & Values Framework - AI-Facilitated Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .live-indicator {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .typing-dot {
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .ai-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .progress-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(#f97316 0deg, #f97316 var(--progress), #e5e7eb var(--progress), #e5e7eb 360deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-circle-inner {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #f97316;
+        }
+        .bg-card { background-color: #ffffff; }
+        .bg-list-item { background-color: #f9fafb; }
+        .bg-orange { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
+        .ai-response {
+            border: 2px solid #f97316;
+            background-color: #fff7ed;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+        }
+        .dnd-zone {
+            min-height: 100px;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: #f9fafb;
+        }
+        .dnd-zone.active {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+        .draggable-item {
+            cursor: move;
+            user-select: none;
+        }
+        .draggable-item:active {
+            opacity: 0.5;
+        }
+        .value-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .value-card.selected {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="min-h-screen">
+        <!-- Screen 1: Method Selection -->
+        <div id="screen-1" class="screen">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Mission, Vision & Values Framework</h1>
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span class="text-orange-600 font-medium">Step 1</span>
+                        <span>→</span>
+                        <span>Choose Delivery Method</span>
+                    </div>
+                </div>
+
+                <!-- Method Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Workshop with Advisor -->
+                    <div class="bg-card border-2 border-gray-200 rounded-xl p-6 hover:border-orange-500 transition cursor-pointer">
+                        <div class="text-4xl mb-4">👨‍💼</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Workshop with Advisor</h3>
+                        <p class="text-gray-600 mb-4">Professional facilitation by external consultant</p>
+                        <div class="bg-gray-100 rounded-lg p-3 mb-4">
+                            <div class="text-sm text-gray-600">Cost</div>
+                            <div class="text-2xl font-bold text-gray-900">$1,500-3,000</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div class="mb-1">✓ Expert facilitation</div>
+                            <div class="mb-1">✓ Personalized guidance</div>
+                            <div>✓ External perspective</div>
+                        </div>
+                    </div>
+
+                    <!-- Workshop with AI - SELECTED -->
+                    <div id="method-ai" class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6 cursor-pointer">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="text-4xl">🤖</div>
+                            <div class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">SELECTED</div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Workshop with AI</h3>
+                        <p class="text-gray-600 mb-4">Live collaborative workshop with AI facilitation</p>
+                        <div class="bg-white rounded-lg p-3 mb-4">
+                            <div class="text-sm text-gray-600">Cost</div>
+                            <div class="text-2xl font-bold text-orange-600">Included in subscription</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div class="mb-1">✓ AI facilitation by Sophia</div>
+                            <div class="mb-1">✓ Real-time collaboration</div>
+                            <div class="mb-1">✓ Unlimited AI consultations</div>
+                            <div>✓ Comprehensive framework output</div>
+                        </div>
+                    </div>
+
+                    <!-- Let AI do this -->
+                    <div class="bg-card border-2 border-gray-200 rounded-xl p-6 hover:border-orange-500 transition cursor-pointer">
+                        <div class="text-4xl mb-4">⚡</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Let AI do this</h3>
+                        <p class="text-gray-600 mb-4">Fully automated AI generation based on family data</p>
+                        <div class="bg-gray-100 rounded-lg p-3 mb-4">
+                            <div class="text-sm text-gray-600">Cost</div>
+                            <div class="text-2xl font-bold text-gray-900">Free</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div class="mb-1">✓ Instant draft generation</div>
+                            <div class="mb-1">✓ Based on existing data</div>
+                            <div>⚠ Requires manual review</div>
+                        </div>
+                    </div>
+
+                    <!-- I'll do it manually -->
+                    <div class="bg-card border-2 border-gray-200 rounded-xl p-6 hover:border-orange-500 transition cursor-pointer">
+                        <div class="text-4xl mb-4">✏️</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">I'll do it manually</h3>
+                        <p class="text-gray-600 mb-4">Self-guided with templates and examples</p>
+                        <div class="bg-gray-100 rounded-lg p-3 mb-4">
+                            <div class="text-sm text-gray-600">Cost</div>
+                            <div class="text-2xl font-bold text-gray-900">Free</div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div class="mb-1">✓ Full control</div>
+                            <div class="mb-1">✓ Work at own pace</div>
+                            <div>⚠ More time required</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Continue Button -->
+                <div class="flex justify-end">
+                    <button onclick="goToScreen(2)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                        Continue to Workshop Setup →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Workshop Program & Scheduling -->
+        <div id="screen-2" class="screen hidden">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Mission, Vision & Values Framework</h1>
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span class="text-orange-600 font-medium">Step 2</span>
+                        <span>→</span>
+                        <span>Workshop Setup & Scheduling</span>
+                    </div>
+                </div>
+
+                <!-- Workshop Structure -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">📋 Workshop Structure (5 Modules)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-orange-600 font-bold mb-2">Module 1</div>
+                            <div class="font-medium">Family History & Foundation</div>
+                            <div class="text-sm text-gray-600 mt-2">Timeline, key moments, lessons learned</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-orange-600 font-bold mb-2">Module 2</div>
+                            <div class="font-medium">Core Values Matrix</div>
+                            <div class="text-sm text-gray-600 mt-2">Values identification & behavior mapping</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-orange-600 font-bold mb-2">Module 3</div>
+                            <div class="font-medium">Family Mission Statement</div>
+                            <div class="text-sm text-gray-600 mt-2">Purpose, impact, and one-liner</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-orange-600 font-bold mb-2">Module 4</div>
+                            <div class="font-medium">10-20 Year Vision</div>
+                            <div class="text-sm text-gray-600 mt-2">Future goals across 6 dimensions</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-orange-600 font-bold mb-2">Module 5</div>
+                            <div class="font-medium">Constitution Integration</div>
+                            <div class="text-sm text-gray-600 mt-2">Mapping to governance framework</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workshop Details -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Workshop Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Duration</div>
+                            <div class="text-lg font-medium">3-4 hours</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Participants</div>
+                            <div class="text-lg font-medium">All family members (3-8)</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Mode</div>
+                            <div class="text-lg font-medium">Live & Synchronous</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">📅 Select Workshop Date</h2>
+                    <div class="mb-4">
+                        <input type="date" id="workshop-date" class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg" value="2025-12-15">
+                    </div>
+                </div>
+
+                <!-- Time Slot Selection -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">⏰ Proposed Time Slots</h2>
+                    <p class="text-gray-600 mb-4">Select 2-3 preferred slots. Family will vote on the best time.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="time-slot border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-orange-500 transition text-center" onclick="toggleTimeSlot(this)">
+                            <div class="font-medium">Morning</div>
+                            <div class="text-sm text-gray-600">9:00 AM</div>
+                        </div>
+                        <div class="time-slot border-2 border-orange-500 bg-orange-50 rounded-lg p-4 cursor-pointer hover:border-orange-500 transition text-center" onclick="toggleTimeSlot(this)">
+                            <div class="font-medium">Late Morning</div>
+                            <div class="text-sm text-gray-600">11:00 AM</div>
+                        </div>
+                        <div class="time-slot border-2 border-orange-500 bg-orange-50 rounded-lg p-4 cursor-pointer hover:border-orange-500 transition text-center" onclick="toggleTimeSlot(this)">
+                            <div class="font-medium">Afternoon</div>
+                            <div class="text-sm text-gray-600">2:00 PM</div>
+                        </div>
+                        <div class="time-slot border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-orange-500 transition text-center" onclick="toggleTimeSlot(this)">
+                            <div class="font-medium">Evening</div>
+                            <div class="text-sm text-gray-600">6:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between">
+                    <button onclick="goToScreen(1)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToScreen(3)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                        Send Invitations & Voting Link →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Voting on Date/Time -->
+        <div id="screen-3" class="screen hidden">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Success Banner -->
+                <div class="bg-green-50 border-2 border-green-500 rounded-xl p-6 mb-6 flex items-start gap-4">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-3xl flex-shrink-0">
+                        ✓
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Workshop Invitations Sent!</h2>
+                        <p class="text-gray-700">All family members can now vote on their preferred date/time. Voting closes in 48 hours or when all members have voted.</p>
+                    </div>
+                </div>
+
+                <!-- Proposed Date & Times -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Proposed Date & Times</h2>
+                    <div class="mb-4">
+                        <div class="text-sm text-gray-600 mb-1">Selected Date</div>
+                        <div class="text-2xl font-bold text-gray-900">Sunday, December 15, 2025</div>
+                    </div>
+
+                    <div class="text-lg font-medium text-gray-900 mb-4">Time Slot Options</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Slot 1 -->
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <div class="font-bold text-lg">Late Morning</div>
+                                    <div class="text-gray-600">11:00 AM ET</div>
+                                </div>
+                                <div class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">
+                                    Most Popular
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">5 votes</div>
+                            <div class="flex items-center gap-2">
+                                <div class="participant-avatar" title="John Smith">JS</div>
+                                <div class="participant-avatar" title="Mary Smith">MS</div>
+                                <div class="participant-avatar" title="Robert Johnson">RJ</div>
+                                <div class="participant-avatar" title="Sarah Johnson">SJ</div>
+                                <div class="participant-avatar" title="Michael Brown">MB</div>
+                            </div>
+                        </div>
+
+                        <!-- Slot 2 -->
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+                            <div class="mb-3">
+                                <div class="font-bold text-lg">Afternoon</div>
+                                <div class="text-gray-600">2:00 PM ET</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">3 votes</div>
+                            <div class="flex items-center gap-2">
+                                <div class="participant-avatar" title="Emily Davis">ED</div>
+                                <div class="participant-avatar" title="David Wilson">DW</div>
+                                <div class="participant-avatar" title="Lisa Martinez">LM</div>
+                            </div>
+                        </div>
+
+                        <!-- Slot 3 -->
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-4">
+                            <div class="mb-3">
+                                <div class="font-bold text-lg">Morning</div>
+                                <div class="text-gray-600">9:00 AM ET</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">0 votes</div>
+                            <div class="text-gray-400 text-sm">No votes yet</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participant Voting Status -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Participant Voting Status</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-white rounded-lg p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="participant-avatar">JS</div>
+                                <div>
+                                    <div class="font-medium">John Smith</div>
+                                    <div class="text-sm text-gray-600">Family Council</div>
+                                </div>
+                            </div>
+                            <div class="bg-green-100 text-green-700 text-sm font-medium px-3 py-1 rounded-full">✓ Voted</div>
+                        </div>
+                        <div class="flex items-center justify-between bg-white rounded-lg p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="participant-avatar">MS</div>
+                                <div>
+                                    <div class="font-medium">Mary Smith</div>
+                                    <div class="text-sm text-gray-600">Family Council</div>
+                                </div>
+                            </div>
+                            <div class="bg-green-100 text-green-700 text-sm font-medium px-3 py-1 rounded-full">✓ Voted</div>
+                        </div>
+                        <div class="flex items-center justify-between bg-white rounded-lg p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="participant-avatar">RJ</div>
+                                <div>
+                                    <div class="font-medium">Robert Johnson</div>
+                                    <div class="text-sm text-gray-600">Member</div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1 rounded-full">Pending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between">
+                    <button onclick="goToScreen(2)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToScreen(4)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                        Confirm & Schedule Workshop →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Workshop Confirmed & Preparation -->
+        <div id="screen-4" class="screen hidden">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Success Banner -->
+                <div class="bg-green-50 border-2 border-green-500 rounded-xl p-6 mb-6 flex items-start gap-4">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl flex-shrink-0">
+                        ✓
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Workshop Scheduled!</h2>
+                        <p class="text-gray-700">Your Mission, Vision & Values Framework workshop with AI is confirmed. Calendar invitations have been sent to all participants.</p>
+                    </div>
+                </div>
+
+                <!-- Workshop Details -->
+                <div class="bg-blue-50 border-2 border-blue-500 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Workshop Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Date</div>
+                            <div class="text-lg font-medium">Sunday, December 15, 2025</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Time</div>
+                            <div class="text-lg font-medium">11:00 AM - 3:00 PM ET</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Participants</div>
+                            <div class="text-lg font-medium">8 Participants Confirmed</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">AI Facilitator</div>
+                            <div class="text-lg font-medium">Sophia 🤖</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workshop Preparation -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">📚 Before the Workshop</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-4">
+                            <div class="text-green-600 text-xl mt-1">✓</div>
+                            <div>
+                                <div class="font-medium">Review workshop structure (5 modules)</div>
+                                <div class="text-sm text-gray-600">Familiarize yourself with the workshop flow and expected outputs</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-4">
+                            <div class="text-gray-400 text-xl mt-1">○</div>
+                            <div>
+                                <div class="font-medium">Reflect on family history and values</div>
+                                <div class="text-sm text-gray-600">Think about key moments, decisions, and what your family stands for</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-4">
+                            <div class="text-gray-400 text-xl mt-1">○</div>
+                            <div>
+                                <div class="font-medium">Ensure stable internet connection</div>
+                                <div class="text-sm text-gray-600">Test your connection and have backup options ready</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-4">
+                            <div class="text-gray-400 text-xl mt-1">○</div>
+                            <div>
+                                <div class="font-medium">Calendar reminder set</div>
+                                <div class="text-sm text-gray-600">Check your calendar for the invitation and set a reminder 30 minutes before</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What to Expect -->
+                <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">💡 What to Expect</h2>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>AI Facilitator Sophia</strong> will guide you through 5 structured modules</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>Each module:</strong> Introduction → Learning materials → Exercises → AI consultation</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>Real-time collaboration:</strong> All family members work together synchronously</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>Unlimited AI guidance:</strong> Request personalized recommendations at any time</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>Auto-save:</strong> Progress saved automatically every 30 seconds</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-orange-600 mt-1">•</span>
+                            <span><strong>Final deliverables:</strong> Mission statement, values matrix, 10-20 year vision, and integration map</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between">
+                    <button onclick="goToScreen(3)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="goToScreen(5)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                        Join Workshop (Simulation) →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Live Workshop Room - Module 1: History & Foundation -->
+        <div id="screen-5" class="screen hidden">
+            <div class="max-w-7xl mx-auto p-6">
+                <!-- Workshop Header -->
+                <div class="bg-card border-2 border-gray-200 rounded-xl p-4 mb-6 flex items-center justify-between sticky top-0 z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="ai-avatar">🤖</div>
+                        <div>
+                            <div class="font-bold text-lg">AI Facilitator: Sophia</div>
+                            <div class="flex items-center gap-2 text-sm text-green-600">
+                                <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                <span>Live Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                        Leave Workshop
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Main Content (3 columns) -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Progress & Participants -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-1">Current Block</div>
+                                <div class="font-bold text-lg mb-2">Module 1: Family History & Foundation</div>
+                                <div class="text-sm text-gray-600 mb-2">Module 1 of 5</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 20%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-2">👥 Live Now (8)</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div class="participant-avatar" title="John Smith">JS</div>
+                                    <div class="participant-avatar" title="Mary Smith">MS</div>
+                                    <div class="participant-avatar" title="Robert Johnson">RJ</div>
+                                    <div class="participant-avatar" title="Sarah Johnson">SJ</div>
+                                    <div class="participant-avatar" title="Michael Brown">MB</div>
+                                    <div class="participant-avatar" title="Emily Davis">ED</div>
+                                    <div class="participant-avatar" title="David Wilson">DW</div>
+                                    <div class="participant-avatar" title="Lisa Martinez">LM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Introduction -->
+                        <div class="flex gap-4 bg-list-item rounded-xl p-6">
+                            <div class="ai-avatar flex-shrink-0">🤖</div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900 mb-2">Welcome to Module 1: Family History & Foundation! 👋</h2>
+                                <p class="text-gray-700">
+                                    Before we define where we're going, we need to understand where we've been. This module helps you document your family's journey, identify key turning points, and extract the lessons that have shaped who you are today. These insights will form the foundation for your values, mission, and vision.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Didactic Material -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">📚 Learning Material: Family History Timeline</h2>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-2">Why This Matters</h3>
+                                <p class="text-gray-700 mb-3">
+                                    Your family's history is not just a collection of dates and events—it's a narrative of decisions, values in action, and lessons learned. By mapping this timeline, you'll uncover patterns in how your family makes choices, what you prioritize during challenges, and which principles have consistently guided you.
+                                </p>
+                                <p class="text-gray-700">
+                                    This historical perspective ensures your mission, vision, and values are authentic—rooted in lived experience rather than abstract ideals. It also helps identify blind spots: values you claim vs. values you've actually demonstrated.
+                                </p>
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-4">Key Dimensions to Explore</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                                        <div>
+                                            <div class="font-medium mb-1">Critical Events</div>
+                                            <div class="text-sm text-gray-600">Business founding, generational transitions, major crises, strategic pivots</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                                        <div>
+                                            <div class="font-medium mb-1">Key Choices</div>
+                                            <div class="text-sm text-gray-600">What did you choose? What did you say no to? What trade-offs were made?</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                                        <div>
+                                            <div class="font-medium mb-1">Sources of Pride</div>
+                                            <div class="text-sm text-gray-600">What outcomes, behaviors, or decisions do you celebrate? What legacy exists?</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                                        <div>
+                                            <div class="font-medium mb-1">Lessons Learned</div>
+                                            <div class="text-sm text-gray-600">What wisdom emerged? What would you do differently? What principles now guide you?</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-l-4 border-orange-600 bg-orange-50 p-4 rounded">
+                                <div class="font-bold mb-2">Best Practice Example:</div>
+                                <div class="text-sm text-gray-700">
+                                    <strong>Event:</strong> 2008 Financial Crisis<br>
+                                    <strong>Choice:</strong> Decided not to sell family business despite pressure; instead took on debt to preserve ownership<br>
+                                    <strong>Pride:</strong> Kept 150 employees during downturn; business recovered stronger<br>
+                                    <strong>Lesson:</strong> "We prioritize long-term stability over short-term gains. Family unity during crisis is our greatest asset."
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Exercise: Timeline Builder -->
+                        <div class="bg-white border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">🎯 Exercise: Build Your Family Timeline</h2>
+                            <p class="text-gray-700 mb-4">Create a timeline of 5-8 significant moments in your family's history. For each, identify the event, key choice, source of pride, and lesson learned.</p>
+
+                            <div id="timeline-container" class="space-y-4">
+                                <!-- Timeline Entry Template -->
+                                <div class="border-2 border-gray-200 rounded-lg p-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Date/Period</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., 1985">
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Event</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., Founded family business">
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Key Choice</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., Chose manufacturing over retail">
+                                        </div>
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">What We're Proud Of</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., Created 50 jobs">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="text-sm font-medium text-gray-700 mb-1 block">Lesson Learned</label>
+                                            <textarea class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="e.g., Quality over speed creates lasting value"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="addTimelineEntry()" class="mt-4 border-2 border-orange-500 text-orange-600 font-medium px-4 py-2 rounded-lg hover:bg-orange-50 transition">
+                                + Add Another Entry
+                            </button>
+                        </div>
+
+                        <!-- Personal Reflection Box -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">💭 Your Personal Reflections</h2>
+                            <p class="text-gray-600 mb-4">
+                                Beyond the timeline, share your personal thoughts about what shaped your family. What patterns do you see? What values have been consistent? What surprises you when looking at your history?
+                            </p>
+                            <textarea id="reflection-1" class="w-full border-2 border-gray-300 rounded-lg px-4 py-3" rows="5" placeholder="Example: Looking at our timeline, I notice we've consistently chosen to invest in people over quick profits. Even in 2008, we kept employees despite pressure to cut costs. This pattern shows that 'people-first' isn't just something we say—it's proven by our actions. I'm surprised how often family unity during crisis led to our best innovations..."></textarea>
+                            <div class="text-sm text-gray-600 mt-2">
+                                💡 <strong>Tip:</strong> Be specific about patterns, challenges, and what these moments reveal about your family's character
+                            </div>
+                        </div>
+
+                        <!-- Ask AI Button -->
+                        <button onclick="showAIConsultation('module-1')" class="w-full bg-orange-600 text-white font-medium px-6 py-4 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Ask AI for Guidance
+                        </button>
+
+                        <!-- AI Response Panel (hidden by default) -->
+                        <div id="ai-response-module-1" class="ai-response hidden">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="ai-avatar flex-shrink-0">🤖</div>
+                                <div class="font-bold text-lg">AI Consultation</div>
+                            </div>
+
+                            <!-- Thinking State -->
+                            <div id="ai-thinking-module-1" class="flex items-center gap-3 py-4">
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                </div>
+                                <span class="text-gray-700">Analyzing your family's history and context...</span>
+                            </div>
+
+                            <!-- Analysis State -->
+                            <div id="ai-analysis-module-1" class="hidden space-y-4">
+                                <div>
+                                    <h3 class="font-bold text-lg mb-3">📊 Analysis of Your Family Timeline</h3>
+                                    <div class="space-y-3 text-gray-700">
+                                        <p><strong>Pattern Identified:</strong> Your timeline reveals a consistent "people-first" principle across multiple generations. The 2008 crisis decision to retain employees despite financial pressure demonstrates values-driven leadership under stress.</p>
+                                        <p><strong>Strengths:</strong> Clear evidence of long-term thinking, resilience during adversity, and willingness to sacrifice short-term gains for values alignment. The pattern of innovation emerging from crisis (rather than panic) suggests strong family cohesion.</p>
+                                        <p><strong>Potential Gaps:</strong> Consider whether this people-first approach has clear boundaries. Has there been a cost to family members? Are there examples of saying "no" to people when necessary? Defining limits makes values actionable.</p>
+                                    </div>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">💡 Specific Recommendations</h3>
+                                    <ol class="space-y-3 text-gray-700">
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">1.</span>
+                                            <span><strong>Articulate the "people-first" value explicitly:</strong> Define what it means (invest in development, fair compensation, safety net during downturns) and what it doesn't mean (unlimited tolerance for poor performance, avoiding tough decisions).</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">2.</span>
+                                            <span><strong>Document trade-offs as decision rules:</strong> Create a principle like "We prioritize employee retention over dividends during downturns, provided core business viability isn't threatened." This makes values operational.</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">3.</span>
+                                            <span><strong>Test for blind spots:</strong> Look for moments when the family acted against stated values. If "people-first" is true, examine any layoffs or conflicts—what justified the deviation? Those boundary cases reveal your real priorities.</span>
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">🎯 Next Steps for Module 2</h3>
+                                    <p class="text-gray-700">
+                                        Use this "people-first" pattern as a candidate value in Module 2. You'll define it precisely, map behaviors, create anti-examples, and establish metrics. Be ready to stress-test whether it's truly non-negotiable or situational.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between gap-4">
+                            <button onclick="goToScreen(4)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                                Save Progress
+                            </button>
+                            <button onclick="goToScreen(6)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                                Submit & Continue →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <!-- Live Activity -->
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">👁️ Live Activity</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">JS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">John</div>
+                                        <div class="text-gray-600 text-xs">Writing timeline...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">MS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Mary</div>
+                                        <div class="text-gray-600 text-xs">Reading materials...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">RJ</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Robert</div>
+                                        <div class="text-gray-600 text-xs">Consulting AI...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Block Navigation -->
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Modules</h3>
+                            <div class="space-y-2">
+                                <div class="bg-orange-50 text-orange-600 font-medium px-3 py-2 rounded-lg">
+                                    1. History & Foundation
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    2. Core Values Matrix
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    3. Mission Statement
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    4. 10-20 Year Vision
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    5. Constitution Integration
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Module Complete & Continue -->
+        <div id="screen-6" class="screen hidden">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Success Banner -->
+                <div class="bg-green-50 border-2 border-green-500 rounded-xl p-6 mb-6 flex items-start gap-4">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl flex-shrink-0">
+                        ✓
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Module 1 Complete: Family History & Foundation</h2>
+                        <p class="text-gray-700">All family members have completed this module. Your timeline and reflections have been saved.</p>
+                    </div>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Module Summary</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Timeline Entries Created</div>
+                            <div class="text-2xl font-bold text-gray-900">7 significant moments</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Key Patterns Identified</div>
+                            <div class="text-gray-700">
+                                • "People-first" approach across generations<br>
+                                • Long-term thinking over short-term gains<br>
+                                • Innovation emerging from crisis moments<br>
+                                • Family unity as core strength
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600 mb-1">Participants Completed</div>
+                            <div class="flex gap-2">
+                                <div class="participant-avatar">JS</div>
+                                <div class="participant-avatar">MS</div>
+                                <div class="participant-avatar">RJ</div>
+                                <div class="participant-avatar">SJ</div>
+                                <div class="participant-avatar">MB</div>
+                                <div class="participant-avatar">ED</div>
+                                <div class="participant-avatar">DW</div>
+                                <div class="participant-avatar">LM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Insight -->
+                <div class="ai-response mb-6">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="ai-avatar flex-shrink-0">🤖</div>
+                        <div class="font-bold text-lg">AI Insight: Ready for Module 2</div>
+                    </div>
+                    <p class="text-gray-700 mb-3">
+                        Your timeline reveals strong consistency in values-driven decision-making. The "people-first" pattern you've identified appears in multiple contexts—crisis management, growth decisions, and daily operations. This consistency makes it an excellent candidate for your Core Values Matrix in Module 2.
+                    </p>
+                    <p class="text-gray-700">
+                        <strong>Recommendation:</strong> In Module 2, we'll work to precisely define this value, map it to specific behaviors, create anti-examples (what it's NOT), and establish measurable indicators. The lessons from your timeline will help ensure your values are grounded in lived experience, not aspirations.
+                    </p>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Workshop Progress</h2>
+                    <div class="text-gray-700 mb-2">1 of 5 modules completed</div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                        <div class="bg-orange-600 h-4 rounded-full" style="width: 20%"></div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <strong>Remaining modules:</strong> Core Values Matrix, Mission Statement, 10-20 Year Vision, Constitution Integration
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between gap-4">
+                    <button onclick="goToScreen(5)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Back to Module 1
+                    </button>
+                    <div class="flex gap-4">
+                        <button onclick="alert('Break consensus requested')" class="border-2 border-orange-500 text-orange-600 font-medium px-6 py-3 rounded-lg hover:bg-orange-50 transition">
+                            Take a Break
+                        </button>
+                        <button onclick="goToModule(2)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                            Continue to Module 2 →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE 2: Core Values Matrix (NEW) -->
+        <div id="module-2" class="screen hidden">
+            <div class="max-w-7xl mx-auto p-6">
+                <!-- Workshop Header -->
+                <div class="bg-card border-2 border-gray-200 rounded-xl p-4 mb-6 flex items-center justify-between sticky top-0 z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="ai-avatar">🤖</div>
+                        <div>
+                            <div class="font-bold text-lg">AI Facilitator: Sophia</div>
+                            <div class="flex items-center gap-2 text-sm text-green-600">
+                                <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                <span>Live Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                        Leave Workshop
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Main Content -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Progress -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-1">Current Block</div>
+                                <div class="font-bold text-lg mb-2">Module 2: Core Values Matrix</div>
+                                <div class="text-sm text-gray-600 mb-2">Module 2 of 5</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 40%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-2">👥 Live Now (8)</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div class="participant-avatar" title="John Smith">JS</div>
+                                    <div class="participant-avatar" title="Mary Smith">MS</div>
+                                    <div class="participant-avatar" title="Robert Johnson">RJ</div>
+                                    <div class="participant-avatar" title="Sarah Johnson">SJ</div>
+                                    <div class="participant-avatar" title="Michael Brown">MB</div>
+                                    <div class="participant-avatar" title="Emily Davis">ED</div>
+                                    <div class="participant-avatar" title="David Wilson">DW</div>
+                                    <div class="participant-avatar" title="Lisa Martinez">LM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Introduction -->
+                        <div class="flex gap-4 bg-list-item rounded-xl p-6">
+                            <div class="ai-avatar flex-shrink-0">🤖</div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900 mb-2">Welcome to Module 2: Core Values Matrix! 💎</h2>
+                                <p class="text-gray-700">
+                                    Now that you've identified patterns from your history, it's time to codify your family's values. This module helps you move from abstract principles ("we value integrity") to concrete behaviors ("we always disclose conflicts of interest; we never misrepresent facts to stakeholders"). The result: 5-7 core values with clear behavioral indicators, anti-examples, and measurable metrics.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Didactic Material -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">📚 Learning Material: Values Matrix Framework</h2>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-2">Why Behavioral Specificity Matters</h3>
+                                <p class="text-gray-700 mb-3">
+                                    Most family values statements fail because they're too abstract. "Integrity" sounds good, but what does it mean in practice? Does it mean you never fire underperforming family members? Does it mean you disclose all financial details to non-managing shareholders?
+                                </p>
+                                <p class="text-gray-700">
+                                    This module forces clarity: for each value, you'll define what you ALWAYS do, what you NEVER do, what violating it looks like (anti-example), and how you measure it. This transforms values from wall art into decision-making tools.
+                                </p>
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-4">Matrix Components</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                                        <div>
+                                            <div class="font-medium mb-1">Value Name & Definition</div>
+                                            <div class="text-sm text-gray-600">Clear label + 1-2 sentence definition grounded in family context</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                                        <div>
+                                            <div class="font-medium mb-1">We Always (Positive Behaviors)</div>
+                                            <div class="text-sm text-gray-600">Specific actions, decisions, practices that exemplify this value</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                                        <div>
+                                            <div class="font-medium mb-1">We Never (Boundaries/Prohibitions)</div>
+                                            <div class="text-sm text-gray-600">Red lines, anti-patterns, behaviors that violate this value</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                                        <div>
+                                            <div class="font-medium mb-1">How We Measure</div>
+                                            <div class="text-sm text-gray-600">Quantitative or qualitative indicators to assess adherence</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-l-4 border-orange-600 bg-orange-50 p-4 rounded">
+                                <div class="font-bold mb-2">Example: Stewardship Value</div>
+                                <div class="text-sm text-gray-700">
+                                    <strong>Value:</strong> "Stewardship – We view ourselves as temporary custodians of wealth, not owners. We preserve and grow capital for future generations."<br><br>
+                                    <strong>We Always:</strong> Reinvest at least 30% of annual profits into business growth or endowment; consult next generation on major capital decisions; maintain conservative debt ratios.<br><br>
+                                    <strong>We Never:</strong> Distribute more than 70% of profits as dividends; make speculative investments without independent due diligence; leverage core business assets for personal consumption.<br><br>
+                                    <strong>Measure:</strong> Annual reinvestment rate ≥30%; debt-to-equity ratio <0.4; next-gen participation in quarterly portfolio reviews.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Exercise: Values Selection -->
+                        <div class="bg-white border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">🎯 Exercise: Select Your 5-7 Core Values</h2>
+                            <p class="text-gray-700 mb-4">Based on your family timeline patterns, select 5-7 values that truly represent your family. Click to select/deselect. You can also add custom values.</p>
+
+                            <div id="values-selection" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                                <div class="value-card cursor-pointer" onclick="toggleValue(this)">
+                                    <div class="font-medium">Integrity</div>
+                                    <div class="text-xs text-gray-600">Honesty, transparency, ethics</div>
+                                </div>
+                                <div class="value-card cursor-pointer selected" onclick="toggleValue(this)">
+                                    <div class="font-medium">People-First Leadership</div>
+                                    <div class="text-xs text-gray-600">Employee well-being priority</div>
+                                </div>
+                                <div class="value-card cursor-pointer" onclick="toggleValue(this)">
+                                    <div class="font-medium">Stewardship</div>
+                                    <div class="text-xs text-gray-600">Long-term capital preservation</div>
+                                </div>
+                                <div class="value-card cursor-pointer selected" onclick="toggleValue(this)">
+                                    <div class="font-medium">Innovation</div>
+                                    <div class="text-xs text-gray-600">Continuous improvement</div>
+                                </div>
+                                <div class="value-card cursor-pointer" onclick="toggleValue(this)">
+                                    <div class="font-medium">Community Impact</div>
+                                    <div class="text-xs text-gray-600">Social responsibility</div>
+                                </div>
+                                <div class="value-card cursor-pointer selected" onclick="toggleValue(this)">
+                                    <div class="font-medium">Family Unity</div>
+                                    <div class="text-xs text-gray-600">Collaboration over conflict</div>
+                                </div>
+                                <div class="value-card cursor-pointer" onclick="toggleValue(this)">
+                                    <div class="font-medium">Excellence</div>
+                                    <div class="text-xs text-gray-600">Quality in all endeavors</div>
+                                </div>
+                                <div class="value-card cursor-pointer" onclick="toggleValue(this)">
+                                    <div class="font-medium">Transparency</div>
+                                    <div class="text-xs text-gray-600">Open communication</div>
+                                </div>
+                                <div class="value-card cursor-pointer selected" onclick="toggleValue(this)">
+                                    <div class="font-medium">Resilience</div>
+                                    <div class="text-xs text-gray-600">Adaptability in crisis</div>
+                                </div>
+                            </div>
+
+                            <button onclick="alert('Add custom value')" class="border-2 border-orange-500 text-orange-600 font-medium px-4 py-2 rounded-lg hover:bg-orange-50 transition">
+                                + Add Custom Value
+                            </button>
+
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                                <strong>Selected:</strong> <span id="selected-count">4</span> values (aim for 5-7)
+                            </div>
+                        </div>
+
+                        <!-- Values Matrix Builder -->
+                        <div class="bg-white border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">📝 Complete Matrix for Each Value</h2>
+                            <p class="text-gray-700 mb-4">For each selected value, fill in the matrix. Example shown for "People-First Leadership".</p>
+
+                            <div class="border-2 border-gray-200 rounded-lg p-4 mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="text-sm font-medium text-gray-700 mb-1 block">Value & Definition</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 mb-2" placeholder="Value Name" value="People-First Leadership">
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="1-2 sentence definition">We prioritize employee well-being, development, and dignity over short-term profits. We believe investing in people creates sustainable competitive advantage.</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700 mb-1 block">We Always...</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" rows="4" placeholder="Specific positive behaviors">• Invest in training and development programs
+• Maintain safety nets during economic downturns
+• Pay fair market wages + benefits
+• Provide clear career progression paths</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700 mb-1 block">We Never...</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" rows="4" placeholder="Boundaries and prohibitions">• Cut training budgets during downturns
+• Tolerate harassment or discrimination
+• Make layoff decisions without exploring alternatives
+• Sacrifice safety for productivity</textarea>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="text-sm font-medium text-gray-700 mb-1 block">How We Measure</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="Quantitative/qualitative indicators" value="Employee retention rate >85%; Training spend per FTE; Annual engagement survey >4.0/5.0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="alert('Add another value matrix')" class="border-2 border-orange-500 text-orange-600 font-medium px-4 py-2 rounded-lg hover:bg-orange-50 transition">
+                                + Add Matrix for Another Value
+                            </button>
+                        </div>
+
+                        <!-- Personal Reflection -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">💭 Reflection: Stress-Test Your Values</h2>
+                            <p class="text-gray-600 mb-4">
+                                Consider real dilemmas where values might conflict. How would you prioritize? This helps identify which values are truly non-negotiable vs. situational.
+                            </p>
+                            <textarea id="reflection-2" class="w-full border-2 border-gray-300 rounded-lg px-4 py-3" rows="5" placeholder="Example: If 'People-First Leadership' conflicts with 'Stewardship' (e.g., retaining employees threatens business survival), which takes priority? Our rule: People-first during normal times, but business viability is non-negotiable—we'd make selective cuts to preserve core operations and prevent total job loss..."></textarea>
+                        </div>
+
+                        <!-- Ask AI Button -->
+                        <button onclick="showAIConsultation('module-2')" class="w-full bg-orange-600 text-white font-medium px-6 py-4 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Ask AI for Guidance
+                        </button>
+
+                        <!-- AI Response Panel -->
+                        <div id="ai-response-module-2" class="ai-response hidden">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="ai-avatar flex-shrink-0">🤖</div>
+                                <div class="font-bold text-lg">AI Consultation</div>
+                            </div>
+
+                            <div id="ai-thinking-module-2" class="flex items-center gap-3 py-4">
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                </div>
+                                <span class="text-gray-700">Analyzing your values matrix...</span>
+                            </div>
+
+                            <div id="ai-analysis-module-2" class="hidden space-y-4">
+                                <div>
+                                    <h3 class="font-bold text-lg mb-3">📊 Analysis of Your Values Matrix</h3>
+                                    <div class="space-y-3 text-gray-700">
+                                        <p><strong>Strength:</strong> Your "People-First Leadership" value is exceptionally well-defined with concrete behaviors and clear metrics. The "We Never" section shows you've thought through boundaries, not just ideals.</p>
+                                        <p><strong>Observation:</strong> Four selected values is good, but aim for 5-7 to cover key domains (people, capital, governance, innovation, community). Consider adding a value around "Stewardship" or "Transparency" based on your timeline patterns.</p>
+                                        <p><strong>Potential Gap:</strong> Your conflict resolution reflection is thoughtful, but consider documenting this as a formal decision rule: "Priority Order: Business Viability → People-First → Growth → Dividends." This prevents future ambiguity.</p>
+                                    </div>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">💡 Specific Recommendations</h3>
+                                    <ol class="space-y-3 text-gray-700">
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">1.</span>
+                                            <span><strong>Add "Stewardship" value:</strong> Your timeline shows consistent long-term thinking and capital preservation. Codify this with metrics like reinvestment rate, debt ratios, and next-gen involvement in capital decisions.</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">2.</span>
+                                            <span><strong>Make metrics SMART:</strong> Your retention rate >85% is good. Add timeframe (annual) and accountability (HR reports quarterly). Example: "Annual employee retention rate >85%, reported quarterly by HR Director."</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">3.</span>
+                                            <span><strong>Create "Anti-Example" scenarios:</strong> For each value, document a real example of when the family came close to violating it. What stopped you? This makes values concrete and memorable.</span>
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">🎯 Preparing for Module 3</h3>
+                                    <p class="text-gray-700">
+                                        Your values matrix will directly inform your mission statement in Module 3. The values you've defined become the "operas on..." clause in your mission formula. Start thinking: what impact do these values collectively enable? What's the overarching purpose they serve?
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between gap-4">
+                            <button onclick="goToScreen(6)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                                Save Progress
+                            </button>
+                            <button onclick="goToModule(3)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                                Submit & Continue →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">👁️ Live Activity</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">JS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">John</div>
+                                        <div class="text-gray-600 text-xs">Selecting values...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">MS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Mary</div>
+                                        <div class="text-gray-600 text-xs">Writing matrix...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Modules</h3>
+                            <div class="space-y-2">
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 1. History & Foundation
+                                </div>
+                                <div class="bg-orange-50 text-orange-600 font-medium px-3 py-2 rounded-lg">
+                                    2. Core Values Matrix
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    3. Mission Statement
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    4. 10-20 Year Vision
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    5. Constitution Integration
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE 3: Mission Statement (NEW) -->
+        <div id="module-3" class="screen hidden">
+            <div class="max-w-7xl mx-auto p-6">
+                <!-- Workshop Header -->
+                <div class="bg-card border-2 border-gray-200 rounded-xl p-4 mb-6 flex items-center justify-between sticky top-0 z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="ai-avatar">🤖</div>
+                        <div>
+                            <div class="font-bold text-lg">AI Facilitator: Sophia</div>
+                            <div class="flex items-center gap-2 text-sm text-green-600">
+                                <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                <span>Live Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                        Leave Workshop
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Main Content -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Progress -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-1">Current Block</div>
+                                <div class="font-bold text-lg mb-2">Module 3: Family Mission Statement</div>
+                                <div class="text-sm text-gray-600 mb-2">Module 3 of 5</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-orange-600 h-2 rounded-full" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-list-item rounded-xl p-4">
+                                <div class="text-sm text-gray-600 mb-2">👥 Live Now (8)</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div class="participant-avatar" title="John Smith">JS</div>
+                                    <div class="participant-avatar" title="Mary Smith">MS</div>
+                                    <div class="participant-avatar" title="Robert Johnson">RJ</div>
+                                    <div class="participant-avatar" title="Sarah Johnson">SJ</div>
+                                    <div class="participant-avatar" title="Michael Brown">MB</div>
+                                    <div class="participant-avatar" title="Emily Davis">ED</div>
+                                    <div class="participant-avatar" title="David Wilson">DW</div>
+                                    <div class="participant-avatar" title="Lisa Martinez">LM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Introduction -->
+                        <div class="flex gap-4 bg-list-item rounded-xl p-6">
+                            <div class="ai-avatar flex-shrink-0">🤖</div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-900 mb-2">Welcome to Module 3: Family Mission Statement! 🎯</h2>
+                                <p class="text-gray-700">
+                                    Your mission statement articulates WHY your family exists beyond wealth preservation. It connects your history (Module 1) and values (Module 2) into a clear purpose statement that guides governance decisions, philanthropy, business strategy, and legacy planning. This module produces both a comprehensive mission (one-page) and a memorable one-liner (≤20 words).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Didactic Material -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">📚 Learning Material: Mission Formula</h2>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-2">Anatomy of a Powerful Mission</h3>
+                                <p class="text-gray-700 mb-3">
+                                    A family mission answers four questions: (1) What impact do we create? (2) For whom? (3) Through what approach/activities? (4) Grounded in which values? This formula ensures your mission is specific, actionable, and authentic—not generic corporate-speak.
+                                </p>
+                                <div class="bg-orange-50 border-l-4 border-orange-600 p-4 rounded mb-4">
+                                    <div class="font-bold mb-2">The Formula:</div>
+                                    <div class="text-gray-900 mb-3">
+                                        We exist to <strong>[impact/meaning]</strong><br>
+                                        for <strong>[beneficiaries/community]</strong><br>
+                                        through <strong>[approach/activities]</strong><br>
+                                        operating on <strong>[core values from Module 2]</strong>.
+                                    </div>
+                                    <div class="font-bold mb-1">One-liner version (≤20 words):</div>
+                                    <div class="text-gray-900">[Concise impact statement capturing essence]</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <h3 class="font-bold text-lg mb-4">Common Pitfalls to Avoid</h3>
+                                <div class="space-y-3">
+                                    <div class="flex gap-3">
+                                        <div class="text-red-600 text-xl">✗</div>
+                                        <div>
+                                            <div class="font-medium">Too Generic</div>
+                                            <div class="text-sm text-gray-600">"Create value for stakeholders" — could be any family/company</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="text-red-600 text-xl">✗</div>
+                                        <div>
+                                            <div class="font-medium">Values-Free</div>
+                                            <div class="text-sm text-gray-600">"Maximize wealth across generations" — no mention of HOW or guiding principles</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div class="text-red-600 text-xl">✗</div>
+                                        <div>
+                                            <div class="font-medium">Aspirational Only</div>
+                                            <div class="text-sm text-gray-600">"Be the best family ever" — no connection to actual activities/history</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-l-4 border-orange-600 bg-orange-50 p-4 rounded">
+                                <div class="font-bold mb-2">Example Mission (Smith Family):</div>
+                                <div class="text-sm text-gray-700 mb-3">
+                                    <strong>Full Version:</strong><br>
+                                    "We exist to <em>create sustainable prosperity and positive community impact</em> for <em>our family, employees, and the regions where we operate</em> through <em>values-driven business stewardship, responsible capital management, and strategic philanthropy</em>, operating on <em>integrity, stewardship, people-first leadership, innovation, and family unity</em>."
+                                </div>
+                                <div class="text-sm text-gray-700">
+                                    <strong>One-Liner:</strong><br>
+                                    "Building lasting value through people-first leadership and multi-generational thinking."
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Exercise: Mission Builder -->
+                        <div class="bg-white border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">🎯 Exercise: Craft Your Mission Statement</h2>
+                            <p class="text-gray-700 mb-4">Fill in each component using insights from your history and values. Then refine into a one-liner.</p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-1 block">1. Impact/Meaning: What do we create or enable?</label>
+                                    <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., sustainable prosperity, educational opportunity, community resilience">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-1 block">2. Beneficiaries: For whom?</label>
+                                    <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., our family, employees, next generation, local community">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-1 block">3. Approach/Activities: Through what means?</label>
+                                    <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., business stewardship, capital management, philanthropy, education">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-1 block">4. Values Foundation: Operating on which values? (from Module 2)</label>
+                                    <input type="text" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2" placeholder="List your 5-7 core values" value="People-First Leadership, Innovation, Family Unity, Resilience">
+                                </div>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+                                <div class="font-bold mb-2">Your Draft Mission (Full):</div>
+                                <div class="text-gray-700 italic" id="mission-preview">
+                                    We exist to <strong>[fill in impact]</strong> for <strong>[fill in beneficiaries]</strong> through <strong>[fill in approach]</strong>, operating on <strong>[your values]</strong>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- One-Liner Generator -->
+                        <div class="bg-white border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">✨ Create Your One-Liner (≤20 words)</h2>
+                            <p class="text-gray-700 mb-4">Distill your full mission into a memorable tagline. This will be your family's signature phrase.</p>
+
+                            <textarea class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 mb-3" rows="2" placeholder="e.g., Building lasting value through people-first leadership and multi-generational thinking."></textarea>
+
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="text-gray-600">Word count: <span id="word-count" class="font-bold">0</span> / 20</div>
+                                <button onclick="alert('AI suggests alternatives')" class="text-orange-600 hover:underline">
+                                    AI Suggest Alternatives →
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Personal Reflection -->
+                        <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">💭 Reflection: Does This Mission Pass the "So What?" Test?</h2>
+                            <p class="text-gray-600 mb-4">
+                                Read your mission aloud. Does it differentiate your family from others? Would it guide a tough decision (e.g., sell business vs. preserve jobs)? If generic, revise until it's authentic and actionable.
+                            </p>
+                            <textarea id="reflection-3" class="w-full border-2 border-gray-300 rounded-lg px-4 py-3" rows="5" placeholder="Reflect on whether your mission feels authentic, specific, and connected to your family's actual history and values..."></textarea>
+                        </div>
+
+                        <!-- Ask AI Button -->
+                        <button onclick="showAIConsultation('module-3')" class="w-full bg-orange-600 text-white font-medium px-6 py-4 rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Ask AI for Guidance
+                        </button>
+
+                        <!-- AI Response Panel -->
+                        <div id="ai-response-module-3" class="ai-response hidden">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="ai-avatar flex-shrink-0">🤖</div>
+                                <div class="font-bold text-lg">AI Consultation</div>
+                            </div>
+
+                            <div id="ai-thinking-module-3" class="flex items-center gap-3 py-4">
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-orange-600 rounded-full typing-dot"></div>
+                                </div>
+                                <span class="text-gray-700">Analyzing your mission statement...</span>
+                            </div>
+
+                            <div id="ai-analysis-module-3" class="hidden space-y-4">
+                                <div>
+                                    <h3 class="font-bold text-lg mb-3">📊 Mission Statement Evaluation</h3>
+                                    <div class="space-y-3 text-gray-700">
+                                        <p><strong>Clarity Score: 8/10.</strong> Your mission clearly answers all four questions (impact, beneficiaries, approach, values). The connection to "people-first leadership" from your history is evident.</p>
+                                        <p><strong>Actionability: Strong.</strong> The mission provides decision criteria. Example: If considering a business acquisition, ask "Does this align with people-first leadership and stewardship?" If not, it's off-mission.</p>
+                                        <p><strong>Memorability of One-Liner: Good start.</strong> "Building lasting value through people-first leadership" is specific. Consider testing variations: "Sustaining prosperity through people-first stewardship" or "Multi-generational value through people-centered leadership."</p>
+                                    </div>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">💡 Specific Recommendations</h3>
+                                    <ol class="space-y-3 text-gray-700">
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">1.</span>
+                                            <span><strong>Make "community" more specific:</strong> Instead of "regions where we operate," consider "employees, their families, and [specific place name]." Generic language weakens impact.</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">2.</span>
+                                            <span><strong>Test one-liner internally:</strong> Share with family members. Can they repeat it back tomorrow? If not, simplify. Aim for "bumper sticker test" — could fit on a bumper sticker and be remembered.</span>
+                                        </li>
+                                        <li class="flex gap-2">
+                                            <span class="font-bold text-orange-600">3.</span>
+                                            <span><strong>Use mission in governance:</strong> In your constitution (Module 5), reference this mission in the preamble. Use it as a filter for Family Council agenda items: "Does this decision advance our mission?"</span>
+                                        </li>
+                                    </ol>
+                                </div>
+
+                                <div class="border-t-2 border-orange-200 pt-4">
+                                    <h3 class="font-bold text-lg mb-3">🎯 Preparing for Module 4</h3>
+                                    <p class="text-gray-700">
+                                        Your mission defines WHY you exist. Module 4 (Vision) defines WHERE you're going. Think about how your mission translates into 10-20 year goals: If your mission is "people-first leadership," what does your workforce/culture look like in 2045? If "stewardship," what capital position do you target?
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between gap-4">
+                            <button onclick="goToModule(2)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                                Save Progress
+                            </button>
+                            <button onclick="goToModule(4)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                                Submit & Continue →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">👁️ Live Activity</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">JS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">John</div>
+                                        <div class="text-gray-600 text-xs">Writing mission...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">MS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Mary</div>
+                                        <div class="text-gray-600 text-xs">Refining one-liner...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Modules</h3>
+                            <div class="space-y-2">
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 1. History & Foundation
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 2. Core Values Matrix
+                                </div>
+                                <div class="bg-orange-50 text-orange-600 font-medium px-3 py-2 rounded-lg">
+                                    3. Mission Statement
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    4. 10-20 Year Vision
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    5. Constitution Integration
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE 4: 10-20 Year Vision Canvas -->
+        <div id="module-4" class="screen hidden">
+            <div class="container mx-auto">
+                <!-- Progress Bar -->
+                <div class="bg-white border-b-2 border-gray-200 px-6 py-4 mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm font-medium text-gray-700">Module 4 of 5: 10-20 Year Vision Canvas</div>
+                        <div class="text-sm text-gray-600">80% complete</div>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-orange-600 h-2 rounded-full" style="width: 80%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Main Content Area -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Module Header -->
+                        <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="text-5xl">🔭</div>
+                                <div>
+                                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Module 4: 10-20 Year Vision Canvas</h1>
+                                    <p class="text-lg text-gray-700">Define your family's long-term aspirations across 6 key dimensions with concrete goals, milestones, and risk responses</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-3">Instructions</h2>
+                            <div class="space-y-2 text-gray-700">
+                                <p>For each dimension below, define:</p>
+                                <ul class="list-disc list-inside space-y-1 ml-2">
+                                    <li><strong>Goal Future State:</strong> What does success look like in 10-20 years?</li>
+                                    <li><strong>Non-Goals:</strong> What are you explicitly NOT trying to achieve? (Helps clarify boundaries)</li>
+                                    <li><strong>First Milestone (T+12 months):</strong> What's the first concrete step within 12 months?</li>
+                                    <li><strong>Key Risk:</strong> What's the biggest threat to this vision?</li>
+                                    <li><strong>Risk Response:</strong> How will you mitigate this risk?</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Vision Canvas Form -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">Vision Canvas</h2>
+
+                            <!-- Dimension 1: Family -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">👨‍👩‍👧‍👦</span> 1. Family Dimension
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: All G3/G4 members have clear career paths, family gatherings occur quarterly with 80%+ attendance, family office provides professional development support..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Force family members into family business roles, mandate geographic proximity, create financial dependency for adult children..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Launch G3 leadership development program with external coaching">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Geographic dispersion">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Virtual meetings + annual retreats">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 2: Business -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">🏢</span> 2. Business Dimension
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: Operating companies have professional non-family CEOs, Board includes 2+ independent directors, EBITDA margins >15%, succession plans for all key roles..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Aggressive M&A growth, public listing, geographic expansion beyond regional markets..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Complete governance review, recruit first independent director">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Industry disruption">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Annual strategy reviews, innovation fund">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 3: Capital/Financial -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">💰</span> 3. Capital & Financial Dimension
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: Diversified portfolio with 60% operating businesses / 40% investments, family office manages €X00M+ AUM, all G3 members financially independent..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Speculative trading, crypto exposure >5%, exit core operating businesses for liquidity..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Establish investment policy statement, hire CIO for family office">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Market volatility">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Conservative allocation, 18-month cash buffer">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 4: Social Impact & Philanthropy -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">🌍</span> 4. Social Impact & Philanthropy
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: Family foundation distributes €XM annually focused on education/environment, 100% of G3/G4 engaged in at least one cause, recognized regional leader in impact..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Political donations, one-off sponsorships without impact measurement, causes outside core focus areas..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Define foundation strategy, hire executive director, launch pilot program">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Mission drift">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Annual strategy review, clear eligibility criteria">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 5: Reputation & Legacy -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">🏆</span> 5. Reputation & Legacy
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: Known regionally as model family business, featured in case studies, family name synonymous with ethical business practices and community leadership..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Seek media attention for its own sake, competitive naming of buildings, prioritize reputation over substance..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Document family history, establish communications protocol, publish first impact report">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Public controversy">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Crisis communications plan, proactive transparency">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dimension 6: Governance & Stewardship -->
+                            <div class="bg-gray-50 rounded-lg p-5 mb-5 border-2 border-gray-300">
+                                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <span class="text-2xl">⚖️</span> 6. Governance & Stewardship
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Goal Future State (10-20 years)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-20" placeholder="Example: Family constitution fully implemented, all governance bodies (Council, Assembly, Foundation Board) operating effectively, succession plans in place for all key roles, G4 trained and ready..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Non-Goals (What we won't do)</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="Example: Create bureaucracy for its own sake, impose rules without buy-in, centralize all decisions, prevent individual entrepreneurship..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">First Milestone (T+12 months)</label>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Ratify constitution, hold first Family Assembly, establish Council operating rhythm">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Key Risk</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Low engagement">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Risk Response</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="Example: Make meetings meaningful, rotate leadership, celebrate wins">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Personal Reflection -->
+                        <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-3">Personal Reflection: Vision-Mission Alignment</h2>
+                            <p class="text-gray-700 mb-3">Does this vision ladder up to your mission from Module 3? Which dimension excites you most? Which feels most challenging?</p>
+                            <textarea class="w-full border-2 border-orange-300 rounded-lg p-3 text-gray-900 h-24" placeholder="Reflect on how your 10-20 year vision translates your mission (WHY) into concrete aspirational goals (WHERE)..."></textarea>
+                        </div>
+
+                        <!-- AI Consultation -->
+                        <div class="bg-white border-2 border-blue-500 rounded-xl p-6">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="text-4xl">🤖</div>
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-900 mb-2">AI Consultation: Vision Validation</h2>
+                                    <p class="text-gray-700">Get expert analysis of your vision canvas for coherence, ambition, and feasibility</p>
+                                </div>
+                            </div>
+                            <button onclick="showAIConsultation(4)" class="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg hover:bg-blue-700 transition w-full">
+                                Request AI Analysis
+                            </button>
+
+                            <!-- AI Response Panel -->
+                            <div id="ai-response-4" class="mt-4 hidden">
+                                <!-- Thinking State -->
+                                <div id="ai-thinking-4" class="bg-blue-50 border-2 border-blue-500 rounded-lg p-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="spinner-border"></div>
+                                        <span class="text-blue-900 font-medium">AI is analyzing your vision canvas...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Analysis Result -->
+                                <div id="ai-analysis-4" class="bg-blue-50 border-2 border-blue-500 rounded-lg p-5 hidden">
+                                    <h3 class="font-bold text-lg mb-3 text-blue-900">✓ Vision Canvas Analysis</h3>
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">🎯 Coherence Check (9/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Strong:</strong> Your Family, Business, and Governance dimensions align well with "people-first leadership" mission. The 12-month milestones (G3 development, Board recruitment, constitution ratification) are sequenced logically.<br>
+                                                <strong>Gap:</strong> Capital dimension focuses on diversification but doesn't mention how you'll fund the philanthropy goals in dimension 4. Consider adding: "Allocate X% annual returns to foundation endowment."
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">🚀 Ambition & Stretch (8/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Good:</strong> Business dimension (independent directors, professional CEOs, 15% EBITDA) shows professionalization ambition. Reputation goal (case studies, regional leadership) is specific and measurable.<br>
+                                                <strong>Consider:</strong> Family dimension may be too conservative — "quarterly gatherings with 80% attendance" is incremental if you already meet annually. What about a family retreat abroad or G4 summer internship exchange?
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">⚠️ Feasibility & Risks (7/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Realistic:</strong> You've identified key risks (geographic dispersion, industry disruption, mission drift) and matched them with reasonable responses.<br>
+                                                <strong>Missing:</strong> What if G3 doesn't want leadership roles? Your business vision assumes professional non-family CEOs — does everyone agree? Add a risk: "Family resistance to professionalization → Response: Early engagement, trial period with interim CEO."
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">📋 Recommended Next Steps</div>
+                                            <ol class="list-decimal list-inside space-y-1 text-sm text-gray-800 ml-2">
+                                                <li><strong>Quantify where possible:</strong> Add numbers to Capital goals (€X00M AUM target, Y% IRR), Philanthropy (€ZM annual giving), Business (revenue/EBITDA targets).</li>
+                                                <li><strong>Sequence dependencies:</strong> Governance must come first (constitution, Council) before you can execute Family (development programs) or Business (Board changes).</li>
+                                                <li><strong>Stress-test with dilemmas:</strong> What if your biggest business opportunity requires abandoning a core market? Does "no geographic expansion beyond regional" hold, or is it a guideline?</li>
+                                                <li><strong>Integrate with Module 3 mission:</strong> Explicitly reference your mission in the vision narrative: "To achieve our mission of people-first leadership, our 2045 vision includes..."</li>
+                                            </ol>
+                                        </div>
+
+                                        <div class="border-t-2 border-blue-200 pt-4">
+                                            <h3 class="font-bold text-lg mb-3">🎯 Preparing for Module 5</h3>
+                                            <p class="text-gray-700">
+                                                Your vision canvas will flow into the Family Constitution in Module 5. The 10-20 year goals will likely go into an Appendix ("Strategic Vision 2025-2045"), while the 12-month milestones become action items for the Family Council's first-year work plan. Think about who owns each dimension: Family dimension → Council Chair? Business → Operating CEO? Philanthropy → Foundation Board?
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between gap-4">
+                            <button onclick="goToModule(3)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                                Save Progress
+                            </button>
+                            <button onclick="goToModule(5)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                                Submit & Continue →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">👁️ Live Activity</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">JS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">John</div>
+                                        <div class="text-gray-600 text-xs">Defining Business goals...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">MS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Mary</div>
+                                        <div class="text-gray-600 text-xs">Working on Philanthropy dimension...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Modules</h3>
+                            <div class="space-y-2">
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 1. History & Foundation
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 2. Core Values Matrix
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 3. Mission Statement
+                                </div>
+                                <div class="bg-orange-50 text-orange-600 font-medium px-3 py-2 rounded-lg">
+                                    4. 10-20 Year Vision
+                                </div>
+                                <div class="text-gray-600 px-3 py-2">
+                                    5. Constitution Integration
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE 5: Constitution Integration & Communication Plan -->
+        <div id="module-5" class="screen hidden">
+            <div class="container mx-auto">
+                <!-- Progress Bar -->
+                <div class="bg-white border-b-2 border-gray-200 px-6 py-4 mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm font-medium text-gray-700">Module 5 of 5: Constitution Integration</div>
+                        <div class="text-sm text-gray-600">100% complete</div>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- Main Content Area -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Module Header -->
+                        <div class="bg-green-50 border-2 border-green-500 rounded-xl p-6">
+                            <div class="flex items-start gap-4">
+                                <div class="text-5xl">📜</div>
+                                <div>
+                                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Module 5: Constitution Integration & Communication Plan</h1>
+                                    <p class="text-lg text-gray-700">Map your mission, vision, and values into the Family Constitution structure and plan the rollout communication</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-3">Instructions</h2>
+                            <div class="space-y-2 text-gray-700">
+                                <p>Complete the mapping and communication planning:</p>
+                                <ul class="list-disc list-inside space-y-1 ml-2">
+                                    <li><strong>Integration Map:</strong> Specify where each element (values, mission, vision) will appear in the constitution</li>
+                                    <li><strong>Owner Assignment:</strong> Designate who is responsible for drafting/reviewing each section</li>
+                                    <li><strong>Ratification Workflow:</strong> Define the approval process (Editorial → Legal → Council → Assembly)</li>
+                                    <li><strong>Communication Plan:</strong> Plan how to roll out the framework to all stakeholders</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Integration Mapping -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">Integration Mapping</h2>
+                            <div class="space-y-4">
+                                <!-- Values Integration -->
+                                <div class="bg-blue-50 border-l-4 border-blue-600 rounded-lg p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="text-2xl">💎</span> Core Values → Constitution Section
+                                    </h3>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Constitution Section</label>
+                                            <select class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900">
+                                                <option>Section 2: Guiding Principles</option>
+                                                <option>Preamble</option>
+                                                <option>Appendix A</option>
+                                                <option>Article I: Family Values</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsible Owner</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="e.g., Family Council Chair">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Integration Notes</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="e.g., Include full values matrix (We Always / We Never / How We Measure) as a dedicated subsection with annual review requirement"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Mission Integration -->
+                                <div class="bg-orange-50 border-l-4 border-orange-600 rounded-lg p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="text-2xl">🎯</span> Mission Statement → Constitution Section
+                                    </h3>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Constitution Section</label>
+                                            <select class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900">
+                                                <option>Preamble</option>
+                                                <option>Section 1: Purpose & Mission</option>
+                                                <option>Article I: Family Mission</option>
+                                                <option>Appendix B</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsible Owner</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="e.g., Founding Member">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Integration Notes</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="e.g., Include both full mission statement and one-liner. Reference in Family Council charter as decision filter ('Does this advance our mission?')"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Vision Integration -->
+                                <div class="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="text-2xl">🔭</span> 10-20 Year Vision → Constitution Section
+                                    </h3>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Constitution Section</label>
+                                            <select class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900">
+                                                <option>Appendix: Strategic Vision 2025-2045</option>
+                                                <option>Section 3: Long-Term Goals</option>
+                                                <option>Article II: Vision Statement</option>
+                                                <option>Preamble</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsible Owner</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="e.g., Strategic Planning Committee">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Integration Notes</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="e.g., Full vision canvas in Appendix with annual review cycle. Extract 12-month milestones into Council's Year 1 Work Plan. Note: Vision is aspirational, not binding"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Timeline Integration -->
+                                <div class="bg-gray-50 border-l-4 border-gray-600 rounded-lg p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="text-2xl">📅</span> Family Timeline → Constitution Section
+                                    </h3>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Constitution Section</label>
+                                            <select class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900">
+                                                <option>Appendix: Family History</option>
+                                                <option>Preamble (summarized)</option>
+                                                <option>Section 1: Our Heritage</option>
+                                                <option>Separate Family History Document</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsible Owner</label>
+                                            <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900" placeholder="e.g., Family Historian">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Integration Notes</label>
+                                        <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 text-gray-900 h-16" placeholder="e.g., Full timeline in Appendix for context. Summarize key lessons in Preamble ('We learned X from Y event'). Option: Separate family history book for broader audience"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ratification Workflow -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">Ratification Workflow</h2>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-4 bg-blue-50 rounded-lg p-4">
+                                    <div class="text-blue-600 text-2xl font-bold">1.</div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 mb-1">Editorial Group (5 working days)</div>
+                                        <div class="text-sm text-gray-700 mb-2">Compile all texts, examples, and polish language for clarity and consistency</div>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-2 text-gray-900 text-sm" placeholder="Assigned to: e.g., John Smith, Mary Johnson">
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4 bg-yellow-50 rounded-lg p-4">
+                                    <div class="text-yellow-600 text-2xl font-bold">2.</div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 mb-1">Legal Review (5 working days)</div>
+                                        <div class="text-sm text-gray-700 mb-2">Family lawyer verifies formulations don't conflict with charter and shareholder agreements</div>
+                                        <input type="text" class="w-full border-2 border-gray-300 rounded-lg p-2 text-gray-900 text-sm" placeholder="Assigned to: e.g., Family Legal Counsel">
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4 bg-green-50 rounded-lg p-4">
+                                    <div class="text-green-600 text-2xl font-bold">3.</div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 mb-1">Family Council Pre-Approval</div>
+                                        <div class="text-sm text-gray-700 mb-2">Council reviews and recommends final draft to Family Assembly</div>
+                                        <input type="date" class="w-full border-2 border-gray-300 rounded-lg p-2 text-gray-900 text-sm" placeholder="Council Meeting Date">
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4 bg-orange-50 rounded-lg p-4">
+                                    <div class="text-orange-600 text-2xl font-bold">4.</div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 mb-1">Family Assembly Ratification</div>
+                                        <div class="text-sm text-gray-700 mb-2">Chair presents Mission/Vision/Values block at Family Assembly for formal approval (requires 2/3 majority)</div>
+                                        <input type="date" class="w-full border-2 border-gray-300 rounded-lg p-2 text-gray-900 text-sm" placeholder="Assembly Meeting Date">
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-4 bg-purple-50 rounded-lg p-4">
+                                    <div class="text-purple-600 text-2xl font-bold">5.</div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-900 mb-1">Annual Review Cycle</div>
+                                        <div class="text-sm text-gray-700 mb-2">Schedule first review in 12 months to assess alignment and update as needed</div>
+                                        <input type="date" class="w-full border-2 border-gray-300 rounded-lg p-2 text-gray-900 text-sm" placeholder="First Review Date (T+12 months)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Communication Plan -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">Communication & Rollout Plan</h2>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border p-3 font-bold">Audience</th>
+                                            <th class="border p-3 font-bold">What to Communicate</th>
+                                            <th class="border p-3 font-bold">When</th>
+                                            <th class="border p-3 font-bold">Channel</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., G3/G4 Family Members">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Full framework + how they can contribute">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Post-ratification (Week 1)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Family Assembly + email">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Operating Company Leadership">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Mission & Values (especially behaviors)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Post-ratification (Week 2)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Leadership offsite">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., All Employees">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Mission one-liner + core values (simplified)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Month 1-2 (phased rollout)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Town halls + posters">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., External Advisors (lawyers, bankers)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Mission statement (for context in advice)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Post-ratification (Month 1)">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="e.g., Email with PDF summary">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="Add more rows as needed...">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                            </td>
+                                            <td class="border p-3">
+                                                <input type="text" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Personal Reflection -->
+                        <div class="bg-green-50 border-2 border-green-500 rounded-xl p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-3">Personal Reflection: Your Role in Integration</h2>
+                            <p class="text-gray-700 mb-3">What role will you personally play in bringing this framework to life? Which aspect (values, mission, vision) are you most excited to champion?</p>
+                            <textarea class="w-full border-2 border-green-300 rounded-lg p-3 text-gray-900 h-24" placeholder="Reflect on your personal commitment to the framework and how you'll model it for the family..."></textarea>
+                        </div>
+
+                        <!-- AI Consultation -->
+                        <div class="bg-white border-2 border-blue-500 rounded-xl p-6">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="text-4xl">🤖</div>
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-900 mb-2">AI Consultation: Integration Strategy Review</h2>
+                                    <p class="text-gray-700">Get expert recommendations on constitution integration and rollout communication</p>
+                                </div>
+                            </div>
+                            <button onclick="showAIConsultation(5)" class="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg hover:bg-blue-700 transition w-full">
+                                Request AI Analysis
+                            </button>
+
+                            <!-- AI Response Panel -->
+                            <div id="ai-response-5" class="mt-4 hidden">
+                                <!-- Thinking State -->
+                                <div id="ai-thinking-5" class="bg-blue-50 border-2 border-blue-500 rounded-lg p-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="spinner-border"></div>
+                                        <span class="text-blue-900 font-medium">AI is analyzing your integration plan...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Analysis Result -->
+                                <div id="ai-analysis-5" class="bg-blue-50 border-2 border-blue-500 rounded-lg p-5 hidden">
+                                    <h3 class="font-bold text-lg mb-3 text-blue-900">✓ Integration Strategy Analysis</h3>
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">📋 Structural Integration (9/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Strong:</strong> Placing values in Section 2 (Guiding Principles), mission in Preamble, and vision in Appendix follows best practice for family constitutions. This structure makes it easy to reference and update.<br>
+                                                <strong>Consider:</strong> Add a "How to Use This Document" introduction explaining that mission/values are binding principles, while vision is aspirational guidance (not enforceable).
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">⏱️ Ratification Timeline (8/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Realistic:</strong> 5-day editorial + 5-day legal + Council + Assembly sequence is achievable. Allows ~3-4 weeks total before Assembly vote.<br>
+                                                <strong>Risk:</strong> What if legal review finds conflicts? Build in 2-3 days contingency for revisions. Also ensure Council sees draft BEFORE legal review to avoid double rework.
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">📢 Communication Plan (7/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Good:</strong> Phased rollout (family → leadership → employees → advisors) prevents confusion and allows adaptation.<br>
+                                                <strong>Missing:</strong> What about family members who couldn't attend the workshop? Plan a "catch-up" session or video summary. Also missing: How will you train Council members to USE values as decision filters? Add Council training workshop (Month 2).
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">🔄 Annual Review Mechanism (9/10)</div>
+                                            <div class="text-gray-800 text-sm">
+                                                <strong>Excellent:</strong> 12-month review is standard practice and prevents mission/vision from becoming stale. <br>
+                                                <strong>Detail:</strong> Specify WHO conducts the review (Council Chair? Strategic Planning Committee?) and HOW (survey family members? Track metric performance? Update milestones?).
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="font-bold text-blue-900 mb-2">📋 Recommended Next Steps</div>
+                                            <ol class="list-decimal list-inside space-y-1 text-sm text-gray-800 ml-2">
+                                                <li><strong>Finalize owner assignments:</strong> Confirm each person agrees to their role (Editorial Group, Legal Counsel, etc.) before launching workflow.</li>
+                                                <li><strong>Create rollout materials:</strong> Draft one-pagers for each audience (family summary, employee poster, advisor briefing). Don't wait for ratification — prepare now.</li>
+                                                <li><strong>Set up measurement:</strong> For each value metric (employee retention, training investment, etc.), assign someone to track and report quarterly.</li>
+                                                <li><strong>Plan Council training:</strong> After ratification, hold a Council workshop on "How to Use Mission/Values in Decision-Making" with case scenarios.</li>
+                                                <li><strong>Document lessons learned:</strong> Capture what worked/didn't in this workshop process for when you do the next framework revision in 12 months.</li>
+                                            </ol>
+                                        </div>
+
+                                        <div class="border-t-2 border-blue-200 pt-4">
+                                            <h3 class="font-bold text-lg mb-3">🎉 Congratulations!</h3>
+                                            <p class="text-gray-700 mb-3">
+                                                You've completed the Mission, Vision & Values framework workshop. You now have a comprehensive governance foundation: a family timeline showing key lessons, 5-7 core values with behavioral specificity, a mission statement (full + one-liner), a 10-20 year vision canvas across 6 dimensions, and an integration plan for your Family Constitution.
+                                            </p>
+                                            <p class="text-gray-700">
+                                                <strong>What makes this strong:</strong> You've moved from abstract principles to concrete behaviors, metrics, and milestones. Your mission defines WHY you exist, your values define HOW you operate, and your vision defines WHERE you're going. This isn't just a document — it's a living governance tool that will guide Family Council decisions, business strategy, and next-generation development for years to come.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between gap-4">
+                            <button onclick="goToModule(4)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                                Save Progress
+                            </button>
+                            <button onclick="goToScreen(7)" class="bg-green-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-green-700 transition">
+                                Complete Workshop →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Sidebar -->
+                    <div class="lg:col-span-1 space-y-4">
+                        <div class="bg-list-item rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">👁️ Live Activity</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">JS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">John</div>
+                                        <div class="text-gray-600 text-xs">Mapping to constitution...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="participant-avatar w-8 h-8 text-sm">MS</div>
+                                    <div class="flex-1 text-sm">
+                                        <div class="font-medium">Mary</div>
+                                        <div class="text-gray-600 text-xs">Planning communication...</div>
+                                    </div>
+                                    <div class="w-2 h-2 bg-green-600 rounded-full live-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 border-2 border-green-500 rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-3">📋 Workshop Modules</h3>
+                            <div class="space-y-2">
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 1. History & Foundation
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 2. Core Values Matrix
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 3. Mission Statement
+                                </div>
+                                <div class="bg-green-50 text-green-600 font-medium px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 4. 10-20 Year Vision
+                                </div>
+                                <div class="bg-green-100 border-2 border-green-500 text-green-700 font-bold px-3 py-2 rounded-lg flex items-center gap-2">
+                                    <span>✓</span> 5. Constitution Integration
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-4">
+                            <h3 class="font-bold text-gray-900 mb-2">🎯 Next Steps</h3>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Review final report</li>
+                                <li>• Assign editorial group</li>
+                                <li>• Schedule legal review</li>
+                                <li>• Plan Assembly presentation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Final Workshop Report (keeping existing) -->
+        <div id="screen-7" class="screen hidden">
+            <div class="max-w-6xl mx-auto p-6">
+                <!-- Overall Score Card -->
+                <div class="bg-orange text-white rounded-xl p-8 mb-6 text-center">
+                    <div class="text-6xl font-bold mb-2">Complete</div>
+                    <div class="text-2xl">Mission, Vision & Values Framework</div>
+                    <div class="text-lg opacity-90 mt-2">All 5 modules completed successfully</div>
+                </div>
+
+                <!-- Deliverables Summary -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Workshop Deliverables (Draft v0.9)</h2>
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="font-bold text-lg mb-2">✓ Family Timeline with Lessons</div>
+                            <div class="text-gray-700">7 significant moments documented with patterns, choices, and learnings</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="font-bold text-lg mb-2">✓ Core Values Matrix</div>
+                            <div class="text-gray-700">5 values with behavior indicators, anti-examples, and metrics</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="font-bold text-lg mb-2">✓ Family Mission Statement</div>
+                            <div class="text-gray-700">One-page detailed mission + one-liner (≤20 words)</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="font-bold text-lg mb-2">✓ 10-20 Year Vision Canvas</div>
+                            <div class="text-gray-700">Goals across 6 dimensions with milestones and risk responses</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="font-bold text-lg mb-2">✓ Constitution Integration Map</div>
+                            <div class="text-gray-700">Mapping of values/mission/vision to constitution sections with owners</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Mission Statement (Preview) -->
+                <div class="bg-white border-2 border-orange-500 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Preview: Your Family Mission</h2>
+                    <div class="bg-orange-50 rounded-lg p-6 mb-4">
+                        <div class="text-lg font-medium text-gray-900 mb-3">One-Liner:</div>
+                        <div class="text-2xl font-bold text-orange-600 mb-6">
+                            "Building lasting value through people-first leadership and multi-generational thinking."
+                        </div>
+                        <div class="text-lg font-medium text-gray-900 mb-3">Full Mission Statement:</div>
+                        <div class="text-gray-700">
+                            We exist to <strong>create sustainable prosperity and positive impact</strong> for <strong>our family, employees, and community</strong> through <strong>values-driven business stewardship and thoughtful capital management</strong>, operating on <strong>integrity, long-term thinking, people-first leadership, innovation during adversity, and family unity</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Values Matrix (Preview) -->
+                <div class="bg-white border-2 border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Preview: Core Values Matrix</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border p-3 font-bold">Value</th>
+                                    <th class="border p-3 font-bold">We Always</th>
+                                    <th class="border p-3 font-bold">We Never</th>
+                                    <th class="border p-3 font-bold">How We Measure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border p-3 font-medium">People-First Leadership</td>
+                                    <td class="border p-3 text-sm">Invest in development, provide safety nets during downturns, prioritize fair compensation</td>
+                                    <td class="border p-3 text-sm">Sacrifice long-term viability for short-term sentiment, tolerate poor performance indefinitely</td>
+                                    <td class="border p-3 text-sm">Employee retention rate, training investment per capita</td>
+                                </tr>
+                                <tr>
+                                    <td class="border p-3 font-medium">Long-Term Thinking</td>
+                                    <td class="border p-3 text-sm">Make decisions with 10+ year horizon, resist pressure for quick gains</td>
+                                    <td class="border p-3 text-sm">Chase trends, prioritize quarterly results over strategic goals</td>
+                                    <td class="border p-3 text-sm">Capital investment ratio, strategic vs. tactical decisions</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Next Steps & Homework -->
+                <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">🎯 Next Steps & Homework</h2>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <div class="text-orange-600 text-xl mt-1">1.</div>
+                            <div>
+                                <div class="font-bold">Editorial Group (5 working days)</div>
+                                <div class="text-sm text-gray-700">Compile all texts, examples, and polish language for clarity and consistency</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="text-orange-600 text-xl mt-1">2.</div>
+                            <div>
+                                <div class="font-bold">Legal Review (5 working days)</div>
+                                <div class="text-sm text-gray-700">Family lawyer verifies formulations don't conflict with charter and shareholder agreements</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="text-orange-600 text-xl mt-1">3.</div>
+                            <div>
+                                <div class="font-bold">Family Council Ratification</div>
+                                <div class="text-sm text-gray-700">Chair presents Mission/Vision/Values block at next Family Assembly for approval</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="text-orange-600 text-xl mt-1">4.</div>
+                            <div>
+                                <div class="font-bold">Annual Review</div>
+                                <div class="text-sm text-gray-700">First review scheduled in 12 months to assess alignment and update as needed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Required -->
+                <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">🔴 Family Council Action Required</h2>
+                    <p class="text-gray-700">
+                        Please review all workshop outputs (timeline, values matrix, mission, vision, integration map) and confirm accuracy before finalizing. This will become the permanent record in your Family Constitution.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between gap-4">
+                    <button onclick="goToModule(4)" class="border-2 border-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Back to Modules
+                    </button>
+                    <div class="flex gap-4">
+                        <button onclick="alert('Feedback form opened')" class="border-2 border-orange-500 text-orange-600 font-medium px-6 py-3 rounded-lg hover:bg-orange-50 transition">
+                            Request Changes
+                        </button>
+                        <button onclick="goToScreen(8)" class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                            Approve & Continue →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 8: Completion -->
+        <div id="screen-8" class="screen hidden">
+            <div class="max-w-4xl mx-auto p-6 text-center">
+                <!-- Success Icon -->
+                <div class="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center text-white text-6xl mx-auto mb-6">
+                    ✓
+                </div>
+
+                <!-- Heading -->
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Mission, Vision & Values Framework Completed! 🎉</h1>
+                <p class="text-xl text-gray-700 mb-8">Your family now has a comprehensive framework to guide governance decisions for generations to come.</p>
+
+                <!-- Progress Circle -->
+                <div class="flex justify-center mb-8">
+                    <div class="progress-circle" style="--progress: 360deg">
+                        <div class="progress-circle-inner">100%</div>
+                    </div>
+                </div>
+
+                <!-- Next Steps Card -->
+                <div class="bg-list-item border-2 border-gray-200 rounded-xl p-6 mb-8 text-left">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">What's Next?</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="text-orange-600 text-2xl">📄</div>
+                            <div>
+                                <div class="font-bold">Download Complete Framework Package</div>
+                                <div class="text-sm text-gray-600">Timeline, values matrix, mission, vision, integration map, and communication plan</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-orange-600 text-2xl">👥</div>
+                            <div>
+                                <div class="font-bold">Editorial & Legal Review</div>
+                                <div class="text-sm text-gray-600">Complete homework tasks before Family Assembly ratification</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-orange-600 text-2xl">📋</div>
+                            <div>
+                                <div class="font-bold">Integrate into Family Constitution</div>
+                                <div class="text-sm text-gray-600">Values → Section 2, Mission → Preamble, Vision → Appendix with annual review</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="text-orange-600 text-2xl">📅</div>
+                            <div>
+                                <div class="font-bold">Schedule First Review</div>
+                                <div class="text-sm text-gray-600">Set calendar reminder for 12-month review and update cycle</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="goToScreen(1)" class="border-2 border-gray-300 text-gray-700 font-medium px-8 py-3 rounded-lg hover:bg-gray-50 transition">
+                        ← Restart Demo
+                    </button>
+                    <button class="bg-orange-600 text-white font-medium px-8 py-3 rounded-lg hover:bg-orange-700 transition">
+                        Download Framework Package
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Screen navigation
+        function goToScreen(screenNumber) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(`screen-${screenNumber}`).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // Module navigation
+        function goToModule(moduleNumber) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(`module-${moduleNumber}`).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // Time slot toggle
+        function toggleTimeSlot(element) {
+            const isSelected = element.classList.contains('border-orange-500');
+            const selectedSlots = document.querySelectorAll('.time-slot.border-orange-500').length;
+
+            if (isSelected) {
+                element.classList.remove('border-orange-500', 'bg-orange-50');
+                element.classList.add('border-gray-200');
+            } else if (selectedSlots < 3) {
+                element.classList.remove('border-gray-200');
+                element.classList.add('border-orange-500', 'bg-orange-50');
+            }
+        }
+
+        // Value card toggle
+        function toggleValue(element) {
+            element.classList.toggle('selected');
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.value-card.selected').length;
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = count;
+            }
+        }
+
+        // Add timeline entry
+        function addTimelineEntry() {
+            const container = document.getElementById('timeline-container');
+            const template = container.firstElementChild.cloneNode(true);
+            // Clear inputs
+            template.querySelectorAll('input, textarea').forEach(input => input.value = '');
+            container.appendChild(template);
+        }
+
+        // Show AI consultation
+        function showAIConsultation(moduleId) {
+            const responsePanel = document.getElementById(`ai-response-${moduleId}`);
+            const thinkingState = document.getElementById(`ai-thinking-${moduleId}`);
+            const analysisState = document.getElementById(`ai-analysis-${moduleId}`);
+
+            responsePanel.classList.remove('hidden');
+            thinkingState.classList.remove('hidden');
+            analysisState.classList.add('hidden');
+
+            // Simulate AI processing
+            setTimeout(() => {
+                thinkingState.classList.add('hidden');
+                analysisState.classList.remove('hidden');
+            }, 3000);
+        }
+
+        // Auto-save simulation
+        setInterval(() => {
+            console.log('Auto-saved at', new Date().toLocaleTimeString());
+        }, 30000);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            goToScreen(1);
+            updateSelectedCount();
+        });
+    </script>
+</body>
+</html>

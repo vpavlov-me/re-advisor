@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Family Governance Assessment - Interactive Prototype v2.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--gray-900);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .assessment-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .assessment-subtitle {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            padding: 24px 32px;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .progress-phases {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .phase-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .phase-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .phase-badge.active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .phase-badge.pending {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        /* Screen Container */
+        .screen {
+            display: none;
+            padding: 40px 32px;
+            min-height: 400px;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Welcome Screen */
+        .welcome-content {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .welcome-content h1 {
+            font-size: 32px;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--gray-600);
+            margin-bottom: 32px;
+        }
+
+        .info-box {
+            background: var(--gray-50);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .info-box h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: var(--gray-800);
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .info-box li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            border: 2px solid var(--gray-200);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Profiling Form */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-800);
+        }
+
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* Context Display */
+        .context-detected {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .context-detected h3 {
+            font-size: 20px;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+        }
+
+        .context-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .context-tag {
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Question Screen */
+        .question-header {
+            margin-bottom: 32px;
+        }
+
+        .question-number {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .question-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .question-description {
+            font-size: 16px;
+            color: var(--gray-600);
+        }
+
+        .question-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .option-card {
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .option-card:hover {
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .option-card.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .option-card input[type="radio"], .option-card input[type="checkbox"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .option-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+        }
+
+        .scale-options {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .scale-option {
+            flex: 1;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scale-option:hover {
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .scale-option.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .scale-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .scale-label {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        /* Live Visualization */
+        .visualization-section {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+
+        .visualization-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 0 auto;
+            max-width: 500px;
+        }
+
+        .dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .dimension-score {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .dimension-name {
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+
+        .dimension-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .dimension-bar {
+            height: 4px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .dimension-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        /* Pattern Alert */
+        .pattern-alert {
+            border: 2px solid var(--warning);
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pattern-alert.critical {
+            border-color: var(--danger);
+            background: #fee2e2;
+        }
+
+        .pattern-alert h4 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pattern-alert ul {
+            margin-top: 12px;
+            padding-left: 20px;
+        }
+
+        /* Insight Card */
+        .insight-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 4px solid var(--secondary);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .insight-card h4 {
+            font-size: 16px;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        /* Results Dashboard */
+        .results-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .results-header h2 {
+            font-size: 32px;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .overall-score {
+            display: inline-block;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 48px;
+            font-weight: 700;
+            margin: 16px 0;
+        }
+
+        .maturity-level {
+            font-size: 24px;
+            color: var(--gray-600);
+            margin-top: 8px;
+        }
+
+        .results-sections {
+            display: grid;
+            gap: 24px;
+        }
+
+        .results-section {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid var(--gray-200);
+        }
+
+        .results-section h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: var(--gray-900);
+        }
+
+        .strength-item, .gap-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+        }
+
+        .strength-item {
+            background: #d1fae5;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .gap-item {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-list li {
+            padding: 16px;
+            margin: 12px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .recommendation-priority {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-priority.high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .recommendation-priority.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 2px solid var(--gray-200);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .btn-large {
+            padding: 18px 36px;
+            font-size: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+            }
+
+            .header, .screen, .progress-section {
+                padding: 20px;
+            }
+
+            .stats-grid, .form-columns {
+                grid-template-columns: 1fr;
+            }
+
+            .scale-options {
+                flex-direction: column;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* Prototype Badge */
+        .prototype-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body>
+    <div class="prototype-badge">PROTOTYPE V2.0</div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">ReFamily</div>
+            </div>
+            <div class="assessment-title">Dynamic Family Governance Assessment</div>
+            <div class="assessment-subtitle">Intelligent, Context-Aware Evaluation System</div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-text" id="progressText">Assessment Journey</span>
+                <span class="progress-text" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-phases" id="progressPhases">
+                <!-- Dynamic phase badges will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Screen 1: Welcome -->
+        <div class="screen active" id="screen-welcome">
+            <div class="welcome-content">
+                <h1>Welcome to Your Family Governance Assessment</h1>
+                <p class="welcome-subtitle">An intelligent, adaptive evaluation that personalizes to your family's unique context</p>
+
+                <div class="info-box">
+                    <h3>🎯 What Makes This Different</h3>
+                    <ul>
+                        <li>Dynamic questions that adapt to your family's life stage and structure</li>
+                        <li>Real-time pattern detection and insights as you progress</li>
+                        <li>Live visualization of your governance maturity across 12 dimensions</li>
+                        <li>Context-aware recommendations based on your specific situation</li>
+                        <li>25-35 minutes with intelligent question selection</li>
+                    </ul>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Dimensions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-value">25-35</div>
+                        <div class="stat-label">Questions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-value">25-30</div>
+                        <div class="stat-label">Minutes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✨</div>
+                        <div class="stat-value">Live</div>
+                        <div class="stat-label">Insights</div>
+                    </div>
+                </div>
+
+                <div class="info-box" style="background: #fef3c7; border-left-color: #f59e0b;">
+                    <h3>💡 How It Works</h3>
+                    <p>This assessment adapts to your family's context. You'll start with 5-7 profiling questions. Based on your answers, the system will:</p>
+                    <ul>
+                        <li>Detect your family's life stage and complexity</li>
+                        <li>Select contextually relevant questions from pools tailored to your situation</li>
+                        <li>Identify patterns in your responses and explore deeper where needed</li>
+                        <li>Provide live feedback on your governance maturity</li>
+                        <li>Generate personalized recommendations based on your unique profile</li>
+                    </ul>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-primary btn-large" onclick="startAssessment()">Begin Assessment →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Profiling -->
+        <div class="screen" id="screen-profiling">
+            <div>
+                <h2 style="font-size: 28px; margin-bottom: 12px;">Understanding Your Family Context</h2>
+                <p style="color: var(--gray-600); margin-bottom: 32px;">These questions help us personalize your assessment experience</p>
+
+                <div class="form-group">
+                    <label>How is your family structured?</label>
+                    <select id="familyStructure" onchange="updateContext()">
+                        <option value="">Select...</option>
+                        <option value="single_branch">Single branch (one founding couple/individual)</option>
+                        <option value="multi_branch">Multiple branches (siblings with separate families)</option>
+                        <option value="extended">Extended family (in-laws actively involved)</option>
+                    </select>
+                </div>
+
+                <div class="form-columns">
+                    <div class="form-group">
+                        <label>Generations actively involved</label>
+                        <select id="generations" onchange="updateContext()">
+                            <option value="">Select...</option>
+                            <option value="1">1 Generation</option>
+                            <option value="2">2 Generations</option>
+                            <option value="3">3 Generations</option>
+                            <option value="4">4+ Generations</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Adult family members</label>
+                        <input type="number" id="adultMembers" min="1" max="100" placeholder="Number" onchange="updateContext()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Business relationship</label>
+                    <select id="businessStatus" onchange="updateContext()">
+                        <option value="">Select...</option>
+                        <option value="operating">Active operating business</option>
+                        <option value="portfolio">Portfolio/multiple businesses</option>
+                        <option value="sold">Business recently sold (within 5 years)</option>
+                        <option value="none">No operating business (legacy wealth)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Founder/senior generation status</label>
+                    <select id="founderStatus" onchange="updateContext()">
+                        <option value="">Select...</option>
+                        <option value="active_young">Founder active, under 60</option>
+                        <option value="active_transition">Founder active, 60-75 (transition phase)</option>
+                        <option value="active_senior">Founder active, 75+ (succession urgent)</option>
+                        <option value="transitioned">Next gen in leadership (within 5 years)</option>
+                        <option value="established">Next gen established (5+ years)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Next generation involvement in business/governance</label>
+                    <select id="nextGenInvolvement" onchange="updateContext()">
+                        <option value="">Select...</option>
+                        <option value="none">Not yet involved</option>
+                        <option value="learning">Learning/junior roles</option>
+                        <option value="active">Active leadership roles</option>
+                        <option value="leading">Leading the business</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Current governance challenge (if any)</label>
+                    <select id="currentChallenge" onchange="updateContext()">
+                        <option value="">Select...</option>
+                        <option value="none">No immediate challenges</option>
+                        <option value="succession">Succession planning needed</option>
+                        <option value="conflict">Family conflict or tension</option>
+                        <option value="transaction">Major transaction (sale, IPO, merger)</option>
+                        <option value="growth">Rapid business growth/scaling</option>
+                    </select>
+                </div>
+
+                <div id="contextDisplay"></div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="showScreen('welcome')">← Back</button>
+                    <button class="btn btn-primary" id="startCoreBtn" onclick="startCoreAssessment()" disabled>Continue to Assessment →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Questions -->
+        <div class="screen" id="screen-questions">
+            <div class="question-header">
+                <div class="question-number" id="questionNumber">Question 1 of 25</div>
+                <h2 class="question-title" id="questionTitle"></h2>
+                <p class="question-description" id="questionDescription"></p>
+            </div>
+
+            <div id="questionContent">
+                <!-- Dynamic question content will be inserted here -->
+            </div>
+
+            <div id="patternAlerts">
+                <!-- Pattern detection alerts will appear here -->
+            </div>
+
+            <div class="visualization-section" id="liveVisualization" style="display: none;">
+                <h3>📊 Your Live Governance Profile</h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="dimension-scores" id="dimensionScores"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="prevQuestionBtn" onclick="previousQuestion()">← Previous</button>
+                <button class="btn btn-primary" id="nextQuestionBtn" onclick="nextQuestion()">Next →</button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Results -->
+        <div class="screen" id="screen-results">
+            <div class="results-header">
+                <h2>Your Family Governance Assessment Results</h2>
+                <div class="overall-score" id="overallScore">6.2</div>
+                <div class="maturity-level" id="maturityLevel">Emerging Governance</div>
+            </div>
+
+            <div class="visualization-section">
+                <h3>📊 Complete Governance Profile</h3>
+                <div class="chart-container">
+                    <canvas id="finalRadarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="results-sections">
+                <div class="results-section">
+                    <h3>✅ Strengths</h3>
+                    <div id="strengthsList"></div>
+                </div>
+
+                <div class="results-section">
+                    <h3>⚠️ Critical Gaps</h3>
+                    <div id="gapsList"></div>
+                </div>
+
+                <div class="results-section">
+                    <h3>🔍 Detected Patterns</h3>
+                    <div id="patternsList"></div>
+                </div>
+
+                <div class="results-section">
+                    <h3>🎯 Recommended Actions</h3>
+                    <ul class="recommendation-list" id="recommendationsList"></ul>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-primary btn-large">Download Full Report (PDF)</button>
+                <button class="btn btn-secondary">Schedule Workshop</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Assessment Engine
+        const assessmentEngine = {
+            session: {
+                familyProfile: {},
+                activeContexts: [],
+                currentPhase: 'welcome',
+                questionIndex: 0,
+                totalQuestions: 0,
+                answeredQuestions: [],
+                liveScores: {},
+                detectedPatterns: [],
+                questionsQueue: []
+            },
+
+            dimensions: [
+                'succession_planning',
+                'decision_making',
+                'conflict_resolution',
+                'communication',
+                'family_meetings',
+                'governance_structure',
+                'values_alignment',
+                'next_gen_development',
+                'entry_exit_rules',
+                'financial_transparency',
+                'family_harmony',
+                'external_advisors'
+            ],
+
+            dimensionLabels: {
+                'succession_planning': 'Succession Planning',
+                'decision_making': 'Decision Making',
+                'conflict_resolution': 'Conflict Resolution',
+                'communication': 'Communication',
+                'family_meetings': 'Family Meetings',
+                'governance_structure': 'Governance Structure',
+                'values_alignment': 'Values Alignment',
+                'next_gen_development': 'Next Gen Development',
+                'entry_exit_rules': 'Entry/Exit Rules',
+                'financial_transparency': 'Financial Transparency',
+                'family_harmony': 'Family Harmony',
+                'external_advisors': 'External Advisors'
+            },
+
+            // Context detection rules
+            contexts: [
+                {
+                    id: 'founder_active_transition',
+                    name: 'Founder Active - Transition Phase',
+                    priority: 9,
+                    weight: 0.4,
+                    rules: (profile) => {
+                        return profile.founderStatus === 'active_transition' ||
+                               profile.founderStatus === 'active_senior';
+                    }
+                },
+                {
+                    id: 'multi_branch',
+                    name: 'Multi-Branch Family',
+                    priority: 7,
+                    weight: 0.3,
+                    rules: (profile) => {
+                        return profile.familyStructure === 'multi_branch' &&
+                               parseInt(profile.adultMembers) >= 10;
+                    }
+                },
+                {
+                    id: 'post_transition',
+                    name: 'Post-Transition Phase',
+                    priority: 8,
+                    weight: 0.35,
+                    rules: (profile) => {
+                        return profile.founderStatus === 'transitioned' ||
+                               profile.founderStatus === 'established';
+                    }
+                },
+                {
+                    id: 'succession_urgent',
+                    name: 'Succession Planning Urgent',
+                    priority: 10,
+                    weight: 0.5,
+                    rules: (profile) => {
+                        return profile.currentChallenge === 'succession' ||
+                               profile.founderStatus === 'active_senior';
+                    }
+                },
+                {
+                    id: 'active_conflict',
+                    name: 'Active Family Conflict',
+                    priority: 10,
+                    weight: 0.6,
+                    rules: (profile) => {
+                        return profile.currentChallenge === 'conflict';
+                    }
+                },
+                {
+                    id: 'transaction',
+                    name: 'Major Transaction',
+                    priority: 9,
+                    weight: 0.5,
+                    rules: (profile) => {
+                        return profile.currentChallenge === 'transaction';
+                    }
+                },
+                {
+                    id: 'early_stage',
+                    name: 'Early Stage Family',
+                    priority: 6,
+                    weight: 0.3,
+                    rules: (profile) => {
+                        return profile.founderStatus === 'active_young' &&
+                               profile.nextGenInvolvement === 'none';
+                    }
+                },
+                {
+                    id: 'business_sold',
+                    name: 'Post-Business Sale',
+                    priority: 7,
+                    weight: 0.35,
+                    rules: (profile) => {
+                        return profile.businessStatus === 'sold';
+                    }
+                }
+            ],
+
+            // Question bank (condensed for prototype)
+            questionBank: {
+                core: [
+                    {
+                        id: 'q_core_001',
+                        text: 'Who currently makes major strategic decisions about the family business/wealth?',
+                        type: 'single_choice',
+                        dimensions: ['decision_making', 'succession_planning'],
+                        options: [
+                            { text: 'Founder/Senior generation exclusively', score: { decision_making: 3, succession_planning: 2 }, triggers: ['founder_dependency'] },
+                            { text: 'Founder with input from next generation', score: { decision_making: 6, succession_planning: 5 } },
+                            { text: 'Shared decision-making (family council/board)', score: { decision_making: 8, succession_planning: 7 } },
+                            { text: 'Next generation leads decisions', score: { decision_making: 9, succession_planning: 9 } },
+                            { text: 'No clear process', score: { decision_making: 2, succession_planning: 2 }, triggers: ['governance_chaos'] }
+                        ]
+                    },
+                    {
+                        id: 'q_core_002',
+                        text: 'How often does your family have formal discussions about governance, succession, or family matters?',
+                        type: 'single_choice',
+                        dimensions: ['communication', 'family_meetings', 'governance_structure'],
+                        options: [
+                            { text: 'Never or rarely', score: { communication: 2, family_meetings: 1, governance_structure: 2 }, triggers: ['communication_breakdown'] },
+                            { text: 'Only when problems arise', score: { communication: 4, family_meetings: 3, governance_structure: 4 } },
+                            { text: 'Annually', score: { communication: 6, family_meetings: 6, governance_structure: 6 } },
+                            { text: 'Quarterly or more often', score: { communication: 9, family_meetings: 9, governance_structure: 8 } },
+                            { text: 'We have structured regular meetings', score: { communication: 10, family_meetings: 10, governance_structure: 9 } }
+                        ]
+                    },
+                    {
+                        id: 'q_core_003',
+                        text: 'When family members disagree on important matters, how are conflicts typically resolved?',
+                        type: 'single_choice',
+                        dimensions: ['conflict_resolution', 'family_harmony', 'governance_structure'],
+                        options: [
+                            { text: 'Conflicts are avoided or swept under the rug', score: { conflict_resolution: 2, family_harmony: 4, governance_structure: 3 }, triggers: ['conflict_avoidance'] },
+                            { text: 'Senior generation makes the final call', score: { conflict_resolution: 5, family_harmony: 5, governance_structure: 5 } },
+                            { text: 'Open discussion until consensus', score: { conflict_resolution: 8, family_harmony: 8, governance_structure: 7 } },
+                            { text: 'We have a formal conflict resolution process', score: { conflict_resolution: 10, family_harmony: 9, governance_structure: 9 } },
+                            { text: 'Conflicts often escalate or remain unresolved', score: { conflict_resolution: 1, family_harmony: 2, governance_structure: 2 }, triggers: ['active_conflict_pattern'] }
+                        ]
+                    },
+                    {
+                        id: 'q_core_004',
+                        text: 'Does your family have a documented governance structure (family constitution, charter, or governance agreement)?',
+                        type: 'single_choice',
+                        dimensions: ['governance_structure', 'values_alignment'],
+                        options: [
+                            { text: 'Yes, comprehensive and actively used', score: { governance_structure: 10, values_alignment: 9 } },
+                            { text: 'Yes, but rarely referenced', score: { governance_structure: 6, values_alignment: 5 } },
+                            { text: 'Draft or work in progress', score: { governance_structure: 5, values_alignment: 5 } },
+                            { text: 'No, but we\'ve discussed creating one', score: { governance_structure: 3, values_alignment: 4 } },
+                            { text: 'No, and no plans to create one', score: { governance_structure: 2, values_alignment: 3 } }
+                        ]
+                    },
+                    {
+                        id: 'q_core_005',
+                        text: 'How clear are the next generation members about expectations, roles, and opportunities within the family enterprise?',
+                        type: 'single_choice',
+                        dimensions: ['next_gen_development', 'communication', 'succession_planning'],
+                        options: [
+                            { text: 'Very clear - well documented and discussed', score: { next_gen_development: 9, communication: 9, succession_planning: 8 } },
+                            { text: 'Somewhat clear - informal understanding', score: { next_gen_development: 6, communication: 6, succession_planning: 5 } },
+                            { text: 'Unclear - assumptions but no explicit discussion', score: { next_gen_development: 3, communication: 3, succession_planning: 3 }, triggers: ['next_gen_confusion'] },
+                            { text: 'No expectations set yet', score: { next_gen_development: 5, communication: 4, succession_planning: 4 } },
+                            { text: 'Conflicting messages from different family members', score: { next_gen_development: 2, communication: 2, succession_planning: 2 }, triggers: ['mixed_messages'] }
+                        ]
+                    },
+                    {
+                        id: 'q_core_006',
+                        text: 'Rate the transparency of family business/wealth financial information across the family.',
+                        type: 'scale',
+                        dimensions: ['financial_transparency', 'governance_structure'],
+                        scaleMin: 1,
+                        scaleMax: 10,
+                        labels: { 1: 'Very opaque', 5: 'Selective sharing', 10: 'Fully transparent' }
+                    },
+                    {
+                        id: 'q_core_007',
+                        text: 'Are there clear, fair policies for how family members can participate in the business or benefit from family wealth?',
+                        type: 'single_choice',
+                        dimensions: ['entry_exit_rules', 'governance_structure', 'family_harmony'],
+                        options: [
+                            { text: 'Yes, clearly documented and followed', score: { entry_exit_rules: 10, governance_structure: 9, family_harmony: 8 } },
+                            { text: 'Informal policies that most accept', score: { entry_exit_rules: 6, governance_structure: 6, family_harmony: 6 } },
+                            { text: 'Decided case-by-case', score: { entry_exit_rules: 4, governance_structure: 4, family_harmony: 5 } },
+                            { text: 'No clear policies - source of tension', score: { entry_exit_rules: 2, governance_structure: 3, family_harmony: 3 }, triggers: ['entry_exit_conflict'] },
+                            { text: 'Not applicable yet', score: { entry_exit_rules: 5, governance_structure: 5, family_harmony: 5 } }
+                        ]
+                    },
+                    {
+                        id: 'q_core_008',
+                        text: 'Does your family work with external advisors (lawyers, accountants, family business consultants) on governance matters?',
+                        type: 'single_choice',
+                        dimensions: ['external_advisors', 'governance_structure'],
+                        options: [
+                            { text: 'Yes, regularly and proactively', score: { external_advisors: 9, governance_structure: 8 } },
+                            { text: 'Yes, but only when problems arise', score: { external_advisors: 5, governance_structure: 5 } },
+                            { text: 'We have advisors but don\'t use them for governance', score: { external_advisors: 4, governance_structure: 4 } },
+                            { text: 'No, we prefer to handle things internally', score: { external_advisors: 2, governance_structure: 4 } },
+                            { text: 'No, but we\'re considering it', score: { external_advisors: 3, governance_structure: 4 } }
+                        ]
+                    },
+                    {
+                        id: 'q_core_009',
+                        text: 'How aligned is your family on core values and the purpose of the family enterprise?',
+                        type: 'scale',
+                        dimensions: ['values_alignment', 'family_harmony'],
+                        scaleMin: 1,
+                        scaleMax: 10,
+                        labels: { 1: 'Significant divergence', 5: 'Some common ground', 10: 'Strongly aligned' }
+                    },
+                    {
+                        id: 'q_core_010',
+                        text: 'Overall, how would you describe the quality of relationships within your family?',
+                        type: 'scale',
+                        dimensions: ['family_harmony', 'communication'],
+                        scaleMin: 1,
+                        scaleMax: 10,
+                        labels: { 1: 'Strained/conflicted', 5: 'Generally okay', 10: 'Excellent/trusting' }
+                    }
+                ],
+
+                contextual: {
+                    founder_active_transition: [
+                        {
+                            id: 'q_founder_001',
+                            text: 'If the founder were suddenly unavailable for 3 months, what would happen to major business decisions?',
+                            type: 'single_choice',
+                            dimensions: ['succession_planning', 'decision_making', 'governance_structure'],
+                            options: [
+                                { text: 'Next gen/team could manage smoothly', score: { succession_planning: 9, decision_making: 9, governance_structure: 8 } },
+                                { text: 'We have protocols and processes to follow', score: { succession_planning: 8, decision_making: 7, governance_structure: 8 } },
+                                { text: 'Decisions would be delayed', score: { succession_planning: 4, decision_making: 4, governance_structure: 4 }, triggers: ['founder_dependency'] },
+                                { text: 'Significant disruption would occur', score: { succession_planning: 2, decision_making: 2, governance_structure: 2 }, triggers: ['critical_founder_dependency'] },
+                                { text: 'Uncertain/never discussed', score: { succession_planning: 3, decision_making: 3, governance_structure: 3 }, triggers: ['succession_not_planned'] }
+                            ]
+                        },
+                        {
+                            id: 'q_founder_002',
+                            text: 'Has your family had explicit discussions about succession timeline and transition plan?',
+                            type: 'single_choice',
+                            dimensions: ['succession_planning', 'communication'],
+                            options: [
+                                { text: 'Yes, detailed plan with timeline', score: { succession_planning: 10, communication: 9 } },
+                                { text: 'General discussions but no formal plan', score: { succession_planning: 6, communication: 6 } },
+                                { text: 'Topic has been raised but not resolved', score: { succession_planning: 4, communication: 4 }, triggers: ['succession_stalled'] },
+                                { text: 'Avoided or contentious topic', score: { succession_planning: 2, communication: 2 }, triggers: ['succession_avoidance'] },
+                                { text: 'Founder not ready to discuss', score: { succession_planning: 2, communication: 3 }, triggers: ['founder_resistance'] }
+                            ]
+                        },
+                        {
+                            id: 'q_founder_003',
+                            text: 'How is decision-making authority currently being transferred to the next generation?',
+                            type: 'single_choice',
+                            dimensions: ['succession_planning', 'next_gen_development', 'decision_making'],
+                            options: [
+                                { text: 'Systematic delegation with increasing responsibility', score: { succession_planning: 9, next_gen_development: 9, decision_making: 8 } },
+                                { text: 'Next gen has some defined areas of authority', score: { succession_planning: 7, next_gen_development: 7, decision_making: 7 } },
+                                { text: 'Ad-hoc involvement when founder allows', score: { succession_planning: 4, next_gen_development: 4, decision_making: 4 } },
+                                { text: 'No meaningful transfer happening', score: { succession_planning: 2, next_gen_development: 2, decision_making: 2 }, triggers: ['succession_blocked'] },
+                                { text: 'Next gen frustrated by lack of autonomy', score: { succession_planning: 3, next_gen_development: 3, decision_making: 3 }, triggers: ['next_gen_frustration'] }
+                            ]
+                        }
+                    ],
+
+                    multi_branch: [
+                        {
+                            id: 'q_branch_001',
+                            text: 'How well do different family branches communicate and collaborate on family matters?',
+                            type: 'scale',
+                            dimensions: ['communication', 'family_harmony', 'governance_structure'],
+                            scaleMin: 1,
+                            scaleMax: 10,
+                            labels: { 1: 'Poor/siloed', 5: 'Adequate', 10: 'Excellent collaboration' }
+                        },
+                        {
+                            id: 'q_branch_002',
+                            text: 'Are there mechanisms to ensure fair representation of all branches in governance?',
+                            type: 'single_choice',
+                            dimensions: ['governance_structure', 'family_harmony', 'conflict_resolution'],
+                            options: [
+                                { text: 'Yes, formal representation structure', score: { governance_structure: 10, family_harmony: 9, conflict_resolution: 8 } },
+                                { text: 'Informal but generally balanced', score: { governance_structure: 6, family_harmony: 7, conflict_resolution: 6 } },
+                                { text: 'One branch dominates decisions', score: { governance_structure: 3, family_harmony: 4, conflict_resolution: 3 }, triggers: ['branch_imbalance'] },
+                                { text: 'Source of ongoing tension', score: { governance_structure: 2, family_harmony: 3, conflict_resolution: 2 }, triggers: ['branch_conflict'] },
+                                { text: 'Not yet addressed', score: { governance_structure: 4, family_harmony: 5, conflict_resolution: 4 } }
+                            ]
+                        },
+                        {
+                            id: 'q_branch_003',
+                            text: 'What happens when branches have competing interests or priorities?',
+                            type: 'single_choice',
+                            dimensions: ['conflict_resolution', 'governance_structure', 'family_harmony'],
+                            options: [
+                                { text: 'Clear process for addressing and resolving', score: { conflict_resolution: 9, governance_structure: 9, family_harmony: 8 } },
+                                { text: 'Usually work it out through discussion', score: { conflict_resolution: 7, governance_structure: 6, family_harmony: 7 } },
+                                { text: 'Senior generation mediates', score: { conflict_resolution: 5, governance_structure: 5, family_harmony: 6 } },
+                                { text: 'Tensions simmer unresolved', score: { conflict_resolution: 2, governance_structure: 3, family_harmony: 3 }, triggers: ['branch_tension'] },
+                                { text: 'Has led to serious family rifts', score: { conflict_resolution: 1, governance_structure: 2, family_harmony: 1 }, triggers: ['branch_rift'] }
+                            ]
+                        }
+                    ],
+
+                    succession_urgent: [
+                        {
+                            id: 'q_urgent_001',
+                            text: 'Has a successor or successor team been clearly identified?',
+                            type: 'single_choice',
+                            dimensions: ['succession_planning', 'governance_structure'],
+                            options: [
+                                { text: 'Yes, clearly identified and announced', score: { succession_planning: 9, governance_structure: 8 } },
+                                { text: 'Identified but not yet formalized', score: { succession_planning: 7, governance_structure: 6 } },
+                                { text: 'Under consideration but not decided', score: { succession_planning: 4, governance_structure: 5 }, triggers: ['succession_delayed'] },
+                                { text: 'No clear successor', score: { succession_planning: 2, governance_structure: 3 }, triggers: ['succession_crisis'] },
+                                { text: 'Multiple candidates causing tension', score: { succession_planning: 3, governance_structure: 3 }, triggers: ['succession_competition'] }
+                            ]
+                        }
+                    ]
+                }
+            },
+
+            // Pattern definitions
+            patterns: [
+                {
+                    id: 'founder_dependency',
+                    name: 'Founder Dependency Pattern',
+                    severity: 'high',
+                    description: 'Critical dependency on founder for key decisions creates business vulnerability',
+                    triggers: ['founder_dependency', 'critical_founder_dependency'],
+                    conditions: (session) => {
+                        return session.liveScores.succession_planning <= 4 &&
+                               session.liveScores.decision_making <= 4;
+                    },
+                    recommendations: [
+                        'Create immediate succession timeline',
+                        'Establish decision delegation framework',
+                        'Develop contingency leadership plan'
+                    ]
+                },
+                {
+                    id: 'communication_breakdown',
+                    name: 'Communication Gap',
+                    severity: 'medium',
+                    description: 'Limited family communication creates risk of misunderstanding and conflict',
+                    triggers: ['communication_breakdown'],
+                    conditions: (session) => {
+                        return session.liveScores.communication <= 4 &&
+                               session.liveScores.family_meetings <= 3;
+                    },
+                    recommendations: [
+                        'Establish regular family meeting cadence',
+                        'Create safe communication protocols',
+                        'Consider family communication workshop'
+                    ]
+                },
+                {
+                    id: 'next_gen_frustration',
+                    name: 'Next Generation Frustration',
+                    severity: 'high',
+                    description: 'Next generation lacks clarity or autonomy, risking disengagement',
+                    triggers: ['next_gen_frustration', 'next_gen_confusion', 'mixed_messages'],
+                    conditions: (session) => {
+                        return session.liveScores.next_gen_development <= 4;
+                    },
+                    recommendations: [
+                        'Clarify next gen entry/advancement path',
+                        'Create meaningful decision authority for next gen',
+                        'Establish next gen development program'
+                    ]
+                },
+                {
+                    id: 'branch_conflict',
+                    name: 'Multi-Branch Tension',
+                    severity: 'high',
+                    description: 'Competing branch interests without resolution mechanism',
+                    triggers: ['branch_conflict', 'branch_imbalance', 'branch_tension', 'branch_rift'],
+                    conditions: (session) => {
+                        return session.activeContexts.some(c => c.id === 'multi_branch') &&
+                               session.liveScores.conflict_resolution <= 4;
+                    },
+                    recommendations: [
+                        'Establish branch representation structure',
+                        'Create formal conflict resolution process',
+                        'Consider family council formation'
+                    ]
+                }
+            ],
+
+            initializeScores() {
+                this.dimensions.forEach(dim => {
+                    this.session.liveScores[dim] = 0;
+                });
+            },
+
+            detectContexts(profile) {
+                const detected = [];
+
+                this.contexts.forEach(context => {
+                    if (context.rules(profile)) {
+                        detected.push({
+                            id: context.id,
+                            name: context.name,
+                            priority: context.priority,
+                            weight: context.weight
+                        });
+                    }
+                });
+
+                // Sort by priority
+                detected.sort((a, b) => b.priority - a.priority);
+
+                // Normalize weights
+                const totalWeight = detected.reduce((sum, ctx) => sum + ctx.weight, 0);
+                detected.forEach(ctx => {
+                    ctx.normalizedWeight = ctx.weight / totalWeight;
+                });
+
+                return detected;
+            },
+
+            generateQuestionQueue() {
+                const queue = [];
+
+                // Add all core questions
+                queue.push(...this.questionBank.core);
+
+                // Add contextual questions based on detected contexts
+                this.session.activeContexts.forEach(context => {
+                    const contextQuestions = this.questionBank.contextual[context.id] || [];
+                    const count = Math.floor(contextQuestions.length * context.normalizedWeight);
+                    queue.push(...contextQuestions.slice(0, Math.max(count, contextQuestions.length)));
+                });
+
+                this.session.questionsQueue = queue;
+                this.session.totalQuestions = queue.length;
+            },
+
+            processAnswer(questionId, answer) {
+                const question = this.session.questionsQueue[this.session.questionIndex];
+
+                // Record answer
+                this.session.answeredQuestions.push({
+                    questionId: questionId,
+                    answer: answer,
+                    timestamp: Date.now()
+                });
+
+                // Update scores
+                if (question.type === 'single_choice') {
+                    const option = question.options.find(opt => opt.text === answer);
+                    if (option && option.score) {
+                        Object.entries(option.score).forEach(([dimension, value]) => {
+                            const currentCount = this.session.answeredQuestions.filter(a => {
+                                const q = this.session.questionsQueue.find(qu => qu.id === a.questionId);
+                                return q && q.dimensions && q.dimensions.includes(dimension);
+                            }).length;
+
+                            const current = this.session.liveScores[dimension] || 0;
+                            this.session.liveScores[dimension] = ((current * (currentCount - 1)) + value) / currentCount;
+                        });
+                    }
+
+                    // Check for triggers
+                    if (option && option.triggers) {
+                        this.checkPatternTriggers(option.triggers);
+                    }
+                } else if (question.type === 'scale') {
+                    const value = parseInt(answer);
+                    question.dimensions.forEach(dimension => {
+                        const currentCount = this.session.answeredQuestions.filter(a => {
+                            const q = this.session.questionsQueue.find(qu => qu.id === a.questionId);
+                            return q && q.dimensions && q.dimensions.includes(dimension);
+                        }).length;
+
+                        const current = this.session.liveScores[dimension] || 0;
+                        this.session.liveScores[dimension] = ((current * (currentCount - 1)) + value) / currentCount;
+                    });
+                }
+
+                // Check for patterns
+                this.detectPatterns();
+            },
+
+            checkPatternTriggers(triggers) {
+                // Pattern trigger logic would go here
+                // For now, just store triggers for pattern detection
+                if (!this.session.triggers) {
+                    this.session.triggers = [];
+                }
+                this.session.triggers.push(...triggers);
+            },
+
+            detectPatterns() {
+                this.patterns.forEach(pattern => {
+                    // Check if pattern already detected
+                    if (this.session.detectedPatterns.some(p => p.id === pattern.id)) {
+                        return;
+                    }
+
+                    // Check triggers
+                    const hasTriggers = pattern.triggers && this.session.triggers &&
+                        pattern.triggers.some(t => this.session.triggers.includes(t));
+
+                    // Check conditions
+                    const meetsConditions = pattern.conditions(this.session);
+
+                    if (hasTriggers || meetsConditions) {
+                        this.session.detectedPatterns.push({
+                            id: pattern.id,
+                            name: pattern.name,
+                            severity: pattern.severity,
+                            description: pattern.description,
+                            recommendations: pattern.recommendations,
+                            detectedAt: this.session.questionIndex
+                        });
+
+                        // Show pattern alert
+                        showPatternAlert(pattern);
+                    }
+                });
+            },
+
+            calculateOverallScore() {
+                const weights = {
+                    succession_planning: 1.2,
+                    decision_making: 1.2,
+                    conflict_resolution: 1.1,
+                    communication: 1.1,
+                    governance_structure: 1.0,
+                    values_alignment: 1.0,
+                    next_gen_development: 1.0,
+                    family_meetings: 0.9,
+                    entry_exit_rules: 0.9,
+                    financial_transparency: 0.9,
+                    family_harmony: 1.0,
+                    external_advisors: 0.8
+                };
+
+                let weightedSum = 0;
+                let totalWeight = 0;
+
+                Object.entries(this.session.liveScores).forEach(([dimension, score]) => {
+                    const weight = weights[dimension] || 1.0;
+                    weightedSum += score * weight;
+                    totalWeight += weight;
+                });
+
+                return weightedSum / totalWeight;
+            },
+
+            getMaturityLevel(score) {
+                if (score >= 8.5) return 'World-Class Governance';
+                if (score >= 7.0) return 'Mature Governance';
+                if (score >= 5.5) return 'Developing Governance';
+                if (score >= 4.0) return 'Emerging Governance';
+                return 'Foundation Building';
+            }
+        };
+
+        // UI Functions
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenName}`).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function startAssessment() {
+            assessmentEngine.session.currentPhase = 'profiling';
+            updateProgressPhases();
+            showScreen('profiling');
+            updateProgress(5);
+        }
+
+        function updateContext() {
+            const profile = {
+                familyStructure: document.getElementById('familyStructure').value,
+                generations: document.getElementById('generations').value,
+                adultMembers: document.getElementById('adultMembers').value,
+                businessStatus: document.getElementById('businessStatus').value,
+                founderStatus: document.getElementById('founderStatus').value,
+                nextGenInvolvement: document.getElementById('nextGenInvolvement').value,
+                currentChallenge: document.getElementById('currentChallenge').value
+            };
+
+            assessmentEngine.session.familyProfile = profile;
+
+            // Check if all required fields are filled
+            const requiredFields = ['familyStructure', 'generations', 'businessStatus', 'founderStatus'];
+            const allFilled = requiredFields.every(field => profile[field]);
+
+            document.getElementById('startCoreBtn').disabled = !allFilled;
+
+            if (allFilled) {
+                // Detect contexts
+                const contexts = assessmentEngine.detectContexts(profile);
+                assessmentEngine.session.activeContexts = contexts;
+
+                // Display detected contexts
+                displayContexts(contexts);
+            }
+        }
+
+        function displayContexts(contexts) {
+            const display = document.getElementById('contextDisplay');
+
+            if (contexts.length === 0) {
+                display.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="context-detected">';
+            html += '<h3>📊 Your Family Context Detected</h3>';
+            html += '<p>Based on your profile, we\'ve identified these characteristics of your family situation:</p>';
+            html += '<div class="context-tags">';
+
+            contexts.forEach(context => {
+                html += `<div class="context-tag">${context.name}</div>`;
+            });
+
+            html += '</div>';
+            html += '<p style="margin-top: 12px; font-size: 14px; color: var(--gray-600);">Your assessment will now be personalized with questions most relevant to your situation.</p>';
+            html += '</div>';
+
+            display.innerHTML = html;
+        }
+
+        function startCoreAssessment() {
+            assessmentEngine.session.currentPhase = 'core';
+            assessmentEngine.initializeScores();
+            assessmentEngine.generateQuestionQueue();
+            assessmentEngine.session.questionIndex = 0;
+
+            updateProgressPhases();
+            loadQuestion(0);
+            showScreen('questions');
+            updateProgress(10);
+        }
+
+        function loadQuestion(index) {
+            const question = assessmentEngine.session.questionsQueue[index];
+
+            document.getElementById('questionNumber').textContent =
+                `Question ${index + 1} of ${assessmentEngine.session.totalQuestions}`;
+            document.getElementById('questionTitle').textContent = question.text;
+            document.getElementById('questionDescription').textContent =
+                `Assessing: ${question.dimensions.map(d => assessmentEngine.dimensionLabels[d]).join(', ')}`;
+
+            const content = document.getElementById('questionContent');
+
+            if (question.type === 'single_choice') {
+                let html = '<div class="question-options">';
+                question.options.forEach((option, idx) => {
+                    html += `
+                        <label class="option-card" onclick="selectOption(this)">
+                            <input type="radio" name="answer" value="${option.text}">
+                            <span class="option-label">${option.text}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else if (question.type === 'scale') {
+                let html = '<div class="scale-options">';
+                for (let i = question.scaleMin; i <= question.scaleMax; i++) {
+                    const label = question.labels[i] || '';
+                    html += `
+                        <div class="scale-option" onclick="selectScale(this, ${i})">
+                            <div class="scale-value">${i}</div>
+                            <div class="scale-label">${label}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                content.innerHTML = html;
+            }
+
+            // Hide visualization during questions - only show in results
+            document.getElementById('liveVisualization').style.display = 'none';
+
+            // Update progress
+            const progress = 10 + ((index / assessmentEngine.session.totalQuestions) * 80);
+            updateProgress(progress);
+        }
+
+        function selectOption(element) {
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+        }
+
+        function selectScale(element, value) {
+            document.querySelectorAll('.scale-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            // Store value for processing
+            element.dataset.scaleValue = value;
+        }
+
+        function nextQuestion() {
+            const current = assessmentEngine.session.questionsQueue[assessmentEngine.session.questionIndex];
+            let answer = null;
+
+            if (current.type === 'single_choice') {
+                const selected = document.querySelector('input[name="answer"]:checked');
+                if (!selected) {
+                    alert('Please select an answer');
+                    return;
+                }
+                answer = selected.value;
+            } else if (current.type === 'scale') {
+                const selected = document.querySelector('.scale-option.selected');
+                if (!selected) {
+                    alert('Please select a rating');
+                    return;
+                }
+                answer = selected.dataset.scaleValue;
+            }
+
+            // Process answer
+            assessmentEngine.processAnswer(current.id, answer);
+
+            // Move to next question or results
+            assessmentEngine.session.questionIndex++;
+
+            if (assessmentEngine.session.questionIndex < assessmentEngine.session.totalQuestions) {
+                loadQuestion(assessmentEngine.session.questionIndex);
+            } else {
+                // Assessment complete
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (assessmentEngine.session.questionIndex > 0) {
+                assessmentEngine.session.questionIndex--;
+                loadQuestion(assessmentEngine.session.questionIndex);
+            }
+        }
+
+        function updateLiveVisualization() {
+            // Update radar chart
+            updateRadarChart('radarChart', assessmentEngine.session.liveScores);
+
+            // Update dimension scores display
+            const scoresDiv = document.getElementById('dimensionScores');
+            let html = '';
+
+            Object.entries(assessmentEngine.session.liveScores).slice(0, 6).forEach(([dimension, score]) => {
+                const displayScore = score.toFixed(1);
+                const percentage = (score / 10) * 100;
+                html += `
+                    <div class="dimension-score">
+                        <div class="dimension-name">${assessmentEngine.dimensionLabels[dimension]}</div>
+                        <div class="dimension-value">${displayScore}/10</div>
+                        <div class="dimension-bar">
+                            <div class="dimension-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            scoresDiv.innerHTML = html;
+        }
+
+        function showPatternAlert(pattern) {
+            const alertsDiv = document.getElementById('patternAlerts');
+
+            const severityClass = pattern.severity === 'high' ? 'critical' : '';
+            const icon = pattern.severity === 'high' ? '⚠️' : '💡';
+
+            const html = `
+                <div class="pattern-alert ${severityClass}">
+                    <h4>${icon} ${pattern.name}</h4>
+                    <p>${pattern.description}</p>
+                    <p style="margin-top: 8px; font-size: 14px;"><strong>We'll explore this deeper with a few follow-up questions...</strong></p>
+                </div>
+            `;
+
+            alertsDiv.innerHTML = html;
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertsDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function updateRadarChart(canvasId, scores) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            // Destroy existing chart if any
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const labels = Object.keys(scores).map(dim => assessmentEngine.dimensionLabels[dim]);
+            const data = Object.values(scores);
+
+            canvas.chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Your Score',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        pointBackgroundColor: 'rgb(37, 99, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(37, 99, 235)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function showResults() {
+            assessmentEngine.session.currentPhase = 'results';
+            updateProgressPhases();
+            updateProgress(100);
+
+            const overallScore = assessmentEngine.calculateOverallScore();
+            const maturityLevel = assessmentEngine.getMaturityLevel(overallScore);
+
+            document.getElementById('overallScore').textContent = overallScore.toFixed(1);
+            document.getElementById('maturityLevel').textContent = maturityLevel;
+
+            // Update final radar chart
+            updateRadarChart('finalRadarChart', assessmentEngine.session.liveScores);
+
+            // Display strengths
+            const strengths = Object.entries(assessmentEngine.session.liveScores)
+                .filter(([_, score]) => score >= 7)
+                .sort((a, b) => b[1] - a[1]);
+
+            let strengthsHtml = '';
+            if (strengths.length === 0) {
+                strengthsHtml = '<p style="color: var(--gray-600);">Focus on building foundational governance practices</p>';
+            } else {
+                strengths.forEach(([dimension, score]) => {
+                    strengthsHtml += `
+                        <div class="strength-item">
+                            <strong>${assessmentEngine.dimensionLabels[dimension]}</strong> - ${score.toFixed(1)}/10
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('strengthsList').innerHTML = strengthsHtml;
+
+            // Display gaps
+            const gaps = Object.entries(assessmentEngine.session.liveScores)
+                .filter(([_, score]) => score < 5)
+                .sort((a, b) => a[1] - b[1]);
+
+            let gapsHtml = '';
+            if (gaps.length === 0) {
+                gapsHtml = '<p style="color: var(--gray-600);">No critical gaps identified - focus on continuous improvement</p>';
+            } else {
+                gaps.forEach(([dimension, score]) => {
+                    gapsHtml += `
+                        <div class="gap-item">
+                            <strong>${assessmentEngine.dimensionLabels[dimension]}</strong> - ${score.toFixed(1)}/10
+                            <p style="font-size: 14px; margin-top: 4px;">Requires immediate attention and development</p>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('gapsList').innerHTML = gapsHtml;
+
+            // Display detected patterns
+            let patternsHtml = '';
+            if (assessmentEngine.session.detectedPatterns.length === 0) {
+                patternsHtml = '<p style="color: var(--gray-600);">No significant patterns detected</p>';
+            } else {
+                assessmentEngine.session.detectedPatterns.forEach(pattern => {
+                    const severityColor = pattern.severity === 'high' ? 'var(--danger)' : 'var(--warning)';
+                    patternsHtml += `
+                        <div style="padding: 16px; border-left: 4px solid ${severityColor}; background: var(--gray-50); border-radius: 8px; margin: 12px 0;">
+                            <strong style="font-size: 16px;">${pattern.name}</strong>
+                            <p style="margin-top: 8px; color: var(--gray-700);">${pattern.description}</p>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('patternsList').innerHTML = patternsHtml;
+
+            // Display recommendations
+            let recommendationsHtml = '';
+
+            // Collect all recommendations from patterns
+            const allRecommendations = [];
+            assessmentEngine.session.detectedPatterns.forEach(pattern => {
+                pattern.recommendations.forEach(rec => {
+                    allRecommendations.push({
+                        text: rec,
+                        priority: pattern.severity === 'high' ? 'high' : 'medium'
+                    });
+                });
+            });
+
+            // Add general recommendations based on gaps
+            gaps.slice(0, 3).forEach(([dimension, score]) => {
+                let rec = '';
+                switch(dimension) {
+                    case 'succession_planning':
+                        rec = 'Develop comprehensive succession planning process';
+                        break;
+                    case 'decision_making':
+                        rec = 'Establish clear decision rights framework';
+                        break;
+                    case 'conflict_resolution':
+                        rec = 'Create formal conflict resolution mechanisms';
+                        break;
+                    case 'communication':
+                        rec = 'Implement regular family communication structures';
+                        break;
+                    case 'governance_structure':
+                        rec = 'Document governance structure and policies';
+                        break;
+                    default:
+                        rec = `Strengthen ${assessmentEngine.dimensionLabels[dimension]}`;
+                }
+                allRecommendations.push({
+                    text: rec,
+                    priority: score < 3 ? 'high' : 'medium'
+                });
+            });
+
+            // Sort by priority
+            allRecommendations.sort((a, b) => {
+                if (a.priority === 'high' && b.priority !== 'high') return -1;
+                if (a.priority !== 'high' && b.priority === 'high') return 1;
+                return 0;
+            });
+
+            // Display top 5 recommendations
+            allRecommendations.slice(0, 5).forEach((rec, idx) => {
+                recommendationsHtml += `
+                    <li>
+                        <span class="recommendation-priority ${rec.priority}">${rec.priority.toUpperCase()}</span>
+                        <div style="font-size: 16px; font-weight: 600; margin-top: 4px;">${rec.text}</div>
+                    </li>
+                `;
+            });
+
+            document.getElementById('recommendationsList').innerHTML = recommendationsHtml;
+
+            showScreen('results');
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+        }
+
+        function updateProgressPhases() {
+            const phases = [
+                { id: 'welcome', name: 'Welcome', icon: '👋' },
+                { id: 'profiling', name: 'Profiling', icon: '📋' },
+                { id: 'core', name: 'Assessment', icon: '📊' },
+                { id: 'results', name: 'Results', icon: '✨' }
+            ];
+
+            const currentPhaseIndex = phases.findIndex(p => p.id === assessmentEngine.session.currentPhase);
+
+            let html = '';
+            phases.forEach((phase, idx) => {
+                let status = 'pending';
+                if (idx < currentPhaseIndex) status = 'completed';
+                if (idx === currentPhaseIndex) status = 'active';
+
+                const icon = status === 'completed' ? '✓' : phase.icon;
+                html += `<div class="phase-badge ${status}">${icon} ${phase.name}</div>`;
+            });
+
+            document.getElementById('progressPhases').innerHTML = html;
+        }
+
+        // Initialize
+        updateProgressPhases();
+    </script>
+</body>
+</html>

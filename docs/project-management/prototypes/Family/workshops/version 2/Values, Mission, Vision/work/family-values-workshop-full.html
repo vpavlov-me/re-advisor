@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Values Workshop - Full Interactive Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .logo span {
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Progress Stepper */
+        .progress-stepper {
+            background: white;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 24px 32px;
+        }
+
+        .stepper-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .stepper-line {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .stepper-line-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .step {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-circle {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Screen 0: Landing */
+        .landing-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .landing-header h1 {
+            font-size: 36px;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .landing-header p {
+            font-size: 18px;
+            color: #6b7280;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .info-card h3 {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-card ul {
+            list-style: none;
+            font-size: 14px;
+            line-height: 2;
+            color: #6b7280;
+        }
+
+        .info-card ul li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        /* Screen 1: Individual Assessment */
+        .assessment-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .assessment-card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .assessment-header {
+            margin-bottom: 32px;
+        }
+
+        .assessment-header h2 {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .assessment-header p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .value-chip {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .value-chip:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+
+        .value-chip.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .selection-counter {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .selection-counter strong {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        /* Screen 2: Collective Discovery */
+        .discovery-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 24px;
+        }
+
+        .side-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            height: fit-content;
+        }
+
+        .side-panel h3 {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .participant-list {
+            list-style: none;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .main-workspace {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .workspace-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .workspace-header h2 {
+            font-size: 22px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .value-frequency-list {
+            list-style: none;
+        }
+
+        .value-frequency-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .value-name {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .value-stats {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .consensus-bar {
+            width: 200px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .consensus-fill {
+            height: 100%;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        /* Screen 3: Final Selection */
+        .selection-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .candidate-values {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .final-values {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 3px dashed #667eea;
+        }
+
+        .drag-zone {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .draggable-value {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: move;
+            transition: all 0.3s;
+        }
+
+        .draggable-value:hover {
+            border-color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .final-value-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .remove-btn {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Screen 4: Documentation */
+        .documentation-form {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .doc-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Screen 5: Review & Complete */
+        .review-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .review-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .values-showcase {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .value-badge-large {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+            position: sticky;
+            bottom: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .discovery-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                display: none;
+            }
+
+            .values-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .selection-workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="logo">RE:<span>Family</span></div>
+        <div class="user-info">
+            <span>👥 12 participants</span>
+            <span>⏱️ <span id="timer">2:45:30</span></span>
+            <span>👤 John Smith</span>
+        </div>
+    </div>
+
+    <!-- Progress Stepper -->
+    <div class="progress-stepper">
+        <div class="stepper-container">
+            <div class="stepper-line">
+                <div class="stepper-line-progress" id="stepperProgress" style="width: 0%"></div>
+            </div>
+
+            <div class="step active" data-step="0" onclick="goToStep(0)">
+                <div class="step-circle">1</div>
+                <div class="step-label">Welcome</div>
+            </div>
+
+            <div class="step" data-step="1" onclick="goToStep(1)">
+                <div class="step-circle">2</div>
+                <div class="step-label">Individual<br>Assessment</div>
+            </div>
+
+            <div class="step" data-step="2" onclick="goToStep(2)">
+                <div class="step-circle">3</div>
+                <div class="step-label">Collective<br>Discovery</div>
+            </div>
+
+            <div class="step" data-step="3" onclick="goToStep(3)">
+                <div class="step-circle">4</div>
+                <div class="step-label">Final<br>Selection</div>
+            </div>
+
+            <div class="step" data-step="4" onclick="goToStep(4)">
+                <div class="step-circle">5</div>
+                <div class="step-label">Documentation</div>
+            </div>
+
+            <div class="step" data-step="5" onclick="goToStep(5)">
+                <div class="step-circle">6</div>
+                <div class="step-label">Review &<br>Complete</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Screen 0: Welcome & Landing -->
+        <div class="screen active" id="screen0">
+            <div class="landing-header">
+                <h1>🎯 Family Values Workshop</h1>
+                <p>Collaborative process to discover and articulate your family's core values</p>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card">
+                    <h3>🎯 Workshop Goals</h3>
+                    <ul>
+                        <li>Identify 5-7 core family values</li>
+                        <li>Build consensus through dialogue</li>
+                        <li>Document shared principles</li>
+                        <li>Create actionable next steps</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>⏱️ Time Allocation</h3>
+                    <ul>
+                        <li>Individual Assessment: 20 min</li>
+                        <li>Collective Discovery: 45 min</li>
+                        <li>Final Selection: 30 min</li>
+                        <li>Documentation: 25 min</li>
+                        <li>Review: 20 min</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>👥 Participants</h3>
+                    <ul>
+                        <li>12 family members present</li>
+                        <li>Facilitator: Sarah Johnson</li>
+                        <li>All voices matter equally</li>
+                        <li>Safe space for dialogue</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="nextStep()" style="font-size: 16px; padding: 16px 48px;">
+                    🚀 Begin Workshop
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 1: Individual Assessment -->
+        <div class="screen" id="screen1">
+            <div class="assessment-container">
+                <div class="assessment-card">
+                    <div class="assessment-header">
+                        <h2>📝 Individual Values Assessment</h2>
+                        <p>Select your top 5 values that best represent what's important to you and your family</p>
+                    </div>
+
+                    <div class="selection-counter">
+                        <strong id="selectedCount">0</strong> / 5 values selected
+                    </div>
+
+                    <div class="values-grid" id="valuesGrid">
+                        <!-- Values will be populated by JavaScript -->
+                    </div>
+
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-top: 24px;">
+                        <p style="font-size: 14px; color: #92400e;">
+                            💡 <strong>Tip:</strong> Think about moments when your family was at its best. What values were present?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Collective Discovery -->
+        <div class="screen" id="screen2">
+            <div class="discovery-layout">
+                <div class="side-panel">
+                    <h3>👥 Participants (12)</h3>
+                    <ul class="participant-list">
+                        <li class="participant-item"><span class="status-dot"></span> John Smith (You)</li>
+                        <li class="participant-item"><span class="status-dot"></span> Maria Smith</li>
+                        <li class="participant-item"><span class="status-dot"></span> Elena Johnson</li>
+                        <li class="participant-item"><span class="status-dot"></span> David Smith</li>
+                        <li class="participant-item"><span class="status-dot"></span> Sarah Chen</li>
+                        <li class="participant-item"><span class="status-dot"></span> + 7 more</li>
+                    </ul>
+                </div>
+
+                <div class="main-workspace">
+                    <div class="workspace-header">
+                        <h2>🌟 Collective Values Discovery</h2>
+                        <p style="color: #6b7280; font-size: 14px;">Values ranked by frequency of selection across all participants</p>
+                    </div>
+
+                    <ul class="value-frequency-list" id="frequencyList">
+                        <!-- Will be populated by JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="side-panel">
+                    <h3>💬 Discussion Notes</h3>
+                    <div style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                        <p style="margin-bottom: 12px;"><strong>Honesty:</strong> "Foundation of trust in business decisions"</p>
+                        <p style="margin-bottom: 12px;"><strong>Family:</strong> "Always prioritize family gatherings"</p>
+                        <p><strong>Innovation:</strong> "Encouraged to think differently"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Final Selection -->
+        <div class="screen" id="screen3">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <h2 style="font-size: 28px; color: #1f2937; margin-bottom: 8px;">🎯 Final Values Selection</h2>
+                    <p style="font-size: 14px; color: #6b7280;">Select 5-7 core values that will guide your family</p>
+                </div>
+
+                <div class="selection-workspace">
+                    <div class="candidate-values">
+                        <h3 style="margin-bottom: 16px;">Candidate Values (Top 10)</h3>
+                        <div class="drag-zone" id="candidateZone">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+
+                    <div class="final-values">
+                        <h3 style="margin-bottom: 16px;">Final Core Values (<span id="finalCount">0</span>/5-7)</h3>
+                        <div class="drag-zone" id="finalZone">
+                            <p style="text-align: center; color: #9ca3af; padding: 40px;">
+                                Click on values from the left to add them here
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Documentation -->
+        <div class="screen" id="screen4">
+            <div class="documentation-form">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <h2 style="font-size: 28px; color: #1f2937; margin-bottom: 8px;">📝 Values Documentation</h2>
+                    <p style="font-size: 14px; color: #6b7280;">Capture the story and meaning behind your family's values</p>
+                </div>
+
+                <div class="doc-card">
+                    <h3 style="margin-bottom: 24px;">Family Mission Statement</h3>
+                    <div class="form-group">
+                        <label>What is your family's purpose?</label>
+                        <textarea id="missionStatement" placeholder="Our family exists to..."></textarea>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <h3 style="margin-bottom: 24px;">Vision Statement</h3>
+                    <div class="form-group">
+                        <label>Where do you see your family in 10-20 years?</label>
+                        <textarea id="visionStatement" placeholder="In the future, our family will..."></textarea>
+                    </div>
+                </div>
+
+                <div class="doc-card">
+                    <h3 style="margin-bottom: 24px;">Values in Action</h3>
+                    <div class="form-group">
+                        <label>How do these values show up in daily family life?</label>
+                        <textarea id="valuesInAction" placeholder="We live our values by..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Review & Complete -->
+        <div class="screen" id="screen5">
+            <div class="review-container">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <h2 style="font-size: 32px; color: #1f2937; margin-bottom: 8px;">🎉 Workshop Complete!</h2>
+                    <p style="font-size: 16px; color: #6b7280;">Review your family's values framework</p>
+                </div>
+
+                <div class="review-section">
+                    <h3 style="margin-bottom: 16px;">🌟 Core Family Values</h3>
+                    <div class="values-showcase" id="finalValuesDisplay">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+
+                <div class="review-section">
+                    <h3 style="margin-bottom: 16px;">🎯 Mission Statement</h3>
+                    <p id="reviewMission" style="font-size: 16px; color: #374151; line-height: 1.8;"></p>
+                </div>
+
+                <div class="review-section">
+                    <h3 style="margin-bottom: 16px;">🔮 Vision Statement</h3>
+                    <p id="reviewVision" style="font-size: 16px; color: #374151; line-height: 1.8;"></p>
+                </div>
+
+                <div class="review-section">
+                    <h3 style="margin-bottom: 16px;">✨ Values in Action</h3>
+                    <p id="reviewAction" style="font-size: 16px; color: #374151; line-height: 1.8;"></p>
+                </div>
+
+                <div class="review-section" style="background: #f0fdf4; border-left: 4px solid #10b981;">
+                    <h3 style="margin-bottom: 16px; color: #166534;">📋 Next Steps</h3>
+                    <ul style="font-size: 14px; color: #166534; line-height: 2; margin-left: 20px;">
+                        <li>Integrate values into Family Constitution</li>
+                        <li>Share with all family members</li>
+                        <li>Schedule annual values review</li>
+                        <li>Create decision-making framework based on values</li>
+                        <li>Download and distribute workshop documentation</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin-top: 32px;">
+                    <button class="btn btn-primary" onclick="downloadReport()" style="font-size: 16px; padding: 16px 32px;">
+                        📥 Download Complete Report
+                    </button>
+                    <button class="btn btn-secondary" onclick="alert('Sharing with family members...')" style="font-size: 16px; padding: 16px 32px; margin-left: 16px;">
+                        📤 Share with Family
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn">
+            ← Previous
+        </button>
+
+        <div style="font-size: 14px; color: #6b7280;">
+            Step <span id="currentStepNum">1</span> of 6
+        </div>
+
+        <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">
+            Next →
+        </button>
+    </div>
+
+    <script>
+        // Workshop state
+        let currentStep = 0;
+        const totalSteps = 6;
+        let selectedValues = [];
+        let finalValues = [];
+
+        // Predefined values from API
+        const PREDEFINED_VALUES = [
+            "Honesty", "Respect", "Compassion", "Responsibility", "Loyalty",
+            "Creativity", "Integrity", "Gratitude", "Empathy", "Patience",
+            "Courage", "Kindness", "Generosity", "Humility", "Trustworthiness",
+            "Perseverance", "Ambition", "Adaptability", "Balance", "Cooperation",
+            "Discipline", "Fairness", "Forgiveness", "Friendship", "Optimism",
+            "Love", "Justice", "Reliability", "Curiosity", "Open-mindedness",
+            "Humor", "Wisdom", "Authenticity", "Family", "Growth",
+            "Health", "Harmony", "Independence", "Leadership", "Commitment",
+            "Excellence", "Passion", "Prudence", "Self-awareness", "Stability",
+            "Understanding", "Unity", "Vision", "Service", "Enthusiasm"
+        ];
+
+        // Simulated collective data
+        const collectiveData = [
+            { name: "Honesty", count: 10, percentage: 83 },
+            { name: "Family", count: 9, percentage: 75 },
+            { name: "Integrity", count: 8, percentage: 67 },
+            { name: "Respect", count: 7, percentage: 58 },
+            { name: "Innovation", count: 6, percentage: 50 },
+            { name: "Compassion", count: 6, percentage: 50 },
+            { name: "Excellence", count: 5, percentage: 42 },
+            { name: "Service", count: 5, percentage: 42 },
+            { name: "Wisdom", count: 4, percentage: 33 },
+            { name: "Growth", count: 4, percentage: 33 }
+        ];
+
+        // Initialize
+        window.addEventListener('load', function() {
+            populateValuesGrid();
+            updateUI();
+        });
+
+        // Populate values grid (Screen 1)
+        function populateValuesGrid() {
+            const grid = document.getElementById('valuesGrid');
+            PREDEFINED_VALUES.forEach(value => {
+                const chip = document.createElement('div');
+                chip.className = 'value-chip';
+                chip.textContent = value;
+                chip.onclick = () => toggleValue(value, chip);
+                grid.appendChild(chip);
+            });
+        }
+
+        // Toggle value selection
+        function toggleValue(value, element) {
+            if (selectedValues.includes(value)) {
+                selectedValues = selectedValues.filter(v => v !== value);
+                element.classList.remove('selected');
+            } else if (selectedValues.length < 5) {
+                selectedValues.push(value);
+                element.classList.add('selected');
+            } else {
+                alert('You can only select 5 values. Deselect one to choose another.');
+            }
+            document.getElementById('selectedCount').textContent = selectedValues.length;
+        }
+
+        // Populate frequency list (Screen 2)
+        function populateFrequencyList() {
+            const list = document.getElementById('frequencyList');
+            list.innerHTML = '';
+
+            collectiveData.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'value-frequency-item';
+                li.innerHTML = `
+                    <div class="value-name">${item.name}</div>
+                    <div class="value-stats">
+                        <span>${item.count}/12 selected</span>
+                        <div class="consensus-bar">
+                            <div class="consensus-fill" style="width: ${item.percentage}%"></div>
+                        </div>
+                        <span><strong>${item.percentage}%</strong></span>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        // Populate candidate values (Screen 3)
+        function populateCandidateValues() {
+            const zone = document.getElementById('candidateZone');
+            zone.innerHTML = '';
+
+            collectiveData.forEach(item => {
+                if (!finalValues.includes(item.name)) {
+                    const div = document.createElement('div');
+                    div.className = 'draggable-value';
+                    div.innerHTML = `
+                        <strong>${item.name}</strong>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            ${item.count}/12 participants (${item.percentage}% consensus)
+                        </div>
+                    `;
+                    div.onclick = () => addToFinal(item.name);
+                    zone.appendChild(div);
+                }
+            });
+        }
+
+        // Add value to final selection
+        function addToFinal(value) {
+            if (finalValues.length < 7 && !finalValues.includes(value)) {
+                finalValues.push(value);
+                updateFinalValues();
+                populateCandidateValues();
+            } else if (finalValues.length >= 7) {
+                alert('Maximum 7 values reached. Remove one to add another.');
+            }
+        }
+
+        // Remove value from final selection
+        function removeFromFinal(value) {
+            finalValues = finalValues.filter(v => v !== value);
+            updateFinalValues();
+            populateCandidateValues();
+        }
+
+        // Update final values display
+        function updateFinalValues() {
+            const zone = document.getElementById('finalZone');
+            zone.innerHTML = '';
+
+            if (finalValues.length === 0) {
+                zone.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">Click on values from the left to add them here</p>';
+            } else {
+                finalValues.forEach(value => {
+                    const badge = document.createElement('div');
+                    badge.className = 'final-value-badge';
+                    badge.innerHTML = `
+                        <strong style="font-size: 16px;">${value}</strong>
+                        <button class="remove-btn" onclick="removeFromFinal('${value}')">×</button>
+                    `;
+                    zone.appendChild(badge);
+                });
+            }
+
+            document.getElementById('finalCount').textContent = finalValues.length;
+        }
+
+        // Navigation
+        function goToStep(step) {
+            if (step < 0 || step >= totalSteps) return;
+
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+            // Show target screen
+            document.getElementById('screen' + step).classList.add('active');
+
+            // Update stepper
+            document.querySelectorAll('.step').forEach((s, i) => {
+                s.classList.remove('active');
+                if (i < step) s.classList.add('completed');
+                else if (i === step) s.classList.add('active');
+                else s.classList.remove('completed');
+            });
+
+            // Update progress line
+            const progress = (step / (totalSteps - 1)) * 100;
+            document.getElementById('stepperProgress').style.width = progress + '%';
+
+            currentStep = step;
+            updateUI();
+
+            // Load step-specific content
+            if (step === 2) populateFrequencyList();
+            if (step === 3) {
+                populateCandidateValues();
+                updateFinalValues();
+            }
+            if (step === 5) updateReview();
+        }
+
+        function nextStep() {
+            // Validation
+            if (currentStep === 1 && selectedValues.length !== 5) {
+                alert('Please select exactly 5 values before proceeding.');
+                return;
+            }
+            if (currentStep === 3 && (finalValues.length < 5 || finalValues.length > 7)) {
+                alert('Please select between 5 and 7 final values.');
+                return;
+            }
+
+            goToStep(currentStep + 1);
+        }
+
+        function previousStep() {
+            goToStep(currentStep - 1);
+        }
+
+        function updateUI() {
+            document.getElementById('currentStepNum').textContent = currentStep + 1;
+            document.getElementById('prevBtn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+            document.getElementById('nextBtn').style.display = currentStep === totalSteps - 1 ? 'none' : 'inline-flex';
+        }
+
+        // Update review screen
+        function updateReview() {
+            const finalDisplay = document.getElementById('finalValuesDisplay');
+            finalDisplay.innerHTML = '';
+            finalValues.forEach(value => {
+                const badge = document.createElement('div');
+                badge.className = 'value-badge-large';
+                badge.textContent = value;
+                finalDisplay.appendChild(badge);
+            });
+
+            document.getElementById('reviewMission').textContent =
+                document.getElementById('missionStatement').value || 'Not provided';
+            document.getElementById('reviewVision').textContent =
+                document.getElementById('visionStatement').value || 'Not provided';
+            document.getElementById('reviewAction').textContent =
+                document.getElementById('valuesInAction').value || 'Not provided';
+        }
+
+        // Download report
+        function downloadReport() {
+            alert('📥 Generating comprehensive workshop report...\n\n' +
+                  'Report includes:\n' +
+                  '• Final core values\n' +
+                  '• Mission and vision statements\n' +
+                  '• Participant consensus analysis\n' +
+                  '• Values behavioral indicators\n' +
+                  '• Implementation recommendations\n\n' +
+                  'API: POST /constitution/family-values/workshops/{id}/download-pdf');
+        }
+
+        // Timer countdown
+        let timeLeft = 9900; // 2:45:00
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent =
+                    `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        console.log('=== Family Values Workshop - Interactive Prototype ===');
+        console.log('6 steps: Welcome → Assessment → Discovery → Selection → Documentation → Review');
+        console.log('API Integration: /constitution/family-values/workshops');
+        console.log('Available values:', PREDEFINED_VALUES.length);
+    </script>
+</body>
+</html>

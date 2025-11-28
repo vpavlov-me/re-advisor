@@ -1,0 +1,2954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission, Vision & Values Workshop - Interactive Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .stage-indicator {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .timer {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .participants-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lang-selector {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Stage Navigation */
+        .stage-nav {
+            background: #f8f9fa;
+            padding: 16px 32px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .stage-nav-item {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stage-nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .stage-nav-item:hover:not(.active) {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .stage-nav-item.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 24px;
+            padding: 32px;
+            min-height: 600px;
+        }
+
+        /* Left Panel - Facilitator */
+        .facilitator-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .facilitator-panel h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #495057;
+        }
+
+        .facilitator-section {
+            margin-bottom: 20px;
+        }
+
+        .facilitator-section h4 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .progress-stat {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .tip-list {
+            list-style: none;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .tip-list li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tip-list li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Center Canvas */
+        .main-canvas {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e9ecef;
+        }
+
+        .canvas-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .canvas-header h2 {
+            font-size: 22px;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .canvas-subtitle {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* Right Panel - Participants */
+        .participants-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .participants-list {
+            margin-bottom: 20px;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.online { background: #28a745; }
+        .status-dot.away { background: #ffc107; }
+
+        .chat-box {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .chat-sender {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .auto-save {
+            color: #28a745;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Screen 0 - Orientation */
+        .orientation-screen {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hero-section h1 {
+            font-size: 36px;
+            color: #212529;
+            margin-bottom: 16px;
+        }
+
+        .roadmap-visual {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 32px 0;
+            position: relative;
+        }
+
+        .roadmap-visual::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            z-index: 0;
+        }
+
+        .roadmap-stage {
+            flex: 1;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .roadmap-stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .roadmap-stage .stage-number {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            line-height: 32px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .roadmap-stage h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+
+        .roadmap-stage p {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .info-panel h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-list {
+            list-style: none;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .info-list li {
+            padding-left: 24px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .info-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .roles-panel {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .prep-section {
+            background: #d1ecf1;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .prep-checklist {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .prep-checklist li {
+            padding: 8px;
+            margin-bottom: 4px;
+        }
+
+        .prep-checklist input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .upload-zone {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin: 16px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover {
+            background: #f8f9fa;
+            border-color: #764ba2;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        /* Timeline Screen */
+        .timeline-container {
+            position: relative;
+            height: 400px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 32px 20px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, white 100%);
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 4px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+        }
+
+        .timeline-events {
+            display: flex;
+            gap: 120px;
+            padding: 0 40px;
+            position: relative;
+            min-width: 100%;
+        }
+
+        .timeline-decade {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .decade-marker {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .decade-label {
+            position: absolute;
+            top: 40px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .timeline-event-card {
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timeline-event-card:hover {
+            transform: translateX(-50%) translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-event-card h4 {
+            font-size: 14px;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .timeline-event-card p {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .event-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .add-event-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        /* Values Discovery Screen */
+        .values-board {
+            display: grid;
+            gap: 24px;
+        }
+
+        .values-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .values-section h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #212529;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .value-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .value-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .value-card.selected {
+            border-color: #667eea;
+            background: #e7f5ff;
+        }
+
+        .value-card h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+
+        .value-card .votes {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .final-values-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            min-height: 200px;
+            background: white;
+        }
+
+        .final-values-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .final-value-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-value {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #212529;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Proposal Selection Cards */
+        .proposal-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .proposal-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .proposal-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #e7f5ff 0%, #f8f9fa 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .proposal-card.selected::before {
+            content: "✓";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .proposal-card h4 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: #212529;
+        }
+
+        .proposal-votes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        .proposal-cluster {
+            font-size: 11px;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .facilitator-panel,
+            .participants-panel {
+                display: none;
+            }
+
+            .info-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .stage-content {
+            display: none;
+        }
+
+        .stage-content.active {
+            display: block;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Stage 3: Values Matrix */
+        .value-matrix {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .value-matrix h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #212529;
+        }
+
+        .matrix-section {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .matrix-section h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #667eea;
+        }
+
+        .behavior-list {
+            list-style: none;
+        }
+
+        .behavior-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .behavior-item-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .behavior-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Stage 4: Mission Statement */
+        .mission-builder {
+            display: grid;
+            gap: 24px;
+        }
+
+        .mission-component {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .mission-component h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #212529;
+        }
+
+        .mission-component textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .mission-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            border: 3px solid #667eea;
+        }
+
+        .mission-preview h3 {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mission-statement {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #212529;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .mission-oneliner {
+            font-size: 16px;
+            font-style: italic;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Stage 5: Vision Canvas */
+        .vision-canvas {
+            display: grid;
+            gap: 20px;
+        }
+
+        .dimension-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dimension-card.active {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e7f5ff 100%);
+        }
+
+        .dimension-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dimension-icon {
+            font-size: 32px;
+        }
+
+        .dimension-title {
+            flex: 1;
+        }
+
+        .dimension-title h3 {
+            font-size: 18px;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+
+        .dimension-title p {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .dimension-content {
+            display: grid;
+            gap: 16px;
+        }
+
+        .dimension-field {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .dimension-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .dimension-field textarea,
+        .dimension-field input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .dimension-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .milestone-item {
+            background: #e7f5ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Stage 6: Integration */
+        .integration-summary {
+            display: grid;
+            gap: 24px;
+        }
+
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border: 2px solid #e9ecef;
+        }
+
+        .summary-card h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .summary-content {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .integration-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .integration-item {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+        }
+
+        .integration-item h4 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .integration-item p {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        /* Quality Checks */
+        .quality-checks {
+            background: #d4edda;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .quality-checks h4 {
+            font-size: 14px;
+            color: #155724;
+            margin-bottom: 12px;
+        }
+
+        .quality-check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #155724;
+            margin-bottom: 6px;
+        }
+
+        /* Voting Widget */
+        .voting-widget {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .vote-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .vote-bar-label {
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .vote-bar-count {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .vote-progress {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .vote-progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+    </style></head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <h1>Workshop: Mission, Vision and Values</h1>
+                <div class="stage-indicator" id="stageIndicator">Stage 0: Orientation</div>
+            </div>
+            <div class="header-meta">
+                <div class="timer" id="timer">3:30:00</div>
+                <div class="participants-count">
+                    <span>👥</span>
+                    <span id="participantCount">12 of 15</span>
+                </div>
+                <select class="lang-selector">
+                    <option value="en">EN</option>
+                    <option value="ru">RU</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Stage Navigation -->
+        <div class="stage-nav">
+            <div class="stage-nav-item active" data-stage="0">
+                <span>📋</span>
+                <span>Orientation</span>
+            </div>
+            <div class="stage-nav-item" data-stage="1">
+                <span>🌟</span>
+                <span>Stage 1: Family Timeline</span>
+            </div>
+            <div class="stage-nav-item" data-stage="2">
+                <span>⭐</span>
+                <span>Stage 2: Values Discovery</span>
+            </div>
+            <div class="stage-nav-item" data-stage="3">
+                <span>📊</span>
+                <span>Stage 3: Values Matrix</span>
+            </div>
+            <div class="stage-nav-item" data-stage="4">
+                <span>🎯</span>
+                <span>Stage 4: Family Mission</span>
+            </div>
+            <div class="stage-nav-item" data-stage="5">
+                <span>🔮</span>
+                <span>Stage 5: Vision</span>
+            </div>
+            <div class="stage-nav-item" data-stage="6">
+                <span>🔗</span>
+                <span>Stage 6: Integration</span>
+            </div>
+        </div>
+
+        <!-- Stage 0: Orientation -->
+        <div id="stage0" class="stage-content active">
+            <div class="orientation-screen fade-in">
+                <div class="hero-section">
+                    <h1>Welcome to the "History, Values, Mission, Vision" Workshop</h1>
+                    <p style="font-size: 18px; color: #6c757d; margin-top: 16px;">
+                        Together we will create the foundation of family identity and chart the course for the next 10-20 years
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <p style="color: #6c757d;">Duration: 3-3.5 hours | Time until start: <strong>00:15:30</strong></p>
+                </div>
+
+                <div class="roadmap-visual">
+                    <div class="roadmap-stage">
+                        <div class="stage-number">1</div>
+                        <h3>Timeline</h3>
+                        <p>40 min 🌟</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">2</div>
+                        <h3>Values</h3>
+                        <p>45 min ⭐</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">3</div>
+                        <h3>Matrix</h3>
+                        <p>30 min</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">4</div>
+                        <h3>Mission</h3>
+                        <p>35 min</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">5</div>
+                        <h3>Vision</h3>
+                        <p>40 min</p>
+                    </div>
+                    <div class="roadmap-stage">
+                        <div class="stage-number">6</div>
+                        <h3>Integration</h3>
+                        <p>20 min</p>
+                    </div>
+                </div>
+
+                <div class="info-panels">
+                    <div class="info-panel">
+                        <h2>🎯 Why This Matters</h2>
+                        <ul class="info-list">
+                            <li>Unites family purpose</li>
+                            <li>Guides complex decisions</li>
+                            <li>Builds multi-generational legacy</li>
+                            <li>Strengthens family bonds</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            📊 <strong>85%</strong> of successful family businesses have clearly articulated values
+                        </p>
+                    </div>
+
+                    <div class="info-panel">
+                        <h2>🔗 How Results Will Be Used</h2>
+                        <ul class="info-list">
+                            <li>Integration into Family Constitution</li>
+                            <li>Decision-making framework</li>
+                            <li>Family code of conduct</li>
+                            <li>Strategic planning</li>
+                            <li>Annual review process</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            All results automatically integrate into platform modules!
+                        </p>
+                    </div>
+
+                    <div class="info-panel roles-panel">
+                        <h2>👥 Your Role in the Workshop</h2>
+                        <ul class="info-list">
+                            <li><strong>Advisor:</strong> Process facilitator</li>
+                            <li><strong>Family Council:</strong> Lead values articulation</li>
+                            <li><strong>Family Members:</strong> Share stories and experiences</li>
+                            <li><strong>Observers:</strong> Expert perspective</li>
+                        </ul>
+                        <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                            This is a collective narrative - everyone's voice matters!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="prep-section">
+                    <h2 style="margin-bottom: 16px;">📝 Workshop Preparation (optional but helpful)</h2>
+                    <ul class="prep-checklist">
+                        <li><input type="checkbox"> Family photos from different eras</li>
+                        <li><input type="checkbox"> Old family documents/letters</li>
+                        <li><input type="checkbox"> Stories from elder generation</li>
+                        <li><input type="checkbox"> Personal reflections: "What makes our family special?"</li>
+                        <li><input type="checkbox"> Draft values that matter to you</li>
+                    </ul>
+                    <div class="upload-zone">
+                        <p style="font-size: 24px; margin-bottom: 8px;">📤</p>
+                        <p><strong>Drag files here</strong> or click to select</p>
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">JPG, PNG, PDF (max 10 MB)</p>
+                    </div>
+                    <p style="font-size: 13px; color: #6c757d; margin-top: 12px;">
+                        💡 <strong>Tip:</strong> Interview elder generation before the workshop!
+                        Ask: "What values did our ancestors live by?" and "What were the defining moments in our family?"
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="openPreSurvey()">📝 Take Pre-Survey (10 min)</button>
+                    <button class="btn btn-secondary" onclick="runTechnicalTest()">🔧 Technical Test</button>
+                    <button class="btn btn-primary" onclick="startWorkshop()">🚀 I'm Ready to Start</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 1: Timeline -->
+        <div id="stage1" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Facilitator Panel</h3>
+
+                    <div class="facilitator-section">
+                        <h4>Timeline Progress:</h4>
+                        <div class="progress-stat">Events added: 8/15</div>
+                        <div class="progress-stat">Decades covered: 4</div>
+                        <div class="progress-stat">Photos attached: 3</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>⏰ Time Checkpoints:</h4>
+                        <div class="progress-stat">Discovery: 15 min</div>
+                        <div class="progress-stat">Deep dive: 20 min</div>
+                        <div class="progress-stat">Lessons: 5 min</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Facilitator Prompts:</h4>
+                        <ul class="tip-list">
+                            <li>How did the family start the business?</li>
+                            <li>Biggest turning point?</li>
+                            <li>Proudest moment?</li>
+                            <li>Hardest decision?</li>
+                        </ul>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>🎨 Emerging Themes:</h4>
+                        <div class="progress-stat" style="font-size: 13px;">
+                            • Independence<br>
+                            • Family unity<br>
+                            • Innovation<br>
+                            • Community service
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>🌟 Family Timeline & Lessons</h2>
+                        <p class="canvas-subtitle">Create an interactive history of your family, capturing key events, decisions, and lessons learned</p>
+                    </div>
+
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-events">
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1950s</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1970s</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">1990s</div>
+                                <div class="timeline-event-card">
+                                    <div class="event-icon">🏭</div>
+                                    <h4>Company Founded</h4>
+                                    <p><strong>March 1987</strong></p>
+                                    <p style="margin-top: 8px;">Declined investors, maintained family control</p>
+                                    <p style="margin-top: 8px; color: #667eea;"><strong>Lesson:</strong> Independence over quick money</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">2010s</div>
+                            </div>
+
+                            <div class="timeline-decade">
+                                <div class="decade-marker"></div>
+                                <div class="decade-label">2020s</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="add-event-btn" onclick="openAddEventModal()">➕ Add Event to Timeline</button>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Participants (12)</h3>
+                    <div class="participants-list">
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Maria (typing...)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Ivan (FC)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Elena (FC)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot online"></div>
+                            <span>Alex (Facilitator)</span>
+                        </div>
+                        <div class="participant-item">
+                            <div class="status-dot away"></div>
+                            <span>David</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 24px;">💬 Story Chat</h3>
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Maria:</div>
+                            <div>My father always said family comes first</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Ivan:</div>
+                            <div>Remember when we almost lost everything in 2008?</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Elena:</div>
+                            <div>That's when we learned resilience</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Share your story...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 2: Values Discovery -->
+        <div id="stage2" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Discovery Progress</h3>
+
+                    <div class="facilitator-section">
+                        <h4>Phase 1: Divergence</h4>
+                        <div class="progress-stat">✅ Complete (15 min)</div>
+                        <div class="progress-stat">23 values proposed</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>Phase 2: Clustering</h4>
+                        <div class="progress-stat">✅ Complete (15 min)</div>
+                        <div class="progress-stat">6 clusters created</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>Phase 3: Convergence</h4>
+                        <div class="progress-stat">⏳ In Progress (15 min)</div>
+                        <div class="progress-stat">Target: 5-7 values</div>
+                        <div class="progress-stat">Current: 0 final</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Prompts:</h4>
+                        <ul class="tip-list">
+                            <li>Which are most essential?</li>
+                            <li>What is non-negotiable?</li>
+                            <li>Max 7, aim for 5</li>
+                            <li>Must be authentic</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>⭐ Core Values Discovery</h2>
+                        <p class="canvas-subtitle">Identify 5-7 core family values through structured brainstorming</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 67%;"></div>
+                        </div>
+                        <p style="font-size: 14px; color: #6c757d; margin-top: 8px;">Current Phase: CONVERGENCE - narrow from 23 to 5-7 final values</p>
+                    </div>
+
+                    <div class="values-board">
+                        <div class="values-section">
+                            <h3>🎨 FROM TIMELINE THEMES (auto-generated)</h3>
+                            <div class="values-grid">
+                                <div class="value-card">
+                                    <h4>Independence</h4>
+                                    <p class="votes">⭐ 4 mentions in timeline</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Add</button>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Family Unity</h4>
+                                    <p class="votes">⭐ 3 mentions in timeline</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Add</button>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Long-term Thinking</h4>
+                                    <p class="votes">⭐ 3 mentions in timeline</p>
+                                    <button class="btn btn-primary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="values-section">
+                            <h3>💡 PROPOSED BY FAMILY</h3>
+                            <div class="values-grid">
+                                <div class="value-card">
+                                    <h4>Honesty & Integrity</h4>
+                                    <p class="votes">👍 9 votes</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Cluster: Honesty, Integrity, Trust</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Innovation</h4>
+                                    <p class="votes">👍 7 votes</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Cluster: Innovation, Creativity</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Community Service</h4>
+                                    <p class="votes">👍 5 votes</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Cluster: Philanthropy, Community</p>
+                                </div>
+                                <div class="value-card">
+                                    <h4>Resilience</h4>
+                                    <p class="votes">👍 4 votes</p>
+                                    <p style="font-size: 11px; color: #6c757d; margin-top: 4px;">Cluster: Resilience, Perseverance</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" style="margin-top: 16px; font-size: 13px;" onclick="viewAllProposals()">View all 23 proposals →</button>
+                        </div>
+
+                        <div class="values-section">
+                            <h3>🏆 FINAL VALUES LIST (5-7)</h3>
+                            <div class="final-values-zone">
+                                <p style="color: #6c757d; font-size: 14px;">Current: 0 values</p>
+                                <p style="color: #6c757d; font-size: 13px; margin-top: 8px;">Drag values here from above or click [Add]</p>
+                                <div class="final-values-list" id="finalValuesList">
+                                    <!-- Final values will appear here -->
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" style="margin-top: 16px;">➕ Add Custom Value</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Active: 12</h3>
+
+                    <div style="margin-top: 20px; background: white; border-radius: 8px; padding: 16px;">
+                        <h4 style="font-size: 14px; margin-bottom: 12px;">🗳️ Active Vote:</h4>
+                        <p style="font-size: 13px; margin-bottom: 12px;">"Which value matters most?"</p>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Honesty</span>
+                                <span>9</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 75%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Innovation</span>
+                                <span>7</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 58%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                                <span>Service</span>
+                                <span>5</span>
+                            </div>
+                            <div style="height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 42%; height: 100%; background: #667eea;"></div>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 12px;">⏱️ Voting closes in 2:00</p>
+                    </div>
+
+                    <h3 style="margin-top: 24px;">💬 Chat</h3>
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Elena:</div>
+                            <div>Honesty has always been our foundation</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Ivan:</div>
+                            <div>Agreed, but innovation is also critical</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Your thoughts...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 3: Values Matrix -->
+        <div id="stage3" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Matrix Progress</h3>
+                    <div class="facilitator-section">
+                        <div class="progress-stat">✅ Value 1: Complete</div>
+                        <div class="progress-stat">⏳ Value 2: In Progress</div>
+                        <div class="progress-stat">⏹️ Value 3: Not Started</div>
+                        <div class="progress-stat">⏹️ Value 4: Not Started</div>
+                        <div class="progress-stat">⏹️ Value 5: Not Started</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>⏰ ~6 mins per value</h4>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Behavior Tips:</h4>
+                        <ul class="tip-list">
+                            <li>Must be specific</li>
+                            <li>Must be observable</li>
+                            <li>Must be achievable</li>
+                        </ul>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>🎯 Quality Checks:</h4>
+                        <div class="progress-stat" style="font-size: 12px;">
+                            ☐ 3+ "We always" behaviors<br>
+                            ☐ 2+ "We never" behaviors<br>
+                            ☐ Metrics are specific
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>📊 Stage 3: Values & Behavior Matrix</h2>
+                        <p class="canvas-subtitle">Define concrete behavioral indicators for each value (30 minutes)</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="value-matrix">
+                        <h3>Value 1 of 5: Integrity & Honesty</h3>
+                        <p style="font-size: 14px; color: #6c757d; margin-bottom: 20px;">
+                            "We uphold the highest ethical standards in everything we do"
+                        </p>
+
+                        <div class="matrix-section">
+                            <h4>✅ WE ALWAYS... (Behaviors)</h4>
+                            <ul class="behavior-list">
+                                <li class="behavior-item">
+                                    <span class="behavior-item-text">Tell the truth, even when it's difficult</span>
+                                    <div class="behavior-actions">
+                                        <button class="btn btn-secondary btn-small">✏️</button>
+                                        <button class="btn btn-secondary btn-small">🗑️</button>
+                                    </div>
+                                </li>
+                                <li class="behavior-item">
+                                    <span class="behavior-item-text">Openly disclose conflicts of interest</span>
+                                    <div class="behavior-actions">
+                                        <button class="btn btn-secondary btn-small">✏️</button>
+                                        <button class="btn btn-secondary btn-small">🗑️</button>
+                                    </div>
+                                </li>
+                                <li class="behavior-item">
+                                    <span class="behavior-item-text">Always keep our promises</span>
+                                    <div class="behavior-actions">
+                                        <button class="btn btn-secondary btn-small">✏️</button>
+                                        <button class="btn btn-secondary btn-small">🗑️</button>
+                                    </div>
+                                </li>
+                            </ul>
+                            <button class="btn btn-success btn-small" style="margin-top: 12px;">+ Add Behavior</button>
+                        </div>
+
+                        <div class="matrix-section">
+                            <h4>❌ WE NEVER... (Anti-Behaviors)</h4>
+                            <ul class="behavior-list">
+                                <li class="behavior-item">
+                                    <span class="behavior-item-text">Hide mistakes or bad news</span>
+                                    <div class="behavior-actions">
+                                        <button class="btn btn-secondary btn-small">✏️</button>
+                                        <button class="btn btn-secondary btn-small">🗑️</button>
+                                    </div>
+                                </li>
+                                <li class="behavior-item">
+                                    <span class="behavior-item-text">Make promises we can't keep</span>
+                                    <div class="behavior-actions">
+                                        <button class="btn btn-secondary btn-small">✏️</button>
+                                        <button class="btn btn-secondary btn-small">🗑️</button>
+                                    </div>
+                                </li>
+                            </ul>
+                            <button class="btn btn-success btn-small" style="margin-top: 12px;">+ Add Anti-Behavior</button>
+                        </div>
+
+                        <div class="matrix-section">
+                            <h4>📊 HOW WE MEASURE</h4>
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                                <strong>Annual Survey:</strong><br>
+                                <span style="font-size: 13px;">"Do family members feel they can openly discuss mistakes?"</span><br>
+                                <span style="font-size: 13px; color: #667eea;">Target: 90%+ answer "Yes"</span>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                                <strong>Behavioral Indicator:</strong><br>
+                                <span style="font-size: 13px;">"Zero instances of material information concealment in Family Council reports"</span>
+                            </div>
+                            <button class="btn btn-success btn-small">+ Add Metric</button>
+                        </div>
+
+                        <div class="matrix-section" style="border-left: 4px solid #dc3545;">
+                            <h4>🚨 REAL ANTI-EXAMPLE (optional)</h4>
+                            <p style="font-size: 13px; margin-bottom: 8px;">
+                                <strong>What Happened:</strong> In 2015, we delayed notifying the Board about a significant budget overrun.
+                            </p>
+                            <p style="font-size: 13px; margin-bottom: 8px;">
+                                <strong>Consequences:</strong> Seriously damaged Board trust. Took 2 years to rebuild the relationship.
+                            </p>
+                            <p style="font-size: 13px;">
+                                <strong>Lesson:</strong> Transparency is non-negotiable, even when the news is bad.
+                            </p>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+                            <button class="btn btn-secondary">← Previous Value</button>
+                            <button class="btn btn-primary">Next Value →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Active: 12</h3>
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Maria:</div>
+                            <div>We should add "always admit when we're wrong"</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">John:</div>
+                            <div>For metrics - track Board feedback scores?</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Your suggestion...">
+
+                    <div style="margin-top: 20px; background: white; padding: 16px; border-radius: 8px;">
+                        <h4 style="font-size: 14px; margin-bottom: 12px;">📊 Completion Status:</h4>
+                        <div style="font-size: 12px;">
+                            ✅ Value 1: Complete (3 behaviors)<br>
+                            ⏳ Value 2: In Progress (1 behavior)<br>
+                            ⏹️ Value 3: Not Started
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 4: Mission Statement -->
+        <div id="stage4" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Mission Progress</h3>
+                    <div class="facilitator-section">
+                        <h4>Phase 1: Components</h4>
+                        <div class="progress-stat">✅ Complete (10 min)</div>
+                    </div>
+                    <div class="facilitator-section">
+                        <h4>Phase 2: Draft</h4>
+                        <div class="progress-stat">⏳ In Progress (15 min)</div>
+                    </div>
+                    <div class="facilitator-section">
+                        <h4>Phase 3: Refinement</h4>
+                        <div class="progress-stat">⏹️ Not Started (10 min)</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Mission Tips:</h4>
+                        <ul class="tip-list">
+                            <li>Inspiring</li>
+                            <li>Clear</li>
+                            <li>Authentic</li>
+                            <li>Future-oriented</li>
+                        </ul>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>🎯 Your Values:</h4>
+                        <div class="progress-stat" style="font-size: 12px;">
+                            • Integrity<br>
+                            • Family Unity<br>
+                            • Innovation<br>
+                            • Independence<br>
+                            • Service to Society
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>🎯 Stage 4: Family Mission Statement</h2>
+                        <p class="canvas-subtitle">Create a clear statement of family purpose and impact (35 minutes)</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mission-builder">
+                        <div style="background: #e7f5ff; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <h3 style="font-size: 16px; margin-bottom: 12px;">📋 Mission Formula:</h3>
+                            <p style="font-size: 14px; color: #495057;">
+                                We exist to <strong>[impact/purpose]</strong><br>
+                                for <strong>[audience/beneficiaries]</strong><br>
+                                through <strong>[approach/how]</strong><br>
+                                guided by <strong>[core values]</strong>
+                            </p>
+                        </div>
+
+                        <div class="mission-component">
+                            <h3>1️⃣ Component: IMPACT/PURPOSE</h3>
+                            <p style="font-size: 14px; color: #6c757d; margin-bottom: 12px;">
+                                Why does your family exist beyond owning assets?
+                            </p>
+                            <textarea placeholder="E.g., Create long-term prosperity and unity across generations">Create long-term prosperity and unity across generations</textarea>
+                        </div>
+
+                        <div class="mission-component">
+                            <h3>2️⃣ Component: AUDIENCE</h3>
+                            <p style="font-size: 14px; color: #6c757d; margin-bottom: 12px;">
+                                Who benefits from your family's existence?
+                            </p>
+                            <textarea placeholder="E.g., For members of our family, our employees, and the communities we serve">For members of our family, our employees, and the communities we serve</textarea>
+                        </div>
+
+                        <div class="mission-component">
+                            <h3>3️⃣ Component: APPROACH</h3>
+                            <p style="font-size: 14px; color: #6c757d; margin-bottom: 12px;">
+                                How do you achieve your purpose? What's your unique approach?
+                            </p>
+                            <textarea placeholder="E.g., Through strategic leadership, collaborative governance, and responsible stewardship">Through strategic leadership, collaborative governance, and responsible stewardship</textarea>
+                        </div>
+
+                        <div class="mission-component">
+                            <h3>4️⃣ Component: VALUES</h3>
+                            <p style="font-size: 14px; color: #6c757d; margin-bottom: 12px;">
+                                Reference to your core values:
+                            </p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+                                <label style="background: white; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" checked> Integrity & Honesty
+                                </label>
+                                <label style="background: white; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" checked> Family Unity
+                                </label>
+                                <label style="background: white; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" checked> Innovation
+                                </label>
+                                <label style="background: white; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox"> Independence
+                                </label>
+                                <label style="background: white; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" checked> Service to Society
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mission-preview">
+                            <h3>📜 FULL MISSION STATEMENT</h3>
+                            <div class="mission-statement">
+                                We exist to create long-term prosperity and unity across generations for members of our family, our employees, and the communities we serve, through strategic leadership, collaborative governance, and responsible stewardship, guided by our values of integrity, unity, innovation, and service.
+                            </div>
+                            <div style="border-top: 2px solid #667eea; padding-top: 16px; margin-top: 16px;">
+                                <h4 style="font-size: 12px; color: #6c757d; margin-bottom: 8px;">SHORT VERSION (≤20 words)</h4>
+                                <div class="mission-oneliner">
+                                    "Creating generational prosperity through integrity, unity, and service."
+                                </div>
+                            </div>
+                            <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: center;">
+                                <button class="btn btn-secondary">✏️ Edit Full Text</button>
+                                <button class="btn btn-primary">↻ Regenerate</button>
+                            </div>
+                        </div>
+
+                        <div class="quality-checks">
+                            <h4>✅ Quality Checks:</h4>
+                            <div class="quality-check-item">✓ Clear and understandable</div>
+                            <div class="quality-check-item">✓ Inspiring and ambitious</div>
+                            <div class="quality-check-item">✓ Authentic to family</div>
+                            <div class="quality-check-item">✓ References core values</div>
+                            <div class="quality-check-item">⚠️ Consider: Is it memorable?</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Active: 12</h3>
+
+                    <div class="voting-widget">
+                        <h4 style="font-size: 14px; margin-bottom: 12px;">🗳️ Mission Vote:</h4>
+                        <p style="font-size: 12px; margin-bottom: 12px;">"Approve this mission statement?"</p>
+
+                        <div class="vote-bar">
+                            <span class="vote-bar-label">👍 Approve</span>
+                            <span class="vote-bar-count">10</span>
+                        </div>
+                        <div class="vote-progress">
+                            <div class="vote-progress-fill" style="width: 83%;"></div>
+                        </div>
+
+                        <div class="vote-bar">
+                            <span class="vote-bar-label">👎 Revise</span>
+                            <span class="vote-bar-count">2</span>
+                        </div>
+                        <div class="vote-progress">
+                            <div class="vote-progress-fill" style="width: 17%;"></div>
+                        </div>
+
+                        <p style="font-size: 12px; color: #28a745; margin-top: 12px;">
+                            ⏱️ 2:00 remaining | Current: 10/12 approve (83%) ✅
+                        </p>
+                    </div>
+
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Maria:</div>
+                            <div>Love "generational prosperity" - perfect!</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">John:</div>
+                            <div>Should we add "innovation"?</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Elena:</div>
+                            <div>Short version is perfect!</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Your feedback...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 5: Vision Canvas -->
+        <div id="stage5" class="stage-content">
+            <div class="main-content fade-in">
+                <div class="facilitator-panel">
+                    <h3>📊 Vision Progress</h3>
+                    <div class="facilitator-section">
+                        <h4>Dimensions:</h4>
+                        <div class="progress-stat">✅ Family</div>
+                        <div class="progress-stat">⏳ Business</div>
+                        <div class="progress-stat">⏹️ Capital</div>
+                        <div class="progress-stat">⏹️ Social</div>
+                        <div class="progress-stat">⏹️ Reputation</div>
+                        <div class="progress-stat">⏹️ Risk</div>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>⏰ ~6-7 mins per dimension</h4>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>💡 Vision Tips:</h4>
+                        <ul class="tip-list">
+                            <li>Ambitious yet achievable</li>
+                            <li>Specific milestones</li>
+                            <li>Aligned with mission</li>
+                            <li>Inspires next generation</li>
+                        </ul>
+                    </div>
+
+                    <div class="facilitator-section">
+                        <h4>🎯 Your Mission:</h4>
+                        <div class="progress-stat" style="font-size: 11px;">
+                            "Creating generational prosperity through integrity, unity, and service"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-canvas">
+                    <div class="canvas-header">
+                        <h2>🔮 Stage 5: 10-20 Year Vision</h2>
+                        <p class="canvas-subtitle">Create a strategic vision for your family's future across 6 key dimensions (40 minutes)</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 33%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="vision-canvas">
+                        <div class="dimension-card active">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">👨‍👩‍👧‍👦</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 1: FAMILY</h3>
+                                    <p>Time Horizon: 10-20 years</p>
+                                </div>
+                                <button class="btn btn-success btn-small">✅ Complete</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>All family members actively participate in governance appropriate to age/interests. Next-gen leadership pipeline established. Strong ties across 4 generations. Family meetings 2x/year with 90%+ attendance.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Forced participation
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> All family in business
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Geographic concentration
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Launch Next-Gen Council with 5 members<br>
+                                        <strong>Timeline:</strong> December 2026<br>
+                                        <strong>Owner:</strong> Family Council<br>
+                                        <strong>Success Metric:</strong> 5 active members, 80% meeting attendance
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Family conflict<br>
+                                        <strong>Description:</strong> Next generation loses interest if not meaningfully engaged<br>
+                                        <strong>Mitigation Strategy:</strong> Early involvement in FC. Mentorship program. Real decision-making authority.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">💼</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 2: BUSINESS</h3>
+                                    <p>Professional management and strategic growth</p>
+                                </div>
+                                <button class="btn btn-secondary btn-small" style="background: #ffc107;">⏳ In Progress</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>Three distinct business lines under professional management. Market leadership in core sector. Annual revenue $500M+. ESG-compliant operations. Board includes 30% independent directors. Succession plans for all key positions.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Family employment entitlement
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Growth at any cost
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Single industry dependence
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Complete strategic review and 5-year business plan<br>
+                                        <strong>Timeline:</strong> March 2026<br>
+                                        <strong>Owner:</strong> Board of Directors<br>
+                                        <strong>Success Metric:</strong> Approved business plan with clear KPIs and growth targets
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Market disruption<br>
+                                        <strong>Description:</strong> Industry consolidation or technological disruption threatens core business<br>
+                                        <strong>Mitigation Strategy:</strong> Diversification strategy. Innovation fund. Strategic partnerships. Regular market analysis.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">💰</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 3: CAPITAL/ASSETS</h3>
+                                    <p>Investment strategy and wealth management</p>
+                                </div>
+                                <button class="btn btn-secondary btn-small">⏹️ Not Started</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>Diversified portfolio across multiple asset classes (equity, real estate, alternatives). Professional wealth management with Family Investment Office. Total assets under management $1B+. Separate family trust structure. Clear investment policy statement aligned with family values.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Over-concentration in single asset
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> High-risk speculation
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Values-misaligned investments
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Establish Family Investment Committee and create Investment Policy Statement<br>
+                                        <strong>Timeline:</strong> June 2026<br>
+                                        <strong>Owner:</strong> Family Council<br>
+                                        <strong>Success Metric:</strong> IPS approved, committee of 5 members active, first quarterly meeting held
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Market volatility<br>
+                                        <strong>Description:</strong> Significant market downturn affects family wealth and business operations<br>
+                                        <strong>Mitigation Strategy:</strong> Diversification across asset classes. Conservative leverage policy. Emergency liquidity reserves. Regular stress testing.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">🌍</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 4: SOCIAL IMPACT/PHILANTHROPY</h3>
+                                    <p>Giving back and creating legacy</p>
+                                </div>
+                                <button class="btn btn-secondary btn-small">⏹️ Not Started</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>Family Foundation with $50M+ endowment focused on education and healthcare. Annual giving of $5M+ to strategic causes. 50% of family members actively engaged in philanthropy. Recognized impact in 3 key social areas. Next-gen leading major philanthropic initiatives.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Scattered, unfocused giving
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Philanthropy for reputation only
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Imposing causes on family members
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Define family's 3 core philanthropic focus areas and create giving framework<br>
+                                        <strong>Timeline:</strong> September 2026<br>
+                                        <strong>Owner:</strong> Philanthropy Committee<br>
+                                        <strong>Success Metric:</strong> Focus areas defined, $500K allocated, 5 family members participating
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Mission drift<br>
+                                        <strong>Description:</strong> Philanthropic efforts become fragmented or lose alignment with family values<br>
+                                        <strong>Mitigation Strategy:</strong> Clear mission statement for foundation. Annual strategic reviews. Family engagement surveys. Impact measurement framework.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">⭐</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 5: REPUTATION/LEGACY</h3>
+                                    <p>How we will be remembered</p>
+                                </div>
+                                <button class="btn btn-secondary btn-small">⏹️ Not Started</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>Recognized as a model family enterprise balancing business success with social responsibility. Known for ethical leadership and innovation. Family name associated with philanthropy and positive community impact. Next generation actively contributing to family's reputation. Regular media features on family governance best practices.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Celebrity status seeking
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Reputation without substance
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Privacy completely sacrificed
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Develop family brand guidelines and communication strategy<br>
+                                        <strong>Timeline:</strong> April 2026<br>
+                                        <strong>Owner:</strong> Communications Lead<br>
+                                        <strong>Success Metric:</strong> Brand guidelines document completed, family website launched, social media presence established
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Reputation damage<br>
+                                        <strong>Description:</strong> Business or personal scandals damage family reputation and legacy<br>
+                                        <strong>Mitigation Strategy:</strong> Strong ethics code. Crisis communication plan. Media training for family members. Proactive reputation monitoring.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dimension-card">
+                            <div class="dimension-header">
+                                <div class="dimension-icon">🛡️</div>
+                                <div class="dimension-title">
+                                    <h3>Dimension 6: RISK MANAGEMENT</h3>
+                                    <p>Protecting family and assets</p>
+                                </div>
+                                <button class="btn btn-secondary btn-small">⏹️ Not Started</button>
+                            </div>
+
+                            <div class="dimension-content">
+                                <div class="dimension-field">
+                                    <label>🎯 Future State (10-20 years)</label>
+                                    <textarea>Comprehensive risk management framework covering financial, operational, legal, and reputational risks. Regular risk assessments and stress testing. Insurance coverage adequate for all major risks. Cybersecurity protocols protecting family data and assets. Conflict resolution mechanisms preventing family disputes. Estate planning complete for all generations.</textarea>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>🚫 Non-Goals (what we DON'T want)</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Risk paralysis
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox" checked> Over-insurance
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <input type="checkbox"> Reactive-only approach
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>📅 FIRST MILESTONE (12 months)</label>
+                                    <div class="milestone-item">
+                                        <strong>What:</strong> Complete comprehensive family risk assessment and create risk register<br>
+                                        <strong>Timeline:</strong> August 2026<br>
+                                        <strong>Owner:</strong> Risk Committee<br>
+                                        <strong>Success Metric:</strong> Risk register with 20+ identified risks, mitigation plans, and responsible owners assigned
+                                    </div>
+                                    <button class="btn btn-success btn-small">+ Add Milestone</button>
+                                </div>
+
+                                <div class="dimension-field">
+                                    <label>⚠️ KEY RISK</label>
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; font-size: 13px;">
+                                        <strong>Type:</strong> Family conflict<br>
+                                        <strong>Description:</strong> Internal family disputes escalate and threaten business operations or wealth preservation<br>
+                                        <strong>Mitigation Strategy:</strong> Clear governance policies. Conflict resolution protocols. Professional mediators on retainer. Regular family communication. Shareholder agreements.
+                                    </div>
+                                    <button class="btn btn-success btn-small" style="margin-top: 8px;">+ Add Risk</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participants-panel">
+                    <h3>👥 Active: 12</h3>
+
+                    <div style="background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="font-size: 14px; margin-bottom: 12px;">📊 Dimension Status:</h4>
+                        <div style="font-size: 12px; line-height: 2;">
+                            ✅ Family: Complete<br>
+                            ⏳ Business: In Progress<br>
+                            ⏹️ Capital: Not Started<br>
+                            ⏹️ Social: Not Started<br>
+                            ⏹️ Reputation: Not Started<br>
+                            ⏹️ Risk: Not Started
+                        </div>
+                    </div>
+
+                    <div class="chat-box">
+                        <div class="chat-message">
+                            <div class="chat-sender">Maria:</div>
+                            <div>Love the "4 generations" goal!</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">John:</div>
+                            <div>What about family members living abroad?</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Elena:</div>
+                            <div>Virtual participation OK!</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-sender">Sarah:</div>
+                            <div>Next-gen council - excellent!</div>
+                        </div>
+                    </div>
+                    <input type="text" class="chat-input" placeholder="Your vision ideas...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 6: Integration -->
+        <div id="stage6" class="stage-content">
+            <div class="fade-in" style="padding: 32px;">
+                <div class="main-canvas" style="margin: 0 auto; max-width: 1200px;">
+                    <div class="canvas-header">
+                        <h2>🔗 Stage 6: Integration & Next Steps</h2>
+                        <p class="canvas-subtitle">Integrate all workshop artifacts into the governance system (20 minutes)</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="integration-summary">
+                        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 32px; border-radius: 12px; text-align: center;">
+                            <h1 style="font-size: 32px; margin-bottom: 16px;">🎉 Congratulations!</h1>
+                            <p style="font-size: 18px;">You've created a complete family identity and strategy framework</p>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>📜 YOUR MISSION</h3>
+                            <div class="summary-content">
+                                <div style="font-size: 18px; font-weight: 500; color: #667eea; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                                    "Creating generational prosperity through integrity, unity, and service"
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>⭐ YOUR 5 CORE VALUES</h3>
+                            <div class="summary-content">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                    <div style="background: #e7f5ff; padding: 16px; border-radius: 8px; text-align: center;">
+                                        <strong>1. Integrity & Honesty</strong><br>
+                                        <span style="font-size: 12px;">4 behaviors, 2 metrics</span>
+                                    </div>
+                                    <div style="background: #e7f5ff; padding: 16px; border-radius: 8px; text-align: center;">
+                                        <strong>2. Family Unity</strong><br>
+                                        <span style="font-size: 12px;">3 behaviors, 2 metrics</span>
+                                    </div>
+                                    <div style="background: #e7f5ff; padding: 16px; border-radius: 8px; text-align: center;">
+                                        <strong>3. Innovation</strong><br>
+                                        <span style="font-size: 12px;">4 behaviors, 2 metrics</span>
+                                    </div>
+                                    <div style="background: #e7f5ff; padding: 16px; border-radius: 8px; text-align: center;">
+                                        <strong>4. Independence</strong><br>
+                                        <span style="font-size: 12px;">3 behaviors, 2 metrics</span>
+                                    </div>
+                                    <div style="background: #e7f5ff; padding: 16px; border-radius: 8px; text-align: center;">
+                                        <strong>5. Service to Society</strong><br>
+                                        <span style="font-size: 12px;">4 behaviors, 2 metrics</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>🔮 10-20 YEAR VISION</h3>
+                            <div class="summary-content">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>👨‍👩‍👧‍👦 Family:</strong> 4 generations, 90% participation
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>💼 Business:</strong> 3 lines, market leader
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>💰 Capital:</strong> Diversified portfolio
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>🌍 Social:</strong> Transformational impact
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>⭐ Reputation:</strong> Recognized legacy
+                                    </div>
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                                        <strong>🛡️ Risk:</strong> Proactive management
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>🔗 CONSTITUTION INTEGRATION MAP</h3>
+                            <div class="integration-map">
+                                <div class="integration-item">
+                                    <h4>📜 Preamble</h4>
+                                    <p>Mission statement</p>
+                                </div>
+                                <div class="integration-item">
+                                    <h4>📊 Section 2</h4>
+                                    <p>Core values</p>
+                                </div>
+                                <div class="integration-item">
+                                    <h4>👨‍👩‍👧‍👦 Code of Conduct</h4>
+                                    <p>Values matrix</p>
+                                </div>
+                                <div class="integration-item">
+                                    <h4>🎯 Decision Module</h4>
+                                    <p>Values framework</p>
+                                </div>
+                                <div class="integration-item">
+                                    <h4>📅 Appendix</h4>
+                                    <p>Strategic vision</p>
+                                </div>
+                                <div class="integration-item">
+                                    <h4>📈 Annual Review</h4>
+                                    <p>Vision progress</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <h3>📋 NEXT STEPS</h3>
+                            <div class="summary-content">
+                                <div style="display: grid; gap: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                                        <span style="font-size: 24px;">1️⃣</span>
+                                        <div>
+                                            <strong>Review & Ratification (2 weeks)</strong><br>
+                                            <span style="font-size: 13px; color: #6c757d;">Family Assembly votes for final approval</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                                        <span style="font-size: 24px;">2️⃣</span>
+                                        <div>
+                                            <strong>Constitution Integration (1 month)</strong><br>
+                                            <span style="font-size: 13px; color: #6c757d;">Auto-populate platform modules</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                                        <span style="font-size: 24px;">3️⃣</span>
+                                        <div>
+                                            <strong>Communication Campaign (ongoing)</strong><br>
+                                            <span style="font-size: 13px; color: #6c757d;">Distribute mission/values to entire family</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                                        <span style="font-size: 24px;">4️⃣</span>
+                                        <div>
+                                            <strong>First Milestone Check (3 months)</strong><br>
+                                            <span style="font-size: 13px; color: #6c757d;">Track progress on first milestones</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                                        <span style="font-size: 24px;">5️⃣</span>
+                                        <div>
+                                            <strong>Annual Review (12 months)</strong><br>
+                                            <span style="font-size: 13px; color: #6c757d;">First Family Assembly to review and refine</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card" style="background: #fff3cd; border-color: #ffc107;">
+                            <h3>💡 REMEMBER</h3>
+                            <div class="summary-content" style="font-size: 14px;">
+                                <p style="margin-bottom: 12px;">
+                                    <strong>These are living documents, not static ones.</strong> Your values, mission, and vision will evolve as your family grows and changes.
+                                </p>
+                                <p style="margin-bottom: 12px;">
+                                    <strong>First review in 12 months.</strong> Family Assembly will assess relevance and make refinements.
+                                </p>
+                                <p>
+                                    <strong>Every decision is now informed.</strong> Use these artifacts to guide all major family decisions.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 32px;">
+                            <button class="btn btn-secondary">📥 Download All Artifacts (PDF)</button>
+                            <button class="btn btn-primary">✅ Complete Workshop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+   <div class="footer">
+            <div class="auto-save">
+                <span>💾</span>
+                <span>Auto-saving...</span>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="previousStage()">← Previous Stage</button>
+                <button class="btn btn-primary" onclick="nextStage()">Next Stage →</button>
+            </div>
+            <div style="font-size: 14px; color: #6c757d;">
+                Progress: <span id="progressText">0/6</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="addEventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ Add Event to Family Timeline</h2>
+            </div>
+            <form>
+                <div class="form-group">
+                    <label>Event Name *</label>
+                    <input type="text" placeholder="e.g., Company Founded" required>
+                </div>
+                <div class="form-group">
+                    <label>Date/Period *</label>
+                    <input type="text" placeholder="e.g., March 1987 or 1990s" required>
+                </div>
+                <div class="form-group">
+                    <label>Event Category</label>
+                    <select>
+                        <option>Business Milestone</option>
+                        <option>Family Milestone</option>
+                        <option>Crisis Overcome</option>
+                        <option>Important Decision</option>
+                        <option>Achievement</option>
+                        <option>Generational Transition</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🎯 Key Decision or Choice</label>
+                    <textarea placeholder="What fundamental choice did the family make?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>🏆 What We're Proud Of</label>
+                    <textarea placeholder="What makes this moment special or important?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📚 Lesson Learned *</label>
+                    <textarea placeholder="What wisdom came from this experience?" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>📷 Attach Photo or Document</label>
+                    <input type="file" accept="image/*,.pdf">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save and Add to Timeline</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- All Proposals Modal -->
+    <div id="allProposalsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>📊 All 23 Proposed Values</h2>
+                <p style="color: #6c757d; font-size: 14px; margin-top: 8px;">Select values to add to your final list (Target: 5-7 values)</p>
+            </div>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <div id="proposalsList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <!-- Proposals will be inserted here by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAllProposalsModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addSelectedToFinalList()">Add Selected to Final List</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStage = 0;
+        const totalStages = 6;
+
+        // Stage Navigation
+        document.querySelectorAll('.stage-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const stage = parseInt(this.dataset.stage);
+                goToStage(stage);
+            });
+        });
+
+        function goToStage(stage) {
+            // Hide all stages
+            document.querySelectorAll('.stage-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show selected stage
+            document.getElementById(`stage${stage}`).classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.stage-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (parseInt(item.dataset.stage) < stage) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+            document.querySelector(`[data-stage="${stage}"]`).classList.add('active');
+
+            currentStage = stage;
+            updateStageIndicator();
+            updateProgress();
+        }
+
+        function nextStage() {
+            if (currentStage < totalStages) {
+                goToStage(currentStage + 1);
+            }
+        }
+
+        function previousStage() {
+            if (currentStage > 0) {
+                goToStage(currentStage - 1);
+            }
+        }
+
+        function updateStageIndicator() {
+            const stageNames = [
+                'Stage 0: Orientation',
+                'Stage 1: Family Timeline',
+                'Stage 2: Values Discovery',
+                'Stage 3: Values Matrix',
+                'Stage 4: Family Mission',
+                'Stage 5: Vision',
+                'Stage 6: Integration'
+            ];
+            document.getElementById('stageIndicator').textContent = stageNames[currentStage];
+        }
+
+        function updateProgress() {
+            document.getElementById('progressText').textContent = `${currentStage}/${totalStages}`;
+            const progressPercent = (currentStage / totalStages) * 100;
+            document.querySelectorAll('.progress-fill').forEach(fill => {
+                fill.style.width = `${progressPercent}%`;
+            });
+        }
+
+        function startWorkshop() {
+            goToStage(1);
+        }
+
+        // Pre-Survey function
+        function openPreSurvey() {
+            alert('📝 Pre-Survey\n\nThis would open a pre-workshop survey to gather:\n\n• Your initial thoughts on family values\n• Key challenges you hope to address\n• Your expectations for the workshop\n• Historical context about your family\n\nEstimated time: 10 minutes\n\n[In production, this would redirect to a survey form]');
+        }
+
+        // Technical Test function
+        function runTechnicalTest() {
+            const tests = [
+                '🎤 Microphone... ✅',
+                '🔊 Speakers... ✅',
+                '📹 Camera... ✅',
+                '🌐 Internet connection... ✅',
+                '💻 Browser compatibility... ✅'
+            ];
+
+            let message = '🔧 Technical Test Results:\n\n';
+            tests.forEach(test => {
+                message += test + '\n';
+            });
+            message += '\n✅ All systems ready!\n\nYou\'re all set for the workshop.';
+
+            alert(message);
+        }
+
+        // All proposals data
+        const allProposals = [
+            { name: "Honesty & Integrity", votes: 9, cluster: "Honesty, Integrity, Trust" },
+            { name: "Innovation", votes: 7, cluster: "Innovation, Creativity" },
+            { name: "Community Service", votes: 5, cluster: "Philanthropy, Community" },
+            { name: "Resilience", votes: 4, cluster: "Resilience, Perseverance" },
+            { name: "Independence", votes: 4, cluster: "Autonomy, Self-reliance" },
+            { name: "Family Unity", votes: 4, cluster: "Unity, Togetherness" },
+            { name: "Long-term Thinking", votes: 3, cluster: "Patience, Strategic" },
+            { name: "Respect", votes: 3, cluster: "Dignity, Honor" },
+            { name: "Excellence", votes: 3, cluster: "Quality, High Standards" },
+            { name: "Transparency", votes: 2, cluster: "Openness, Honesty" },
+            { name: "Education", votes: 2, cluster: "Learning, Growth" },
+            { name: "Sustainability", votes: 2, cluster: "Environment, Future" },
+            { name: "Accountability", votes: 2, cluster: "Responsibility, Ownership" },
+            { name: "Collaboration", votes: 2, cluster: "Teamwork, Partnership" },
+            { name: "Generosity", votes: 1, cluster: "Giving, Charity" },
+            { name: "Courage", votes: 1, cluster: "Bravery, Bold" },
+            { name: "Humility", votes: 1, cluster: "Modesty, Grounded" },
+            { name: "Diversity", votes: 1, cluster: "Inclusion, Different Perspectives" },
+            { name: "Stewardship", votes: 1, cluster: "Caretaking, Legacy" },
+            { name: "Work-Life Balance", votes: 1, cluster: "Wellbeing, Health" },
+            { name: "Entrepreneurship", votes: 1, cluster: "Risk-taking, Innovation" },
+            { name: "Tradition", votes: 1, cluster: "Heritage, History" },
+            { name: "Adaptability", votes: 1, cluster: "Flexibility, Change" }
+        ];
+
+        let selectedProposals = [];
+
+        // View all proposals function - opens modal
+        function viewAllProposals() {
+            const proposalsList = document.getElementById('proposalsList');
+            proposalsList.innerHTML = '';
+
+            allProposals.forEach((proposal, index) => {
+                const card = document.createElement('div');
+                card.className = 'proposal-card';
+                card.dataset.index = index;
+                card.innerHTML = `
+                    <h4>${proposal.name}</h4>
+                    <div class="proposal-votes">
+                        <span>👍 ${proposal.votes} vote${proposal.votes > 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="proposal-cluster">${proposal.cluster}</div>
+                `;
+
+                card.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    const idx = parseInt(this.dataset.index);
+                    const selectedIdx = selectedProposals.indexOf(idx);
+
+                    if (selectedIdx > -1) {
+                        selectedProposals.splice(selectedIdx, 1);
+                    } else {
+                        selectedProposals.push(idx);
+                    }
+
+                    updateSelectionCount();
+                });
+
+                proposalsList.appendChild(card);
+            });
+
+            document.getElementById('allProposalsModal').classList.add('active');
+        }
+
+        function updateSelectionCount() {
+            const header = document.querySelector('#allProposalsModal .modal-header p');
+            const count = selectedProposals.length;
+            let message = `Select values to add to your final list (Target: 5-7 values)`;
+
+            if (count > 0) {
+                message = `Selected: ${count} value${count > 1 ? 's' : ''}`;
+                if (count >= 5 && count <= 7) {
+                    message += ' ✅ (Perfect!)';
+                } else if (count > 7) {
+                    message += ' ⚠️ (Too many, aim for 5-7)';
+                } else {
+                    message += ` (Add ${5 - count} more)`;
+                }
+            }
+
+            header.textContent = message;
+        }
+
+        function closeAllProposalsModal() {
+            document.getElementById('allProposalsModal').classList.remove('active');
+            selectedProposals = [];
+        }
+
+        function addSelectedToFinalList() {
+            if (selectedProposals.length === 0) {
+                alert('Please select at least one value to add.');
+                return;
+            }
+
+            const finalList = document.getElementById('finalValuesList');
+
+            selectedProposals.forEach(idx => {
+                const proposal = allProposals[idx];
+                const badge = document.createElement('div');
+                badge.className = 'final-value-badge fade-in';
+                badge.innerHTML = `
+                    ${proposal.name}
+                    <button class="remove-value" onclick="this.parentElement.remove()">×</button>
+                `;
+                finalList.appendChild(badge);
+            });
+
+            closeAllProposalsModal();
+
+            // Show success message
+            alert(`✅ Added ${selectedProposals.length} value${selectedProposals.length > 1 ? 's' : ''} to your final list!`);
+        }
+
+        // Close modal on outside click
+        document.getElementById('allProposalsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAllProposalsModal();
+            }
+        });
+
+        // Modal functions
+        function openAddEventModal() {
+            document.getElementById('addEventModal').classList.add('active');
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('addEventModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('addEventModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddEventModal();
+            }
+        });
+
+        // Timer countdown
+        let timeLeft = 12600; // 3.5 hours in seconds
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent =
+                    `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        // Auto-save simulation
+        setInterval(() => {
+            const autoSaveElement = document.querySelector('.auto-save span:last-child');
+            autoSaveElement.textContent = 'Saved ✓';
+            setTimeout(() => {
+                autoSaveElement.textContent = 'Auto-saving...';
+            }, 2000);
+        }, 10000);
+
+        // Add value to final list (for Stage 2)
+        document.querySelectorAll('.value-card button').forEach(button => {
+            button.addEventListener('click', function() {
+                const valueCard = this.closest('.value-card');
+                const valueName = valueCard.querySelector('h4').textContent;
+                addToFinalList(valueName);
+            });
+        });
+
+        function addToFinalList(valueName) {
+            const finalList = document.getElementById('finalValuesList');
+            const badge = document.createElement('div');
+            badge.className = 'final-value-badge fade-in';
+            badge.innerHTML = `
+                ${valueName}
+                <button class="remove-value" onclick="this.parentElement.remove()">×</button>
+            `;
+            finalList.appendChild(badge);
+        }
+
+        // Roadmap stage hover preview
+        document.querySelectorAll('.roadmap-stage').forEach(stage => {
+            stage.addEventListener('click', function() {
+                const stageNum = Array.from(this.parentElement.children).indexOf(this) + 1;
+                goToStage(stageNum);
+            });
+        });
+    </script>
+</body>
+</html>

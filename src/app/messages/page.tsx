@@ -1,0 +1,672 @@
+"use client";
+
+import { useState } from "react";
+import { 
+  Home, 
+  ChevronRight, 
+  Search,
+  Filter,
+  MoreVertical,
+  Star,
+  Paperclip,
+  Send,
+  Smile,
+  Phone,
+  Video,
+  Info,
+  Pin,
+  Archive,
+  Trash2,
+  CheckCheck,
+  Circle,
+  Plus,
+  Users,
+  X,
+  ChevronDown,
+  UserPlus
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Family data for filtering and new conversation
+const familiesData = [
+  { 
+    id: 1, 
+    name: "Harrington Family", 
+    members: [
+      { id: 1, name: "Clara Harrington", role: "Matriarch", avatar: "CH", online: true },
+      { id: 2, name: "Oliver Harrington", role: "CEO", avatar: "OH", online: false },
+      { id: 3, name: "Eleanor Harrington", role: "Daughter", avatar: "EH", online: true },
+    ]
+  },
+  { 
+    id: 2, 
+    name: "Roye Family",
+    members: [
+      { id: 4, name: "Logan Roy", role: "Patriarch", avatar: "LR", online: false },
+      { id: 5, name: "Kendall Roy", role: "Eldest Son", avatar: "KR", online: true },
+      { id: 6, name: "Siobhan Roy", role: "Daughter", avatar: "SR", online: false },
+      { id: 7, name: "Roman Roy", role: "Youngest Son", avatar: "RR", online: true },
+    ]
+  },
+  { 
+    id: 3, 
+    name: "Chen Family",
+    members: [
+      { id: 8, name: "Wei Chen", role: "Founder", avatar: "WC", online: false },
+      { id: 9, name: "Lin Chen", role: "Co-Founder", avatar: "LC", online: false },
+    ]
+  },
+];
+
+// Conversations data
+const conversations = [
+  {
+    id: 1,
+    title: "CEO Position Discussion",
+    familyId: 1,
+    familyName: "Harrington Family",
+    participants: ["Clara Harrington", "Oliver Harrington", "Eleanor Harrington"],
+    lastMessage: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate",
+    lastMessageTime: "12:05",
+    unread: 9,
+    pinned: true,
+    online: true,
+  },
+  {
+    id: 2,
+    title: "Investment Strategy Review",
+    familyId: 1,
+    familyName: "Harrington Family",
+    participants: ["Oliver Harrington"],
+    lastMessage: "I suggest we diversify into renewable energy funds before the next quarter.",
+    lastMessageTime: "18:33",
+    unread: 0,
+    pinned: true,
+    online: false,
+  },
+  {
+    id: 3,
+    title: "Philanthropy Initiatives",
+    familyId: 1,
+    familyName: "Harrington Family",
+    participants: ["Eleanor Harrington"],
+    lastMessage: "Let's prioritize education scholarships this year; it aligns with our long-term vision.",
+    lastMessageTime: "16:20",
+    unread: 0,
+    pinned: false,
+    online: true,
+  },
+  {
+    id: 4,
+    title: "Succession Planning",
+    familyId: 2,
+    familyName: "Roye Family",
+    participants: ["Logan Roy", "Kendall Roy"],
+    lastMessage: "We need to finalize the timeline before the next board meeting.",
+    lastMessageTime: "Yesterday",
+    unread: 2,
+    pinned: false,
+    online: false,
+  },
+  {
+    id: 5,
+    title: "IPO Preparation",
+    familyId: 3,
+    familyName: "Chen Family",
+    participants: ["Wei Chen", "Lin Chen"],
+    lastMessage: "The lawyers have reviewed the documents. Ready for next steps.",
+    lastMessageTime: "Mon",
+    unread: 0,
+    pinned: false,
+    online: false,
+  },
+];
+
+// Messages in current conversation
+const messages = [
+  {
+    id: 1,
+    sender: "Clara Harrington",
+    content: "I've been thinking about who should take over as CEO when father retires. It's a big decision for the family.",
+    time: "10:30 AM",
+    isOwn: false,
+  },
+  {
+    id: 2,
+    sender: "Oliver Harrington",
+    content: "I agree. We need someone who understands both the business and the family values. It's not just about qualifications.",
+    time: "10:32 AM",
+    isOwn: false,
+  },
+  {
+    id: 3,
+    sender: "You",
+    content: "As your advisor, I'd recommend we create a formal succession plan. This should include clear criteria, a timeline, and involvement from all key stakeholders.",
+    time: "10:35 AM",
+    isOwn: true,
+  },
+  {
+    id: 4,
+    sender: "Eleanor Harrington",
+    content: "That sounds reasonable. What kind of criteria should we consider?",
+    time: "10:38 AM",
+    isOwn: false,
+  },
+  {
+    id: 5,
+    sender: "You",
+    content: "We should look at leadership experience, understanding of family governance, strategic vision, and the ability to maintain family harmony while driving business growth.",
+    time: "10:42 AM",
+    isOwn: true,
+  },
+  {
+    id: 6,
+    sender: "Clara Harrington",
+    content: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate.",
+    time: "12:05 PM",
+    isOwn: false,
+  },
+];
+
+// Conversation participants for header
+const currentConversation = {
+  title: "CEO Position Discussion",
+  participants: [
+    { name: "Clara Harrington", online: true },
+    { name: "Oliver Harrington", online: false },
+    { name: "Eleanor Harrington", online: true },
+  ],
+};
+
+export default function MessagesPage() {
+  const [conversationsList, setConversationsList] = useState(conversations);
+  const [messagesList, setMessagesList] = useState(messages);
+  const [newMessage, setNewMessage] = useState("");
+  const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
+  const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [newConvStep, setNewConvStep] = useState<"family" | "participants">("family");
+  const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<typeof familiesData[0] | null>(null);
+  const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
+
+  // Filter conversations
+  const filteredConversations = conversationsList.filter(conv => {
+    const matchesFamily = selectedFamilyFilter === null || conv.familyId === selectedFamilyFilter;
+    const matchesSearch = searchQuery === "" || 
+      conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.participants.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesFamily && matchesSearch;
+  });
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+
+    const newMsg = {
+      id: messagesList.length + 1,
+      sender: "You",
+      content: newMessage,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isOwn: true,
+    };
+
+    setMessagesList([...messagesList, newMsg]);
+    setNewMessage("");
+
+    // Simulate reply
+    setTimeout(() => {
+      const replyMsg = {
+        id: messagesList.length + 2,
+        sender: "Clara Harrington",
+        content: "That's a great point. Let's discuss this further in our next meeting.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: false,
+      };
+      setMessagesList(prev => [...prev, replyMsg]);
+    }, 3000);
+  };
+
+  const handleOpenNewConversation = () => {
+    setNewConvStep("family");
+    setSelectedFamilyForConv(null);
+    setSelectedParticipants([]);
+    setIsNewConversationOpen(true);
+  };
+
+  const handleSelectFamily = (family: typeof familiesData[0]) => {
+    setSelectedFamilyForConv(family);
+    setNewConvStep("participants");
+  };
+
+  const handleAddEntireFamily = () => {
+    if (selectedFamilyForConv) {
+      setSelectedParticipants(selectedFamilyForConv.members.map(m => m.id));
+    }
+  };
+
+  const toggleParticipant = (memberId: number) => {
+    setSelectedParticipants(prev => 
+      prev.includes(memberId) 
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
+
+  const handleStartConversation = () => {
+    const newId = Math.max(...conversations.map(c => c.id)) + 1;
+    const familyName = selectedFamilyForConv?.name || "Unknown Family";
+    
+    const newConversation = {
+      id: newId,
+      title: "New Conversation", // Could be dynamic based on input
+      familyId: selectedFamilyForConv?.id || 0,
+      familyName: familyName,
+      participants: selectedFamilyForConv?.members
+        .filter(m => selectedParticipants.includes(m.id))
+        .map(m => m.name) || [],
+      lastMessage: "Started a new conversation",
+      lastMessageTime: "Just now",
+      unread: 0,
+      pinned: false,
+      online: true,
+    };
+
+    // In a real app, we would fetch the conversation details
+    // For now, we'll just add it to the list and select it
+    // Note: We can't easily update the 'conversations' const, so we should move it to state
+    // But since I can't refactor the whole file to state easily in one go without reading it all again,
+    // I will assume 'conversations' is state or I will make it state.
+    
+    // Wait, 'conversations' is a const outside the component. I need to move it to state.
+    setConversationsList([newConversation, ...conversationsList]);
+    setIsNewConversationOpen(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Breadcrumb Bar */}
+      <div className="bg-card border-b border-border">
+        <div className="container py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Home</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              <span className="text-foreground font-medium">Messages</span>
+            </div>
+            <Button onClick={handleOpenNewConversation}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Conversation
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container py-6 h-[calc(100vh-130px)]">
+        <div className="grid grid-cols-12 gap-4 h-full">
+          {/* Conversations List */}
+          <div className="col-span-4 h-full">
+            <Card className="h-full flex flex-col overflow-hidden">
+              <CardHeader className="pb-4 shrink-0">
+                <div className="flex items-center justify-between mb-4">
+                  <CardTitle className="text-base">Messages</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
+                        {selectedFamilyFilter 
+                          ? familiesData.find(f => f.id === selectedFamilyFilter)?.name 
+                          : "All Families"}
+                        <ChevronDown className="h-3 w-3 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem 
+                        onClick={() => setSelectedFamilyFilter(null)}
+                        className="cursor-pointer"
+                      >
+                        All Families
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {familiesData.map((family) => (
+                        <DropdownMenuItem 
+                          key={family.id}
+                          onClick={() => setSelectedFamilyFilter(family.id)}
+                          className="cursor-pointer"
+                        >
+                          {family.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search conversations..." 
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-hidden pt-0">
+                <ScrollArea className="h-full">
+                  <div className="space-y-1">
+                    {filteredConversations.map((conv, index) => (
+                      <div key={conv.id}>
+                        {index === 0 && conv.pinned && (
+                          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+                            <Pin className="h-3 w-3" />
+                            Pinned
+                          </div>
+                        )}
+                        {index > 0 && !conv.pinned && filteredConversations[index - 1]?.pinned && (
+                          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground mt-2">
+                            All Messages
+                          </div>
+                        )}
+                        <div 
+                          className={`p-3 rounded-[10px] cursor-pointer transition-colors ${
+                            conv.id === 1 ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="relative">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback>
+                                  {conv.title.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              {conv.online && (
+                                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-card" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-medium text-foreground text-sm truncate">{conv.title}</h3>
+                                <span className="text-xs text-muted-foreground shrink-0 ml-2">{conv.lastMessageTime}</span>
+                              </div>
+                              <p className="text-xs text-primary truncate mt-0.5">
+                                {conv.familyName}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {conv.participants.slice(0, 2).join(", ")}
+                                {conv.participants.length > 2 && ` +${conv.participants.length - 2}`}
+                              </p>
+                              <p className="text-sm text-muted-foreground truncate mt-1">{conv.lastMessage}</p>
+                            </div>
+                            {conv.unread > 0 && (
+                              <Badge className="shrink-0">{conv.unread}</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredConversations.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No conversations found
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Chat Area */}
+          <div className="col-span-8 h-full">
+            <Card className="h-full flex flex-col overflow-hidden">
+              {/* Chat Header */}
+              <div className="p-4 border-b border-border shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>CP</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="font-semibold text-foreground">{currentConversation.title}</h2>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        {currentConversation.participants.map((p, i) => (
+                          <span key={p.name} className="flex items-center gap-1">
+                            {p.online && <Circle className="h-2 w-2 fill-green-500 text-green-500" />}
+                            {p.name}
+                            {i < currentConversation.participants.length - 1 && ","}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon">
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Phone className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Video className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Star className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Info className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {messagesList.map((message) => (
+                    <div 
+                      key={message.id} 
+                      className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                    >
+                      <div className={`flex items-end gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : ""}`}>
+                        {!message.isOwn && (
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarFallback className="text-xs">
+                              {message.sender.split(" ").map(n => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className={`space-y-1 ${message.isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                          {!message.isOwn && (
+                            <span className="text-xs text-muted-foreground">{message.sender}</span>
+                          )}
+                          <div 
+                            className={`px-4 py-2 rounded-2xl ${
+                              message.isOwn 
+                                ? "bg-primary text-primary-foreground" 
+                                : "bg-muted"
+                            }`}
+                          >
+                            <p className="text-sm">{message.content}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">{message.time}</span>
+                            {message.isOwn && <CheckCheck className="h-3 w-3 text-primary" />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              {/* Message Input */}
+              <div className="p-4 border-t border-border shrink-0">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon">
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <div className="flex-1 relative">
+                    <Input 
+                      placeholder="Type your message..." 
+                      className="pr-10"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                    />
+                    <Button variant="ghost" size="icon" className="absolute right-0 top-0">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button onClick={handleSendMessage}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* New Conversation Modal */}
+      <Dialog open={isNewConversationOpen} onOpenChange={setIsNewConversationOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {newConvStep === "family" ? "New Conversation" : `Select Participants - ${selectedFamilyForConv?.name}`}
+            </DialogTitle>
+          </DialogHeader>
+
+          {newConvStep === "family" ? (
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">Select a family to start a conversation:</p>
+              <div className="space-y-2">
+                {familiesData.map((family) => (
+                  <div
+                    key={family.id}
+                    onClick={() => handleSelectFamily(family)}
+                    className="flex items-center gap-3 p-3 rounded-[10px] border border-border hover:border-primary/50 cursor-pointer transition-colors"
+                  >
+                    <Avatar>
+                      <AvatarFallback>{family.name.split(" ")[0][0]}{family.name.split(" ")[1]?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="font-medium text-foreground">{family.name}</div>
+                      <div className="text-xs text-muted-foreground">{family.members.length} members</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setNewConvStep("family")}
+                >
+                  <ChevronRight className="h-4 w-4 mr-1 rotate-180" />
+                  Back
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAddEntireFamily}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Add Entire Family
+                </Button>
+              </div>
+
+              <p className="text-sm text-muted-foreground">Select participants for the conversation:</p>
+              
+              <div className="space-y-2">
+                {selectedFamilyForConv?.members.map((member) => (
+                  <div
+                    key={member.id}
+                    onClick={() => toggleParticipant(member.id)}
+                    className={`flex items-center gap-3 p-3 rounded-[10px] border cursor-pointer transition-colors ${
+                      selectedParticipants.includes(member.id)
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="relative">
+                      <Avatar>
+                        <AvatarFallback>{member.avatar}</AvatarFallback>
+                      </Avatar>
+                      {member.online && (
+                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-card" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-foreground">{member.name}</div>
+                      <div className="text-xs text-muted-foreground">{member.role}</div>
+                    </div>
+                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedParticipants.includes(member.id)
+                        ? "bg-primary border-primary"
+                        : "border-muted-foreground"
+                    }`}>
+                      {selectedParticipants.includes(member.id) && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {selectedParticipants.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {selectedParticipants.length} participant{selectedParticipants.length > 1 ? "s" : ""} selected
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewConversationOpen(false)}>
+              Cancel
+            </Button>
+            {newConvStep === "participants" && (
+              <Button 
+                disabled={selectedParticipants.length === 0}
+                onClick={handleStartConversation}
+              >
+                Start Conversation
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generating Constitution - Family Constitution Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        background: '#F6F8FA',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        .ai-avatar {
+            background: linear-gradient(135deg, #FB6428 0%, rgba(251, 100, 40, 0.8) 100%);
+        }
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #FB6428;
+            animation: typing 1.4s infinite;
+            display: inline-block;
+            margin: 0 3px;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-12px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen flex items-center justify-center py-8 px-4">
+    <div class="max-w-3xl w-full">
+
+        <div class="bg-white rounded-2xl shadow-2xl p-12 text-center">
+            <!-- AI Avatar -->
+            <div class="w-32 h-32 rounded-full ai-avatar flex items-center justify-center mx-auto mb-8 pulse">
+                <span class="text-white text-6xl">🤖</span>
+            </div>
+
+            <!-- Main Title -->
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                AI is Creating Your Governance Documents...
+            </h1>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator flex justify-center mb-8">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Progress Steps -->
+            <div id="stepsContainer" class="space-y-4 max-w-lg mx-auto text-left">
+                <div id="step1" class="flex items-center gap-3 text-gray-400">
+                    <span class="text-2xl">⏳</span>
+                    <div class="text-lg">Analyzing your assessment responses...</div>
+                </div>
+                <div id="step2" class="flex items-center gap-3 text-gray-400">
+                    <span class="text-2xl">⏳</span>
+                    <div class="text-lg">Processing your governance preferences...</div>
+                </div>
+                <div id="step3" class="flex items-center gap-3 text-gray-400">
+                    <span class="text-2xl">⏳</span>
+                    <div class="text-lg">Drafting Family Constitution (12 articles)...</div>
+                </div>
+                <div id="step4" class="flex items-center gap-3 text-gray-400">
+                    <span class="text-2xl">⏳</span>
+                    <div class="text-lg">Creating governance frameworks...</div>
+                </div>
+                <div id="step5" class="flex items-center gap-3 text-gray-400">
+                    <span class="text-2xl">⏳</span>
+                    <div class="text-lg">Mapping sources to each section...</div>
+                </div>
+            </div>
+
+            <!-- Progress Info -->
+            <div class="mt-8 text-sm text-gray-500">
+                This usually takes 3-5 seconds...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="sections-data.js"></script>
+    <script src="phase2-questions.js"></script>
+    <script src="storage-utils.js"></script>
+    <script src="generate-constitution.js"></script>
+
+    <script>
+        let currentStep = 0;
+        const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+
+        // Animate steps
+        function animateSteps() {
+            if (currentStep < steps.length) {
+                const stepEl = document.getElementById(steps[currentStep]);
+                stepEl.classList.remove('text-gray-400');
+                stepEl.classList.add('text-green-600', 'fade-in');
+                stepEl.querySelector('span').textContent = '✓';
+
+                currentStep++;
+                setTimeout(animateSteps, 600);
+            } else {
+                // All steps complete, generate constitution and redirect
+                setTimeout(() => {
+                    generateArtifacts();
+                    window.location.href = 'artifacts-view.html';
+                }, 500);
+            }
+        }
+
+        // Start animation on load
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(animateSteps, 500);
+        });
+
+        function generateArtifacts() {
+            const phase1 = loadPhase1Responses();
+            const phase2 = loadPhase2Responses();
+            const priorityAreas = loadPriorityAreas();
+
+            // Generate constitution articles
+            const articles = generateConstitutionArticles(phase1, phase2, priorityAreas);
+
+            // Create artifacts object
+            const artifacts = {
+                constitution: {
+                    preamble: generatePreamble(),
+                    articles: articles
+                },
+                decisionFramework: generateDecisionFramework(phase2, priorityAreas),
+                conflictProtocol: generateConflictProtocol(phase2, priorityAreas),
+                communicationCharter: generateCommunicationCharter(phase2, priorityAreas),
+                generatedAt: new Date().toISOString()
+            };
+
+            // Save artifacts
+            saveArtifacts(artifacts);
+        }
+
+        function generatePreamble() {
+            return "We, the Family, united by shared values and commitment to our collective future, establish this Constitution to guide our family governance for generations to come. This living document reflects our commitment to transparency, mutual respect, and sustainable wealth stewardship.";
+        }
+
+        function generateConstitutionArticles(phase1, phase2, priorityAreas) {
+            const articles = [
+                {
+                    number: 1,
+                    title: "Family Values & Mission",
+                    content: "Strong communication, transparency, and mutual respect form the foundation of our family values. We are committed to open dialogue, active listening, and creating space for all voices to be heard.",
+                    sources: ["Section 12: Family Unity & Values", "Section 1: Communication Patterns"]
+                },
+                {
+                    number: 2,
+                    title: "Communication Charter",
+                    content: getPhase2Answer(phase2, priorityAreas, 1, 'comm-1') || "Monthly family council meetings with structured agendas and rotating leadership. All adult members participate with clear communication protocols.",
+                    sources: ["Section 1: Communication Patterns", "Phase 2: Communication Questions"]
+                },
+                {
+                    number: 3,
+                    title: "Governance Structure",
+                    content: "Family Council consists of all adult family members (age 25+). Council meets regularly for strategic decisions. Board of Advisors provides expert guidance without voting rights.",
+                    sources: ["Section 5: Roles & Responsibilities", "Section 2: Decision-Making"]
+                },
+                {
+                    number: 4,
+                    title: "Decision-Making Framework",
+                    content: getPhase2Answer(phase2, priorityAreas, 2, 'decision-1') || "Unanimous vote required for constitutional changes and major transactions. Supermajority (75%) for significant investments. Simple majority for operational matters.",
+                    sources: ["Section 2: Decision-Making Process", "Phase 2: Decision Questions"]
+                },
+                {
+                    number: 5,
+                    title: "Voting Rights & Procedures",
+                    content: getPhase2Answer(phase2, priorityAreas, 2, 'decision-3') || "Each family member age 25+ holds one vote with equal weight. Proxy voting permitted with written authorization. Quorum requires majority of voting members present.",
+                    sources: ["Section 2: Decision-Making Process", "Phase 2: Decision Questions"]
+                },
+                {
+                    number: 6,
+                    title: "Financial Transparency & Reporting",
+                    content: getPhase2Answer(phase2, priorityAreas, 4, 'finance-2') || "Quarterly financial reports shared with all family members. Annual comprehensive review with external auditors. Transparent reporting of all major financial decisions.",
+                    sources: ["Section 4: Financial Transparency", "Phase 2: Financial Questions"]
+                },
+                {
+                    number: 7,
+                    title: "Conflict Resolution Protocol",
+                    content: getPhase2Answer(phase2, priorityAreas, 3, 'conflict-1') || "Three-step process: (1) Direct dialogue between parties, (2) Mediation by neutral family member, (3) External professional mediator if unresolved.",
+                    sources: ["Section 3: Conflict Resolution", "Phase 2: Conflict Questions"]
+                },
+                {
+                    number: 8,
+                    title: "Succession Planning",
+                    content: "Next generation leadership development program with mentorship pairings. Structured transition timeline with graduated responsibilities and knowledge transfer.",
+                    sources: ["Section 7: Succession Readiness"]
+                },
+                {
+                    number: 9,
+                    title: "Family Business Involvement",
+                    content: "Family members may join business based on qualifications and merit. Clear requirements for education, external experience, and role availability. Compensation at market rates.",
+                    sources: ["Section 8: Business Involvement"]
+                },
+                {
+                    number: 10,
+                    title: "Education & Development",
+                    content: "Annual education budget allocated per family member. Financial literacy program mandatory. Leadership development opportunities for next generation.",
+                    sources: ["Section 9: Education & Development"]
+                },
+                {
+                    number: 11,
+                    title: "Philanthropy & Social Impact",
+                    content: "Annual charitable giving commitment with family council determining priorities. Individual giving autonomy within allocation limits.",
+                    sources: ["Section 10: Philanthropy Alignment"]
+                },
+                {
+                    number: 12,
+                    title: "Amendment Process",
+                    content: "Constitutional amendments require: (1) Written proposal, (2) 60-day review period, (3) Family meeting presentation, (4) Unanimous vote. Annual constitution review scheduled.",
+                    sources: ["General Governance Best Practices"]
+                }
+            ];
+
+            return articles;
+        }
+
+        function getPhase2Answer(phase2, priorityAreas, sectionId, questionId) {
+            const area = priorityAreas.find(a => a.section.id === sectionId);
+            if (!area) return null;
+            return phase2[sectionId]?.[questionId] || null;
+        }
+
+        function generateDecisionFramework(phase2, priorityAreas) {
+            const content = getPhase2Answer(phase2, priorityAreas, 2, 'decision-2');
+            return {
+                title: "Decision-Making Framework",
+                content: content || "Structured process for major family decisions with clear thresholds, review stages, and implementation tracking."
+            };
+        }
+
+        function generateConflictProtocol(phase2, priorityAreas) {
+            const content = getPhase2Answer(phase2, priorityAreas, 3, 'conflict-1');
+            return {
+                title: "Conflict Resolution Protocol",
+                content: content || "Three-tier escalation process ensuring fair and effective conflict resolution with clear steps and mediator guidelines."
+            };
+        }
+
+        function generateCommunicationCharter(phase2, priorityAreas) {
+            const content = getPhase2Answer(phase2, priorityAreas, 1, 'comm-2');
+            return {
+                title: "Communication Charter",
+                content: content || "Guidelines for family communication across different channels with response times and escalation procedures."
+            };
+        }
+    </script>
+</body>
+</html>

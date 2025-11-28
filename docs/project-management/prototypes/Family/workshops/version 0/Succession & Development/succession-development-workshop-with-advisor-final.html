@@ -1,0 +1,1478 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succession & Development Workshop with Advisor - Contact Enhanced - Family Governance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB6428',
+                        'primary-dark': '#E5541A',
+                        background: '#F5F7FA',
+                        card: '#FFFFFF',
+                        border: '#F0F0F0',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            animation: modalFadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FB6428; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E5541A; }
+    </style>
+</head>
+<body class="bg-background min-h-screen">
+    <!-- Header -->
+    <header class="bg-card shadow-sm border-b border-border sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-semibold text-gray-900">RE:Family</h1>
+                    <nav class="hidden md:flex space-x-4">
+                        <a href="#" class="text-gray-500 hover:text-gray-900 transition-colors">Dashboard</a>
+                        <a href="#" class="text-gray-900 font-medium">Constitution Setup</a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Step 4 of 8</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Family Succession & Development Setup</span>
+                <span class="text-sm text-gray-600" id="progress-text">0% Complete</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-primary h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Screen 1: Workshop Method Selection -->
+        <div class="screen active" id="screen-1">
+            <div class="max-w-4xl mx-auto">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-semibold text-gray-900 mb-2">How would you like to complete the Succession & Development?</h1>
+                    <p class="text-gray-600">Choose the method that works best for your family's needs and schedule.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="workshop-option selected bg-card border-2 border-primary rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg" data-method="advisor">
+                        <div class="text-5xl mb-4">👨‍💼</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Workshop with Advisor</h3>
+                        <p class="text-gray-600 mb-4">Get professional guidance from family governance expert</p>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-primary font-semibold">$500-1500 per session</span>
+                            <span class="text-xs text-gray-500">2-3 hours</span>
+                        </div>
+                    </div>
+
+                    <div class="workshop-option bg-card border-2 border-gray-200 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg hover:border-gray-300" data-method="ai">
+                        <div class="text-5xl mb-4">🤖</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Workshop with AI</h3>
+                        <p class="text-gray-600 mb-4">AI-guided interactive workshop</p>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-green-600 font-semibold">Included in subscription</span>
+                            <span class="text-xs text-gray-500">1-2 hours</span>
+                        </div>
+                    </div>
+
+                    <div class="workshop-option bg-card border-2 border-gray-200 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg hover:border-gray-300" data-method="auto">
+                        <div class="text-5xl mb-4">⚡</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Let AI do this</h3>
+                        <p class="text-gray-600 mb-4">Fully automated Succession & Development based on your profile</p>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-green-600 font-semibold">Free</span>
+                            <span class="text-xs text-gray-500">Instant</span>
+                        </div>
+                    </div>
+
+                    <div class="workshop-option bg-card border-2 border-gray-200 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg hover:border-gray-300" data-method="manual">
+                        <div class="text-5xl mb-4">✍️</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">I'll do it manually</h3>
+                        <p class="text-gray-600 mb-4">Fill out Succession & Development yourself</p>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-green-600 font-semibold">Free</span>
+                            <span class="text-xs text-gray-500">30-45 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="goToScreen(2)" class="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                        Continue to Advisor Selection →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Advisor Directory -->
+        <div class="screen" id="screen-2">
+            <div class="mb-8">
+                <button onclick="goToScreen(1)" class="text-gray-600 hover:text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back
+                </button>
+                <h1 class="text-3xl font-semibold text-gray-900 mb-2">Select Your Advisor</h1>
+                <p class="text-gray-600">Choose from our network of experienced family governance consultants</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-card rounded-xl p-6 mb-6 shadow-sm border border-border">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option selected>Succession & Development ✓</option>
+                            <option>All Specializations</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>All Languages</option>
+                            <option>English</option>
+                            <option>Spanish</option>
+                            <option>Mandarin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>All Timezones</option>
+                            <option>EST</option>
+                            <option>PST</option>
+                            <option>GMT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>All Prices</option>
+                            <option>$500-$750</option>
+                            <option>$750-$1000</option>
+                            <option>$1000+</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advisors Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="advisor-card selected bg-card border-2 border-primary rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg" data-advisor="sarah">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                        SJ
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-1">Dr. Sarah Johnson</h3>
+                    <div class="text-center text-yellow-500 mb-2">★★★★★ 4.9 (127)</div>
+                    <p class="text-sm text-gray-600 text-center mb-3">Family Succession & Development, Governance Design</p>
+                    <div class="text-center text-primary font-semibold mb-4">$800/session</div>
+                    <div class="space-y-2">
+                        <button onclick="openContactModal('sarah')" class="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors">
+                            Contact Advisor
+                        </button>
+                        <button onclick="selectAdvisor('sarah')" class="w-full border-2 border-primary text-primary py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Select & Schedule
+                        </button>
+                    </div>
+                </div>
+
+                <div class="advisor-card bg-card border-2 border-gray-200 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg hover:border-gray-300" data-advisor="michael">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                        MC
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-1">Michael Chen, MBA</h3>
+                    <div class="text-center text-yellow-500 mb-2">★★★★ 4.7 (89)</div>
+                    <p class="text-sm text-gray-600 text-center mb-3">Family Succession & Development, Succession</p>
+                    <div class="text-center text-primary font-semibold mb-4">$950/session</div>
+                    <div class="space-y-2">
+                        <button onclick="openContactModal('michael')" class="w-full border-2 border-primary text-primary py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Contact Advisor
+                        </button>
+                        <button onclick="selectAdvisor('michael')" class="w-full border-2 border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Select & Schedule
+                        </button>
+                    </div>
+                </div>
+
+                <div class="advisor-card bg-card border-2 border-gray-200 rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg hover:border-gray-300" data-advisor="maria">
+                    <div class="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                        MR
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-1">Maria Rodriguez</h3>
+                    <div class="text-center text-yellow-500 mb-2">★★★★★ 4.8 (156)</div>
+                    <p class="text-sm text-gray-600 text-center mb-3">Family Succession & Development, Values</p>
+                    <div class="text-center text-primary font-semibold mb-4">$750/session</div>
+                    <div class="space-y-2">
+                        <button onclick="openContactModal('maria')" class="w-full border-2 border-primary text-primary py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Contact Advisor
+                        </button>
+                        <button onclick="selectAdvisor('maria')" class="w-full border-2 border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                            Select & Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Smart Scheduling - Family Availability Matrix -->
+        <div class="screen" id="screen-3">
+            <div class="mb-8">
+                <button onclick="goToScreen(2)" class="text-gray-600 hover:text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back
+                </button>
+                <h1 class="text-3xl font-semibold text-gray-900 mb-2">Schedule Workshop with Dr. Sarah Johnson</h1>
+                <p class="text-gray-600">Find a time that works for all family members and your advisor</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Calendar & AI Suggestions -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- AI Smart Scheduling -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">AI Smart Scheduling</h3>
+                                <p class="text-sm text-gray-700 mb-4">Based on family availability and advisor schedule, we recommend:</p>
+                                <div class="space-y-2">
+                                    <div class="bg-white rounded-lg p-3 border border-blue-200 cursor-pointer hover:border-blue-400 transition-colors" onclick="selectSuggestedTime(1)">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <div class="font-semibold text-gray-900">Friday, Nov 15, 2:00 PM</div>
+                                                <div class="text-sm text-gray-600">All 3 members available • Best match</div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Optimal</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors" onclick="selectSuggestedTime(2)">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <div class="font-semibold text-gray-900">Monday, Nov 18, 10:00 AM</div>
+                                                <div class="text-sm text-gray-600">All 3 members available</div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Good</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900">November 2025</h3>
+                            <div class="flex space-x-2">
+                                <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                    </svg>
+                                </button>
+                                <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-2 mb-2">
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Mon</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Tue</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Wed</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Thu</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Fri</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Sat</div>
+                            <div class="text-center text-xs font-medium text-gray-500 py-2">Sun</div>
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-2">
+                            <!-- Calendar days -->
+                            <div class="calendar-day opacity-30 text-center py-3 text-sm text-gray-400"></div>
+                            <div class="calendar-day opacity-30 text-center py-3 text-sm text-gray-400"></div>
+                            <div class="calendar-day opacity-30 text-center py-3 text-sm text-gray-400"></div>
+                            <div class="calendar-day opacity-30 text-center py-3 text-sm text-gray-400"></div>
+                            <div class="calendar-day opacity-30 text-center py-3 text-sm text-gray-400"></div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">1</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">2</div>
+
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">3</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">4</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">5</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">6</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">7</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">8</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">9</div>
+
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">10</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">11</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">12</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">13</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">14</div>
+                            <div class="calendar-day selected text-center py-3 text-sm bg-primary text-white font-semibold rounded-lg cursor-pointer">15</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">16</div>
+
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">17</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">18</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">19</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">20</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">21</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">22</div>
+                            <div class="calendar-day text-center py-3 text-sm hover:bg-gray-100 rounded-lg cursor-pointer">23</div>
+                        </div>
+
+                        <!-- Time Slots -->
+                        <div class="mt-6">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Available Times - Nov 15</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="time-slot border-2 border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-colors">
+                                    <div class="font-semibold">10:00 AM</div>
+                                    <div class="text-xs text-gray-600">1.5h session</div>
+                                </div>
+                                <div class="time-slot selected border-2 border-primary bg-primary text-white rounded-lg p-3 text-center cursor-pointer">
+                                    <div class="font-semibold">2:00 PM</div>
+                                    <div class="text-xs">1.5h session</div>
+                                </div>
+                                <div class="time-slot border-2 border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-colors">
+                                    <div class="font-semibold">4:00 PM</div>
+                                    <div class="text-xs text-gray-600">1.5h session</div>
+                                </div>
+                                <div class="time-slot border-2 border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-colors">
+                                    <div class="font-semibold">6:00 PM</div>
+                                    <div class="text-xs text-gray-600">1.5h session</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Participants & Summary -->
+                <div class="space-y-6">
+                    <!-- Family Availability Matrix -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Family Availability</h3>
+                        <p class="text-sm text-gray-600 mb-4">Check availability for Nov 15, 2:00 PM</p>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">John Smith</div>
+                                        <div class="text-xs text-gray-600">Administrator</div>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
+                                        MS
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Mary Smith</div>
+                                        <div class="text-xs text-gray-600">Family Council</div>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
+                                        DS
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">David Smith</div>
+                                        <div class="text-xs text-gray-600">Family Member</div>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
+                                        SJ
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">Dr. Sarah Johnson</div>
+                                        <div class="text-xs text-gray-600">Advisor</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Confirmed participants:</span>
+                                <span class="font-semibold text-green-600">3 of 3 ✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Automated Reminders -->
+                    <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-2">Automated Reminders</h4>
+                                <ul class="text-xs text-gray-700 space-y-1">
+                                    <li>• Calendar invite sent immediately</li>
+                                    <li>• Email reminder 7 days before</li>
+                                    <li>• SMS reminder 24 hours before</li>
+                                    <li>• Video link sent 1 hour before</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Summary -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Date:</span>
+                                <span class="font-semibold">Fri, Nov 15, 2025</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Time:</span>
+                                <span class="font-semibold">2:00 PM - 3:30 PM EST</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Duration:</span>
+                                <span class="font-semibold">1.5 hours</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Participants:</span>
+                                <span class="font-semibold">3 members + advisor</span>
+                            </div>
+                            <div class="pt-3 border-t border-gray-200">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-900 font-semibold">Total:</span>
+                                    <span class="text-xl font-bold text-primary">$800</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="goToScreen(4)" class="w-full mt-6 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                            Confirm Booking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Booking Confirmed with Materials Library -->
+        <div class="screen" id="screen-4">
+            <div class="max-w-3xl mx-auto">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-semibold text-gray-900 mb-2">Workshop Confirmed!</h1>
+                    <p class="text-gray-600">Your Succession & Development workshop with Dr. Sarah Johnson is scheduled</p>
+                </div>
+
+                <!-- Booking Details -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div>
+                                <div class="text-sm text-gray-600">Date</div>
+                                <div class="font-semibold">Friday, November 15, 2025</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <div class="text-sm text-gray-600">Time</div>
+                                <div class="font-semibold">2:00 PM - 3:30 PM EST</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <div>
+                                <div class="text-sm text-gray-600">Participants</div>
+                                <div class="font-semibold">John, Mary, David + Advisor</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <div>
+                                <div class="text-sm text-gray-600">Meeting Link</div>
+                                <div class="font-semibold text-primary cursor-pointer hover:underline">Sent 1h before</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials Library -->
+                <div class="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">📚 Workshop Materials</h2>
+                            <p class="text-sm text-gray-600 mt-1">Prepared by Dr. Sarah Johnson</p>
+                        </div>
+                        <span class="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">3 items</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Family Succession & Development Workbook</div>
+                                    <div class="text-sm text-gray-600">PDF • 24 pages • Essential reading</div>
+                                </div>
+                            </div>
+                            <button class="text-primary font-medium hover:text-primary-dark transition-colors">Download</button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Pre-Workshop Questionnaire</div>
+                                    <div class="text-sm text-gray-600">Form • 15 minutes • Complete before session</div>
+                                </div>
+                            </div>
+                            <button class="text-primary font-medium hover:text-primary-dark transition-colors">Open</button>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Introduction Video</div>
+                                    <div class="text-sm text-gray-600">Video • 12 minutes • Optional</div>
+                                </div>
+                            </div>
+                            <button class="text-primary font-medium hover:text-primary-dark transition-colors">Watch</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 What Happens Next?</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                                1
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Calendar Invites Sent</div>
+                                <div class="text-sm text-gray-600">All participants received calendar invitations with video link</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                                2
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Complete Pre-Workshop Materials</div>
+                                <div class="text-sm text-gray-600">Review workbook and fill out questionnaire (30 min)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                                3
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Automated Reminders</div>
+                                <div class="text-sm text-gray-600">You'll receive reminders 7 days, 24 hours, and 1 hour before</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                                4
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Join Workshop</div>
+                                <div class="text-sm text-gray-600">Click the video link 5 minutes before start time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="goToScreen(5)" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                        Simulate Workshop Completion →
+                    </button>
+                    <button class="flex-1 border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                        Add to My Calendar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Virtual Workshop Room -->
+        <div class="screen" id="screen-5">
+            <div class="mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-gray-900 mb-1">Succession & Development Workshop - Live Session</h1>
+                        <p class="text-sm text-gray-600">Dr. Sarah Johnson • Friday, Nov 15, 2025 • 2:00 PM EST</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-4 py-2 bg-red-100 text-red-700 font-semibold rounded-lg flex items-center">
+                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                            LIVE
+                        </span>
+                        <span class="text-lg font-semibold text-gray-700">32:45</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Main Content Area -->
+                <div class="lg:col-span-3 space-y-6">
+                    <!-- Video Conference Placeholder -->
+                    <div class="bg-gray-900 rounded-xl overflow-hidden" style="aspect-ratio: 16/9;">
+                        <div class="h-full flex items-center justify-center text-white">
+                            <div class="text-center">
+                                <svg class="w-24 h-24 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <p class="text-gray-400">Video Conference Area</p>
+                                <p class="text-sm text-gray-500 mt-2">Advisor and family members on video call</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Exercise Section -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Current Exercise: Communication Patterns</h3>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">Step 3 of 12</span>
+                        </div>
+
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                            <p class="text-sm text-gray-700">
+                                <strong>Dr. Sarah Johnson:</strong> "Let's evaluate how your family currently handles communication.
+                                On a scale of 1-5, rate the following aspects..."
+                            </p>
+                        </div>
+
+                        <!-- Interactive Exercise -->
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-medium text-gray-900">Frequency of family meetings</span>
+                                    <span class="text-primary font-semibold">Rating: 4/5</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">1</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">2</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">3</button>
+                                    <button class="flex-1 py-2 bg-primary text-white border-2 border-primary rounded-lg">4</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">5</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-medium text-gray-900">Openness in discussions</span>
+                                    <span class="text-gray-500">Not rated yet</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">1</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">2</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">3</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">4</button>
+                                    <button class="flex-1 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">5</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex justify-end">
+                            <button class="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors">
+                                Submit & Continue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Shared Notes Area -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">📝 Shared Workshop Notes</h3>
+                        <div class="bg-gray-50 rounded-lg p-4 min-h-32 text-sm text-gray-700">
+                            <p class="mb-2"><strong>Key Observations:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                <li>Family demonstrates strong commitment to unity</li>
+                                <li>Communication patterns are generally healthy but could be more structured</li>
+                                <li>Need to establish regular meeting cadence</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="space-y-6">
+                    <!-- Participants Status -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">👥 Participants (4)</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                        SJ
+                                    </div>
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="text-sm font-semibold">Dr. Sarah Johnson</div>
+                                    <div class="text-xs text-gray-600">Facilitator</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                        JS
+                                    </div>
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="text-sm font-semibold">John Smith</div>
+                                    <div class="text-xs text-gray-600">Admin</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                        MS
+                                    </div>
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="text-sm font-semibold">Mary Smith</div>
+                                    <div class="text-xs text-gray-600">Council</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                        DS
+                                    </div>
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="text-sm font-semibold">David Smith</div>
+                                    <div class="text-xs text-gray-600">Member</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workshop Progress -->
+                    <div class="bg-card rounded-xl shadow-sm border border-border p-6">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-4">📊 Workshop Progress</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-gray-600">Overall</span>
+                                    <span class="font-semibold">25%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-primary h-2 rounded-full" style="width: 25%"></div>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-gray-200 space-y-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">✓ Introduction</span>
+                                    <span class="text-green-600 font-medium">Complete</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">✓ Family Overview</span>
+                                    <span class="text-green-600 font-medium">Complete</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-primary font-medium">→ Communication (3/12)</span>
+                                    <span class="text-primary font-medium">Current</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Decision Making (4/12)</span>
+                                    <span class="text-gray-400">Pending</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">+ 8 more dimensions</span>
+                                    <span class="text-gray-400">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <h4 class="text-xs font-semibold text-gray-700 mb-3">Quick Actions</h4>
+                        <div class="space-y-2">
+                            <button class="w-full text-left px-3 py-2 bg-white rounded-lg text-sm hover:bg-gray-100 transition-colors">
+                                📎 View Materials
+                            </button>
+                            <button class="w-full text-left px-3 py-2 bg-white rounded-lg text-sm hover:bg-gray-100 transition-colors">
+                                💬 Chat
+                            </button>
+                            <button class="w-full text-left px-3 py-2 bg-white rounded-lg text-sm hover:bg-gray-100 transition-colors">
+                                ⚙️ Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- End Session -->
+                    <button onclick="goToScreen(6)" class="w-full bg-red-100 text-red-700 py-3 rounded-lg font-semibold hover:bg-red-200 transition-colors">
+                        Simulate Workshop End
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Succession & Development Results & Post-Workshop Action Plan -->
+        <div class="screen" id="screen-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-semibold text-gray-900 mb-2">Succession & Development Workshop Completed!</h1>
+                    <p class="text-gray-600">Dr. Sarah Johnson has completed your family Succession & Development</p>
+                </div>
+
+                <!-- Overall Score -->
+                <div class="bg-gradient-to-br from-primary to-primary-dark rounded-xl p-8 text-white text-center mb-6">
+                    <div class="text-6xl font-bold mb-2">7.2/10</div>
+                    <div class="text-xl opacity-90">Overall Family Readiness Score</div>
+                    <div class="text-sm opacity-75 mt-2">Based on 12 dimensions of family governance</div>
+                </div>
+
+                <!-- Key Insights -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Key Strengths
+                        </h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span>Strong commitment to family unity</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span>Clear wealth management practices</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span>Willingness to establish governance</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span>Good intergenerational relationships</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            Areas for Development
+                        </h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-yellow-600 mr-2">!</span>
+                                <span>Improve structured communication</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-600 mr-2">!</span>
+                                <span>Establish formal decision-making process</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-600 mr-2">!</span>
+                                <span>Develop conflict resolution mechanisms</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-600 mr-2">!</span>
+                                <span>Create succession planning framework</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Post-Workshop Action Plan -->
+                <div class="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">🎯 Post-Workshop Action Plan</h2>
+                            <p class="text-sm text-gray-600 mt-1">Generated automatically based on Succession & Development results</p>
+                        </div>
+                        <button class="text-primary font-medium hover:text-primary-dark transition-colors">Download PDF</button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900 mb-1">Immediate Action (Next 7 days)</h4>
+                                    <p class="text-sm text-gray-700 mb-2">Schedule first Family Council meeting to review Succession & Development</p>
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <span class="mr-3">👤 Assigned to: John Smith</span>
+                                        <span>📅 Due: Nov 22, 2025</span>
+                                    </div>
+                                </div>
+                                <button class="ml-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors">
+                                    Create Task
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900 mb-1">Short-term (1-3 months)</h4>
+                                    <p class="text-sm text-gray-700 mb-2">Establish regular family meeting cadence and communication protocols</p>
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <span class="mr-3">👥 Assigned to: Family Council</span>
+                                        <span>📅 Due: Feb 15, 2026</span>
+                                    </div>
+                                </div>
+                                <button class="ml-4 px-4 py-2 border-2 border-primary text-primary rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                                    Create Task
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900 mb-1">Long-term (6-12 months)</h4>
+                                    <p class="text-sm text-gray-700 mb-2">Complete Values & Mission workshop, formalize decision-making framework</p>
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <span class="mr-3">👥 Assigned to: All Members</span>
+                                        <span>📅 Due: Aug 15, 2026</span>
+                                    </div>
+                                </div>
+                                <button class="ml-4 px-4 py-2 border-2 border-primary text-primary rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                                    Create Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <button class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                            Create All Tasks in Task Management
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Succession & Development Report -->
+                <div class="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-semibold text-gray-900">📊 Detailed Succession & Development Report</h2>
+                        <button onclick="toggleReport()" class="text-primary font-medium hover:text-primary-dark transition-colors">
+                            View All 12 Dimensions →
+                        </button>
+                    </div>
+
+                    <div id="report-preview" class="space-y-3">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">1. Communication Patterns</span>
+                                <span class="text-yellow-500 text-lg">★★★★☆ 3.5/5</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Family demonstrates good basic communication but lacks structured forums for difficult conversations.</p>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">2. Decision-Making Process</span>
+                                <span class="text-yellow-500 text-lg">★★★☆☆ 2.5/5</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Current decision-making is informal and ad-hoc. Would benefit from clear decision rights framework.</p>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">3. Financial Literacy</span>
+                                <span class="text-yellow-500 text-lg">★★★★☆ 4/5</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Strong financial understanding among Gen 1. Next generation needs more education.</p>
+                        </div>
+
+                        <div class="text-center py-4 text-gray-500 text-sm">
+                            + 9 more dimensions available in full report
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advisor Follow-up -->
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                    <div class="flex items-start">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-lg font-bold mr-4">
+                            SJ
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900 mb-2">Message from Dr. Sarah Johnson</h3>
+                            <p class="text-sm text-gray-700 mb-4">
+                                "Congratulations on completing your family Succession & Development! Your family shows strong potential for effective governance.
+                                I recommend focusing on the communication and decision-making frameworks in the coming months.
+                                I'm available for a follow-up session in 3 months to review your progress."
+                            </p>
+                            <button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors">
+                                Schedule Follow-up Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="goToScreen(7)" class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                        Approve & Continue to Step 5 →
+                    </button>
+                    <button class="flex-1 border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                        Request Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Step Completed -->
+        <div class="screen" id="screen-7">
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+
+                <h1 class="text-4xl font-semibold text-gray-900 mb-4">Step 4 Completed! 🎉</h1>
+                <p class="text-lg text-gray-600 mb-8">Succession & Development approved and saved to your family constitution</p>
+
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-12 mb-8">
+                    <div class="text-7xl font-bold text-primary mb-4">50%</div>
+                    <div class="text-xl text-gray-700 font-semibold mb-2">Constitution Setup Progress</div>
+                    <div class="text-gray-600">4 of 8 steps completed</div>
+                </div>
+
+                <div class="bg-card rounded-xl shadow-sm border border-border p-8 mb-8 text-left">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">📋 What's Next?</h3>
+                    <p class="text-gray-700 mb-4">
+                        Continue to <strong>Step 5: Values, Mission & Vision</strong> to define your family's core principles
+                        and long-term goals. This step builds directly on insights from your Succession & Development.
+                    </p>
+                    <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                        <p class="text-sm text-gray-700">
+                            💡 <strong>Tip:</strong> Based on your Succession & Development results, we recommend scheduling the Values workshop
+                            with Dr. Sarah Johnson for continuity and deeper insights.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="location.reload()" class="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                        ← Restart Demo
+                    </button>
+                    <button class="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                        Continue to Step 5: Values & Mission →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Advisor Modal -->
+    <div id="contact-modal" class="modal">
+        <div class="modal-content bg-card rounded-xl shadow-2xl max-w-2xl w-full mx-4">
+            <div class="p-6 border-b border-border">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-semibold text-gray-900">Contact Advisor</h2>
+                    <button onclick="closeContactModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Advisor Profile Section -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 mb-6">
+                    <div class="flex items-start space-x-4">
+                        <div id="modal-advisor-avatar" class="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                            SJ
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="modal-advisor-name" class="text-xl font-semibold text-gray-900 mb-1">Dr. Sarah Johnson</h3>
+                            <div class="flex items-center mb-2">
+                                <span id="modal-advisor-rating" class="text-yellow-500 mr-2">★★★★★ 4.9</span>
+                                <span id="modal-advisor-reviews" class="text-sm text-gray-600">(127 reviews)</span>
+                            </div>
+                            <p id="modal-advisor-specialization" class="text-sm text-gray-700 mb-3">
+                                <strong>Specialization:</strong> Family Succession & Development, Governance Design
+                            </p>
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="flex items-center text-gray-700">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    15+ years experience
+                                </span>
+                                <span class="flex items-center text-gray-700">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                                    </svg>
+                                    English, Spanish
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-blue-200">
+                        <p class="text-sm text-gray-700">
+                            <strong>About:</strong> Dr. Johnson specializes in helping multi-generational families establish governance frameworks.
+                            With over 15 years of experience, she has guided 200+ families through their governance journey.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Message Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Message to the Advisor</label>
+                        <textarea
+                            id="advisor-message"
+                            rows="6"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                            placeholder="Hello Dr. Johnson,&#10;&#10;I'm interested in scheduling a Succession & Development workshop for my family. We are a multi-generational family looking to establish our first governance framework.&#10;&#10;Could you please let me know your availability for the next few weeks?&#10;&#10;Best regards"
+                        ></textarea>
+                        <p class="text-xs text-gray-500 mt-2">
+                            💡 The advisor will receive your message on the Advisor Portal and will respond within 24 hours.
+                        </p>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="text-sm text-gray-700">
+                                <strong>What happens next:</strong>
+                                <ul class="mt-2 space-y-1 list-disc list-inside">
+                                    <li>Your message will be sent to the advisor's portal</li>
+                                    <li>The advisor will review your request and respond within 24 hours</li>
+                                    <li>You'll receive a notification when they reply</li>
+                                    <li>You can then schedule a consultation or workshop session</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-border flex justify-end space-x-3">
+                <button onclick="closeContactModal()" class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="sendMessage()" class="px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
+                    Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+        const totalScreens = 7;
+        let selectedAdvisor = null;
+
+        // Advisor data
+        const advisors = {
+            sarah: {
+                name: 'Dr. Sarah Johnson',
+                initials: 'SJ',
+                avatar: 'from-primary to-primary-dark',
+                rating: '★★★★★ 4.9',
+                reviews: '127 reviews',
+                specialization: 'Family Succession & Development, Governance Design',
+                experience: '15+ years experience',
+                languages: 'English, Spanish',
+                about: 'Dr. Johnson specializes in helping multi-generational families establish governance frameworks. With over 15 years of experience, she has guided 200+ families through their governance journey.',
+                price: '$800/session'
+            },
+            michael: {
+                name: 'Michael Chen, MBA',
+                initials: 'MC',
+                avatar: 'from-blue-500 to-blue-600',
+                rating: '★★★★ 4.7',
+                reviews: '89 reviews',
+                specialization: 'Family Succession & Development, Succession Planning',
+                experience: '12+ years experience',
+                languages: 'English, Mandarin',
+                about: 'Michael Chen brings extensive experience in family business succession and Succession & Development. He has worked with Asian and Western families to bridge cultural differences in governance structures.',
+                price: '$950/session'
+            },
+            maria: {
+                name: 'Maria Rodriguez',
+                initials: 'MR',
+                avatar: 'from-pink-500 to-pink-600',
+                rating: '★★★★★ 4.8',
+                reviews: '156 reviews',
+                specialization: 'Family Succession & Development, Values & Mission',
+                experience: '18+ years experience',
+                languages: 'English, Spanish, Portuguese',
+                about: 'Maria Rodriguez is renowned for her values-centered approach to family governance. She has helped over 150 families articulate their core values and translate them into actionable governance structures.',
+                price: '$750/session'
+            }
+        };
+
+        // Progress tracking
+        function updateProgressBar() {
+            const progress = ((currentScreen - 1) / (totalScreens - 1)) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = Math.round(progress) + '% Complete';
+        }
+
+        // Navigation
+        function goToScreen(screenNumber) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('screen-' + screenNumber).classList.add('active');
+            currentScreen = screenNumber;
+            updateProgressBar();
+            window.scrollTo(0, 0);
+        }
+
+        // Workshop option selection
+        function initWorkshopOptions() {
+            document.querySelectorAll('.workshop-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.workshop-option').forEach(o => {
+                        o.classList.remove('selected', 'border-primary');
+                        o.classList.add('border-gray-200');
+                    });
+                    this.classList.add('selected', 'border-primary');
+                    this.classList.remove('border-gray-200');
+                });
+            });
+        }
+
+        // Advisor card selection
+        function initAdvisorCards() {
+            document.querySelectorAll('.advisor-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'BUTTON') {
+                        document.querySelectorAll('.advisor-card').forEach(c => {
+                            c.classList.remove('selected', 'border-primary');
+                            c.classList.add('border-gray-200');
+                        });
+                        this.classList.add('selected', 'border-primary');
+                        this.classList.remove('border-gray-200');
+                    }
+                });
+            });
+        }
+
+        // Open contact modal
+        function openContactModal(advisorId) {
+            console.log('Opening modal for advisor:', advisorId);
+            selectedAdvisor = advisorId;
+            const advisor = advisors[advisorId];
+
+            if (!advisor) {
+                console.error('Advisor not found:', advisorId);
+                return;
+            }
+
+            // Update modal content
+            const avatarEl = document.getElementById('modal-advisor-avatar');
+            if (avatarEl) {
+                avatarEl.className = `w-20 h-20 bg-gradient-to-br ${advisor.avatar} rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0`;
+                avatarEl.textContent = advisor.initials;
+            }
+
+            const nameEl = document.getElementById('modal-advisor-name');
+            if (nameEl) nameEl.textContent = advisor.name;
+
+            const ratingEl = document.getElementById('modal-advisor-rating');
+            if (ratingEl) ratingEl.textContent = advisor.rating;
+
+            const reviewsEl = document.getElementById('modal-advisor-reviews');
+            if (reviewsEl) reviewsEl.textContent = `(${advisor.reviews})`;
+
+            const specializationEl = document.getElementById('modal-advisor-specialization');
+            if (specializationEl) {
+                specializationEl.innerHTML = `<strong>Specialization:</strong> ${advisor.specialization}`;
+            }
+
+            // Show modal
+            document.getElementById('contact-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close contact modal
+        function closeContactModal() {
+            document.getElementById('contact-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Send message
+        function sendMessage() {
+            const message = document.getElementById('advisor-message').value.trim();
+
+            if (!message) {
+                alert('Please enter a message before sending.');
+                return;
+            }
+
+            // Simulate sending message
+            alert(`Message sent to ${advisors[selectedAdvisor].name}!\n\nYou will receive a notification when the advisor responds (usually within 24 hours).`);
+
+            // Close modal and reset
+            closeContactModal();
+            document.getElementById('advisor-message').value = '';
+        }
+
+        // Close modal on background click
+        document.getElementById('contact-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeContactModal();
+            }
+        });
+
+        function selectAdvisor(advisorId) {
+            goToScreen(3);
+        }
+
+        function selectSuggestedTime(timeId) {
+            // Simulate selecting suggested time
+            document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected', 'bg-primary', 'text-white'));
+            const day15 = Array.from(document.querySelectorAll('.calendar-day')).find(d => d.textContent.trim() === '15');
+            if (day15) {
+                day15.classList.add('selected', 'bg-primary', 'text-white', 'font-semibold');
+            }
+        }
+
+        function toggleReport() {
+            alert('Full detailed report would open here with all 12 dimensions');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initWorkshopOptions();
+            initAdvisorCards();
+            updateProgressBar();
+            console.log('Succession & Development Workshop with Advisor - Contact Enhanced Flow');
+        });
+    </script>
+</body>
+</html>
+
+

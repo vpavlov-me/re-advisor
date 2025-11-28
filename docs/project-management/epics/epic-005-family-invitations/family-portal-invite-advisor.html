@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invite External Advisor - Family Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        /* Header */
+        .header {
+            background-color: white;
+            border-bottom: 1px solid #d2d2d7;
+            padding: 0 24px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0066cc;
+        }
+
+        .nav {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav a.active {
+            color: #0066cc;
+            font-weight: 500;
+        }
+
+        /* Main */
+        .container {
+            max-width: 1400px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-description {
+            font-size: 15px;
+            color: #86868b;
+        }
+
+        .btn-add-advisor {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff4500 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-advisor:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: white;
+            border-radius: 16px;
+            width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e5e5;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #86868b;
+        }
+
+        .modal-content {
+            padding: 24px;
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .form-hint {
+            font-size: 13px;
+            color: #86868b;
+            margin-top: 6px;
+        }
+
+        .info-box {
+            background: #f5f9ff;
+            border: 1px solid #d0e4ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .permissions-box {
+            background: #f9f9fb;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .permissions-box.show {
+            display: block;
+        }
+
+        .permission-item {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff4500 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .success-state {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .success-state.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">RE:Family</div>
+            <nav class="nav">
+                <a href="#">Dashboard</a>
+                <a href="#">Governance</a>
+                <a href="#">Development</a>
+                <a href="#" class="active">Family Affairs</a>
+                <a href="#">Tools</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 style="font-size: 32px; margin-bottom: 32px;">Family Members</h1>
+
+        <div class="two-column">
+            <div class="main-content">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">External Advisors</h2>
+                        <p class="section-description">
+                            Connect with external advisors who can provide specialized expertise
+                        </p>
+                    </div>
+                    <button class="btn-add-advisor" onclick="openModal()">
+                        <span>🔗</span>
+                        <span>Add Advisor</span>
+                    </button>
+                </div>
+
+                <div class="empty-state">
+                    <div class="empty-state-icon">👔</div>
+                    <h3>No external advisors linked yet</h3>
+                    <p style="color: #86868b; margin-top: 12px;">
+                        Use an invite code from an advisor to establish a connection
+                    </p>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">Quick Actions</h3>
+                    <button class="btn-add-advisor" style="width: 100%;" onclick="openModal()">
+                        <span>👤</span>
+                        <span>Add Family Member</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">About Family</h3>
+                    <p style="font-size: 14px; color: #86868b; line-height: 1.6;">
+                        Manage your family members and their roles within the governance structure
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Advisor Modal -->
+    <div id="inviteModal" class="modal" onclick="closeModal()">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Invite External Advisor</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div id="formContent" class="modal-content">
+                <div class="info-box">
+                    <strong>💡 Invite an advisor to your family</strong>
+                    <p style="margin-top: 8px; font-size: 14px;">
+                        Send an email invitation with their role and permissions
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Advisor Email *</label>
+                    <input type="email" id="email" class="form-input" placeholder="advisor@example.com">
+                    <div class="form-hint">Enter the advisor's email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Advisor Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Dr. John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Role *</label>
+                    <select id="role" class="form-select" onchange="showPermissions()">
+                        <option value="">Select a role...</option>
+                        <option value="personal">Personal Family Advisor</option>
+                        <option value="external_consul">External Consul</option>
+                        <option value="constitution">Constitution Advisor</option>
+                        <option value="financial">Financial Advisor</option>
+                        <option value="legal">Legal Advisor</option>
+                        <option value="succession">Succession Planning Advisor</option>
+                        <option value="education">Education & Development Advisor</option>
+                    </select>
+                    <div class="form-hint">Define the advisor's area of expertise</div>
+
+                    <div id="permissions" class="permissions-box">
+                        <strong style="font-size: 14px;">Default Permissions:</strong>
+                        <div id="permissionsList"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Access to Family Sections *</label>
+                    <div style="background: #f9f9fb; border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_constitution" checked>
+                                <span style="font-size: 14px;">📜 Constitution</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_meetings">
+                                <span style="font-size: 14px;">🗓️ Meetings & Family Council</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_decisions">
+                                <span style="font-size: 14px;">✅ Decision Making</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_succession">
+                                <span style="font-size: 14px;">👑 Succession Planning</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_education">
+                                <span style="font-size: 14px;">📚 Education & Development</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_communication">
+                                <span style="font-size: 14px;">💬 Communication</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_philanthropy">
+                                <span style="font-size: 14px;">❤️ Philanthropy</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_assets">
+                                <span style="font-size: 14px;">💰 Assets & Wealth</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px;">
+                                <input type="checkbox" id="access_conflicts">
+                                <span style="font-size: 14px;">⚖️ Conflict Resolution</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-hint">Select which sections the advisor can access</div>
+                </div>
+            </div>
+
+            <div id="successContent" class="success-state">
+                <div style="font-size: 64px;">✅</div>
+                <h3 style="margin: 16px 0 8px;">Invitation Sent!</h3>
+                <p style="color: #86868b;">
+                    We've sent an invitation to <strong id="sentEmail"></strong>
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="sendInvite()">Send Invitation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const permissions = {
+            personal: [
+                'Full access to all family sections',
+                'Can view and comment on all family activities',
+                'Attend all meetings as observer',
+                'Provide holistic family governance advice'
+            ],
+            external_consul: [
+                'Strategic advisory on family governance',
+                'High-level consultation on family matters',
+                'Can attend key meetings by invitation',
+                'Access to high-level family documentation'
+            ],
+            constitution: [
+                'View and comment on family constitution',
+                'Participate in amendment discussions',
+                'Access governance documentation',
+                'Attend constitution review meetings'
+            ],
+            financial: [
+                'View family financial reports',
+                'Provide financial advisory insights',
+                'Access asset management documents',
+                'Attend financial planning meetings'
+            ],
+            legal: [
+                'Review legal documents',
+                'Provide legal counsel on family matters',
+                'Access compliance documentation',
+                'Participate in legal review meetings'
+            ],
+            succession: [
+                'View succession planning documents',
+                'Provide succession advisory services',
+                'Access leadership development plans',
+                'Participate in succession discussions'
+            ],
+            education: [
+                'Manage education programs',
+                'Create learning content',
+                'Track family member development',
+                'Access educational resources'
+            ]
+        };
+
+        function openModal() {
+            document.getElementById('inviteModal').classList.add('active');
+            document.getElementById('formContent').style.display = 'block';
+            document.getElementById('successContent').classList.remove('show');
+        }
+
+        function closeModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        function showPermissions() {
+            const role = document.getElementById('role').value;
+            const box = document.getElementById('permissions');
+            const list = document.getElementById('permissionsList');
+
+            if (role && permissions[role]) {
+                list.innerHTML = permissions[role]
+                    .map(p => `<div class="permission-item"><span>✓</span><span>${p}</span></div>`)
+                    .join('');
+                box.classList.add('show');
+            } else {
+                box.classList.remove('show');
+            }
+        }
+
+        function sendInvite() {
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const role = document.getElementById('role').value;
+
+            // Collect selected sections
+            const accessSections = [];
+            const checkboxes = {
+                'constitution': 'Constitution',
+                'meetings': 'Meetings & Family Council',
+                'decisions': 'Decision Making',
+                'succession': 'Succession Planning',
+                'education': 'Education & Development',
+                'communication': 'Communication',
+                'philanthropy': 'Philanthropy',
+                'assets': 'Assets & Wealth',
+                'conflicts': 'Conflict Resolution'
+            };
+
+            for (const [key, label] of Object.entries(checkboxes)) {
+                if (document.getElementById(`access_${key}`).checked) {
+                    accessSections.push(label);
+                }
+            }
+
+            if (!email || !role) {
+                alert('Please fill in required fields (Email and Role)');
+                return;
+            }
+
+            if (accessSections.length === 0) {
+                alert('Please select at least one section for advisor access');
+                return;
+            }
+
+            // Log invitation data (in real app, this would be sent to API)
+            console.log('Invitation Data:', {
+                email,
+                name,
+                role,
+                accessSections,
+                permissions: permissions[role]
+            });
+
+            // Show success
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successContent').classList.add('show');
+            document.getElementById('sentEmail').textContent = email;
+
+            setTimeout(() => closeModal(), 3000);
+        }
+
+        // Auto-open for demo
+        setTimeout(() => openModal(), 500);
+    </script>
+</body>
+</html>

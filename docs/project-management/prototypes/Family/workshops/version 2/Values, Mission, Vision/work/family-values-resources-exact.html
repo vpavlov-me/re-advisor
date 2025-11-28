@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Values Resources - RE:Family (Exact Copy from Codebase)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .logo span {
+            color: #667eea;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        /* Main Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 24px 24px 0 24px;
+            margin-bottom: 16px;
+        }
+
+        .card-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-wrapper {
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-wrapper.blue {
+            background: #dbeafe;
+        }
+
+        .icon-wrapper.green {
+            background: #d1fae5;
+        }
+
+        .icon-wrapper svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .card-content {
+            padding: 0 24px 24px 24px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        /* Features List */
+        .features-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .check-icon {
+            width: 16px;
+            height: 16px;
+            color: #10b981;
+            flex-shrink: 0;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-outline:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Alert */
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-left: 4px solid #f59e0b;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .alert svg {
+            width: 16px;
+            height: 16px;
+            color: #f59e0b;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-text {
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quick-action-btn {
+            width: 100%;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .quick-action-btn.accent {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+        }
+
+        .quick-action-btn.accent:hover {
+            background: #e5e7eb;
+        }
+
+        /* Progress Tracker */
+        .progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .progress-dot.completed {
+            background: #10b981;
+        }
+
+        .progress-dot.in-progress {
+            background: #eab308;
+        }
+
+        .progress-dot.pending {
+            background: #d1d5db;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #374151;
+            flex: 1;
+        }
+
+        .progress-status {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        /* Related Resources */
+        .resource-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .resource-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .resource-link:hover {
+            color: #5a67d8;
+        }
+
+        .resource-link svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            color: #10b981;
+        }
+
+        .toast-text {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="logo">RE:<span>Family</span></div>
+        <div class="nav-menu">
+            <a href="#" class="nav-item">🏠 Dashboard</a>
+            <a href="#" class="nav-item active">📜 Governance</a>
+            <a href="#" class="nav-item">🚀 Development</a>
+            <a href="#" class="nav-item">👨‍👩‍👧‍👦 Family Affairs</a>
+            <a href="#" class="nav-item">🛠️ Tools</a>
+        </div>
+        <div class="user-menu">
+            <div class="notification-icon">
+                🔔
+                <div class="notification-badge">1</div>
+            </div>
+            <div style="font-size: 14px; font-weight: 500; color: #374151;">aa</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-left">
+                <a href="#" class="btn-back" onclick="alert('← Navigating back to Constitution'); return false;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    Back to Constitution
+                </a>
+                <h1>Family Values Resources</h1>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Main Content -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Values Workshop Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="icon-wrapper blue">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                            <div>
+                                <div class="card-title">Family Values Workshop</div>
+                                <div class="card-description">
+                                    Collaborative process to identify and articulate your family's core values
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">Duration</div>
+                                <div class="stat-value">2-3 hours</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Participants</div>
+                                <div class="stat-value">All family members</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Output</div>
+                                <div class="stat-value">5-7 core values</div>
+                            </div>
+                        </div>
+
+                        <div class="features-title">Key Features:</div>
+                        <ul class="features-list">
+                            <li class="feature-item">
+                                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Guided facilitation process</span>
+                            </li>
+                            <li class="feature-item">
+                                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Interactive values exploration</span>
+                            </li>
+                            <li class="feature-item">
+                                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Consensus building activities</span>
+                            </li>
+                            <li class="feature-item">
+                                <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Documentation and next steps</span>
+                            </li>
+                        </ul>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" id="startWorkshopBtn" onclick="handleStartWorkshop()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Start Workshop
+                            </button>
+                            <button class="btn btn-outline" onclick="handleDownloadGuide()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Download Guide
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Values Assessment Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="icon-wrapper green">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+                            </div>
+                            <div>
+                                <div class="card-title">Values Assessment Tool</div>
+                                <div class="card-description">
+                                    Individual assessments to understand personal values alignment
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="alert">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20m0-20l8 8m-8-8-8 8m8 12l8-8m-8 8-8-8"/></svg>
+                            <div class="alert-text">
+                                Complete individual assessments before the family workshop for best results.
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-outline" onclick="handleStartAssessment()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                                Start Assessment
+                            </button>
+                            <button class="btn btn-outline" onclick="handleViewResults()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                View Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="sidebar-card-title">Quick Actions</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="quick-actions">
+                            <button class="btn quick-action-btn accent" onclick="alert('Opening Governance Resources...')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                Governance Resources
+                            </button>
+                            <button class="btn btn-outline quick-action-btn" onclick="alert('Opening Education Center...')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                Education Center
+                            </button>
+                            <button class="btn btn-outline quick-action-btn" onclick="handleRefresh()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="sidebar-card-title">Progress Tracker</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="progress-list">
+                            <div class="progress-item">
+                                <div class="progress-dot completed"></div>
+                                <span class="progress-label">Values Workshop</span>
+                                <span class="progress-status">Completed</span>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-dot in-progress"></div>
+                                <span class="progress-label">Individual Assessments</span>
+                                <span class="progress-status">In Progress</span>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-dot pending"></div>
+                                <span class="progress-label">Values Integration</span>
+                                <span class="progress-status">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Resources -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="sidebar-card-title">Related Resources</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="resource-list">
+                            <a href="#" class="resource-link" onclick="alert('Opening Family Mission Statement...'); return false;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <span>Family Mission Statement</span>
+                            </a>
+                            <a href="#" class="resource-link" onclick="alert('Opening Governance Framework...'); return false;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <span>Governance Framework</span>
+                            </a>
+                            <a href="#" class="resource-link" onclick="alert('Opening Decision Making Process...'); return false;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <span>Decision Making Process</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span class="toast-text" id="toastText"></span>
+    </div>
+
+    <script>
+        // Toast notification function (mimics React toast from sonner library)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            toastText.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handler functions - EXACTLY as in the React code (lines 33-39)
+        function handleStartWorkshop() {
+            const btn = document.getElementById('startWorkshopBtn');
+            const originalHTML = btn.innerHTML;
+
+            // Show loading state
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="spinner" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Starting...';
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                // Exactly as in codebase line 34
+                showToast('Workshop feature coming soon!');
+            }, 800);
+        }
+
+        function handleStartAssessment() {
+            // Exactly as in codebase line 38
+            showToast('Assessment feature coming soon!');
+        }
+
+        function handleViewResults() {
+            showToast('View Results feature coming soon!');
+        }
+
+        function handleDownloadGuide() {
+            showToast('Downloading facilitator guide...');
+            setTimeout(() => {
+                showToast('Guide downloaded successfully!');
+            }, 1500);
+        }
+
+        function handleRefresh() {
+            showToast('Refreshing data...');
+
+            // Simulate data refresh
+            const progressDots = document.querySelectorAll('.progress-dot');
+            progressDots.forEach(dot => {
+                dot.style.opacity = '0.5';
+            });
+
+            setTimeout(() => {
+                progressDots.forEach(dot => {
+                    dot.style.opacity = '1';
+                });
+                showToast('Data refreshed successfully!');
+            }, 1200);
+        }
+
+        // Log API information
+        console.log('=== Family Values Resources - Exact Codebase Copy ===');
+        console.log('Source: /frontend/react-app/src/pages/constitution/FamilyValuesResources.js');
+        console.log('Status: Workshop and Assessment features are placeholders ("coming soon")');
+        console.log('');
+        console.log('API Endpoints (Backend fully implemented):');
+        console.log('- POST /constitution/family-values/workshops');
+        console.log('- GET /constitution/family-values/workshops');
+        console.log('- POST /constitution/values-assessment/assessments');
+        console.log('- GET /constitution/family-values/predefined-values');
+        console.log('');
+        console.log('Note: Frontend only has landing page. Workshop flow is NOT implemented yet.');
+    </script>
+</body>
+</html>

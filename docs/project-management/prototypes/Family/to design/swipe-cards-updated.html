@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reluna Family Governance - Onboarding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 650px;
+            perspective: 1000px;
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 24px;
+            padding: 30px 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateX(100px) scale(0.9);
+            pointer-events: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card.active {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .card.prev {
+            opacity: 0;
+            transform: translateX(-100px) scale(0.9);
+        }
+
+        .card-emoji {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .card-subtitle {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .card-text {
+            font-size: 14px;
+            color: #4a4a68;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .card-text strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .bullet-list {
+            margin: 12px 0;
+            padding-left: 18px;
+        }
+
+        .bullet-list li {
+            font-size: 14px;
+            color: #4a4a68;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            list-style-type: disc;
+        }
+
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .feature-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 10px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a1a2e;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            line-height: 1.3;
+        }
+
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            height: 440px;
+            margin: 12px 0;
+        }
+
+        .diagram-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .center-node {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 130px;
+            height: 130px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+            z-index: 10;
+        }
+
+        .center-node-emoji {
+            font-size: 40px;
+            margin-bottom: 4px;
+        }
+
+        .center-node-text {
+            font-size: 12px;
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.2;
+            padding: 0 8px;
+        }
+
+        .outer-node {
+            position: absolute;
+            width: 88px;
+            height: 88px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border: 3px solid #f5f7fa;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .outer-node:hover {
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+            z-index: 15;
+        }
+
+        .outer-node-emoji {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .outer-node-text {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #1a1a2e;
+            text-align: center;
+            line-height: 1.2;
+            padding: 0 6px;
+        }
+
+        /* Arrow styling */
+        .outer-node::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(102, 126, 234, 0.4), rgba(102, 126, 234, 0.1));
+            z-index: -1;
+        }
+
+        .outer-node::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 8px;
+            border-color: transparent transparent transparent rgba(102, 126, 234, 0.4);
+        }
+
+        /* Position outer nodes in a perfect circle with arrows pointing to center */
+        /* Top */
+        .outer-node:nth-child(2) {
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .outer-node:nth-child(2)::before { top: 100%; left: 50%; transform: translateX(-50%) rotate(90deg); transform-origin: top center; }
+        .outer-node:nth-child(2)::after { top: calc(100% + 56px); left: 50%; transform: translateX(-50%) rotate(90deg); }
+
+        /* Top-right */
+        .outer-node:nth-child(3) {
+            top: 15%;
+            right: 10%;
+        }
+        .outer-node:nth-child(3)::before { bottom: 50%; right: 100%; transform: translateY(50%) rotate(135deg); transform-origin: right center; }
+        .outer-node:nth-child(3)::after { bottom: calc(50% - 20px); right: calc(100% + 38px); transform: rotate(135deg); }
+
+        /* Right */
+        .outer-node:nth-child(4) {
+            top: 50%;
+            right: 4%;
+            transform: translateY(-50%);
+        }
+        .outer-node:nth-child(4)::before { top: 50%; right: 100%; transform: translateY(-50%) rotate(180deg); transform-origin: right center; }
+        .outer-node:nth-child(4)::after { top: 50%; right: calc(100% + 56px); transform: translateY(-50%) rotate(180deg); }
+
+        /* Bottom-right */
+        .outer-node:nth-child(5) {
+            bottom: 15%;
+            right: 10%;
+        }
+        .outer-node:nth-child(5)::before { top: 50%; right: 100%; transform: translateY(-50%) rotate(225deg); transform-origin: right center; }
+        .outer-node:nth-child(5)::after { top: calc(50% + 20px); right: calc(100% + 38px); transform: rotate(225deg); }
+
+        /* Bottom */
+        .outer-node:nth-child(6) {
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .outer-node:nth-child(6)::before { bottom: 100%; left: 50%; transform: translateX(-50%) rotate(270deg); transform-origin: bottom center; }
+        .outer-node:nth-child(6)::after { bottom: calc(100% + 56px); left: 50%; transform: translateX(-50%) rotate(270deg); }
+
+        /* Bottom-left */
+        .outer-node:nth-child(7) {
+            bottom: 15%;
+            left: 10%;
+        }
+        .outer-node:nth-child(7)::before { top: 50%; left: 100%; transform: translateY(-50%) rotate(315deg); transform-origin: left center; }
+        .outer-node:nth-child(7)::after { top: calc(50% + 20px); left: calc(100% + 38px); transform: rotate(315deg); }
+
+        /* Left */
+        .outer-node:nth-child(8) {
+            top: 50%;
+            left: 4%;
+            transform: translateY(-50%);
+        }
+        .outer-node:nth-child(8)::before { top: 50%; left: 100%; transform: translateY(-50%); }
+        .outer-node:nth-child(8)::after { top: 50%; left: calc(100% + 56px); transform: translateY(-50%); }
+
+        /* Top-left */
+        .outer-node:nth-child(9) {
+            top: 15%;
+            left: 10%;
+        }
+        .outer-node:nth-child(9)::before { bottom: 50%; left: 100%; transform: translateY(50%) rotate(45deg); transform-origin: left center; }
+        .outer-node:nth-child(9)::after { bottom: calc(50% - 20px); left: calc(100% + 38px); transform: rotate(45deg); }
+
+        @media (max-width: 768px) {
+            .diagram-container {
+                height: 380px;
+            }
+
+            .center-node {
+                width: 110px;
+                height: 110px;
+            }
+
+            .center-node-emoji {
+                font-size: 28px;
+            }
+
+            .center-node-text {
+                font-size: 11px;
+            }
+
+            .outer-node {
+                width: 75px;
+                height: 75px;
+            }
+
+            .outer-node-emoji {
+                font-size: 20px;
+            }
+
+            .outer-node-text {
+                font-size: 9px;
+            }
+        }
+
+        .stats-container {
+            margin: 12px 0;
+            padding: 16px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-item {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f5576c;
+            display: block;
+            margin: 2px 0;
+        }
+
+        .cta-button {
+            margin-top: auto;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .dots-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .dot.active {
+            background: white;
+            width: 24px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 15;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .nav-button.prev {
+            left: -30px;
+        }
+
+        .nav-button.next {
+            right: -30px;
+        }
+
+        .nav-button svg {
+            width: 24px;
+            height: 24px;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .card-container {
+                height: 600px;
+            }
+
+            .card {
+                padding: 25px 20px;
+            }
+
+            .card-emoji {
+                font-size: 36px;
+                margin-bottom: 10px;
+            }
+
+            .card-title {
+                font-size: 20px;
+                margin-bottom: 8px;
+            }
+
+            .card-subtitle {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .card-text {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+
+            .nav-button {
+                width: 50px;
+                height: 50px;
+            }
+
+            .nav-button.prev {
+                left: -15px;
+            }
+
+            .nav-button.next {
+                right: -15px;
+            }
+
+            .feature-cards {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .stat-item {
+                font-size: 12px;
+                margin: 6px 0;
+            }
+        }
+
+        .card.swiping {
+            transition: transform 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container" id="cardContainer">
+        <!-- Card 1: Welcome -->
+        <div class="card active" data-card="0">
+            <span class="card-emoji">🏛️</span>
+            <h2 class="card-title">Welcome to Reluna Family Governance</h2>
+            <p class="card-subtitle">We help families preserve their legacy, wealth, and harmony across generations.</p>
+            <p class="card-text">
+                Managing family wealth, values, and legacy across generations requires structure, communication, and shared vision.
+            </p>
+            <p class="card-text">
+                Reluna provides the tools and framework to help your family thrive for generations to come.
+            </p>
+        </div>
+
+        <!-- Card 2: The Challenge -->
+        <div class="card" data-card="1">
+            <span class="card-emoji">📉</span>
+            <h2 class="card-title">Generational wealth often fades away</h2>
+
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-number">70%</span>
+                    of wealth is lost by the second generation
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">30%</span>
+                    of family businesses survive to Gen 2
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">12%</span>
+                    reach the third generation
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">3%</span>
+                    make it to the fourth
+                </div>
+            </div>
+
+            <p class="card-text" style="text-align: center; margin-top: 16px;">
+                Without proper governance, generational wealth rarely survives.
+            </p>
+        </div>
+
+        <!-- Card 3: Why It Happens -->
+        <div class="card" data-card="2">
+            <span class="card-emoji">🔍</span>
+            <h2 class="card-title">It's rarely the economy. It's what happens inside the family.</h2>
+
+            <ul class="bullet-list">
+                <li>Lack of open communication</li>
+                <li>Unclear roles and responsibilities</li>
+                <li>Unprepared next generation</li>
+                <li>Conflicts around assets and authority</li>
+                <li>No shared vision or structure</li>
+                <li>Unsustainable management model</li>
+            </ul>
+
+            <p class="card-text" style="margin-top: 20px;">
+                These internal challenges are the real threat to family wealth and harmony — but they can be addressed with the right framework.
+            </p>
+        </div>
+
+        <!-- Card 4: How Reluna Helps -->
+        <div class="card" data-card="3">
+            <span class="card-emoji">🚀</span>
+            <h2 class="card-title">Reluna strengthens your family and reduces risks</h2>
+            <p class="card-subtitle">One hub for your family's future. Everything connects to your Family Constitution.</p>
+
+            <div class="diagram-title">Family Governance</div>
+
+            <div class="diagram-container">
+                <!-- Center Node - Family Constitution -->
+                <div class="center-node">
+                    <div class="center-node-emoji">📜</div>
+                    <div class="center-node-text">Family Constitution</div>
+                </div>
+
+                <!-- Outer Nodes -->
+                <div class="outer-node">
+                    <div class="outer-node-emoji">📋</div>
+                    <div class="outer-node-text">Family Meetings</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">🗳️</div>
+                    <div class="outer-node-text">Decisions</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">💬</div>
+                    <div class="outer-node-text">Communication</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">⚖️</div>
+                    <div class="outer-node-text">Conflicts</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">💼</div>
+                    <div class="outer-node-text">Assets</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">🌱</div>
+                    <div class="outer-node-text">Succession</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">📚</div>
+                    <div class="outer-node-text">Education</div>
+                </div>
+
+                <div class="outer-node">
+                    <div class="outer-node-emoji">🤝</div>
+                    <div class="outer-node-text">Philanthropy</div>
+                </div>
+            </div>
+
+            <p class="card-text" style="text-align: center; font-size: 13px;">
+                Everything your family needs to preserve wealth, values, and vision — in one secure platform.
+            </p>
+        </div>
+
+        <!-- Card 5: Get Started -->
+        <div class="card" data-card="4">
+            <span class="card-emoji">✨</span>
+            <h2 class="card-title">Start protecting your legacy with Reluna</h2>
+            <p class="card-subtitle">Preserve your family wealth, values, and vision — for generations ahead.</p>
+
+            <p class="card-text">
+                Join families around the world who are building lasting legacies with structure, transparency, and shared purpose.
+            </p>
+
+            <p class="card-text">
+                Begin your journey today with a platform designed for family harmony and generational success.
+            </p>
+
+            <button class="cta-button">Get Started →</button>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="nav-button prev" id="prevBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </div>
+        <div class="nav-button next" id="nextBtn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </div>
+
+        <!-- Dots Indicator -->
+        <div class="dots-container">
+            <div class="dot active" data-dot="0"></div>
+            <div class="dot" data-dot="1"></div>
+            <div class="dot" data-dot="2"></div>
+            <div class="dot" data-dot="3"></div>
+            <div class="dot" data-dot="4"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentCard = 0;
+        const totalCards = 5;
+        const cards = document.querySelectorAll('.card');
+        const dots = document.querySelectorAll('.dot');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const container = document.getElementById('cardContainer');
+
+        // Touch swipe variables
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isDragging = false;
+
+        function showCard(index) {
+            cards.forEach(card => {
+                card.classList.remove('active', 'prev');
+            });
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+
+            cards[index].classList.add('active');
+            dots[index].classList.add('active');
+
+            for (let i = 0; i < index; i++) {
+                cards[i].classList.add('prev');
+            }
+
+            currentCard = index;
+        }
+
+        function nextCard() {
+            if (currentCard < totalCards - 1) {
+                showCard(currentCard + 1);
+            }
+        }
+
+        function prevCard() {
+            if (currentCard > 0) {
+                showCard(currentCard - 1);
+            }
+        }
+
+        nextBtn.addEventListener('click', nextCard);
+        prevBtn.addEventListener('click', prevCard);
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                showCard(index);
+            });
+        });
+
+        container.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            isDragging = true;
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            const currentX = e.changedTouches[0].screenX;
+            const diff = currentX - touchStartX;
+
+            cards[currentCard].classList.add('swiping');
+            cards[currentCard].style.transform = `translateX(${diff}px) scale(${1 - Math.abs(diff) / 1000})`;
+        });
+
+        container.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+
+            cards[currentCard].classList.remove('swiping');
+            cards[currentCard].style.transform = '';
+
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    nextCard();
+                } else {
+                    prevCard();
+                }
+            }
+
+            isDragging = false;
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === 'ArrowLeft') prevCard();
+        });
+
+        let mouseStartX = 0;
+        let mouseEndX = 0;
+        let isMouseDragging = false;
+
+        container.addEventListener('mousedown', (e) => {
+            mouseStartX = e.clientX;
+            isMouseDragging = true;
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isMouseDragging) return;
+
+            const diff = e.clientX - mouseStartX;
+            cards[currentCard].classList.add('swiping');
+            cards[currentCard].style.transform = `translateX(${diff}px) scale(${1 - Math.abs(diff) / 1000})`;
+        });
+
+        container.addEventListener('mouseup', (e) => {
+            if (!isMouseDragging) return;
+
+            mouseEndX = e.clientX;
+            const diff = mouseStartX - mouseEndX;
+
+            cards[currentCard].classList.remove('swiping');
+            cards[currentCard].style.transform = '';
+
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    nextCard();
+                } else {
+                    prevCard();
+                }
+            }
+
+            isMouseDragging = false;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            if (isMouseDragging) {
+                cards[currentCard].classList.remove('swiping');
+                cards[currentCard].style.transform = '';
+                isMouseDragging = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Values Workshop - RE:Family Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .top-nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .logo span {
+            color: #667eea;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            cursor: pointer;
+        }
+
+        .breadcrumb:hover {
+            color: #667eea;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .card-icon.secondary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .card-title {
+            flex: 1;
+        }
+
+        .card-title h2 {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .card-title p {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Key Features */
+        .features-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            width: 24px;
+            height: 24px;
+            background: #d1fae5;
+            color: #059669;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-card h3 {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Quick Actions */
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            margin-bottom: 8px;
+        }
+
+        .quick-action:hover {
+            background: #f9fafb;
+        }
+
+        .quick-action-icon {
+            width: 40px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .quick-action-text {
+            flex: 1;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        /* Progress Tracker */
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .progress-badge.completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .progress-badge.in-progress {
+            background: #fed7aa;
+            color: #ea580c;
+        }
+
+        .progress-badge.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        /* Related Resources */
+        .resource-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+            font-size: 14px;
+            color: #667eea;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .resource-link:hover {
+            color: #764ba2;
+            transform: translateX(4px);
+        }
+
+        /* Newsletter */
+        .newsletter-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .newsletter-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .newsletter-input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-newsletter {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Workshop Steps Modal */
+        .steps-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .step-card {
+            flex: 1;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 0 auto 12px;
+        }
+
+        .step-card h4 {
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .step-card p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .steps-container {
+                flex-direction: column;
+            }
+
+            .container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <div class="top-nav">
+        <div class="logo">RE:<span>Family</span></div>
+        <div class="nav-menu">
+            <a href="#" class="nav-item">🏠 Dashboard</a>
+            <a href="#" class="nav-item active">📜 Governance</a>
+            <a href="#" class="nav-item">🚀 Development</a>
+            <a href="#" class="nav-item">👨‍👩‍👧‍👦 Family Affairs</a>
+            <a href="#" class="nav-item">🛠️ Tools</a>
+        </div>
+        <div class="user-menu">
+            <div class="notification-icon">
+                🔔
+                <div class="notification-badge">1</div>
+            </div>
+            <div style="font-size: 14px; font-weight: 500;">aa</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container fade-in">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb" onclick="history.back()">
+            ← Back to Constitution
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Family Values Resources</h1>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Family Values Workshop Card -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <div class="card-icon">👥</div>
+                        <div class="card-title">
+                            <h2>Family Values Workshop</h2>
+                            <p>Collaborative process to identify and articulate your family's core values</p>
+                        </div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">2-3 hours</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Participants</div>
+                            <div class="info-value">All family members</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Output</div>
+                            <div class="info-value">5-7 core values</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: #1f2937;">Key Features:</h3>
+                    <ul class="features-list">
+                        <li>Guided facilitation process</li>
+                        <li>Interactive values exploration</li>
+                        <li>Consensus building activities</li>
+                        <li>Documentation and next steps</li>
+                    </ul>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="openWorkshopModal()">
+                            ▶ Start Workshop
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadGuide()">
+                            📥 Download Guide
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Values Assessment Tool Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon secondary">📋</div>
+                        <div class="card-title">
+                            <h2>Values Assessment Tool</h2>
+                            <p>Individual assessments to understand personal values alignment</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="font-size: 20px;">💡</span>
+                            <strong style="font-size: 14px; color: #92400e;">Pro Tip</strong>
+                        </div>
+                        <p style="font-size: 13px; color: #78350f;">
+                            Complete individual assessments before the family workshop for best results.
+                        </p>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="startAssessment()">
+                            📝 Start Assessment
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewResults()">
+                            📊 View Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <h3>⚡ Quick Actions</h3>
+                    <a href="#" class="quick-action" onclick="event.preventDefault(); alert('Opening Governance Resources...')">
+                        <div class="quick-action-icon">📚</div>
+                        <div class="quick-action-text">Governance Resources</div>
+                    </a>
+                    <a href="#" class="quick-action" onclick="event.preventDefault(); alert('Opening Education Center...')">
+                        <div class="quick-action-icon">🎓</div>
+                        <div class="quick-action-text">Education Center</div>
+                    </a>
+                    <a href="#" class="quick-action" onclick="event.preventDefault(); refreshData()">
+                        <div class="quick-action-icon">🔄</div>
+                        <div class="quick-action-text">Refresh Data</div>
+                    </a>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="sidebar-card">
+                    <h3>📊 Progress Tracker</h3>
+                    <div class="progress-item">
+                        <span class="progress-label">
+                            <span style="color: #10b981;">●</span>
+                            Values Workshop
+                        </span>
+                        <span class="progress-badge completed">Completed</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">
+                            <span style="color: #f59e0b;">●</span>
+                            Individual Assessments
+                        </span>
+                        <span class="progress-badge in-progress">In Progress</span>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">
+                            <span style="color: #6b7280;">●</span>
+                            Values Integration
+                        </span>
+                        <span class="progress-badge pending">Pending</span>
+                    </div>
+                </div>
+
+                <!-- Related Resources -->
+                <div class="sidebar-card">
+                    <h3>🔗 Related Resources</h3>
+                    <a href="#" class="resource-link" onclick="event.preventDefault(); alert('Opening Family Mission Statement...')">
+                        ⭐ Family Mission Statement
+                    </a>
+                    <a href="#" class="resource-link" onclick="event.preventDefault(); alert('Opening Governance Framework...')">
+                        ⭐ Governance Framework
+                    </a>
+                    <a href="#" class="resource-link" onclick="event.preventDefault(); alert('Opening Decision Making Process...')">
+                        ⭐ Decision Making Process
+                    </a>
+                </div>
+
+                <!-- Stay Updated -->
+                <div class="sidebar-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="color: white;">📬 Stay Updated</h3>
+                    <p style="font-size: 13px; margin-bottom: 16px; opacity: 0.9;">
+                        Get insights and update on family governance best practices delivered every two weeks
+                    </p>
+                    <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+                        <input type="email" class="newsletter-input" placeholder="Your email address" required>
+                        <button type="submit" class="btn-newsletter">
+                            Subscribe ✈️
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workshop Setup Modal -->
+    <div id="workshopModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚀 Start Family Values Workshop</h2>
+                <p>Set up your collaborative values discovery session</p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Preparation</h4>
+                    <p>15-30 min</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Discovery</h4>
+                    <p>45-60 min</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Alignment</h4>
+                    <p>30-45 min</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h4>Documentation</h4>
+                    <p>15-20 min</p>
+                </div>
+            </div>
+
+            <form id="workshopForm" onsubmit="createWorkshop(event)">
+                <div class="form-group">
+                    <label>Workshop Title *</label>
+                    <input type="text" name="title" placeholder="e.g., Smith Family Values Workshop 2025" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Purpose and goals for this workshop session..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Scheduled Date & Time</label>
+                    <input type="datetime-local" name="scheduled_date">
+                </div>
+
+                <div class="form-group">
+                    <label>Estimated Duration</label>
+                    <select name="duration_hours">
+                        <option value="2">2 hours</option>
+                        <option value="3" selected>3 hours</option>
+                        <option value="4">4 hours</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Facilitator</label>
+                    <select name="facilitator">
+                        <option value="self">Myself</option>
+                        <option value="advisor">Family Advisor</option>
+                        <option value="council">Family Council Member</option>
+                    </select>
+                </div>
+
+                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                    <h4 style="font-size: 14px; color: #166534; margin-bottom: 8px;">✅ Pre-Workshop Checklist</h4>
+                    <ul style="font-size: 13px; color: #166534; line-height: 1.8; margin-left: 20px;">
+                        <li>All family members have completed individual assessments</li>
+                        <li>Facilitator has reviewed the workshop guide</li>
+                        <li>Meeting space (physical or virtual) is prepared</li>
+                        <li>Materials and resources are ready</li>
+                    </ul>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeWorkshopModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Workshop Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: white; border-top: 1px solid #e5e7eb; padding: 32px; margin-top: 48px;">
+        <div style="max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;">
+            <div>
+                <div class="logo" style="margin-bottom: 16px;">RE:<span>Family</span></div>
+                <p style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                    Reluna Family platform for managing family wealth, governance and legacy.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Platform</h4>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Family Constitution</a>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Family Council</a>
+            </div>
+            <div>
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Education</h4>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Learning Paths</a>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Mentorship</a>
+            </div>
+            <div>
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Legal</h4>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Privacy Policy</a>
+                <a href="#" style="display: block; font-size: 13px; color: #6b7280; margin-bottom: 8px; text-decoration: none;">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openWorkshopModal() {
+            document.getElementById('workshopModal').classList.add('active');
+        }
+
+        function closeWorkshopModal() {
+            document.getElementById('workshopModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('workshopModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeWorkshopModal();
+            }
+        });
+
+        // Create Workshop
+        function createWorkshop(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const workshopData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                scheduled_date: formData.get('scheduled_date'),
+                duration_hours: parseInt(formData.get('duration_hours')),
+                facilitator: formData.get('facilitator'),
+                status: 'planned'
+            };
+
+            console.log('Creating workshop:', workshopData);
+
+            // Simulate API call to POST /constitution/family-values/workshops
+            setTimeout(() => {
+                alert('✅ Workshop created successfully!\n\nWorkshop ID: ws_' + Math.random().toString(36).substr(2, 9) + '\n\nYou will be redirected to the workshop interface...');
+                closeWorkshopModal();
+
+                // Simulate redirect to workshop interface
+                setTimeout(() => {
+                    window.location.href = '../version 1/values-mission-vision-workshop-v1-steps-1-2-EN.html';
+                }, 1000);
+            }, 500);
+        }
+
+        // Start Assessment
+        function startAssessment() {
+            const predefinedValues = [
+                "Honesty", "Respect", "Compassion", "Responsibility", "Loyalty",
+                "Creativity", "Integrity", "Gratitude", "Empathy", "Patience",
+                "Courage", "Kindness", "Generosity", "Humility", "Trustworthiness",
+                "Perseverance", "Ambition", "Adaptability", "Balance", "Cooperation",
+                "Discipline", "Fairness", "Forgiveness", "Friendship", "Optimism",
+                "Love", "Justice", "Reliability", "Curiosity", "Open-mindedness",
+                "Humor", "Wisdom", "Authenticity", "Family", "Growth",
+                "Health", "Harmony", "Independence", "Leadership", "Commitment",
+                "Excellence", "Passion", "Prudence", "Self-awareness", "Stability",
+                "Understanding", "Unity", "Vision", "Service", "Enthusiasm"
+            ];
+
+            alert('📝 Starting Values Assessment...\n\nYou will:\n1. Select your top 5 values from ' + predefinedValues.length + ' options\n2. Share a family story demonstrating values\n3. Answer reflection questions\n\nEstimated time: 15-20 minutes\n\nAPI: POST /constitution/values-assessment/assessments');
+
+            console.log('Available values:', predefinedValues);
+            console.log('API Endpoint: /constitution/values-assessment/assessments');
+        }
+
+        // View Results
+        function viewResults() {
+            alert('📊 Viewing Assessment Results...\n\n• 8 of 12 family members completed\n• Top aligned values: Honesty (83%), Family (75%), Integrity (67%)\n• Consensus score: 72% (Good alignment)\n• Areas for discussion: Work-life balance, Innovation\n\nAPI: GET /constitution/family-values/workshops/{id}/analysis\n\nFull analytics dashboard would load here with:\n- Value frequency matrix\n- Consensus metrics\n- Story themes analysis\n- Radar charts and heat maps');
+        }
+
+        // Download Guide
+        function downloadGuide() {
+            alert('📥 Downloading Workshop Facilitator Guide...\n\nThe guide includes:\n• Step-by-step facilitation instructions\n• Discussion prompts and activities\n• Consensus-building techniques\n• Documentation templates\n\nAPI: GET /constitution/family-values/workshops/{id}/download-guide\n\nFile: family-values-workshop-guide.pdf');
+        }
+
+        // Refresh Data
+        function refreshData() {
+            const progressBadges = document.querySelectorAll('.progress-badge');
+            progressBadges.forEach(badge => {
+                badge.style.opacity = '0.5';
+            });
+
+            console.log('API: GET /constitution/family-values/assessments');
+            console.log('Fetching latest workshop and assessment data...');
+
+            setTimeout(() => {
+                progressBadges.forEach(badge => {
+                    badge.style.opacity = '1';
+                });
+                alert('✅ Data refreshed successfully!');
+            }, 800);
+        }
+
+        // Newsletter Subscription
+        function subscribeNewsletter(event) {
+            event.preventDefault();
+            const email = event.target.querySelector('input[type="email"]').value;
+
+            setTimeout(() => {
+                alert('✅ Successfully subscribed!\n\nEmail: ' + email + '\n\nYou will receive family governance best practices every two weeks.');
+                event.target.reset();
+            }, 500);
+        }
+
+        // Add fade-in animation on load
+        window.addEventListener('load', function() {
+            document.querySelector('.container').classList.add('fade-in');
+        });
+
+        // Simulate notification interaction
+        document.querySelector('.notification-icon').addEventListener('click', function() {
+            alert('🔔 Notifications\n\n• New workshop invitation: "Smith Family Values 2025"\n• Assessment reminder: Complete by March 15\n• Document ready: Family Values Report v2.1');
+        });
+
+        // Log API endpoints to console for reference
+        console.log('=== Family Values Workshop API Endpoints ===');
+        console.log('Workshop Management:');
+        console.log('  POST   /constitution/family-values/workshops');
+        console.log('  GET    /constitution/family-values/workshops');
+        console.log('  GET    /constitution/family-values/workshops/{id}');
+        console.log('  PUT    /constitution/family-values/workshops/{id}');
+        console.log('  DELETE /constitution/family-values/workshops/{id}');
+        console.log('');
+        console.log('Assessment Management:');
+        console.log('  POST   /constitution/values-assessment/assessments');
+        console.log('  GET    /constitution/values-assessment/assessments');
+        console.log('  GET    /constitution/values-assessment/assessments/{id}');
+        console.log('');
+        console.log('Analysis & Reports:');
+        console.log('  GET    /constitution/family-values/workshops/{id}/analysis');
+        console.log('  GET    /constitution/family-values/workshops/{id}/download-pdf');
+        console.log('  GET    /constitution/values-assessment/reports/{id}');
+        console.log('');
+        console.log('Values:');
+        console.log('  GET    /constitution/family-values/predefined-values');
+        console.log('  POST   /constitution/family-values/workshops/{id}/values');
+    </script>
+</body>
+</html>

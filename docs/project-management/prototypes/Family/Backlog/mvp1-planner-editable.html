@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP1 Planner with Editable Features - Blueprint + Family + Advisor</title>
+    <style>
+        :root {
+            --primary-color: #1a4d8f;
+            --primary-dark: #0f3666;
+            --primary-light: #2b6bb8;
+            --success-color: #28a745;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --border-color: #dee2e6;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background-color: var(--light-gray);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 20px 32px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .mvp1-summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .planner-layout {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 24px;
+        }
+
+        .builders-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .story-pool {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .story-cards {
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        .category-section {
+            margin-bottom: 16px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px 6px 0 0;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .category-count {
+            font-size: 11px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .story-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            padding: 10px;
+            background: var(--light-gray);
+            border-radius: 0 0 6px 6px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .story-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .story-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            z-index: 10;
+        }
+
+        .story-card.in-mvp1 {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .story-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 3px;
+        }
+
+        .story-id {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--light-gray);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .story-sp {
+            font-size: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--medium-gray);
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .story-title {
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.3;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .priority-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .priority-critical .priority-indicator { background: #dc3545; }
+        .priority-high .priority-indicator { background: #ffc107; }
+        .priority-medium .priority-indicator { background: #17a2b8; }
+        .priority-low .priority-indicator { background: #6c757d; }
+
+        .add-btn {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        .add-btn:disabled {
+            background: var(--medium-gray);
+            cursor: not-allowed;
+        }
+
+        .mvp1-builder {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .builder-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .builder-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 12px;
+            background: var(--light-gray);
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .drop-zone {
+            border: 3px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .mvp1-story {
+            background: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mvp1-story-id {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .mvp1-story-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--medium-gray);
+        }
+
+        .builder-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            color: white;
+            padding: 24px 32px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 24px;
+            top: 24px;
+            font-size: 28px;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            padding-right: 40px;
+        }
+
+        .modal-meta {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .modal-meta-item {
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .modal-meta-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .modal-meta-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .priority-badge {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .priority-badge.critical { background: #dc3545; color: white; }
+        .priority-badge.high { background: #ffc107; color: #333; }
+        .priority-badge.medium { background: #17a2b8; color: white; }
+        .priority-badge.low { background: #6c757d; color: white; }
+
+        .modal-body {
+            padding: 24px 32px;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .modal-description {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .ac-list {
+            list-style: none;
+        }
+
+        .ac-item {
+            display: flex;
+            align-items: start;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--light-gray);
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+        }
+
+        .ac-item.missing { border-left-color: #dc3545; }
+        .ac-item.partial { border-left-color: #ffc107; }
+        .ac-item.complete { border-left-color: #28a745; }
+
+        .ac-checkbox {
+            min-width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            margin-right: 12px;
+            background: white;
+        }
+
+        .ac-checkbox.checked {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            position: relative;
+        }
+
+        .ac-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: -3px;
+            left: 2px;
+            font-size: 14px;
+        }
+
+        .ac-text {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .ac-status {
+            margin-left: 12px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .ac-status.missing { background: #ffebee; color: #c62828; }
+        .ac-status.partial { background: #fff9c4; color: #f57f17; }
+        .ac-status.complete { background: #e8f5e9; color: #2e7d32; }
+
+        .modal-footer {
+            padding: 16px 32px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn-primary {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .modal-btn-secondary {
+            background: var(--medium-gray);
+        }
+
+        /* Edit mode styles */
+        .edit-field {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff9e6;
+        }
+
+        .edit-field:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(26, 77, 143, 0.1);
+        }
+
+        textarea.edit-field {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select.edit-field {
+            cursor: pointer;
+        }
+
+        input.edit-field[type="text"] {
+            font-size: 18px;
+            font-weight: 600;
+            background: #fff9e6;
+        }
+
+        .modal-body.edit-mode .modal-description,
+        .modal-body.edit-mode #modalBlock {
+            display: none;
+        }
+
+        .modal-body.edit-mode .edit-fields {
+            display: block !important;
+        }
+
+        .edit-fields {
+            display: none;
+        }
+
+        .edit-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            margin-top: 12px;
+            color: var(--text-secondary);
+        }
+
+        .edit-label:first-child {
+            margin-top: 0;
+        }
+
+        .edit-mode-indicator {
+            background: #ffc107;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* Editable AC styles */
+        .ac-editable-list {
+            list-style: none;
+        }
+
+        .ac-editable-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--light-gray);
+            border-radius: 6px;
+            border: 2px solid transparent;
+        }
+
+        .ac-editable-item:focus-within {
+            border-color: var(--primary-color);
+            background: #fff9e6;
+        }
+
+        .ac-editable-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .ac-editable-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .ac-remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .ac-remove-btn:hover {
+            background: #c82333;
+        }
+
+        .ac-add-btn {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .ac-add-btn:hover {
+            background: #218838;
+        }
+
+        .modal-body.edit-mode #modalAC {
+            display: none;
+        }
+
+        .modal-body.edit-mode #editableAC {
+            display: block !important;
+        }
+
+        #editableAC {
+            display: none;
+        }
+
+        @media (max-width: 1200px) {
+            .planner-layout {
+                grid-template-columns: 1fr;
+            }
+            .mvp1-builder {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MVP1 Compact Planner (Editable)</h1>
+        <div class="header-subtitle">Blueprint + Family + Advisor - Complete feature set with editing capability</div>
+    </div>
+
+    <div class="container">
+        <div class="mvp1-summary">
+            <div class="summary-item">
+                <div class="summary-label">Total Features</div>
+                <div class="summary-value" id="totalCount">0</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Critical</div>
+                <div class="summary-value" id="criticalCount">0</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">High</div>
+                <div class="summary-value" id="highCount">0</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Available SP</div>
+                <div class="summary-value" id="totalSP">0</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Feature Blocks</div>
+                <div class="summary-value">45</div>
+            </div>
+        </div>
+
+        <div class="planner-layout">
+            <div class="story-pool">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color);">
+                    <h2 style="font-size: 18px; font-weight: 600; margin: 0;">Available Features</h2>
+                    <button class="btn btn-primary" onclick="openAddFeatureModal()" style="padding: 8px 16px; font-size: 12px;">
+                        + Add Custom Feature
+                    </button>
+                </div>
+                <div class="story-cards" id="storyCards"></div>
+            </div>
+
+            <div class="builders-container">
+                <!-- MVP1 Build -->
+                <div class="mvp1-builder">
+                    <div class="builder-title">MVP1 Build</div>
+                    <div class="builder-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Features</div>
+                            <div class="stat-value" id="mvp1Count">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Story Points</div>
+                            <div class="stat-value" id="mvp1SP">0</div>
+                        </div>
+                        <div class="stat-item" style="grid-column: 1 / -1;">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="mvp1Duration" style="font-size: 16px;">0 sprints</div>
+                        </div>
+                    </div>
+
+                    <div class="drop-zone" id="dropZone1" data-zone="1">
+                        <div style="text-align: center; color: #6c757d; padding: 30px 10px;">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📋</div>
+                            <strong>Drag features here</strong>
+                        </div>
+                    </div>
+
+                    <div class="builder-actions">
+                        <button class="btn btn-secondary" onclick="clearPlan(1)">Clear</button>
+                        <button class="btn btn-primary" onclick="exportPlan(1)">Export</button>
+                        <button class="btn btn-primary btn-full" onclick="savePlan(1)">Save</button>
+                    </div>
+                </div>
+
+                <!-- MVP2 Build -->
+                <div class="mvp1-builder">
+                    <div class="builder-title">MVP2 Build</div>
+                    <div class="builder-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Features</div>
+                            <div class="stat-value" id="mvp2Count">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Story Points</div>
+                            <div class="stat-value" id="mvp2SP">0</div>
+                        </div>
+                        <div class="stat-item" style="grid-column: 1 / -1;">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="mvp2Duration" style="font-size: 16px;">0 sprints</div>
+                        </div>
+                    </div>
+
+                    <div class="drop-zone" id="dropZone2" data-zone="2">
+                        <div style="text-align: center; color: #6c757d; padding: 30px 10px;">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📋</div>
+                            <strong>Drag features here</strong>
+                        </div>
+                    </div>
+
+                    <div class="builder-actions">
+                        <button class="btn btn-secondary" onclick="clearPlan(2)">Clear</button>
+                        <button class="btn btn-primary" onclick="exportPlan(2)">Export</button>
+                        <button class="btn btn-primary btn-full" onclick="savePlan(2)">Save</button>
+                    </div>
+                </div>
+
+                <!-- Backlog -->
+                <div class="mvp1-builder">
+                    <div class="builder-title">Backlog</div>
+                    <div class="builder-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Features</div>
+                            <div class="stat-value" id="backlogCount">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Story Points</div>
+                            <div class="stat-value" id="backlogSP">0</div>
+                        </div>
+                        <div class="stat-item" style="grid-column: 1 / -1;">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="backlogDuration" style="font-size: 16px;">0 sprints</div>
+                        </div>
+                    </div>
+
+                    <div class="drop-zone" id="dropZone3" data-zone="3">
+                        <div style="text-align: center; color: #6c757d; padding: 30px 10px;">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📋</div>
+                            <strong>Drag features here</strong>
+                        </div>
+                    </div>
+
+                    <div class="builder-actions">
+                        <button class="btn btn-secondary" onclick="clearPlan(3)">Clear</button>
+                        <button class="btn btn-primary" onclick="exportPlan(3)">Export</button>
+                        <button class="btn btn-primary btn-full" onclick="savePlan(3)">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Feature Modal -->
+    <div class="modal" id="addFeatureModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeAddFeatureModal()">&times;</button>
+                <div class="modal-title">Add Custom Feature</div>
+            </div>
+            <div class="modal-body">
+                <form id="addFeatureForm" onsubmit="event.preventDefault(); addCustomFeature();">
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Feature ID *</label>
+                        <input type="text" id="featureId" placeholder="e.g., C1, CUSTOM-1" required
+                            style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Title *</label>
+                        <input type="text" id="featureTitle" placeholder="Feature name" required
+                            style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Description *</label>
+                        <textarea id="featureDescription" placeholder="Feature description" required rows="3"
+                            style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Story Points *</label>
+                            <input type="number" id="featureSP" placeholder="1-34" required min="1" max="34" value="8"
+                                style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Priority *</label>
+                            <select id="featurePriority" required
+                                style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                                <option value="critical">🔴 Critical</option>
+                                <option value="high" selected>🟡 High</option>
+                                <option value="medium">🟠 Medium</option>
+                                <option value="low">🟢 Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Category *</label>
+                        <select id="featureCategory" required
+                            style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                            <option value="Custom">Custom</option>
+                            <option value="Blueprint">Blueprint</option>
+                            <option value="Family">Family</option>
+                            <option value="Advisor">Advisor</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Block Name</label>
+                        <input type="text" id="featureBlock" placeholder="e.g., Custom Features"
+                            style="width: 100%; padding: 8px 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn modal-btn-secondary" onclick="closeAddFeatureModal()">Cancel</button>
+                <button type="submit" form="addFeatureForm" class="modal-btn modal-btn-primary">Add Feature</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Detail Modal -->
+    <div class="modal" id="storyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div class="modal-title" id="modalTitle"></div>
+                <div class="modal-meta" id="modalMeta"></div>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="modal-section">
+                    <div class="modal-section-title">Title</div>
+                    <div class="modal-description" id="modalTitleDisplay"></div>
+                    <div class="edit-fields">
+                        <input type="text" class="edit-field" id="editTitle" placeholder="Feature title">
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">Description</div>
+                    <div class="modal-description" id="modalDescription"></div>
+                    <div class="edit-fields">
+                        <textarea class="edit-field" id="editDescription" rows="4" placeholder="Feature description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">Details</div>
+                    <div id="modalDetailsDisplay"></div>
+                    <div class="edit-fields">
+                        <label class="edit-label">Story Points</label>
+                        <input type="number" class="edit-field" id="editSP" min="1" max="34" placeholder="Story points">
+
+                        <label class="edit-label">Priority</label>
+                        <select class="edit-field" id="editPriority">
+                            <option value="critical">🔴 Critical</option>
+                            <option value="high">🟡 High</option>
+                            <option value="medium">🟠 Medium</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">Block</div>
+                    <div id="modalBlock"></div>
+                    <div class="edit-fields">
+                        <input type="text" class="edit-field" id="editBlock" placeholder="Block name">
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">Acceptance Criteria</div>
+                    <div id="modalAC"></div>
+                    <div id="editableAC">
+                        <ul class="ac-editable-list" id="acList"></ul>
+                        <button class="ac-add-btn" onclick="addAC()">+ Add Criterion</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="deleteStoryBtn" class="modal-btn" onclick="deleteStory()"
+                    style="background: #dc3545; color: white; margin-right: auto; display: none;">
+                    Delete Feature
+                </button>
+                <button id="editStoryBtn" class="modal-btn" onclick="toggleEditMode()"
+                    style="background: #fd7e14; color: white;">
+                    ✏️ Edit
+                </button>
+                <button id="saveStoryBtn" class="modal-btn" onclick="saveStoryEdits()"
+                    style="background: var(--success-color); color: white; display: none;">
+                    💾 Save Changes
+                </button>
+                <button id="cancelEditBtn" class="modal-btn modal-btn-secondary" onclick="cancelEdit()"
+                    style="display: none;">
+                    Cancel
+                </button>
+                <button id="closeModalBtn" class="modal-btn modal-btn-secondary" onclick="closeModal()">Close</button>
+                <button id="addToMVP1Btn" class="modal-btn modal-btn-primary" onclick="addToMVP1FromModal()">Add to MVP1</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="work/all-stories-data.js"></script>
+    <script>
+        let plans = {
+            1: [], // MVP1
+            2: [], // MVP2
+            3: []  // Backlog
+        };
+        let allStories = [];
+        let currentModalStory = null;
+        let customFeatures = [];
+        let isEditMode = false;
+        let editedStories = {}; // Store all edited stories
+        let currentAC = []; // Current acceptance criteria being edited
+
+        const categories = [
+            { key: 'blueprint', name: 'Blueprint', filter: s => s.id.match(/^\d+\.\d+$/) || (s.isUserAdded && s.category === 'Blueprint') },
+            { key: 'family', name: 'Family', filter: s => s.id.startsWith('F') || (s.isUserAdded && s.category === 'Family') },
+            { key: 'advisor', name: 'Advisor', filter: s => s.id.startsWith('A') || (s.isUserAdded && s.category === 'Advisor') },
+            { key: 'custom', name: 'Custom', filter: s => s.isCustom === true && s.category === 'Custom' }
+        ];
+
+        function init() {
+            allStories = allStoriesData.slice(); // Create copy
+            loadEditedStories(); // Load edited stories from localStorage
+            loadCustomFeatures(); // Load custom features
+            applyEdits(); // Apply saved edits to original stories
+            renderByCategory();
+            updateStats();
+            setupDragDrop();
+        }
+
+        // Load edited stories from localStorage
+        function loadEditedStories() {
+            const saved = localStorage.getItem('editedStories');
+            if (saved) {
+                try {
+                    editedStories = JSON.parse(saved);
+                    console.log('Loaded', Object.keys(editedStories).length, 'edited stories');
+                } catch(e) {
+                    console.error('Failed to load edited stories:', e);
+                }
+            }
+        }
+
+        // Save edited stories to localStorage
+        function saveEditedStories() {
+            localStorage.setItem('editedStories', JSON.stringify(editedStories));
+        }
+
+        // Apply edits to stories
+        function applyEdits() {
+            allStories.forEach(story => {
+                if (editedStories[story.id]) {
+                    Object.assign(story, editedStories[story.id]);
+                }
+            });
+        }
+
+        // Load custom features from localStorage
+        function loadCustomFeatures() {
+            const saved = localStorage.getItem('customFeatures');
+            if (saved) {
+                try {
+                    customFeatures = JSON.parse(saved);
+                    // Add custom features to allStories
+                    customFeatures.forEach(cf => {
+                        if (!allStories.some(s => s.id === cf.id)) {
+                            allStories.push(cf);
+                        }
+                    });
+                    console.log('Loaded', customFeatures.length, 'custom features');
+                } catch(e) {
+                    console.error('Failed to load custom features:', e);
+                }
+            }
+        }
+
+        function renderByCategory() {
+            const container = document.getElementById('storyCards');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                const catStories = allStories.filter(cat.filter);
+
+                const section = document.createElement('div');
+                section.className = 'category-section';
+
+                section.innerHTML = `
+                    <div class="category-header">
+                        <span>${cat.name}</span>
+                        <span class="category-count">${catStories.length} features</span>
+                    </div>
+                    <div class="story-grid"></div>
+                `;
+
+                const grid = section.querySelector('.story-grid');
+                catStories.forEach(story => {
+                    grid.appendChild(createStoryCard(story));
+                });
+
+                container.appendChild(section);
+            });
+        }
+
+        function createStoryCard(story) {
+            const card = document.createElement('div');
+            card.className = `story-card priority-${story.priority}`;
+            card.draggable = true;
+            card.dataset.storyId = story.id;
+
+            // Check if story is in any plan
+            const inAnyPlan = Object.values(plans).some(plan => plan.some(s => s.id === story.id));
+            if (inAnyPlan) {
+                card.classList.add('in-mvp1');
+            }
+
+            card.innerHTML = `
+                <div class="priority-indicator"></div>
+                <div class="story-card-header">
+                    <div class="story-id">${story.id}</div>
+                    <div class="story-sp">${story.sp}SP</div>
+                </div>
+                <div class="story-title">${story.title}</div>
+                <button class="add-btn" onclick="event.stopPropagation(); showPlanSelector('${story.id}')" ${inAnyPlan ? 'disabled' : ''}>
+                    ${inAnyPlan ? '✓ Added' : '+ Add'}
+                </button>
+            `;
+
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', story.id);
+            });
+
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('add-btn')) {
+                    openStoryModal(story.id);
+                }
+            });
+
+            return card;
+        }
+
+        function openStoryModal(storyId) {
+            const story = allStories.find(s => s.id === storyId);
+            if (!story) return;
+
+            currentModalStory = story;
+            isEditMode = false;
+
+            document.getElementById('modalTitle').textContent = story.id + ': ' + story.title;
+
+            document.getElementById('modalMeta').innerHTML = `
+                <div class="modal-meta-item">
+                    <div class="modal-meta-label">Story Points</div>
+                    <div class="modal-meta-value">${story.sp} SP</div>
+                </div>
+                <div class="modal-meta-item">
+                    <div class="modal-meta-label">Readiness</div>
+                    <div class="modal-meta-value">${story.readiness || 0}%</div>
+                </div>
+                <div class="modal-meta-item">
+                    <div class="modal-meta-label">Timeline</div>
+                    <div class="modal-meta-value">${Math.ceil(story.sp / 12)} sprint</div>
+                </div>
+                <div class="modal-meta-item">
+                    <div class="modal-meta-label">Priority</div>
+                    <div class="modal-meta-value">
+                        <span class="priority-badge ${story.priority}">${story.priority.toUpperCase()}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalTitleDisplay').textContent = story.title;
+            document.getElementById('modalDescription').textContent = story.description || 'No description available';
+            document.getElementById('modalDetailsDisplay').innerHTML = `
+                <div style="background: var(--light-gray); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                    <strong>Story Points:</strong> ${story.sp} SP<br>
+                    <strong>Priority:</strong> <span class="priority-badge ${story.priority}">${story.priority.toUpperCase()}</span>
+                </div>
+            `;
+            document.getElementById('modalBlock').textContent = story.blockName || 'Unknown';
+
+            // Set edit field values
+            document.getElementById('editTitle').value = story.title;
+            document.getElementById('editDescription').value = story.description || '';
+            document.getElementById('editSP').value = story.sp;
+            document.getElementById('editPriority').value = story.priority;
+            document.getElementById('editBlock').value = story.blockName || '';
+
+            // Acceptance Criteria - use saved criteria or default
+            const criteria = story.acceptanceCriteria || [
+                'Functional requirements defined and documented',
+                'Technical design completed and reviewed',
+                'Testing criteria and test cases established',
+                'User acceptance criteria validated'
+            ];
+
+            const acHTML = `
+                <ul class="ac-list">
+                    ${criteria.map(criterion => `
+                        <li class="ac-item missing">
+                            <div class="ac-checkbox"></div>
+                            <div class="ac-text">${criterion}</div>
+                            <span class="ac-status missing">Pending</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+
+            document.getElementById('modalAC').innerHTML = acHTML;
+
+            // Initialize AC for editing
+            currentAC = story.acceptanceCriteria ? [...story.acceptanceCriteria] : [
+                'Functional requirements defined and documented',
+                'Technical design completed and reviewed',
+                'Testing criteria and test cases established',
+                'User acceptance criteria validated'
+            ];
+            renderEditableAC();
+
+            // Show delete button for all cards
+            document.getElementById('deleteStoryBtn').style.display = 'block';
+
+            // Reset button visibility
+            document.getElementById('editStoryBtn').style.display = 'inline-block';
+            document.getElementById('saveStoryBtn').style.display = 'none';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('closeModalBtn').style.display = 'inline-block';
+            document.getElementById('addToMVP1Btn').style.display = 'inline-block';
+
+            document.getElementById('storyModal').classList.add('active');
+        }
+
+        function renderEditableAC() {
+            const acList = document.getElementById('acList');
+            acList.innerHTML = '';
+
+            currentAC.forEach((criterion, index) => {
+                const li = document.createElement('li');
+                li.className = 'ac-editable-item';
+                li.innerHTML = `
+                    <input type="text" class="ac-editable-input" value="${criterion}"
+                        onchange="updateAC(${index}, this.value)" placeholder="Acceptance criterion">
+                    <button class="ac-remove-btn" onclick="removeAC(${index})">Remove</button>
+                `;
+                acList.appendChild(li);
+            });
+        }
+
+        function addAC() {
+            currentAC.push('');
+            renderEditableAC();
+            // Focus on the new input
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('.ac-editable-input');
+                if (inputs.length > 0) {
+                    inputs[inputs.length - 1].focus();
+                }
+            }, 50);
+        }
+
+        function removeAC(index) {
+            if (currentAC.length <= 1) {
+                alert('At least one acceptance criterion is required!');
+                return;
+            }
+            currentAC.splice(index, 1);
+            renderEditableAC();
+        }
+
+        function updateAC(index, value) {
+            currentAC[index] = value;
+        }
+
+        function toggleEditMode() {
+            isEditMode = true;
+            document.getElementById('modalBody').classList.add('edit-mode');
+
+            // Toggle button visibility
+            document.getElementById('editStoryBtn').style.display = 'none';
+            document.getElementById('saveStoryBtn').style.display = 'inline-block';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+            document.getElementById('closeModalBtn').style.display = 'none';
+            document.getElementById('addToMVP1Btn').style.display = 'none';
+        }
+
+        function cancelEdit() {
+            isEditMode = false;
+            document.getElementById('modalBody').classList.remove('edit-mode');
+
+            // Reset edit fields to original values
+            document.getElementById('editTitle').value = currentModalStory.title;
+            document.getElementById('editDescription').value = currentModalStory.description || '';
+            document.getElementById('editSP').value = currentModalStory.sp;
+            document.getElementById('editPriority').value = currentModalStory.priority;
+            document.getElementById('editBlock').value = currentModalStory.blockName || '';
+
+            // Reset AC
+            currentAC = currentModalStory.acceptanceCriteria ? [...currentModalStory.acceptanceCriteria] : [
+                'Functional requirements defined and documented',
+                'Technical design completed and reviewed',
+                'Testing criteria and test cases established',
+                'User acceptance criteria validated'
+            ];
+            renderEditableAC();
+
+            // Toggle button visibility
+            document.getElementById('editStoryBtn').style.display = 'inline-block';
+            document.getElementById('saveStoryBtn').style.display = 'none';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('closeModalBtn').style.display = 'inline-block';
+            document.getElementById('addToMVP1Btn').style.display = 'inline-block';
+        }
+
+        function saveStoryEdits() {
+            if (!currentModalStory) return;
+
+            // Get edited values
+            const newTitle = document.getElementById('editTitle').value.trim();
+            const newDescription = document.getElementById('editDescription').value.trim();
+            const newSP = parseInt(document.getElementById('editSP').value);
+            const newPriority = document.getElementById('editPriority').value;
+            const newBlock = document.getElementById('editBlock').value.trim();
+
+            // Validate AC - filter out empty criteria
+            const validAC = currentAC.filter(ac => ac.trim() !== '');
+            if (validAC.length === 0) {
+                alert('Please add at least one acceptance criterion!');
+                return;
+            }
+
+            // Validate other fields
+            if (!newTitle || !newDescription || !newSP || newSP < 1 || newSP > 34) {
+                alert('Please fill all required fields with valid values!');
+                return;
+            }
+
+            // Update the story object in allStories
+            const storyIndex = allStories.findIndex(s => s.id === currentModalStory.id);
+            if (storyIndex !== -1) {
+                allStories[storyIndex].title = newTitle;
+                allStories[storyIndex].description = newDescription;
+                allStories[storyIndex].sp = newSP;
+                allStories[storyIndex].priority = newPriority;
+                allStories[storyIndex].blockName = newBlock;
+                allStories[storyIndex].acceptanceCriteria = validAC;
+
+                // Store in editedStories for persistence
+                editedStories[currentModalStory.id] = {
+                    title: newTitle,
+                    description: newDescription,
+                    sp: newSP,
+                    priority: newPriority,
+                    blockName: newBlock,
+                    acceptanceCriteria: validAC
+                };
+            }
+
+            // If it's a custom feature, update customFeatures array too
+            if (currentModalStory.isUserAdded) {
+                const customIndex = customFeatures.findIndex(s => s.id === currentModalStory.id);
+                if (customIndex !== -1) {
+                    customFeatures[customIndex].title = newTitle;
+                    customFeatures[customIndex].description = newDescription;
+                    customFeatures[customIndex].sp = newSP;
+                    customFeatures[customIndex].priority = newPriority;
+                    customFeatures[customIndex].blockName = newBlock;
+                    customFeatures[customIndex].acceptanceCriteria = validAC;
+                    localStorage.setItem('customFeatures', JSON.stringify(customFeatures));
+                }
+            }
+
+            // Save edited stories to localStorage
+            saveEditedStories();
+
+            // Update story in all plans if present
+            [1, 2, 3].forEach(planNum => {
+                const planIndex = plans[planNum].findIndex(s => s.id === currentModalStory.id);
+                if (planIndex !== -1) {
+                    plans[planNum][planIndex].title = newTitle;
+                    plans[planNum][planIndex].description = newDescription;
+                    plans[planNum][planIndex].sp = newSP;
+                    plans[planNum][planIndex].priority = newPriority;
+                    plans[planNum][planIndex].blockName = newBlock;
+                    plans[planNum][planIndex].acceptanceCriteria = validAC;
+                    updatePlanDisplay(planNum);
+                }
+            });
+
+            // Update current modal story reference
+            currentModalStory.title = newTitle;
+            currentModalStory.description = newDescription;
+            currentModalStory.sp = newSP;
+            currentModalStory.priority = newPriority;
+            currentModalStory.blockName = newBlock;
+            currentModalStory.acceptanceCriteria = validAC;
+
+            // Exit edit mode and refresh
+            isEditMode = false;
+            document.getElementById('modalBody').classList.remove('edit-mode');
+
+            // Refresh display
+            renderByCategory();
+            updateStats();
+
+            // Close modal and show success
+            closeModal();
+            alert('Changes saved successfully!');
+        }
+
+        function closeModal() {
+            document.getElementById('storyModal').classList.remove('active');
+            currentModalStory = null;
+            isEditMode = false;
+            document.getElementById('modalBody').classList.remove('edit-mode');
+        }
+
+        function deleteStory() {
+            if (!currentModalStory) return;
+
+            const isUserAdded = currentModalStory.isUserAdded;
+
+            // Different confirmation messages for user-added vs original features
+            const confirmMsg = isUserAdded
+                ? `Delete feature "${currentModalStory.id}: ${currentModalStory.title}"?\n\nThis action cannot be undone.`
+                : `Delete all edits for feature "${currentModalStory.id}: ${currentModalStory.title}"?\n\nOriginal feature data will be restored on reload.`;
+
+            if (!confirm(confirmMsg)) return;
+
+            const storyId = currentModalStory.id;
+
+            // Remove from allStories array (visible in current session)
+            allStories = allStories.filter(s => s.id !== storyId);
+
+            // If user-added, remove from customFeatures and update localStorage
+            if (isUserAdded) {
+                customFeatures = customFeatures.filter(s => s.id !== storyId);
+                localStorage.setItem('customFeatures', JSON.stringify(customFeatures));
+            } else {
+                // Remove from edited stories
+                delete editedStories[storyId];
+                saveEditedStories();
+            }
+
+            // Remove from all plans if present
+            [1, 2, 3].forEach(planNum => {
+                if (plans[planNum].some(s => s.id === storyId)) {
+                    removeFromPlan(planNum, storyId);
+                }
+            });
+
+            // Close modal
+            closeModal();
+
+            // Refresh display
+            renderByCategory();
+            updateStats();
+
+            // Show appropriate success message
+            if (isUserAdded) {
+                alert('Feature deleted permanently!');
+            } else {
+                alert('Edits removed. Reload page to restore original data.');
+            }
+        }
+
+        function addToMVP1FromModal() {
+            if (currentModalStory) {
+                showPlanSelector(currentModalStory.id);
+                closeModal();
+            }
+        }
+
+        document.getElementById('storyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                if (isEditMode) {
+                    if (confirm('You have unsaved changes. Close without saving?')) {
+                        closeModal();
+                    }
+                } else {
+                    closeModal();
+                }
+            }
+        });
+
+        function setupDragDrop() {
+            // Setup drop zones for all three plans
+            [1, 2, 3].forEach(zoneNum => {
+                const dropZone = document.getElementById(`dropZone${zoneNum}`);
+                dropZone.addEventListener('dragover', (e) => e.preventDefault());
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const storyId = e.dataTransfer.getData('text/plain');
+                    addToPlan(zoneNum, storyId);
+                });
+            });
+        }
+
+        function showPlanSelector(storyId) {
+            const planNames = {1: 'MVP1', 2: 'MVP2', 3: 'Backlog'};
+            const choice = prompt(`Add to which plan?\n1 - MVP1\n2 - MVP2\n3 - Backlog\n\nEnter number (1-3):`);
+            const planNum = parseInt(choice);
+            if (planNum >= 1 && planNum <= 3) {
+                addToPlan(planNum, storyId);
+            }
+        }
+
+        function addToPlan(planNum, storyId) {
+            const story = allStories.find(s => s.id === storyId);
+            if (!story) return;
+
+            // Check if story is already in any plan
+            const inAnyPlan = Object.values(plans).some(plan => plan.some(s => s.id === storyId));
+            if (inAnyPlan) return;
+
+            plans[planNum].push(story);
+            updatePlanDisplay(planNum);
+            renderByCategory();
+        }
+
+        function removeFromPlan(planNum, storyId) {
+            plans[planNum] = plans[planNum].filter(s => s.id !== storyId);
+            updatePlanDisplay(planNum);
+            renderByCategory();
+        }
+
+        function updatePlanDisplay(planNum) {
+            const planNames = {1: 'mvp1', 2: 'mvp2', 3: 'backlog'};
+            const planName = planNames[planNum];
+            const dropZone = document.getElementById(`dropZone${planNum}`);
+            const stories = plans[planNum];
+
+            if (stories.length === 0) {
+                dropZone.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 30px 10px;"><div style="font-size: 40px; margin-bottom: 12px;">📋</div><strong>Drag features here</strong></div>';
+            } else {
+                dropZone.innerHTML = stories.map(s => `
+                    <div class="mvp1-story">
+                        <div>
+                            <div class="mvp1-story-id">${s.id}</div>
+                            <div class="mvp1-story-title">${s.title}</div>
+                        </div>
+                        <button class="remove-btn" onclick="removeFromPlan(${planNum}, '${s.id}')">×</button>
+                    </div>
+                `).join('');
+            }
+
+            const totalSP = stories.reduce((sum, s) => sum + s.sp, 0);
+            const sprints = Math.ceil(totalSP / 12);
+
+            document.getElementById(`${planName}Count`).textContent = stories.length;
+            document.getElementById(`${planName}SP`).textContent = totalSP;
+            document.getElementById(`${planName}Duration`).textContent = sprints + ' sprints';
+        }
+
+        function updateStats() {
+            const critical = allStories.filter(s => s.priority === 'critical').length;
+            const high = allStories.filter(s => s.priority === 'high').length;
+            const totalSP = allStories.reduce((sum, s) => sum + s.sp, 0);
+
+            document.getElementById('totalCount').textContent = allStories.length;
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('highCount').textContent = high;
+            document.getElementById('totalSP').textContent = totalSP;
+        }
+
+        function clearPlan(planNum) {
+            const planDisplayNames = {1: 'MVP1', 2: 'MVP2', 3: 'Backlog'};
+            if (plans[planNum].length === 0) return;
+            if (confirm(`Clear all features from ${planDisplayNames[planNum]}?`)) {
+                plans[planNum] = [];
+                updatePlanDisplay(planNum);
+                renderByCategory();
+            }
+        }
+
+        function exportPlan(planNum) {
+            const planDisplayNames = {1: 'MVP1', 2: 'MVP2', 3: 'Backlog'};
+            const stories = plans[planNum];
+
+            if (stories.length === 0) {
+                alert('No features to export');
+                return;
+            }
+
+            const totalSP = stories.reduce((sum, s) => sum + s.sp, 0);
+            let md = `# ${planDisplayNames[planNum]} Plan\n\n**Features:** ${stories.length}\n**Story Points:** ${totalSP}\n\n`;
+
+            ['critical', 'high', 'medium', 'low'].forEach(priority => {
+                const priorityStories = stories.filter(s => s.priority === priority);
+                if (priorityStories.length) {
+                    md += `## ${priority.toUpperCase()}\n\n`;
+                    priorityStories.forEach(s => {
+                        md += `- **${s.id}**: ${s.title} (${s.sp} SP)\n`;
+                    });
+                    md += '\n';
+                }
+            });
+
+            const blob = new Blob([md], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${planDisplayNames[planNum].toLowerCase()}-plan.md`;
+            a.click();
+        }
+
+        function savePlan(planNum) {
+            const planDisplayNames = {1: 'MVP1', 2: 'MVP2', 3: 'Backlog'};
+            if (plans[planNum].length === 0) {
+                alert('No features to save');
+                return;
+            }
+            localStorage.setItem(`plan_${planNum}`, JSON.stringify(plans[planNum]));
+            alert(`Saved ${plans[planNum].length} features to ${planDisplayNames[planNum]}`);
+        }
+
+        // Load saved plans
+        [1, 2, 3].forEach(planNum => {
+            const saved = localStorage.getItem(`plan_${planNum}`);
+            if (saved) {
+                try {
+                    plans[planNum] = JSON.parse(saved);
+                } catch(e) {}
+            }
+        });
+
+        // Custom feature functionality
+        function openAddFeatureModal() {
+            document.getElementById('addFeatureModal').classList.add('active');
+            // Reset form
+            document.getElementById('addFeatureForm').reset();
+            document.getElementById('featureSP').value = 8;
+            document.getElementById('featurePriority').value = 'high';
+        }
+
+        function closeAddFeatureModal() {
+            document.getElementById('addFeatureModal').classList.remove('active');
+        }
+
+        function addCustomFeature() {
+            const id = document.getElementById('featureId').value.trim();
+            const title = document.getElementById('featureTitle').value.trim();
+            const description = document.getElementById('featureDescription').value.trim();
+            const sp = parseInt(document.getElementById('featureSP').value);
+            const priority = document.getElementById('featurePriority').value;
+            const category = document.getElementById('featureCategory').value;
+            const blockName = document.getElementById('featureBlock').value.trim() || (category + ' Features');
+
+            // Check if ID already exists
+            if (allStories.some(s => s.id === id)) {
+                alert('Feature ID already exists! Please use a different ID.');
+                return;
+            }
+
+            // Determine if it's truly custom based on category selection
+            const isCustomCategory = category === 'Custom';
+
+            // Create new story object
+            const newStory = {
+                id: id,
+                title: title,
+                description: description,
+                sp: sp,
+                priority: priority,
+                readiness: 0,
+                blockName: blockName + ' [USER-ADDED]',
+                isCustom: isCustomCategory,
+                isUserAdded: true, // Flag to mark all user-added features
+                category: category
+            };
+
+            // Add to stories
+            allStories.push(newStory);
+            customFeatures.push(newStory);
+
+            // Save to localStorage
+            localStorage.setItem('customFeatures', JSON.stringify(customFeatures));
+
+            // Re-render
+            renderByCategory();
+            updateStats();
+
+            // Close modal
+            closeAddFeatureModal();
+
+            // Show success message
+            alert('Feature "' + title + '" added to ' + category + ' category!');
+        }
+
+        // Close modal on outside click
+        document.getElementById('addFeatureModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAddFeatureModal();
+        });
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

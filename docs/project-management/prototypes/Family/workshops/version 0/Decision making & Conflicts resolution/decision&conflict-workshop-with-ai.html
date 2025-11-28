@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Governance Blueprint Workshop - Family Governance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .live-indicator {
+            animation: pulse-slow 2s ease-in-out infinite;
+        }
+        .typing-indicator span {
+            animation: bounce 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+        .gradient-primary {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%);
+        }
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        .bg-list-item {
+            background-color: #FAFAFA;
+            border: 1px solid #E5E7EB;
+        }
+        .border-primary {
+            border-color: #FF6B35;
+        }
+        .bg-orange-50 {
+            background-color: #FFF5F0;
+        }
+        .text-primary {
+            color: #FF6B35;
+        }
+        .bg-primary {
+            background-color: #FF6B35;
+        }
+        .hover\:bg-primary-dark:hover {
+            background-color: #E85A2A;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- Container -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Family Governance Blueprint Workshop</h1>
+                    <p class="text-gray-600 mt-2">Архитектура семейного управления</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block bg-orange-50 text-primary px-4 py-2 rounded-full text-sm font-semibold">
+                        Workshop with AI
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 1: Method Selection -->
+        <div id="screen-1" class="screen">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Choose Your Workshop Method</h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Method 1: Workshop with Advisor -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">👨‍💼</div>
+                        <h3 class="text-xl font-bold mb-2">Workshop with Advisor</h3>
+                        <p class="text-gray-600 mb-4">Professional facilitator guides your family through governance framework development</p>
+                        <div class="text-2xl font-bold text-gray-900">$500-1,500</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Expert facilitation</li>
+                            <li>✓ Personalized guidance</li>
+                            <li>✓ 3-4 hour session</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 2: Workshop with AI (Selected) -->
+                    <div class="border-4 border-primary rounded-lg p-6 bg-orange-50 cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-4xl">🤖</div>
+                            <span class="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">RECOMMENDED</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Workshop with AI</h3>
+                        <p class="text-gray-600 mb-4">AI-facilitated collaborative workshop with unlimited guidance and personalized recommendations</p>
+                        <div class="text-2xl font-bold text-primary">Included</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Live collaboration (2-10 participants)</li>
+                            <li>✓ Unlimited AI consultations</li>
+                            <li>✓ Democratic scheduling</li>
+                            <li>✓ Comprehensive Governance Blueprint v0.9</li>
+                            <li>✓ 3-3.5 hour workshop</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 3: Let AI do this -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">⚡</div>
+                        <h3 class="text-xl font-bold mb-2">Let AI Create Framework</h3>
+                        <p class="text-gray-600 mb-4">AI generates governance blueprint based on your family profile</p>
+                        <div class="text-2xl font-bold text-gray-900">Free</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Automated generation</li>
+                            <li>✓ 15 minutes</li>
+                            <li>✓ Requires review</li>
+                        </ul>
+                    </div>
+
+                    <!-- Method 4: Manual -->
+                    <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 cursor-pointer transition">
+                        <div class="text-4xl mb-4">✏️</div>
+                        <h3 class="text-xl font-bold mb-2">I'll Do It Manually</h3>
+                        <p class="text-gray-600 mb-4">Use templates and guides to create framework independently</p>
+                        <div class="text-2xl font-bold text-gray-900">Free</div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li>✓ Full control</li>
+                            <li>✓ Self-paced</li>
+                            <li>✓ Template library</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button onclick="showScreen(2)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Continue to Workshop Setup →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Workshop Program & Scheduling -->
+        <div id="screen-2" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Workshop Program & Scheduling</h2>
+
+                <!-- Workshop Goal -->
+                <div class="border-2 border-primary bg-orange-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-3">🎯 Workshop Goal</h3>
+                    <p class="text-gray-700 mb-3">
+                        Согласовать каркас Governance Blueprint с ролями и правами: модель трёх кругов, органы управления, матрица прав решений RACI, календарь встреч, процедуры эскалации конфликтов.
+                    </p>
+                    <div class="flex gap-4 text-sm">
+                        <div><strong>Duration:</strong> 3-3.5 hours</div>
+                        <div><strong>Participants:</strong> 6-15 people</div>
+                        <div><strong>Mode:</strong> Live & Synchronous</div>
+                    </div>
+                </div>
+
+                <!-- Workshop Structure -->
+                <div class="bg-list-item rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">📋 Workshop Structure (10 Blocks)</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                            <div>
+                                <div class="font-semibold">Three Circles Model</div>
+                                <div class="text-sm text-gray-600">10 min • Family-Ownership-Business</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                            <div>
+                                <div class="font-semibold">Governance Organs Roles</div>
+                                <div class="text-sm text-gray-600">25 min • Assembly, Council, Board, Management</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                            <div>
+                                <div class="font-semibold">Decision Rights Matrix (RACI)</div>
+                                <div class="text-sm text-gray-600">40 min • Who decides what</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                            <div>
+                                <div class="font-semibold">Meeting Calendar</div>
+                                <div class="text-sm text-gray-600">20 min • Annual schedule</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">5</div>
+                            <div>
+                                <div class="font-semibold">Family Council Elections</div>
+                                <div class="text-sm text-gray-600">30 min • Composition & voting</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">6</div>
+                            <div>
+                                <div class="font-semibold">Board Interface</div>
+                                <div class="text-sm text-gray-600">25 min • Joint sessions & reporting</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">7</div>
+                            <div>
+                                <div class="font-semibold">Conflict Escalation</div>
+                                <div class="text-sm text-gray-600">15 min • 4-level process</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">8</div>
+                            <div>
+                                <div class="font-semibold">Secretariat</div>
+                                <div class="text-sm text-gray-600">10 min • Documentation</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">9</div>
+                            <div>
+                                <div class="font-semibold">Resume & Plan</div>
+                                <div class="text-sm text-gray-600">10 min • Finalization</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">10</div>
+                            <div>
+                                <div class="font-semibold">Materials Review</div>
+                                <div class="text-sm text-gray-600">Async • Pre-workshop prep</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workshop Materials -->
+                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">📚 Materials to Prepare Before Workshop</h3>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Current organizational chart (family, business, ownership)</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Draft family values and mission statement</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Existing meeting calendar</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>Current bylaws, shareholder agreements, board regulations</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-600">✓</span>
+                            <span>List of conflicting issues between family, board, and management</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3">Select Workshop Date</h3>
+                    <input type="date" class="border-2 border-gray-300 rounded-lg px-4 py-2 w-full md:w-auto" />
+                </div>
+
+                <!-- Time Slot Selection -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold mb-2">⏰ Proposed Time Slots</h3>
+                    <p class="text-sm text-gray-600 mb-4">Select 2-3 preferred time slots. Family members will vote.</p>
+                    <div class="grid md:grid-cols-4 gap-4">
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Morning</div>
+                            <div class="text-sm text-gray-600">9:00 AM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Late Morning</div>
+                            <div class="text-sm text-gray-600">11:00 AM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Afternoon</div>
+                            <div class="text-sm text-gray-600">2:00 PM</div>
+                        </label>
+                        <label class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-primary transition">
+                            <input type="checkbox" class="mb-2" />
+                            <div class="font-semibold">Evening</div>
+                            <div class="text-sm text-gray-600">6:00 PM</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(1)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(3)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Send Invitations & Voting Link →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- This prototype demonstrates screen flow and would continue with the remaining screens from the previous detailed implementation -->
+        <!-- For brevity, I'm focusing on the key workshop content structure that matches the template -->
+
+        <!-- Screen 3: Voting on Date/Time -->
+        <div id="screen-3" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-green-800 mb-2">✅ Invitations Sent Successfully!</h3>
+                    <p class="text-green-700">All family members have been invited to vote on the workshop schedule.</p>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">🗳️ Vote on Workshop Time</h2>
+
+                <!-- Voting Results -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="border-2 border-primary bg-orange-50 rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-bold text-lg">Morning Session</div>
+                            <div class="text-2xl font-bold text-primary">7 votes</div>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-3">Saturday, March 15 at 9:00 AM</div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-primary h-3 rounded-full" style="width: 70%"></div>
+                        </div>
+                        <div class="text-xs text-gray-600 mt-2">70% of participants</div>
+                    </div>
+
+                    <div class="border-2 border-gray-300 rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-bold text-lg">Afternoon Session</div>
+                            <div class="text-2xl font-bold text-gray-700">3 votes</div>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-3">Saturday, March 15 at 2:00 PM</div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gray-400 h-3 rounded-full" style="width: 30%"></div>
+                        </div>
+                        <div class="text-xs text-gray-600 mt-2">30% of participants</div>
+                    </div>
+                </div>
+
+                <!-- Participant Voting Status -->
+                <div class="bg-list-item rounded-lg p-6 mb-8">
+                    <h3 class="text-lg font-bold mb-4">Participant Voting Status (10 invited)</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-primary">АИ</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Александр Иванов</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-blue-500">МП</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Мария Петрова</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-purple-500">ДС</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Дмитрий Сидоров</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-pink-500">ЕК</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Елена Козлова</div>
+                                <div class="text-sm text-green-600">✓ Voted for Afternoon</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-green-500">ИМ</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Игорь Морозов</div>
+                                <div class="text-sm text-gray-400">⏳ Pending...</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="participant-avatar bg-orange-500">ОВ</div>
+                            <div class="flex-1">
+                                <div class="font-semibold">Ольга Волкова</div>
+                                <div class="text-sm text-green-600">✓ Voted for Morning</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-300">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Response Rate:</span>
+                            <span class="font-semibold">90% (9/10)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(2)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(4)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Confirm & Schedule Workshop →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Workshop Confirmed & Preparation -->
+        <div id="screen-4" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Workshop Scheduled!</h2>
+                    <div class="text-xl text-gray-600 mb-2">Saturday, March 15, 2025 at 9:00 AM</div>
+                    <div class="text-sm text-gray-500">Duration: 3-3.5 hours</div>
+                </div>
+
+                <!-- Calendar Event -->
+                <div class="bg-gradient-primary text-white rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold">📅 Calendar Event Created</h3>
+                        <button class="bg-white text-primary px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                            Add to Calendar
+                        </button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="opacity-80 mb-1">Location:</div>
+                            <div class="font-semibold">Virtual Room (link sent via email)</div>
+                        </div>
+                        <div>
+                            <div class="opacity-80 mb-1">Participants:</div>
+                            <div class="font-semibold">10 family members confirmed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Workshop Checklist -->
+                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">✅ Pre-Workshop Preparation Checklist</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" checked disabled />
+                            <div>
+                                <div class="font-semibold">Review family organizational chart</div>
+                                <div class="text-sm text-gray-600">Sent via email on March 10</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" checked disabled />
+                            <div>
+                                <div class="font-semibold">Read "Three Circles Model" guide</div>
+                                <div class="text-sm text-gray-600">15-minute read</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" />
+                            <div>
+                                <div class="font-semibold">Draft your conflict resolution ideas</div>
+                                <div class="text-sm text-gray-600">Optional but helpful</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="mt-1" />
+                            <div>
+                                <div class="font-semibold">Review current bylaws and board regulations</div>
+                                <div class="text-sm text-gray-600">Will be discussed in Block 2</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- What to Expect -->
+                <div class="bg-list-item rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4">🔮 What to Expect in the Workshop</h3>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="font-semibold mb-2">Interactive Exercises:</div>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>• Three Circles mapping</li>
+                                <li>• RACI matrix collaboration</li>
+                                <li>• Live voting on decisions</li>
+                                <li>• Conflict scenario discussions</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="font-semibold mb-2">AI Assistance:</div>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>• Unlimited consultations</li>
+                                <li>• Real-time suggestions</li>
+                                <li>• Best practice recommendations</li>
+                                <li>• Instant document generation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(3)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(5)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Enter Workshop Room →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: Live Workshop Room -->
+        <div id="screen-5" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <!-- Live Indicator -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 bg-red-500 rounded-full live-indicator"></div>
+                        <h2 class="text-2xl font-bold text-gray-900">Live Workshop in Progress</h2>
+                    </div>
+                    <div class="text-sm text-gray-600">10 participants active</div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-8">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-600">Workshop Progress</span>
+                        <span class="font-semibold">Block 1 of 10 • 10%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="bg-primary h-3 rounded-full transition-all duration-500" style="width: 10%"></div>
+                    </div>
+                </div>
+
+                <!-- Current Block -->
+                <div id="workshop-content" class="border-2 border-primary rounded-lg p-8 bg-orange-50 mb-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <div class="inline-block bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold mb-3">Block 1/10</div>
+                            <h3 class="text-2xl font-bold mb-2">Three Circles Model</h3>
+                            <p class="text-gray-600 mb-4">Duration: 10 minutes • Family-Ownership-Business relationships</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl mb-2">⏱️</div>
+                            <div class="font-bold text-lg">8:30</div>
+                            <div class="text-sm text-gray-600">remaining</div>
+                        </div>
+                    </div>
+
+                    <!-- Block Content -->
+                    <div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Map your family's circles</h4>
+                        <p class="text-gray-700 mb-4">
+                            Модель трёх кругов (Three Circles Model) помогает понять, как взаимодействуют семья, собственность и бизнес. Каждый член семьи может принадлежать к одному или нескольким кругам.
+                        </p>
+
+                        <!-- Interactive Exercise -->
+                        <div class="border-2 border-gray-300 rounded-lg p-6 mb-4">
+                            <h5 class="font-semibold mb-3">📝 Exercise: Place family members in circles</h5>
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">🏠 Family Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Blood/marriage relations</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И.</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Мария П.</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С.</div>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">📊 Ownership Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Shareholders</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И. (40%)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Мария П. (30%)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С. (30%)</div>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">💼 Business Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Board/Management</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И. (CEO)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С. (Board)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">External CFO</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold transition">
+                                + Add Person to Circle
+                            </button>
+                        </div>
+
+                        <!-- Reflection -->
+                        <div class="mb-4">
+                            <label class="font-semibold mb-2 block">💭 Key Insights from this mapping:</label>
+                            <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 min-h-24" placeholder="What overlaps do you notice? What potential conflicts might arise?"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- AI Consultation -->
+                    <div class="bg-white rounded-lg border-2 border-blue-300 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-lg">🤖 AI Consultation</h4>
+                            <button onclick="consultAI(1)" id="aiConsultBtn-1" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                                Ask AI for Guidance
+                            </button>
+                        </div>
+                        <div id="aiThinking-1" class="hidden mb-4">
+                            <div class="flex items-center gap-2 text-blue-600">
+                                <div class="typing-indicator flex gap-1">
+                                    <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                    <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                    <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                </div>
+                                <span>AI analyzing your family structure...</span>
+                            </div>
+                        </div>
+                        <div id="aiResponse-1" class="hidden bg-blue-50 rounded-lg p-4">
+                            <!-- AI response will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between">
+                    <button onclick="showScreen(4)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Exit Workshop
+                    </button>
+                    <button onclick="completeBlock(1)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Complete Block 1 →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Block Complete & Aggregated Results -->
+        <div id="screen-6" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-green-800 mb-2">✅ Workshop Blocks Completed!</h3>
+                    <p class="text-green-700">All 10 blocks have been successfully completed. Review your family's governance framework below.</p>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">📊 Governance Blueprint v0.9 - Final Results</h2>
+
+                <!-- Summary Statistics -->
+                <div class="grid md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-orange-50 border-2 border-primary rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-primary">10/10</div>
+                        <div class="text-sm text-gray-600">Blocks Completed</div>
+                    </div>
+                    <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-blue-600">3h 25m</div>
+                        <div class="text-sm text-gray-600">Workshop Duration</div>
+                    </div>
+                    <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-green-600">85%</div>
+                        <div class="text-sm text-gray-600">Family Consensus</div>
+                    </div>
+                    <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-purple-600">8</div>
+                        <div class="text-sm text-gray-600">Deliverables Created</div>
+                    </div>
+                </div>
+
+                <!-- Block Results -->
+                <div class="space-y-4 mb-8">
+                    <div class="bg-list-item rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">✓</div>
+                                <div>
+                                    <h3 class="font-bold text-lg">Block 1: Three Circles Model</h3>
+                                    <p class="text-sm text-gray-600">Mapped 10 family members across 3 circles</p>
+                                </div>
+                            </div>
+                            <button class="text-primary hover:underline text-sm font-semibold">View Details →</button>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-3 text-sm">
+                            <div class="bg-white rounded p-3">
+                                <div class="font-semibold mb-1">🏠 Family Circle:</div>
+                                <div class="text-gray-600">10 members</div>
+                            </div>
+                            <div class="bg-white rounded p-3">
+                                <div class="font-semibold mb-1">📊 Ownership Circle:</div>
+                                <div class="text-gray-600">5 shareholders</div>
+                            </div>
+                            <div class="bg-white rounded p-3">
+                                <div class="font-semibold mb-1">💼 Business Circle:</div>
+                                <div class="text-gray-600">3 family + 2 external</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-list-item rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">✓</div>
+                                <div>
+                                    <h3 class="font-bold text-lg">Block 2: Governance Organs Roles</h3>
+                                    <p class="text-sm text-gray-600">Defined 4 governance bodies</p>
+                                </div>
+                            </div>
+                            <button class="text-primary hover:underline text-sm font-semibold">View Details →</button>
+                        </div>
+                        <div class="bg-white rounded p-3 text-sm">
+                            <strong>Key Decisions:</strong> Family Assembly (annual), Family Council (quarterly), Board of Directors (monthly), Management (weekly)
+                        </div>
+                    </div>
+
+                    <div class="bg-list-item rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">✓</div>
+                                <div>
+                                    <h3 class="font-bold text-lg">Block 3: RACI Decision Rights Matrix</h3>
+                                    <p class="text-sm text-gray-600">25 key decisions mapped</p>
+                                </div>
+                            </div>
+                            <button class="text-primary hover:underline text-sm font-semibold">View Details →</button>
+                        </div>
+                        <div class="bg-white rounded p-3 text-sm">
+                            <strong>Clarity achieved:</strong> Who's Responsible, Accountable, Consulted, and Informed for strategic decisions, hiring, investments, dividends, and conflicts.
+                        </div>
+                    </div>
+
+                    <!-- Remaining blocks summarized -->
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 text-center text-sm text-gray-600">
+                        + 7 more blocks completed (Meeting Calendar, Elections, Board Interface, Conflict Escalation, Secretariat, Resume, Materials)
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(5)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back to Workshop
+                    </button>
+                    <button onclick="showScreen(7)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Generate Final Report →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Final Assessment Report -->
+        <div id="screen-7" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">📄</div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Governance Blueprint v0.9</h2>
+                    <p class="text-gray-600">Your complete family governance framework is ready</p>
+                </div>
+
+                <!-- Document Preview -->
+                <div class="border-4 border-primary rounded-lg bg-orange-50 p-8 mb-8">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Family Governance Architecture</h3>
+
+                    <!-- 8 Deliverables -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</div>
+                                <div class="font-bold">Governance Blueprint v0.9</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">Complete framework document (42 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">2</div>
+                                <div class="font-bold">Family Council Charter</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">Roles, composition, election process (8 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">3</div>
+                                <div class="font-bold">RACI Decision Matrix</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">25 key decisions mapped (Excel + PDF)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download XLSX →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">4</div>
+                                <div class="font-bold">Meeting Calendar Template</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">Annual governance meeting schedule</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download iCal →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">5</div>
+                                <div class="font-bold">Conflict Escalation Playbook</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">4-level process with templates (12 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">6</div>
+                                <div class="font-bold">Board-Council Interface Protocol</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">Joint session guidelines (5 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">7</div>
+                                <div class="font-bold">Secretariat Handbook</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">Documentation standards (6 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">8</div>
+                                <div class="font-bold">Implementation Roadmap</div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">90-day action plan (4 pages)</div>
+                            <button class="text-primary hover:underline text-sm font-semibold">Download PDF →</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <button class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-bold text-lg transition">
+                            📦 Download All Documents (ZIP)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4">🚀 Recommended Next Steps (90 days)</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                            <div>
+                                <div class="font-semibold">Week 1-2: Family Council Elections</div>
+                                <div class="text-sm text-gray-600">Conduct elections based on approved charter</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                            <div>
+                                <div class="font-semibold">Week 3-4: First Council Meeting</div>
+                                <div class="text-sm text-gray-600">Inaugurate new council, approve meeting calendar</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                            <div>
+                                <div class="font-semibold">Month 2: RACI Implementation</div>
+                                <div class="text-sm text-gray-600">Socialize decision matrix with all stakeholders</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+                            <div>
+                                <div class="font-semibold">Month 3: Review & Iterate</div>
+                                <div class="text-sm text-gray-600">Collect feedback, refine to v1.0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="showScreen(6)" class="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                        ← Back
+                    </button>
+                    <button onclick="showScreen(8)" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Complete Workshop →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 8: Completion -->
+        <div id="screen-8" class="screen hidden">
+            <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div class="text-6xl mb-6">🎉</div>
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Congratulations!</h2>
+                <p class="text-xl text-gray-600 mb-8">Your Family Governance Blueprint v0.9 is complete</p>
+
+                <div class="max-w-2xl mx-auto mb-8">
+                    <div class="grid grid-cols-3 gap-6 mb-8">
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-primary mb-2">10</div>
+                            <div class="text-sm text-gray-600">Blocks Completed</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-primary mb-2">8</div>
+                            <div class="text-sm text-gray-600">Documents Created</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-primary mb-2">90</div>
+                            <div class="text-sm text-gray-600">Days to v1.0</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-primary text-white rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-bold mb-3">✅ Workshop Achievement Unlocked</h3>
+                        <p class="mb-4">You've successfully established the foundation for professional family governance. Your family now has clear roles, decision rights, and conflict resolution processes.</p>
+                        <div class="text-sm opacity-90">
+                            This puts you ahead of 90% of family businesses globally.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What's Next -->
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 mb-8 text-left max-w-2xl mx-auto">
+                    <h3 class="text-xl font-bold mb-4 text-center">🔮 What Happens Next?</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-600 font-bold">→</span>
+                            <span><strong>All documents saved</strong> to your Family Governance portal</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-600 font-bold">→</span>
+                            <span><strong>Email summary sent</strong> to all 10 participants with access links</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-600 font-bold">→</span>
+                            <span><strong>90-day implementation tracker</strong> activated in your dashboard</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-600 font-bold">→</span>
+                            <span><strong>AI Assistant available</strong> 24/7 for questions during implementation</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 justify-center">
+                    <button onclick="showScreen(7)" class="border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
+                        ← Review Documents
+                    </button>
+                    <button onclick="window.location.href='/#/dashboard'" class="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition">
+                        Go to Dashboard →
+                    </button>
+                </div>
+
+                <div class="mt-8 text-sm text-gray-500">
+                    <p>🤖 Generated with AI-assisted workshop methodology</p>
+                    <p class="mt-1">Family Governance Platform © 2025</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Workshop state
+        let currentBlock = 1;
+        let completedBlocks = [];
+        const totalBlocks = 10;
+
+        // Block data
+        const blockData = {
+            1: { title: "Three Circles Model", duration: "10 min", description: "Family-Ownership-Business relationships" },
+            2: { title: "Governance Organs Roles", duration: "25 min", description: "Assembly, Council, Board, Management" },
+            3: { title: "Decision Rights Matrix (RACI)", duration: "40 min", description: "Who decides what" },
+            4: { title: "Meeting Calendar", duration: "20 min", description: "Annual schedule" },
+            5: { title: "Family Council Elections", duration: "30 min", description: "Composition & voting" },
+            6: { title: "Board Interface", duration: "25 min", description: "Joint sessions & reporting" },
+            7: { title: "Conflict Escalation", duration: "15 min", description: "4-level process" },
+            8: { title: "Secretariat", duration: "10 min", description: "Documentation" },
+            9: { title: "Resume & Plan", duration: "10 min", description: "Finalization" },
+            10: { title: "Materials Review", duration: "Async", description: "Pre-workshop prep" }
+        };
+
+        // Screen navigation
+        function showScreen(screenNumber) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+
+            // Show selected screen
+            document.getElementById(`screen-${screenNumber}`).classList.remove('hidden');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // AI Consultation
+        async function consultAI(blockNum) {
+            const btn = document.getElementById(`aiConsultBtn-${blockNum}`);
+            const thinking = document.getElementById(`aiThinking-${blockNum}`);
+            const response = document.getElementById(`aiResponse-${blockNum}`);
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            thinking.classList.remove('hidden');
+
+            // Simulate AI thinking
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            thinking.classList.add('hidden');
+            response.classList.remove('hidden');
+            response.innerHTML = generateAIResponse(blockNum);
+        }
+
+        // Generate AI response based on block
+        function generateAIResponse(blockNum) {
+            const responses = {
+                1: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Key Observations:</h5>
+                    <p>Based on your Three Circles mapping, I notice significant overlap between ownership and management (Александр and Дмитрий). This is common in family businesses but creates potential conflicts of interest.</p>
+                    <h5 class="font-bold mt-4">💡 Recommendations:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Create clear role separation:</strong> Define when someone acts as owner vs. manager</li>
+                        <li>• <strong>Establish decision escalation:</strong> Ownership decisions go to Family Assembly, operational decisions stay with management</li>
+                        <li>• <strong>Consider independent directors:</strong> Add 1-2 non-family board members to reduce bias</li>
+                        <li>• <strong>Document conflict resolution:</strong> What happens when family and business interests clash?</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded">
+                        <strong>⚠️ Red Flag:</strong> External CFO only in Business Circle - ensure family understands financial decisions and reporting.
+                    </div>
+                </div>`,
+                2: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Key Observations:</h5>
+                    <p>Your governance structure includes 4 organs - good foundation! However, I notice potential gaps in authority delegation and reporting lines.</p>
+                    <h5 class="font-bold mt-4">💡 Recommendations:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Family Assembly:</strong> Ultimate authority on family values, constitution changes, major asset decisions</li>
+                        <li>• <strong>Family Council:</strong> Bridge between family and business - meets quarterly, advises board on family matters</li>
+                        <li>• <strong>Board of Directors:</strong> Fiduciary duty to company - strategic oversight, CEO evaluation, financial controls</li>
+                        <li>• <strong>Management:</strong> Day-to-day operations - reports to Board, implements strategy</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-green-50 border border-green-300 rounded">
+                        <strong>✅ Best Practice:</strong> Schedule joint Family Council + Board sessions 2x/year to align family expectations with business strategy.
+                    </div>
+                </div>`,
+                3: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 RACI Matrix Analysis:</h5>
+                    <p>Your decision rights matrix covers 25 decisions - excellent! Critical to avoid "too many cooks" syndrome where decisions get stuck.</p>
+                    <h5 class="font-bold mt-4">💡 Key Decisions to Clarify:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Capital allocation >$500K:</strong> Board Responsible, Assembly Approves, Council Consulted</li>
+                        <li>• <strong>CEO hiring/firing:</strong> Board Responsible, Assembly Approves, Council Informed</li>
+                        <li>• <strong>Dividend policy:</strong> Board Recommends, Assembly Approves, all Informed</li>
+                        <li>• <strong>Family employment:</strong> Council Responsible, Board Consulted, Assembly Informed</li>
+                        <li>• <strong>Conflict resolution:</strong> Council Responsible, external mediator Consulted if escalated</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-300 rounded">
+                        <strong>💡 Pro Tip:</strong> Create "decision thresholds" - small decisions fast-tracked, strategic decisions require full RACI process.
+                    </div>
+                </div>`,
+                4: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Meeting Calendar Best Practices:</h5>
+                    <p>A well-structured governance calendar creates rhythm and predictability. Avoid ad-hoc crisis meetings.</p>
+                    <h5 class="font-bold mt-4">💡 Recommended Annual Schedule:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Family Assembly:</strong> 1x/year (usually Q4) - approve constitution changes, major decisions</li>
+                        <li>• <strong>Family Council:</strong> 4x/year (quarterly) - family strategy, conflict resolution, education</li>
+                        <li>• <strong>Board Meetings:</strong> 6-12x/year (monthly or bi-monthly) - strategic oversight</li>
+                        <li>• <strong>Joint Sessions:</strong> 2x/year (Council + Board) - alignment and communication</li>
+                        <li>• <strong>Ad-hoc Education:</strong> Ongoing - next-gen training, financial literacy</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-purple-50 border border-purple-300 rounded">
+                        <strong>🗓️ Planning Tip:</strong> Book all meetings for next 12 months now - increases attendance 3x compared to ad-hoc scheduling.
+                    </div>
+                </div>`,
+                5: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Family Council Elections:</h5>
+                    <p>Democratic elections increase legitimacy and engagement. Your 5-7 member council size is optimal for decision-making.</p>
+                    <h5 class="font-bold mt-4">💡 Election Best Practices:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Eligibility:</strong> All family members 18+ can run and vote (adjust age based on family culture)</li>
+                        <li>• <strong>Term length:</strong> 3 years with staggered terms (rotate 2-3 seats annually for continuity)</li>
+                        <li>• <strong>Representation:</strong> Ensure mix of generations, branches, business/non-business members</li>
+                        <li>• <strong>Voting method:</strong> Secret ballot, ranked choice if >2x candidates per seat</li>
+                        <li>• <strong>Council Chair:</strong> Elected by council members (not automatic based on ownership)</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded">
+                        <strong>⚠️ Avoid:</strong> Don't automatically seat largest shareholders - council represents family, not just capital.
+                    </div>
+                </div>`,
+                6: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Board-Council Interface:</h5>
+                    <p>The Council-Board relationship is critical but tricky. Council is NOT the board's boss - they have different mandates.</p>
+                    <h5 class="font-bold mt-4">💡 Interface Guidelines:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Council Role:</strong> Voice of family - educate, communicate values, manage family matters</li>
+                        <li>• <strong>Board Role:</strong> Fiduciary duty to company - independent judgment, shareholder interests</li>
+                        <li>• <strong>Joint Sessions:</strong> 2x/year - share perspectives, no decision-making (separate votes later)</li>
+                        <li>• <strong>Communication:</strong> Council Chair + Board Chair meet quarterly, written reports exchanged</li>
+                        <li>• <strong>Escalation:</strong> If major conflict, Assembly (owners) has final say on board composition</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-green-50 border border-green-300 rounded">
+                        <strong>✅ Success Factor:</strong> Clear mandate separation prevents councils from micromanaging business decisions.
+                    </div>
+                </div>`,
+                7: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Conflict Escalation Process:</h5>
+                    <p>Your 4-level escalation ensures conflicts don't fester or explode. Most resolve at Level 1-2.</p>
+                    <h5 class="font-bold mt-4">💡 Escalation Levels:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Level 1 - Direct:</strong> Parties discuss 1-on-1 (resolve 60% of conflicts)</li>
+                        <li>• <strong>Level 2 - Facilitated:</strong> Family Council member facilitates (resolve 30%)</li>
+                        <li>• <strong>Level 3 - Mediation:</strong> External mediator brought in (resolve 9%)</li>
+                        <li>• <strong>Level 4 - Binding Resolution:</strong> Assembly votes or arbitration (last resort, <1%)</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-red-50 border border-red-300 rounded">
+                        <strong>🚨 Red Flags:</strong> If conflicts regularly reach Level 3+, governance structure needs redesign - something's broken.
+                    </div>
+                </div>`,
+                8: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Secretariat Function:</h5>
+                    <p>Professional documentation is the backbone of good governance. Don't underestimate this role!</p>
+                    <h5 class="font-bold mt-4">💡 Secretariat Responsibilities:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>• <strong>Before Meetings:</strong> Send agenda 1 week ahead, prepare materials, book venue</li>
+                        <li>• <strong>During Meetings:</strong> Take detailed minutes, track decisions, manage time</li>
+                        <li>• <strong>After Meetings:</strong> Distribute minutes within 48h, track action items, follow-up</li>
+                        <li>• <strong>Year-round:</strong> Maintain governance library, update documents, coordinate calendar</li>
+                        <li>• <strong>Confidentiality:</strong> Absolute discretion - secretary is trusted custodian of family information</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-300 rounded">
+                        <strong>💼 Staffing:</strong> Can be professional hire (10-20h/month), trusted family member, or shared with board secretary.
+                    </div>
+                </div>`,
+                9: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Workshop Summary:</h5>
+                    <p>Congratulations on completing this intensive governance design! You've built a solid framework in 3.5 hours.</p>
+                    <h5 class="font-bold mt-4">💡 Key Achievements:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>✅ <strong>Three Circles mapped:</strong> Clear understanding of family-ownership-business overlaps</li>
+                        <li>✅ <strong>4 Governance organs defined:</strong> Assembly, Council, Board, Management with clear mandates</li>
+                        <li>✅ <strong>RACI matrix created:</strong> 25 key decisions with explicit accountability</li>
+                        <li>✅ <strong>Meeting calendar set:</strong> Predictable rhythm for governance activities</li>
+                        <li>✅ <strong>Elections designed:</strong> Democratic council with 3-year staggered terms</li>
+                        <li>✅ <strong>Council-Board interface:</strong> Joint sessions 2x/year with clear boundaries</li>
+                        <li>✅ <strong>Conflict escalation:</strong> 4-level process from direct to binding resolution</li>
+                        <li>✅ <strong>Secretariat function:</strong> Professional documentation and coordination</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-primary text-white rounded">
+                        <strong>🚀 Next Step:</strong> Download Governance Blueprint v0.9 and begin 90-day implementation roadmap!
+                    </div>
+                </div>`,
+                10: `<div class="space-y-3">
+                    <h5 class="font-bold">🎯 Pre-Workshop Materials Review:</h5>
+                    <p>This async block ensures everyone comes prepared. Materials were distributed 1 week before workshop.</p>
+                    <h5 class="font-bold mt-4">💡 Materials Checklist:</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li>✅ <strong>Current org chart:</strong> Family tree, ownership structure, business hierarchy</li>
+                        <li>✅ <strong>Values & mission:</strong> Draft family values and business mission statements</li>
+                        <li>✅ <strong>Existing calendar:</strong> Current meeting schedules (if any)</li>
+                        <li>✅ <strong>Legal docs:</strong> Bylaws, shareholder agreements, board regulations</li>
+                        <li>✅ <strong>Conflict list:</strong> Known tensions between family, board, and management</li>
+                        <li>✅ <strong>Reading:</strong> Three Circles Model guide (15 min), RACI basics (10 min)</li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-green-50 border border-green-300 rounded">
+                        <strong>✅ Preparation Complete:</strong> All 10 participants reviewed materials - workshop ready to begin!
+                    </div>
+                </div>`
+            };
+            return responses[blockNum] || '<p>AI guidance for this block is being prepared...</p>';
+        }
+
+        // Generate block content
+        function generateBlockContent(blockNum) {
+            const blocks = {
+                1: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Map your family's circles</h4>
+                        <p class="text-gray-700 mb-4">
+                            Модель трёх кругов (Three Circles Model) помогает понять, как взаимодействуют семья, собственность и бизнес. Каждый член семьи может принадлежать к одному или нескольким кругам.
+                        </p>
+                        <div class="border-2 border-gray-300 rounded-lg p-6 mb-4">
+                            <h5 class="font-semibold mb-3">📝 Exercise: Place family members in circles</h5>
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">🏠 Family Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Blood/marriage relations</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И.</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Мария П.</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С.</div>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">📊 Ownership Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Shareholders</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И. (40%)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Мария П. (30%)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С. (30%)</div>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                    <div class="font-bold text-center mb-2">💼 Business Circle</div>
+                                    <div class="text-sm text-gray-600 text-center mb-3">Board/Management</div>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Александр И. (CEO)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">Дмитрий С. (Board)</div>
+                                        <div class="bg-white rounded px-3 py-2 text-sm">External CFO</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold transition">
+                                + Add Person to Circle
+                            </button>
+                        </div>
+                        <div class="mb-4">
+                            <label class="font-semibold mb-2 block">💭 Key Insights from this mapping:</label>
+                            <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 min-h-24" placeholder="What overlaps do you notice? What potential conflicts might arise?"></textarea>
+                        </div>
+                    </div>`,
+                2: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Define roles and responsibilities for 4 governance organs</h4>
+                        <p class="text-gray-700 mb-4">
+                            Определите роли и полномочия для четырёх органов управления: Family Assembly, Family Council, Board of Directors, Management.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-2">👥 Family Assembly</h5>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <strong>Frequency:</strong> Annual
+                                    </div>
+                                    <div>
+                                        <strong>Members:</strong> All family shareholders
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong class="block mb-2">Key Decisions:</strong>
+                                    <textarea class="w-full border border-gray-300 rounded p-2 text-sm" rows="2" placeholder="Constitution changes, major asset sales, dividend policy..."></textarea>
+                                </div>
+                            </div>
+                            <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-2">🏛️ Family Council</h5>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div><strong>Frequency:</strong> Quarterly</div>
+                                    <div><strong>Members:</strong> 5-7 elected representatives</div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong class="block mb-2">Key Responsibilities:</strong>
+                                    <textarea class="w-full border border-gray-300 rounded p-2 text-sm" rows="2" placeholder="Family education, conflict resolution, communication with board..."></textarea>
+                                </div>
+                            </div>
+                            <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-2">📊 Board of Directors</h5>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div><strong>Frequency:</strong> Monthly/Bi-monthly</div>
+                                    <div><strong>Members:</strong> 5-9 directors (family + independent)</div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong class="block mb-2">Fiduciary Duties:</strong>
+                                    <textarea class="w-full border border-gray-300 rounded p-2 text-sm" rows="2" placeholder="Strategic oversight, CEO evaluation, financial controls, risk management..."></textarea>
+                                </div>
+                            </div>
+                            <div class="border-2 border-orange-300 bg-orange-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-2">💼 Management</h5>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div><strong>Reporting:</strong> Weekly/Monthly to Board</div>
+                                    <div><strong>Leadership:</strong> CEO + C-Suite</div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong class="block mb-2">Operational Authority:</strong>
+                                    <textarea class="w-full border border-gray-300 rounded p-2 text-sm" rows="2" placeholder="Day-to-day operations, hiring, budget execution, implementation..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                3: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Create RACI matrix for 25 key decisions</h4>
+                        <p class="text-gray-700 mb-4">
+                            RACI = Responsible (делает), Accountable (отвечает), Consulted (консультирует), Informed (информируют). Определите для каждого решения.
+                        </p>
+                        <div class="border-2 border-gray-300 rounded-lg overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="text-left p-3 border-b">Decision Type</th>
+                                        <th class="p-3 border-b">Assembly</th>
+                                        <th class="p-3 border-b">Council</th>
+                                        <th class="p-3 border-b">Board</th>
+                                        <th class="p-3 border-b">Management</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white">
+                                    <tr class="border-b">
+                                        <td class="p-3 font-semibold">Capital allocation >$500K</td>
+                                        <td class="p-3 text-center"><span class="bg-green-100 px-2 py-1 rounded text-xs">A</span></td>
+                                        <td class="p-3 text-center"><span class="bg-blue-100 px-2 py-1 rounded text-xs">C</span></td>
+                                        <td class="p-3 text-center"><span class="bg-orange-100 px-2 py-1 rounded text-xs">R</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3 font-semibold">CEO hiring/firing</td>
+                                        <td class="p-3 text-center"><span class="bg-green-100 px-2 py-1 rounded text-xs">A</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                        <td class="p-3 text-center"><span class="bg-orange-100 px-2 py-1 rounded text-xs">R</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3 font-semibold">Dividend policy</td>
+                                        <td class="p-3 text-center"><span class="bg-green-100 px-2 py-1 rounded text-xs">A</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                        <td class="p-3 text-center"><span class="bg-orange-100 px-2 py-1 rounded text-xs">R</span></td>
+                                        <td class="p-3 text-center"><span class="bg-blue-100 px-2 py-1 rounded text-xs">C</span></td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3 font-semibold">Family employment</td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                        <td class="p-3 text-center"><span class="bg-orange-100 px-2 py-1 rounded text-xs">R</span></td>
+                                        <td class="p-3 text-center"><span class="bg-blue-100 px-2 py-1 rounded text-xs">C</span></td>
+                                        <td class="p-3 text-center"><span class="bg-green-100 px-2 py-1 rounded text-xs">A</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 font-semibold">Conflict resolution</td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                        <td class="p-3 text-center"><span class="bg-orange-100 px-2 py-1 rounded text-xs">R/A</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                        <td class="p-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded text-xs">I</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <strong>Legend:</strong> R = Responsible (делает) • A = Accountable (отвечает) • C = Consulted (консультирует) • I = Informed (информируют)
+                        </div>
+                        <div class="mt-4">
+                            <label class="font-semibold mb-2 block">💭 Additional decisions to add to matrix:</label>
+                            <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 min-h-20" placeholder="List other key decisions: succession planning, M&A, philanthropy budget, etc."></textarea>
+                        </div>
+                    </div>`,
+                4: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Create annual governance meeting calendar</h4>
+                        <p class="text-gray-700 mb-4">
+                            Создайте предсказуемый календарь встреч на год вперёд. Это увеличивает посещаемость в 3 раза.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="border-2 border-gray-300 rounded-lg overflow-hidden">
+                                <div class="bg-gradient-primary text-white p-4">
+                                    <h5 class="font-bold text-lg">2025 Governance Calendar</h5>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>Q1 - January</strong>
+                                            <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">Board</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">Strategic planning session • Budget approval</div>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 rounded p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>Q1 - March</strong>
+                                            <span class="text-xs bg-green-600 text-white px-2 py-1 rounded">Council</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">Education planning • Family updates</div>
+                                    </div>
+                                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>Q2 - April</strong>
+                                            <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">Board</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">Q1 review • Performance metrics</div>
+                                    </div>
+                                    <div class="bg-purple-50 border border-purple-200 rounded p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>Q2 - May</strong>
+                                            <span class="text-xs bg-purple-600 text-white px-2 py-1 rounded">Joint Session</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">Council + Board alignment • Strategic updates</div>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 rounded p-3">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <strong>Q2 - June</strong>
+                                            <span class="text-xs bg-green-600 text-white px-2 py-1 rounded">Council</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">Next-gen programs • Summer planning</div>
+                                    </div>
+                                    <div class="bg-gray-100 border border-gray-300 rounded p-3 text-center text-sm">
+                                        + 7 more meetings through December (Board, Council, Joint Session, Assembly)
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-primary hover:bg-primary-dark text-white py-2 rounded-lg font-semibold transition">
+                                📅 Download iCal Calendar (all meetings)
+                            </button>
+                        </div>
+                    </div>`,
+                5: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Design Family Council election process</h4>
+                        <p class="text-gray-700 mb-4">
+                            Демократические выборы повышают легитимность и вовлечённость. Определите правила.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="border-2 border-gray-300 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">Eligibility Rules</h5>
+                                    <div class="space-y-2 text-sm">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked />
+                                            <span>All family members 18+ can vote</span>
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked />
+                                            <span>All family members 21+ can run</span>
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" />
+                                            <span>Must attend 2+ family events/year</span>
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" />
+                                            <span>Exclude board members from council</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-gray-300 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">Council Composition</h5>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-1">Council Size:</label>
+                                            <select class="w-full border border-gray-300 rounded p-2">
+                                                <option>5 members</option>
+                                                <option selected>7 members</option>
+                                                <option>9 members</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-1">Term Length:</label>
+                                            <select class="w-full border border-gray-300 rounded p-2">
+                                                <option>2 years</option>
+                                                <option selected>3 years</option>
+                                                <option>4 years</option>
+                                            </select>
+                                        </div>
+                                        <label class="flex items-center gap-2 text-sm">
+                                            <input type="checkbox" checked />
+                                            <span>Staggered terms (rotate 2-3 seats/year)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-2 border-primary bg-orange-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-3">Voting Method</h5>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="voting" checked />
+                                        <span>Secret ballot, top N candidates win</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="voting" />
+                                        <span>Ranked choice voting (if more than 2x candidates)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="voting" />
+                                        <span>Consensus-based selection</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="font-semibold mb-2 block">💭 Special considerations for your family:</label>
+                                <textarea class="w-full border-2 border-gray-300 rounded-lg p-3 min-h-20" placeholder="Branch representation, generation mix, business vs. non-business members, etc."></textarea>
+                            </div>
+                        </div>
+                    </div>`,
+                6: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Define Board-Council interface protocol</h4>
+                        <p class="text-gray-700 mb-4">
+                            Council и Board имеют разные мандаты. Важно определить, как они взаимодействуют без конфликтов.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">🏛️ Family Council Mandate</h5>
+                                    <ul class="space-y-2 text-sm">
+                                        <li>✓ Voice of the family</li>
+                                        <li>✓ Educate family members</li>
+                                        <li>✓ Communicate family values to board</li>
+                                        <li>✓ Manage family conflicts</li>
+                                        <li>✓ Plan family events & education</li>
+                                        <li>✓ Advise (not direct) the board</li>
+                                    </ul>
+                                </div>
+                                <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">📊 Board of Directors Mandate</h5>
+                                    <ul class="space-y-2 text-sm">
+                                        <li>✓ Fiduciary duty to company</li>
+                                        <li>✓ Independent judgment</li>
+                                        <li>✓ Strategic oversight</li>
+                                        <li>✓ CEO evaluation & hiring</li>
+                                        <li>✓ Financial controls & risk management</li>
+                                        <li>✓ Shareholder interests (all, not just family)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-3">Communication Protocols</h5>
+                                <div class="space-y-3">
+                                    <div>
+                                        <strong class="block mb-1">Joint Sessions:</strong>
+                                        <div class="text-sm text-gray-700">2x per year • Share perspectives, NO decision-making • Separate votes later</div>
+                                    </div>
+                                    <div>
+                                        <strong class="block mb-1">Regular Updates:</strong>
+                                        <div class="text-sm text-gray-700">Council Chair + Board Chair meet quarterly • Written reports exchanged monthly</div>
+                                    </div>
+                                    <div>
+                                        <strong class="block mb-1">Escalation Path:</strong>
+                                        <div class="text-sm text-gray-700">If major conflict → Assembly (owners) has final say on board composition</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-2 border-yellow-300 bg-yellow-50 rounded-lg p-4">
+                                <strong class="block mb-2">⚠️ Red Lines (Council CANNOT):</strong>
+                                <ul class="text-sm space-y-1">
+                                    <li>• Hire/fire executives (board's job)</li>
+                                    <li>• Approve budgets (board's job)</li>
+                                    <li>• Override board decisions (unless via Assembly vote)</li>
+                                    <li>• Access confidential business info without board approval</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>`,
+                7: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Define 4-level conflict escalation process</h4>
+                        <p class="text-gray-700 mb-4">
+                            Большинство конфликтов (90%) решаются на Level 1-2. Процесс предотвращает замалчивание или взрыв.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="font-bold">Level 1: Direct Discussion</h5>
+                                    <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs">Resolves 60%</span>
+                                </div>
+                                <p class="text-sm mb-2">Parties discuss conflict directly, 1-on-1, within 7 days of issue arising.</p>
+                                <div class="text-sm">
+                                    <strong>Process:</strong> Schedule conversation → Listen actively → Seek mutual understanding → Document agreement if reached
+                                </div>
+                            </div>
+                            <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="font-bold">Level 2: Facilitated by Council</h5>
+                                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs">Resolves 30%</span>
+                                </div>
+                                <p class="text-sm mb-2">Family Council member facilitates discussion between parties.</p>
+                                <div class="text-sm">
+                                    <strong>Process:</strong> Council member meets parties separately → Joint facilitated session → Propose solutions → Track implementation
+                                </div>
+                            </div>
+                            <div class="border-2 border-orange-300 bg-orange-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="font-bold">Level 3: External Mediation</h5>
+                                    <span class="bg-orange-600 text-white px-3 py-1 rounded-full text-xs">Resolves 9%</span>
+                                </div>
+                                <p class="text-sm mb-2">Professional mediator brought in (pre-approved list of 3-5 mediators).</p>
+                                <div class="text-sm">
+                                    <strong>Process:</strong> Parties agree on mediator → Confidential mediation sessions → Written mediation agreement → Council monitors
+                                </div>
+                            </div>
+                            <div class="border-2 border-red-300 bg-red-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="font-bold">Level 4: Binding Resolution</h5>
+                                    <span class="bg-red-600 text-white px-3 py-1 rounded-full text-xs">Last Resort <1%</span>
+                                </div>
+                                <p class="text-sm mb-2">Assembly vote OR binding arbitration (as specified in constitution).</p>
+                                <div class="text-sm">
+                                    <strong>Process:</strong> Assembly called for vote → 2/3 supermajority required → Decision is final and binding → Review governance structure
+                                </div>
+                            </div>
+                            <div class="border-2 border-gray-300 rounded-lg p-4 mt-4">
+                                <label class="font-semibold mb-2 block">💭 Your family's escalation timeline:</label>
+                                <div class="grid grid-cols-4 gap-2 text-sm">
+                                    <input type="text" value="7 days" class="border rounded p-2 text-center" />
+                                    <input type="text" value="14 days" class="border rounded p-2 text-center" />
+                                    <input type="text" value="30 days" class="border rounded p-2 text-center" />
+                                    <input type="text" value="45 days" class="border rounded p-2 text-center" />
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 mt-1 text-xs text-gray-600">
+                                    <div class="text-center">Level 1</div>
+                                    <div class="text-center">Level 2</div>
+                                    <div class="text-center">Level 3</div>
+                                    <div class="text-center">Level 4</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                8: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Goal: Define secretariat function and responsibilities</h4>
+                        <p class="text-gray-700 mb-4">
+                            Секретариат — это позвоночник governance. Профессиональная документация и координация критически важны.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">Before Meetings</h5>
+                                    <ul class="space-y-2 text-sm">
+                                        <li>✓ Send agenda 1 week ahead</li>
+                                        <li>✓ Prepare materials</li>
+                                        <li>✓ Book venue</li>
+                                        <li>✓ Send reminders</li>
+                                        <li>✓ Confirm attendance</li>
+                                    </ul>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">During Meetings</h5>
+                                    <ul class="space-y-2 text-sm">
+                                        <li>✓ Take detailed minutes</li>
+                                        <li>✓ Track decisions</li>
+                                        <li>✓ Manage time</li>
+                                        <li>✓ Track action items</li>
+                                        <li>✓ Record votes</li>
+                                    </ul>
+                                </div>
+                                <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-3">After Meetings</h5>
+                                    <ul class="space-y-2 text-sm">
+                                        <li>✓ Distribute minutes (48h)</li>
+                                        <li>✓ Track action items</li>
+                                        <li>✓ Follow-up reminders</li>
+                                        <li>✓ Archive documents</li>
+                                        <li>✓ Update library</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="border-2 border-orange-300 bg-orange-50 rounded-lg p-4">
+                                <h5 class="font-bold mb-3">Year-Round Responsibilities</h5>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div>• Maintain governance library</div>
+                                    <div>• Update documents</div>
+                                    <div>• Coordinate calendar</div>
+                                    <div>• Onboard new members</div>
+                                    <div>• Manage communications</div>
+                                    <div>• Ensure confidentiality</div>
+                                </div>
+                            </div>
+                            <div class="border-2 border-gray-300 rounded-lg p-4">
+                                <h5 class="font-bold mb-3">Staffing Options</h5>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="staffing" checked />
+                                        <span>Professional hire (10-20h/month, $3-5K/month)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="staffing" />
+                                        <span>Trusted family member (volunteer or stipend)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="staffing" />
+                                        <span>Shared with board secretary (if same person)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="radio" name="staffing" />
+                                        <span>Family office staff member</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                9: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Workshop Summary & Implementation Plan</h4>
+                        <p class="text-gray-700 mb-4">
+                            Поздравляем! За 3.5 часа вы создали полноценный Governance Blueprint v0.9. Теперь переходите к имплементации.
+                        </p>
+                        <div class="border-2 border-primary bg-orange-50 rounded-lg p-6 mb-4">
+                            <h5 class="font-bold text-lg mb-3">✅ What You've Accomplished Today</h5>
+                            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                <div>✓ Three Circles Model mapped</div>
+                                <div>✓ 4 Governance organs defined</div>
+                                <div>✓ RACI matrix for 25 decisions</div>
+                                <div>✓ Annual meeting calendar</div>
+                                <div>✓ Council election process</div>
+                                <div>✓ Board-Council interface</div>
+                                <div>✓ 4-level conflict escalation</div>
+                                <div>✓ Secretariat function</div>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6">
+                            <h5 class="font-bold text-lg mb-3">🚀 90-Day Implementation Roadmap</h5>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                                    <div>
+                                        <strong>Week 1-2: Council Elections</strong>
+                                        <div class="text-sm text-gray-600">Conduct elections based on charter → Inaugurate council</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                                    <div>
+                                        <strong>Week 3-4: First Council Meeting</strong>
+                                        <div class="text-sm text-gray-600">Approve calendar → Assign secretariat → Review RACI</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                                    <div>
+                                        <strong>Month 2: RACI Socialization</strong>
+                                        <div class="text-sm text-gray-600">Share matrix with board → Train management → Document exceptions</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+                                    <div>
+                                        <strong>Month 3: Review & Refine</strong>
+                                        <div class="text-sm text-gray-600">Collect feedback → Adjust processes → Upgrade to v1.0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`,
+                10: `<div class="bg-white rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4">🎯 Pre-Workshop Materials Review (Async Block)</h4>
+                        <p class="text-gray-700 mb-4">
+                            Все участники должны были изучить эти материалы до воркшопа. Проверим готовность.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                                <h5 class="font-bold mb-3">✅ Materials Reviewed</h5>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>Current organizational chart reviewed (family tree, ownership, business hierarchy)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>Draft family values and mission statement prepared</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>Existing meeting calendar (if any) shared</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>Current bylaws, shareholder agreements, board regulations uploaded</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>List of known conflicts between family, board, management documented</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>Three Circles Model guide read (15 minutes)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" checked disabled />
+                                        <span>RACI basics video watched (10 minutes)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="border-2 border-blue-300 bg-blue-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-2">📊 Participation Rate</h5>
+                                    <div class="text-4xl font-bold text-blue-600 mb-1">100%</div>
+                                    <div class="text-sm text-gray-600">All 10 invited members reviewed materials</div>
+                                </div>
+                                <div class="border-2 border-purple-300 bg-purple-50 rounded-lg p-4">
+                                    <h5 class="font-bold mb-2">⏱️ Average Prep Time</h5>
+                                    <div class="text-4xl font-bold text-purple-600 mb-1">45 min</div>
+                                    <div class="text-sm text-gray-600">Per participant (materials + reading)</div>
+                                </div>
+                            </div>
+                            <div class="bg-primary text-white rounded-lg p-4 text-center">
+                                <strong class="text-lg">🚀 Workshop Ready!</strong>
+                                <p class="mt-2">All participants prepared → Can proceed with intensive 3.5-hour workshop</p>
+                            </div>
+                        </div>
+                    </div>`
+            };
+            return blocks[blockNum] || '<p class="text-gray-500">Block content loading...</p>';
+        }
+
+        // Update workshop content for current block
+        function updateWorkshopContent() {
+            const blockHeader = document.querySelector('#workshop-content .flex.items-start.justify-between');
+            const blockContent = document.querySelector('#workshop-content .bg-white.rounded-lg.p-6.mb-6');
+
+            const block = blockData[currentBlock];
+            const progress = Math.round((currentBlock / totalBlocks) * 100);
+
+            // Update progress bar
+            document.querySelector('.flex.justify-between.text-sm .font-semibold').textContent = `Block ${currentBlock} of ${totalBlocks} • ${progress}%`;
+            document.querySelector('.bg-primary.h-3.rounded-full').style.width = `${progress}%`;
+
+            // Update block header
+            blockHeader.innerHTML = `
+                <div>
+                    <div class="inline-block bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold mb-3">Block ${currentBlock}/10</div>
+                    <h3 class="text-2xl font-bold mb-2">${block.title}</h3>
+                    <p class="text-gray-600 mb-4">Duration: ${block.duration} • ${block.description}</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl mb-2">⏱️</div>
+                    <div class="font-bold text-lg">${block.duration === 'Async' ? '—' : block.duration}</div>
+                    <div class="text-sm text-gray-600">${block.duration === 'Async' ? 'completed' : 'remaining'}</div>
+                </div>
+            `;
+
+            // Update block content
+            blockContent.innerHTML = generateBlockContent(currentBlock);
+
+            // Update navigation button
+            const navButton = document.querySelector('#workshop-content').parentElement.querySelector('.flex.justify-between button:last-child');
+            navButton.textContent = currentBlock < totalBlocks ? `Complete Block ${currentBlock} →` : 'Complete Workshop →';
+            navButton.onclick = () => completeBlock(currentBlock);
+        }
+
+        // Complete block
+        function completeBlock(blockNum) {
+            completedBlocks.push(blockNum);
+
+            // Move to next block or finish
+            if (blockNum < totalBlocks) {
+                currentBlock = blockNum + 1;
+                updateWorkshopContent();
+                window.scrollTo(0, 0);
+            } else {
+                showScreen(6); // Final report
+            }
+        }
+
+        // Show block completion
+        function showBlockCompletion(completedBlockNum) {
+            // This would show Screen 6 with aggregated results
+            // For now, advancing to next block
+            alert(`Block ${completedBlockNum} completed! Moving to Block ${currentBlock}...`);
+            // In full implementation, this would update Screen 5 with next block content
+            // and show Screen 6 with aggregated results
+            showScreen(6); // Jump to final report for demo
+        }
+
+        // Initialize - show first screen
+        showScreen(1);
+    </script>
+
+</body>
+</html>

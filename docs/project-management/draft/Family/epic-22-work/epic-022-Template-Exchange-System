@@ -1,0 +1,1341 @@
+# EPIC-022: Template Exchange System
+
+> **Note:** This Epic enables bidirectional collaborative editing of templates between Family Council and External Advisors
+
+---
+
+## 📋 Basic Information
+
+**Issue Type:** Epic
+**Project:** FG
+**Epic Name:** Template Exchange System
+**Summary:** Enable bidirectional collaborative editing of all template types (10 types) between Family Council and External Advisors through copy-based workflow with structured review and merge capabilities
+**Parent User Journey:** [To be determined]
+**Parent Initiative:** N/A
+**Priority:** Critical
+**Target Release:** 30.11.2025
+**Epic Link:** FG-EPIC-022
+
+---
+
+## 🎯 Epic Goal
+
+**What will this Epic deliver?**
+
+A universal template exchange system that enables Family Council members and External Advisors to collaborate on improving templates through a structured copy-edit-review-merge workflow. The system supports all 10 template types with bidirectional sharing capabilities.
+
+**User-facing value:**
+- Family Council can share any template with their advisors for expert review and improvement
+- Advisors can share their professional templates with families for customization
+- Both parties maintain full control through structured review and approval process
+- Clear visibility of all proposed changes through type-specific diff views
+- Auto-save prevents data loss during editing
+- Instant notifications keep all parties informed throughout the workflow
+
+**Business value:**
+- Increases value of advisor engagements through concrete collaborative deliverables
+- Improves quality of family governance documents through professional input
+- Creates structured audit trail of all collaborative work
+- Reduces need for external document sharing tools (Google Docs, email attachments)
+- Positions platform as comprehensive governance collaboration tool
+- Encourages longer-term advisor-family relationships
+
+**Scope boundaries:**
+
+**✅ INCLUDED:**
+
+**Core Exchange Mechanism:**
+1. Universal sharing for 10 template types (all data/link based)
+2. Bidirectional sharing (Family ↔ Advisor, both can initiate)
+3. JSONB copy creation when sharing
+4. Original template locked during active exchange (prevents conflicts)
+5. Type-specific edit interfaces for all template types
+6. Auto-save every 30 seconds with draft persistence
+7. Submit changes workflow with required message
+8. Type-specific diff/comparison views for review
+9. Binary approve/reject decision (all-or-nothing)
+10. Merge approved changes to original template
+11. Instant notifications on all key events
+12. Exchange history tracking
+13. Optional messages at all stages (share, submit, review)
+14. 7-day auto-expiration for inactive exchanges
+
+**Template Types Supported:**
+- Constitution Templates (12 sections, structured)
+- Learning Paths (modules with resources, structured)
+- Checklists (items, structured)
+- Articles (rich text)
+- Guides (rich text)
+- Documents (external links)
+- Videos (URLs)
+- Podcasts (URLs)
+- External Links (URLs)
+- Templates (generic links)
+
+**❌ NOT INCLUDED:**
+- File upload/storage (only external links)
+- Real-time collaborative editing (Google Docs style)
+- Multi-round negotiation (only one submit → review cycle per exchange)
+- Granular section/module approval (all-or-nothing in MVP)
+- Comments/discussion threads on specific sections
+- Advanced version control with branching
+- Conflict resolution for concurrent edits (prevented by locking)
+- Template marketplace integration
+- Analytics on exchange usage
+- Bulk exchange (multiple templates at once)
+- Multi-party exchange (only two parties: sender ↔ receiver)
+
+---
+
+## 👥 Target Users
+
+**Who will use this feature?**
+
+**Primary Personas:**
+- **Family Council Member** - Can initiate exchange by sharing family templates with advisors; can receive templates from advisors; reviews and approves/rejects proposed changes
+- **External Advisor** (all types: Personal Family Advisor, External Consul, Marketplace Consultant) - Can initiate exchange by sharing professional templates with families; can receive templates from families; proposes improvements through editing
+
+**Note:** Both personas have equal capabilities - either can be sender or receiver in exchange workflow.
+
+---
+
+## 📖 User Stories (High-Level)
+
+**Main scenarios this Epic will enable:**
+
+### Critical Stories for MVP (11 stories)
+
+**Group 1: Initiate Exchange**
+
+**US-EPIC-022-001: Share Template for Collaborative Editing**
+- **As a** Family Council Member OR External Advisor
+- **I want to** share any template (Constitution, Learning Path, Article, etc.) with my counterpart for collaborative editing
+- **So that** we can work together to improve the template content
+
+**Acceptance Criteria:**
+- Can select any template from my library (10 types supported)
+- Can select recipient from active FamilyAdvisorAssociations (Service Request status = "In Progress")
+- Can add optional message (0-500 chars) explaining what feedback/changes I need
+- System creates editable copy for recipient
+- System locks original template (owner cannot edit during exchange)
+- System sends instant notification to recipient
+- Exchange session created with status "editing"
+- Template card shows "🔒 In Collaboration with [Name]" badge
+
+---
+
+**Group 2: Receive & Edit**
+
+**US-EPIC-022-003: Receive Shared Template Notification**
+- **As a** Family Council Member OR External Advisor
+- **I want to** receive instant notification when someone shares a template with me
+- **So that** I know collaborative work is waiting for me
+
+**Acceptance Criteria:**
+- Notification appears immediately in notification center
+- Notification shows: sender name, template type, template title, optional message
+- Clicking notification opens template editor
+- Badge count updates immediately
+- Email notification also sent
+- Cannot disable these notifications (critical workflow)
+
+---
+
+**US-EPIC-022-004: Edit Shared Template (Structured)**
+- **As a** Family Council Member OR External Advisor
+- **I want to** edit structured templates (Constitution sections, Learning Path modules, Checklist items)
+- **So that** I can make improvements or adapt content to specific needs
+
+**Acceptance Criteria:**
+- Can edit all sections/modules/items in shared copy
+- Changes auto-save every 30 seconds
+- "Last saved" timestamp visible
+- Can add/remove sections (for applicable types)
+- Can reorder modules/items (drag-and-drop)
+- Original owner's template remains locked and unchanged
+- Can save as draft and return later (up to 7 days)
+- Constitution: Section-by-section editing with rich text
+- Learning Paths: Module management with resource links
+- Checklists: Item management with reordering
+
+---
+
+**US-EPIC-022-005: Edit Shared Template (Rich Text)**
+- **As a** Family Council Member OR External Advisor
+- **I want to** edit rich text templates (Articles, Guides) with formatting
+- **So that** I can refine content, add information, or improve structure
+
+**Acceptance Criteria:**
+- Full rich text editor available (bold, italic, lists, links, headings)
+- Changes auto-save every 30 seconds
+- Can see edit history (draft saves)
+- Can revert to last saved version
+- Word count displayed
+- Original unchanged until approved
+
+---
+
+**US-EPIC-022-006: Edit Shared Template (Links)**
+- **As a** Family Council Member OR External Advisor
+- **I want to** update URLs and metadata for link-based templates (Documents, Videos, Podcasts, External Links, Templates)
+- **So that** I can provide better resources or updated links
+
+**Acceptance Criteria:**
+- Can update URL (validated format: http/https)
+- Can update title and description
+- Can test link (opens in new tab)
+- Can add/remove additional related links
+- Type-specific metadata fields (duration, host, file type, etc.)
+- Changes auto-save
+- Original link preserved until approved
+
+---
+
+**Group 3: Submit Changes**
+
+**US-EPIC-022-007: Submit Proposed Changes**
+- **As a** Family Council Member OR External Advisor (receiver)
+- **I want to** submit my proposed changes back to the original owner for review
+- **So that** they can decide whether to incorporate my improvements
+
+**Acceptance Criteria:**
+- "Submit Changes" button available when editing complete
+- Must provide message (1-1000 chars) explaining changes made
+- Must check confirmation checkbox: "I confirm these changes represent my final recommendations"
+- System shows summary of changes before submission
+- System locks further editing after submit
+- System generates type-specific diff data for review
+- Instant notification sent to original owner
+- Exchange status → "changes_submitted"
+- Can see "Submitted, awaiting review" status in my portal
+
+---
+
+**Group 4: Review & Decide**
+
+**US-EPIC-022-009: Review Proposed Changes (Structured Templates)**
+- **As a** Family Council Member OR External Advisor (original owner)
+- **I want to** see section-by-section or module-by-module comparison of proposed changes
+- **So that** I can understand exactly what was modified before approving
+
+**Acceptance Criteria:**
+- Receive notification: "Changes submitted by [Name]"
+- Comparison view shows:
+  - Constitution: Section-by-section side-by-side (original vs proposed)
+  - Learning Paths: Module-by-module comparison with resource links
+  - Checklists: Item-by-item comparison with order changes
+- Additions highlighted in green
+- Deletions highlighted in red with strikethrough
+- Modified text highlighted in yellow
+- Can navigate between sections/modules
+- Shows message from editor explaining changes
+- "Approve All Changes" and "Reject Changes" buttons visible
+
+---
+
+**US-EPIC-022-010: Review Proposed Changes (Rich Text)**
+- **As a** Family Council Member OR External Advisor (original owner)
+- **I want to** see text diff with inline highlights for Articles and Guides
+- **So that** I can review writing changes clearly
+
+**Acceptance Criteria:**
+- Side-by-side or unified diff view (toggleable)
+- Text additions highlighted in green
+- Text deletions shown with strikethrough in red
+- Formatting changes indicated
+- Statistics shown (word count: original → proposed)
+- Shows editor's message
+- "Approve All Changes" and "Reject Changes" buttons
+
+---
+
+**US-EPIC-022-011: Review Proposed Changes (Links)**
+- **As a** Family Council Member OR External Advisor (original owner)
+- **I want to** see before/after comparison for link-based templates
+- **So that** I can verify the new URL is correct and appropriate
+
+**Acceptance Criteria:**
+- Shows original URL and proposed URL side-by-side
+- Shows original metadata and proposed metadata
+- Link preview available (if possible)
+- Can click to test both links
+- Changed fields highlighted
+- Shows editor's message
+- "Approve All Changes" and "Reject Changes" buttons
+
+---
+
+**US-EPIC-022-012: Approve and Merge Changes**
+- **As a** Family Council Member OR External Advisor (original owner)
+- **I want to** approve proposed changes and merge them into my original template
+- **So that** my template is updated with the improvements
+
+**Acceptance Criteria:**
+- "Approve All Changes" button in review interface
+- Confirmation modal: "Apply these changes to your template? This will update your original and unlock it for editing."
+- Optional: Add review notes for editor (0-500 chars)
+- Clicking "Confirm" merges all changes into original template
+- System updates template with all proposed data
+- System unlocks original template for editing
+- Records merge event in version history
+- Notification sent to editor: "Your changes were approved and merged"
+- Exchange status → "approved"
+- Exchange session closed
+- Receiver's copy deleted
+
+---
+
+**US-EPIC-022-013: Reject Changes**
+- **As a** Family Council Member OR External Advisor (original owner)
+- **I want to** reject proposed changes if they don't meet my needs
+- **So that** my original template remains unchanged
+
+**Acceptance Criteria:**
+- "Reject Changes" button in review interface
+- Confirmation modal: "Reject these changes? Your original template will remain unchanged."
+- Optional: Provide feedback for editor (0-1000 chars)
+- Original template unchanged
+- System unlocks original template for editing
+- Notification sent to editor: "Changes not accepted" + optional feedback
+- Exchange status → "rejected"
+- Exchange session closed
+- Receiver's copy deleted
+
+---
+
+## 🔗 Dependencies
+
+**Upstream Dependencies:**
+- EPIC-008 (Knowledge Center) - Template types and structure exist
+- EPIC-009 (Learning Paths CRUD) - Learning Path data model exists
+- EPIC-010 (Constitution Templates) - 12 sections structure exists
+- EPIC-017-021 (Service Request Journey) - Access control and FamilyAdvisorAssociation exists
+- Notification system operational
+- Service Request status tracking
+
+**Downstream Impact:**
+- Template version history system
+- Family governance analytics (tracks collaborative work)
+- Future: Template marketplace integration
+- Future: Multi-advisor collaboration workflows
+
+**Technical Dependencies:**
+
+**New Services Needed:**
+- Template Exchange Service (NEW) - Manages exchange session lifecycle
+- Diff Engine Component (NEW) - Type-specific diff generation
+
+**Existing Services to Extend:**
+- Constitution Service (port 8002) - Add snapshot/merge APIs
+- Learning Paths Service - Add snapshot/merge APIs
+- Knowledge Center Service - Add exchange session references
+- Advisor Portal Service (port 8011) - Add exchange UI
+- Family Portal Service - Add exchange UI
+
+**Database:**
+- New tables: template_exchange_sessions, template_change_proposals, template_version_history
+- Indexes on template_id, status, expires_at, association_id
+
+**External Libraries:**
+- Backend: `jsondiffpatch` or `fast-json-patch` (JSONB diff), `diff-match-patch` (text diff)
+- Frontend: `react-diff-viewer` or `monaco-diff-editor` (diff UI), `react-beautiful-dnd` (drag-drop)
+
+---
+
+## 🎨 Design & UX
+
+**Figma Links:**
+- [To be created] Template Sharing Modal
+- [To be created] Type-Specific Editors (Structured/Rich Text/Links)
+- [To be created] Change Review Interface (Diff Views)
+- [To be created] Approval/Rejection Modals
+- [To be created] Exchange History View
+
+**UX Notes:**
+
+### Master User Flow Overview
+
+```
+Party A (Owner)                    System                    Party B (Receiver)
+─────────────────────────────────────────────────────────────────────────────
+
+1. Select template from library
+
+2. Click "Share for Collaboration"
+
+3. Select recipient                Create copy
+   Add optional message            Lock original template
+                                  
+4. Confirm sharing                 Send notification ────────► 5. Receive notification
+                                                               "Template shared by [A]"
+                                  
+                                                               6. Click notification
+                                                               Opens editor
+                                  
+                                                               7. Edit template copy
+                                                               (auto-save every 30s)
+                                  
+                                                               8. Click "Submit Changes"
+                                                               Add required message
+                                  
+                                   Generate diff data
+                                   Lock editing
+                                  
+9. Receive notification ◄──────── Send notification           10. See "Submitted" status
+   "Changes submitted by [B]"
+   
+10. Click notification
+    Opens review interface
+    
+11. Review type-specific diff
+    (side-by-side comparison)
+    
+12a. Click "Approve"              Merge changes              13a. Receive notification
+     Add optional notes            Update original                 "Changes approved"
+                                   Unlock template
+                                   Close session
+                                   
+OR
+
+12b. Click "Reject"               Keep original              13b. Receive notification
+     Add optional feedback         Unlock template                "Changes not accepted"
+                                   Close session                  + feedback
+
+```
+
+---
+
+### Detailed User Flows
+
+#### Flow 1: Share Template (Initiate Exchange)
+
+**Context:** Either Family Council or Advisor initiates sharing
+
+**Step 1: Entry Point**
+1. User navigates to their template library:
+   - **Family Portal:** "Constitution" / "Learning Center" / "Resources"
+   - **Advisor Portal:** "Knowledge Center" / "Templates Library"
+2. Finds template to share (search/filter/browse)
+3. Sees template card with actions
+
+**Step 2: Initiate Sharing**
+4. Clicks "Share for Collaboration" button (or menu → "Share")
+5. Modal opens: "Share Template for Collaboration"
+6. Modal shows:
+   - **Template preview:** Type badge, title, description, icon
+   - **Explanation:** "Create editable copy for [counterpart]. They can propose changes, which you'll review before merging. Your original will be locked during collaboration."
+   - **Recipient selector:**
+     - Dropdown of active associations (FamilyAdvisorAssociation.is_active = true, Service Request status = "In Progress")
+     - Shows: Name, photo, service type
+   - **Message field (optional):**
+     - Label: "What feedback do you need?"
+     - Placeholder: "Please review section 3 and suggest improvements to succession criteria"
+     - Max 500 chars, character counter
+   - **Preview:** "They will receive: [template name] ([template type])"
+
+**Step 3: Confirm Sharing**
+7. Selects recipient
+8. (Optional) Adds message
+9. Clicks "Share Template" button
+10. System validates:
+    - Active association exists
+    - No duplicate active exchange for same template
+11. System processes:
+    - Creates exchange_session record
+    - Creates deep JSONB copy of template
+    - **Locks original template** (owner cannot edit)
+    - Status = "editing"
+    - Sets expires_at = created_at + 7 days
+12. Success message: "Template shared with [Recipient Name]. Your original is locked during collaboration."
+13. Modal closes
+14. Template card updates:
+    - Badge: "🔒 In Collaboration with [Name]"
+    - Edit button disabled/grayed
+    - Hover: "Complete or cancel exchange to edit"
+    - Actions: [View] [View Exchange] [Cancel]
+
+**Step 4: Notification to Receiver**
+15. System sends instant notification:
+    - **Notification Center:** Badge count increments
+    - **Item:** Icon (template type) + "Template shared by [Sender Name]" + "[Template Title]" + [Message] + "Open Template" button
+    - **Email:** Subject "[Sender Name] shared a template with you" + details + "Open in Portal" link
+
+---
+
+#### Flow 2: Receive & Edit Templates
+
+**Context:** Receiver opens shared template
+
+**Step 1: Access Notification**
+1. Receiver sees badge in notification center
+2. Clicks notification center icon
+3. Sees notification: "Template shared by [Sender Name]"
+4. Clicks "Open Template" button
+
+**Step 2: Type-Specific Editor Opens**
+
+---
+
+##### **A. STRUCTURED TEMPLATES EDITOR** (Constitution, Learning Paths, Checklists)
+
+**Header:**
+- Badge: "Shared by [Sender Name]"
+- Template title (editable)
+- Template type icon + label
+- Status: "Editing (Draft)"
+- Last auto-saved: "2 minutes ago"
+- Actions: "Submit Changes" (primary) | "Cancel Editing" (secondary)
+
+**For Constitution Templates:**
+
+**Left Sidebar:**
+- Section navigation (12 sections)
+- Each section: Number, title, status icon (✓ has content / ○ empty), edit indicator (*modified)
+
+**Main Content:**
+- Section title (editable)
+- Rich text editor (toolbar: Bold, Italic, Lists, Links, Headings)
+- Auto-save every 30 sec
+- Word count
+- Section status dropdown: "Not Started" / "In Progress" / "Completed"
+- "Save Section" button (manual)
+
+**Bottom:** "Previous Section" / "Next Section" + Progress: "5 of 12 completed"
+
+**For Learning Paths:**
+
+**Main Content:**
+- Title, description, category (editable)
+- **Modules list:**
+  - Cards with: Order (drag handle), title, description, resource count, edit/delete
+  - Click module → inline editor (title, description, duration, resources)
+  - Resources: Title + URL fields for each
+  - Drag-drop reordering
+  - "Add Module" button
+- Auto-save
+
+**For Checklists:**
+
+**Main Content:**
+- Title, description (editable)
+- **Items list:**
+  - Rows: Order (drag handle), item text (editable inline), delete icon
+  - "Add Item" button
+  - Drag-drop reordering
+- Auto-save
+
+---
+
+##### **B. RICH TEXT TEMPLATES EDITOR** (Articles, Guides)
+
+**Header:** Same as structured
+
+**Main Content:**
+- Title (large, editable)
+- Description (smaller, editable)
+- **Rich Text Editor:**
+  - Full toolbar (headings, bold, italic, underline, lists, links, blockquotes)
+  - Large editing area
+  - Auto-save every 30 sec
+  - Word count: "1,247 words"
+  - Character count
+- "Last saved: 30 seconds ago"
+
+**Footer:** "Submit Changes" / "Cancel"
+
+---
+
+##### **C. LINK-BASED TEMPLATES EDITOR** (Documents, Videos, Podcasts, External Links, Templates)
+
+**Header:** Same
+
+**Main Content:**
+- Title, description (editable, rich text)
+- **Primary Link:**
+  - Label: "Primary URL"
+  - URL input (validated)
+  - "Test Link" button
+  - Link preview (favicon, title from meta)
+- **Type-Specific Metadata:**
+  - Videos: Duration, platform (auto-detected)
+  - Podcasts: Duration, host name
+  - Documents: File type, size
+- **Additional Links:**
+  - "Add Related Link" button
+  - Each: URL, title, remove button
+- Auto-save
+
+**Footer:** "Submit Changes" / "Cancel"
+
+---
+
+**Step 3: Editing Experience (All Types)**
+
+**Auto-save mechanism:**
+- Triggers every 30 seconds if changes detected
+- Shows: "Saving..." → "Saved at [time]"
+- Draft stored in exchange session
+- If offline: "Connection lost. Attempting to reconnect..." (retries)
+- On reconnect: Auto-saves pending changes
+
+**Draft management:**
+- Can close editor anytime
+- Changes preserved in draft
+- Returning: "You have unsaved changes. Continue editing?"
+- Draft expires after 7 days (warning at day 6)
+
+---
+
+#### Flow 3: Submit Changes
+
+**Step 1: Prepare Submission**
+1. User finished editing
+2. Reviews changes
+3. Clicks "Submit Changes" button
+
+**Step 2: Submission Modal**
+4. Modal: "Submit Changes for Review"
+5. Shows:
+   - **Summary:**
+     - Structured: "Modified X sections" (clickable preview)
+     - Rich Text: "Word count: 500 → 750"
+     - Links: "URL updated" + before/after
+   - **Message field (REQUIRED):**
+     - Label: "Explain your changes to [Owner Name]"
+     - Placeholder: "I've refined section 3 to include clearer role definitions..."
+     - Max 1000 chars, counter
+   - **Confirmation checkbox:**
+     - "I confirm these changes represent my final recommendations"
+     - Must check to enable Submit
+   - **Warning:** "After submitting, you cannot edit further until [Owner] reviews."
+
+**Step 3: Confirm & Submit**
+6. Fills message
+7. Checks box
+8. Clicks "Submit for Review"
+9. System validates
+10. System processes:
+    - Generates type-specific diff
+    - Locks copy (read-only)
+    - Status: "editing" → "changes_submitted"
+    - Creates change_proposal record
+11. Success: "Changes Submitted! [Owner Name] will be notified. You'll hear back when they decide."
+12. User returns to portal
+
+**Step 4: Post-Submit View**
+13. Template in "Submitted" section
+14. Card shows: Title, type, "Awaiting review by [Owner]", date, "View Submitted Version" (read-only)
+
+**Step 5: Notification to Owner**
+15. Instant notification:
+    - **Center:** Icon + "Changes submitted by [Receiver Name]" + [Template Title] + [Message preview] + "Review Changes" button
+    - **Email:** Subject + details + "Review in Portal" link
+
+---
+
+#### Flow 4: Review Changes (Type-Specific)
+
+**Context:** Owner reviews submitted changes
+
+**Step 1: Access Review**
+1. Clicks "Review Changes" notification
+2. Review interface opens
+
+---
+
+##### **A. REVIEW STRUCTURED TEMPLATES**
+
+**Header:**
+- Title: "Review Changes: [Template Title]"
+- Badge: "Changes from [Receiver Name]"
+- Date submitted
+- Receiver's message (prominent)
+
+**Navigation Sidebar:**
+- Overview: "X sections modified"
+- List of changed sections:
+  - Name + change icon (✏️ modified / ➕ added / ➖ removed)
+  - Click to jump
+
+**Main Content:**
+
+**For Constitution:**
+- Section-by-section comparison
+- **Side-by-side diff:**
+  - Left: "Current Version" (original)
+  - Right: "Proposed Version" (changes)
+- **Highlighting:**
+  - Green background = additions
+  - Red strikethrough = deletions
+  - Yellow background = modifications
+- Navigation: Previous/Next buttons
+
+**For Learning Paths:**
+- Module-by-module comparison
+- If modified: side-by-side with highlighting
+- If added: "NEW MODULE" badge (green)
+- If removed: "WILL BE DELETED" badge (red)
+- Reordering: "Module order changed: #3 → #1"
+
+**For Checklists:**
+- Table: Item # | Current | Proposed | Change Type
+- Color highlighting (green/red/yellow)
+
+**Footer:** "Approve All Changes" (green) | "Reject Changes" (red)
+
+---
+
+##### **B. REVIEW RICH TEXT**
+
+**View Toggle:** Tabs: "Side-by-Side" | "Unified Diff"
+
+**Side-by-Side:**
+- Left: Current version
+- Right: Proposed version
+- Synchronized scrolling
+- Color highlighting (green/red/yellow)
+
+**Unified:**
+- Single column
+- Additions with + prefix (green)
+- Deletions with - prefix (red)
+- Unchanged (normal)
+
+**Statistics:** "Original: 500 words → Proposed: 750 words (+250)"
+
+**Footer:** Same buttons
+
+---
+
+##### **C. REVIEW LINKS**
+
+**Comparison Cards:**
+
+**Primary URL:**
+- Current: URL + "Test Link" + preview
+- Proposed: New URL + "Test Link" + preview
+- Difference indicator (yellow if changed)
+
+**Metadata:**
+- Table: Field | Current | Proposed
+- Changed fields highlighted
+
+**Additional Links:**
+- Added: green "NEW" badges
+- Removed: red "REMOVED" badges
+- Modified: side-by-side
+
+**Preview:** Embedded players (videos) or link previews
+
+**Footer:** Same buttons
+
+---
+
+#### Flow 5: Approve & Merge
+
+**Step 1: Decision**
+1. Owner reviewed all changes
+2. Satisfied
+3. Clicks "Approve All Changes"
+
+**Step 2: Confirmation**
+4. Modal: "Apply These Changes?"
+5. Shows:
+   - Warning icon
+   - Title: "Apply changes to your template?"
+   - Text: "This will update your original with all proposed changes and unlock it for editing. This cannot be undone."
+   - Summary: "[X] sections will be updated" + "Changes by [Receiver]" + "Submitted [timeago]"
+   - Optional: Review notes for receiver (0-500 chars)
+   - Buttons: "Go Back" | "Apply Changes" (green)
+
+**Step 3: Merge**
+6. (Optional) Adds notes
+7. Clicks "Apply Changes"
+8. System:
+   - Merges all changes to original
+   - **Unlocks original template**
+   - Records merge in version history
+   - Status: "approved"
+   - Deletes receiver's copy
+   - Closes session
+9. Success: "✓ Changes Applied! Your template is updated and unlocked for editing." + "View Updated Template" | "Close"
+
+**Step 4: Notification**
+10. Receiver gets:
+    - **Center:** Green checkmark + "Your changes were approved!" + [Title] + [Notes if provided]
+    - **Email:** Subject + details
+
+**Step 5: Post-Merge**
+11. **Owner:** Template updated, badge removed, unlocked, history shows merge
+12. **Receiver:** Exchange in "Completed" section, shows "Approved by [Owner]"
+
+---
+
+#### Flow 6: Reject Changes
+
+**Step 1: Decision**
+1. Owner not satisfied
+2. Clicks "Reject Changes"
+
+**Step 2: Confirmation**
+3. Modal: "Reject These Changes?"
+4. Shows:
+   - Warning icon
+   - "Your original will remain unchanged and unlocked. [Receiver] will be notified."
+   - Feedback field (optional, 0-1000 chars): "Explain why (optional)"
+   - Placeholder: "I appreciate the effort, but these changes don't align with our values..."
+   - Buttons: "Go Back" | "Reject Changes" (red)
+
+**Step 3: Reject**
+5. (Optional) Adds feedback
+6. Clicks "Reject"
+7. System:
+   - Original unchanged
+   - **Unlocks original template**
+   - Status: "rejected"
+   - Deletes receiver's copy
+   - Closes session
+8. Success: "Changes Rejected. Your template remains unchanged and unlocked."
+
+**Step 4: Notification**
+9. Receiver gets:
+   - **Center:** "Changes not accepted" + [Title] + [Feedback if provided]
+   - **Email:** Subject + details
+
+**Step 5: Post-Rejection**
+10. **Owner:** Unchanged, unlocked, history shows rejection
+11. **Receiver:** Exchange in "Completed", shows "Not accepted" + feedback
+
+---
+
+### Key UI Components
+
+**Notification Format:**
+```
+┌────────────────────────────────────────────┐
+│ [Icon] [Title]                    [Time]   │
+│ [Subtitle]                                 │
+│ [Message preview...]                       │
+│ [Action Button]                            │
+└────────────────────────────────────────────┘
+```
+
+**Template Card States:**
+
+**Normal:**
+```
+┌─────────────────────────────────┐
+│ [Type Icon] [Template Title]    │
+│ [Description preview...]        │
+│ Updated: 2 days ago             │
+│ [View] [Edit] [Share] [•••]    │
+└─────────────────────────────────┘
+```
+
+**Locked (In Collaboration):**
+```
+┌─────────────────────────────────┐
+│ 🔒 [Type Icon] [Template Title] │
+│ In Collaboration with [Name]    │
+│ Status: Editing | Awaiting Review│
+│ [View] [View Exchange] [Cancel] │
+│ Edit ⊘ (disabled, hover tooltip)│
+└─────────────────────────────────┘
+```
+
+**Attempting to Edit Locked Template:**
+```
+Modal: "Template Locked"
+🔒 This template is in collaboration with [Receiver Name]
+You cannot edit while exchange is active
+
+Options:
+- View Exchange Status
+- Cancel Exchange (if status = editing)
+- Close
+```
+
+---
+
+### UX Principles
+
+1. **Visibility & Feedback:** Always show auto-save status, exchange state, immediate visual feedback
+2. **Safety:** Confirmation modals for destructive actions, draft auto-save, clear warnings, template locking prevents conflicts
+3. **Context:** Always show who shared what with whom, display messages, change summaries
+4. **Efficiency:** Auto-save, type-optimized editors, quick navigation, batch operations
+5. **Transparency:** All changes visible in diffs, complete history, feedback mechanisms, status always visible
+
+---
+
+## 📢 Notifications
+
+**Does this Epic involve user notifications?** Yes
+
+**Critical Note:** Exchange notifications CANNOT be disabled by users (these are critical workflow notifications)
+
+| Trigger | Recipient | Format | Description |
+|---------|-----------|--------|-------------|
+| Template shared | Receiver | Email + In-App | "Template shared by [Sender Name]: [Template Title]" + optional message. CTA: "Open Template" |
+| Changes submitted | Original Owner | Email + In-App | "Changes submitted by [Receiver Name]: [Template Title]" + message preview. CTA: "Review Changes" |
+| Changes approved | Receiver | Email + In-App | "Your changes were approved by [Owner Name]" + optional review notes. Template updated. |
+| Changes rejected | Receiver | Email + In-App | "Changes not accepted by [Owner Name]" + optional feedback. Template unchanged. |
+| Exchange cancelled | Counterpart | Email + In-App | "Exchange cancelled" + reason (by user / expired / service completed). Access revoked. |
+| Draft expiring (Day 6) | Receiver | Email + In-App | "Your draft will expire in 24 hours. Submit changes or it will be auto-cancelled." |
+| Service completed | Both parties | Email + In-App | "Service completed - All active exchanges auto-cancelled." Access revoked. |
+
+**Notification Configuration:**
+- All notifications sent instantly (no batching)
+- In-app: Always delivered, badge count updates immediately
+- Email: Always sent (cannot be disabled for exchange notifications)
+- Notifications include: Actor, template details, action, message (if applicable), timestamp, CTA button
+
+---
+
+## 🧮 Business Rules
+
+### Exchange Initiation Rules
+
+**BR-TES-001: Sharing Eligibility**
+- Template can ONLY be shared if FamilyAdvisorAssociation exists with is_active = true
+- Service Request MUST be in status "In Progress"
+- Both parties (Family Council & Advisor) can initiate sharing (bidirectional)
+- One template can have ONLY ONE active exchange at a time
+- If exchange already active: Error "This template is already in collaboration with [Name]. Complete or cancel current exchange first."
+
+**BR-TES-002: Template Copy Creation**
+- System creates deep copy (snapshot) of all template data as JSONB
+- Copy includes all sections/modules/items/content/links/metadata
+- Copy is independent (changes to original don't affect copy during exchange)
+- Copy stored in template_exchange_sessions.copy_snapshot
+- Copy timestamp: created_at
+
+**BR-TES-003: Original Template Locking**
+- When exchange initiated: Original template LOCKED
+- Owner cannot:
+  - Edit template content
+  - Delete template
+  - Share template with another party
+- Owner can:
+  - View template (read-only)
+  - Cancel exchange (unlocks immediately)
+  - View exchange status
+- Lock indicator: "🔒 In Collaboration with [Name]"
+- Lock released when: Approved / Rejected / Cancelled / Expired
+
+**BR-TES-004: Message Requirements**
+- Message when sharing: Optional (0-500 chars)
+- Message when submitting: Required (1-1000 chars)
+- Message when reviewing: Optional (0-500 chars)
+- System validates length before action
+- Empty required messages block submission
+
+**BR-TES-005: Template Types Supported**
+All 10 types with same core workflow:
+1. Constitution Templates (structured: 12 sections)
+2. Learning Paths (structured: modules + resources)
+3. Checklists (structured: items)
+4. Articles (rich text)
+5. Guides (rich text)
+6. Documents (links)
+7. Videos (links)
+8. Podcasts (links)
+9. External Links (links)
+10. Templates (links)
+
+---
+
+### Editing Rules
+
+**BR-TES-006: Auto-Save Mechanism**
+- Triggers every 30 seconds if changes detected
+- Draft stored in copy_snapshot (updated)
+- Last saved timestamp: copy_last_saved_at
+- If offline: Queue locally, sync on reconnect (max 5 attempts with exponential backoff)
+- After 5 failures: Show error, allow manual retry
+
+**BR-TES-007: Draft Expiration**
+- Exchange sessions in "editing" status auto-cancel after 7 days (fixed, not configurable)
+- Warning at Day 6: "Your draft will expire in 24 hours"
+- After 7 days:
+  - Status → "cancelled", reason: "Expired due to inactivity"
+  - Notifications to both parties
+  - Copy deleted
+  - Original unlocked
+- Owner can re-initiate new exchange
+
+**BR-TES-008: Editing Permissions**
+- ONLY receiver can edit shared copy
+- Original owner CANNOT edit copy
+- Original owner CANNOT edit locked original (during exchange)
+- Receiver gets full edit permissions on copy
+- After submission: Copy read-only for receiver
+
+**BR-TES-009: Validation Rules per Type**
+
+**Structured:**
+- Constitution: No validation (partial sections allowed)
+- Learning Paths: Warning if 0 modules, not blocked
+- Checklists: At least 1 item to submit
+
+**Rich Text:**
+- Minimum 10 characters to submit
+
+**Links:**
+- URL must be valid (http:// or https://)
+- Validation on blur
+- Primary URL required
+
+---
+
+### Submission Rules
+
+**BR-TES-010: Submission Requirements**
+- Receiver MUST provide message (1-1000 chars)
+- Receiver MUST check confirmation checkbox
+- Both required to enable Submit button
+- After submit: Receiver CANNOT edit further
+- Copy locked (read-only) until decision
+
+**BR-TES-011: Diff Generation**
+Type-specific:
+
+**Structured:** Section/module/item level comparison (additions, deletions, modifications, order changes)
+**Rich Text:** Text diff (additions green, deletions red, modifications yellow)
+**Links:** Before/after URL + metadata comparison
+
+**BR-TES-012: Submission Locking**
+- After submit: Receiver can only view (read-only) and wait
+- Cannot cancel (only owner can)
+
+---
+
+### Review & Decision Rules
+
+**BR-TES-013: Review Access**
+- ONLY original owner can review and decide
+- Review shows complete diff (all changes)
+- Binary decision: Approve All or Reject All (no partial)
+- No editing during review
+
+**BR-TES-014: Merge Logic**
+
+**When approved:**
+
+**Structured:** All sections/modules/items replaced. Empty in proposed = deleted in original. New in proposed = added to original. Order changes applied.
+**Rich Text:** Complete text replaced (formatting preserved)
+**Links:** URLs and metadata replaced
+
+**General:**
+- Original template_id remains same
+- Updated_at timestamp = merge time
+- Version history event created
+
+**BR-TES-015: Rejection Logic**
+- Original unchanged
+- No merge
+- Feedback stored
+- Copy deleted
+
+**BR-TES-016: Post-Decision State**
+- Status: "approved" or "rejected"
+- reviewed_at timestamp
+- Exchange closed
+- Original unlocked
+- Copy deleted
+- Notifications sent
+
+---
+
+### Cancellation Rules
+
+**BR-TES-017: Cancellation by Owner (Before Submission)**
+- Owner can cancel while status = "editing"
+- Deletes receiver's copy
+- Unlocks original
+- Notification to receiver
+- Status → "cancelled"
+
+**BR-TES-018: Cancellation by Receiver (Before Submission)**
+- Receiver can decline while status = "editing"
+- Optional reason
+- Notification to owner
+- Unlocks original
+- Status → "cancelled"
+
+**BR-TES-019: Cannot Cancel After Submission**
+- Once status = "changes_submitted": Neither can cancel
+- Only owner can approve or reject
+
+---
+
+### Service Request Impact
+
+**BR-TES-020: Service Completion Auto-Cancel**
+- When Service Request → "Completed & Paid":
+  - All active exchanges between that pair auto-cancel
+  - Status → "cancelled", reason: "Service completed"
+  - Notifications to both
+  - Originals unlocked
+  - Copies deleted
+  - Advisor loses access
+- Completed exchanges remain in history
+
+---
+
+### Notification Rules
+
+**BR-TES-021: Notification Triggers**
+System sends instant notifications on:
+1. Template shared → Receiver
+2. Changes submitted → Owner
+3. Changes approved → Receiver
+4. Changes rejected → Receiver
+5. Exchange cancelled → Counterpart
+6. Draft expiring (Day 6) → Receiver
+7. Service completed (auto-cancel) → Both
+
+**BR-TES-022: Notification Preferences**
+- Exchange notifications CANNOT be disabled (critical workflow)
+- In-app: Always sent, immediate
+- Email: Always sent (no opt-out)
+- Badge count: Updates immediately
+- No SMS/push in MVP
+
+**BR-TES-023: Notification Content**
+All include: Actor, template details, action, message (if applicable), timestamp, CTA
+
+---
+
+### Data & History
+
+**BR-TES-024: Exchange History Retention**
+- All sessions stored indefinitely
+- Status tracked through lifecycle
+- Historical exchanges viewable by both parties
+- Includes: snapshot, diff, messages, timestamps, decisions
+
+**BR-TES-025: Version History**
+When merged:
+- Event created for original template
+- "Merged from collaboration with [Receiver]"
+- Timestamp, link to session, summary
+
+**BR-TES-026: Data Deletion**
+- Exchange sessions: Hard delete after completion
+- Copies: Permanently deleted after decision/cancellation
+- Exception: Exchange_sessions table record preserved for history
+
+---
+
+### Access Control
+
+**BR-TES-027: Association-Based Access**
+- ALWAYS validates FamilyAdvisorAssociation
+- Queries filtered by is_active = true
+- Service Request status check: "In Progress"
+- If association inactive during exchange: Auto-cancel
+
+**BR-TES-028: Data Isolation**
+- Family ONLY shares with active advisors
+- Advisor ONLY shares with families with active service
+- No cross-family/advisor visibility
+- All queries filtered by association
+
+**BR-TES-029: Permission Model**
+- Owner: Full on original (except editing during lock)
+- Receiver: Edit on copy during "editing"
+- Receiver: Read-only after submit
+- Receiver: No access after close
+
+---
+
+### Edge Cases
+
+**BR-TES-030: Network Failures**
+- Auto-save failures: Queue, retry on reconnect
+- Submission failures: Allow retry (don't lose message)
+- Review failures: Allow retry
+- Merge failures: Rollback, show error, retry
+
+**BR-TES-031: Empty/Partial Templates**
+- Constitution: 0-12 sections allowed
+- Learning Paths: 0 modules allowed (warning)
+- Articles: Minimal content (warning if <10 chars)
+- Links: Primary URL required
+
+**BR-TES-032: Large Templates**
+- No hard limit on content
+- Constitution (all 12): ~50KB JSONB
+- Learning Path (50 modules): ~200KB JSONB
+- Rich text: 1MB guidance
+- Tested up to 2MB per template
+
+---
+
+## 📝 Notes
+
+### Resolved Questions
+
+**Q1: Notification preferences?**
+✅ Users CANNOT disable exchange notifications (critical workflow)
+
+**Q2: Expiration period?**
+✅ Keep 7 days fixed (not configurable in MVP)
+
+**Q3: Rejection feedback?**
+✅ Optional but encouraged (not required)
+
+**Q4: Multiple concurrent exchanges?**
+✅ No - one exchange per template at a time
+
+**Q5: Template locking?**
+✅ YES - Lock original from editing during active exchange to prevent conflicts
+
+---
+
+### MVP Simplifications
+
+- **No file uploads:** Only external links (no storage/security complexity)
+- **No real-time collaboration:** Copy-based workflow (not Google Docs style)
+- **No multi-round negotiation:** Single submit → review cycle per exchange
+- **No granular approval:** All-or-nothing merge (no section-by-section)
+- **No comments/threads:** Messages only at key stages
+- **No multi-party:** Only two parties (sender ↔ receiver)
+- **No template marketplace:** Exchange is private between associated parties
+
+---
+
+### Future Enhancements (Post-MVP)
+
+**Phase 2:**
+- Granular section/module approval
+- Multi-round negotiation (submit → review → re-edit → resubmit)
+- Comments/discussion threads on specific sections
+- Real-time collaborative editing
+
+**Phase 3:**
+- Advanced version control with full history
+- Conflict resolution UI for concurrent edits
+- Batch exchange (multiple templates at once)
+- Exchange templates library/marketplace
+
+**Phase 4:**
+- Analytics dashboard (usage patterns, popular templates)
+- AI-assisted diff explanation
+- Automatic translation during exchange
+- Mobile app support
+
+---
+
+### Success Metrics
+
+**Adoption:**
+- Exchange sessions initiated per month
+- % of advisors using feature
+- % of families using feature
+- Sessions by template type
+
+**Workflow:**
+- Avg time share → submission (target: <3 days)
+- Submission rate (% vs expired)
+- Approval rate (% vs rejected)
+- Avg review time (target: <24 hours)
+
+**Quality:**
+- Auto-save success rate (target: >99%)
+- Notification delivery (target: 100%)
+- Merge success rate (target: 100%)
+- User issues (target: <5% of exchanges)
+
+**Engagement:**
+- Repeat usage (>3 templates)
+- Cross-type usage
+- Feedback provided rate
+
+---
+
+### Risks & Mitigation
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Complex diff UI confuses users | High | User testing, tooltips, tutorial |
+| Auto-save failures cause data loss | Critical | Queue locally, retry, draft recovery |
+| Large templates slow performance | Medium | Testing, JSONB compression, lazy loading |
+| Users forget pending exchanges | Medium | Email notifications, badges, warnings |
+| Lock frustrates owners | Medium | Clear messaging, easy cancel option |
+| Stale locks not released | Low | Cleanup job checks for orphaned locks |
+
+---
+
+### Technical Notes
+
+**New Services:**
+- Template Exchange Service (session lifecycle management)
+- Diff Engine Component (type-specific diff generation)
+
+**Database:**
+- template_exchange_sessions (main tracking)
+- template_change_proposals (diff storage)
+- template_version_history (merge events)
+
+**Libraries:**
+- Backend: jsondiffpatch, diff-match-patch
+- Frontend: react-diff-viewer, react-beautiful-dnd
+
+**Scheduled Jobs:**
+- Expiration cleanup (hourly)
+- Warning notifications (daily 9 AM)
+
+**Performance:**
+- Target: <500ms for diff computation
+- Auto-save: 30 sec debounce
+- Pagination: 20 exchanges per page
+
+---
+
+### Rollout Plan
+
+**Week 1-2:** Alpha (internal testing, all types)
+**Week 3:** Beta (5 families + 5 advisors, focus Constitution & Learning Paths)
+**Week 4:** Gradual (25% users, monitor metrics)
+**Week 5:** Full launch (100% with announcement + tutorial)
+
+---
+
+### Documentation Needed
+
+**User:**
+- Feature overview guide
+- Step-by-step tutorial (screenshots)
+- FAQ
+- Video walkthrough (5 min)
+
+**Developer:**
+- API documentation (Exchange Service)
+- Diff Engine implementation
+- Database schema
+- Integration guide (new template types)
+
+**Support:**
+- Troubleshooting guide
+- Common issues
+- Escalation procedures
+
+---
+
+### Effort Estimate
+
+**Backend:** 20 SP (Exchange Service 5, Diff Engine 8, DB 2, Jobs 2, APIs 3)
+**Frontend:** 23 SP (Editors 5, Review UI 8, Management 5, Notifications 2, Auto-save 3)
+**Testing:** 13 SP (Unit 3, Integration 5, Performance 3, UAT 2)
+**Documentation:** 6 SP (User 2, Developer 2, Video 2)
+
+**TOTAL: 62 SP** (~3 sprints, team of 4-5 developers)
+
+---
+
+**Template Version:** 1.0.0
+**Last Updated:** 2025-11-19
+**Epic Status:** Ready for Review
+**Story Points Estimate:** 62 SP
+**Next Steps:** Product review → Technical architecture review → Grooming → Design mockups
