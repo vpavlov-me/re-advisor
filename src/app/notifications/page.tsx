@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Home, 
   ChevronRight, 
@@ -25,50 +25,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/lib/supabaseClient";
 
-// Recent notifications
-const initialNotifications = [
-  {
-    id: 1,
-    type: "message" as const,
-    title: "New message from Clara Harrington",
-    description: "RE: CEO Position Discussion - I agree, but it can't just be about tradition...",
-    time: "5 minutes ago",
-    read: false,
-  },
-  {
-    id: 2,
-    type: "consultation" as const,
-    title: "Consultation reminder",
-    description: "Constitution Workshop with Roye Family starts in 1 hour",
-    time: "1 hour ago",
-    read: false,
-  },
-  {
-    id: 3,
-    type: "payment" as const,
-    title: "Payment received",
-    description: "You received $2,500 from Harrington Family for Governance Review Session",
-    time: "3 hours ago",
-    read: true,
-  },
-  {
-    id: 4,
-    type: "system" as const,
-    title: "Profile verification approved",
-    description: "Your CFA credential has been verified successfully",
-    time: "Yesterday",
-    read: true,
-  },
-  {
-    id: 5,
-    type: "family" as const,
-    title: "New family connection request",
-    description: "Chen Family would like to connect with you",
-    time: "2 days ago",
-    read: true,
-  },
-];
+interface Notification {
+  id: number;
+  type: "message" | "consultation" | "payment" | "system" | "family";
+  title: string;
+  description: string;
+  created_at: string;
+  read: boolean;
+}
 
 // Notification settings
 const notificationSettings = [
@@ -151,16 +117,68 @@ function Toggle({ enabled }: { enabled: boolean }) {
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleMarkAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const handleMarkAllRead = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Error marking all read:", error);
+    }
   };
 
-  const handleMarkRead = (id: number) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  const handleMarkRead = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+    } catch (error) {
+      console.error("Error marking read:", error);
+    }
   };
 
   return (
@@ -231,7 +249,7 @@ export default function NotificationsPage() {
                               </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-muted-foreground">{notification.time}</span>
+                              <span className="text-xs text-muted-foreground">{new Date(notification.created_at).toLocaleString()}</span>
                               {!notification.read && (
                                 <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => handleMarkRead(notification.id)}>
                                   <div className="h-2 w-2 rounded-full bg-primary mr-2" />
@@ -284,7 +302,7 @@ export default function NotificationsPage() {
                                 </p>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs text-muted-foreground">{notification.time}</span>
+                                <span className="text-xs text-muted-foreground">{new Date(notification.created_at).toLocaleString()}</span>
                                 <Button variant="ghost" size="sm" onClick={() => handleMarkRead(notification.id)}>Mark as Read</Button>
                               </div>
                             </div>

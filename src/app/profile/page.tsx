@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Home, 
   ChevronRight, 
@@ -44,43 +44,40 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
+import { supabase } from "@/lib/supabaseClient";
 
-// Profile data
-const profileData = {
-  name: "Logan Roy",
-  firstName: "Logan",
-  lastName: "Roy",
-  title: "Senior Family Business Advisor",
-  email: "logan.roy@advisor.com",
-  phone: "+1 (555) 123-4567",
-  location: "New York, NY",
-  timezone: "Eastern Time (ET)",
-  company: "Roy Family Advisors",
-  website: "www.royadvisors.com",
-  linkedin: "linkedin.com/in/loganroy",
-  twitter: "@loganroy",
-  bio: "With over 25 years of experience in family business consulting, I specialize in governance structures, succession planning, and conflict resolution. I've helped over 50 multi-generational families navigate complex transitions while preserving their legacy and values.",
-  joinedDate: "January 2024",
-  completionPercentage: 85,
-};
+// Types
+interface Profile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  timezone: string;
+  company: string;
+  website: string;
+  linkedin: string;
+  twitter: string;
+  bio: string;
+  joined_date: string;
+  completion_percentage: number;
+}
 
-// Credentials
-const credentials = [
-  { id: 1, name: "Certified Family Business Advisor (CFBA)", status: "verified", year: "2018" },
-  { id: 2, name: "Chartered Financial Analyst (CFA)", status: "verified", year: "2010" },
-  { id: 3, name: "MBA, Harvard Business School", status: "verified", year: "2005" },
-  { id: 4, name: "Family Wealth Alliance Certification", status: "pending", year: "2024" },
-];
+interface Credential {
+  id: number;
+  name: string;
+  issuer: string;
+  year: string;
+  status: string;
+  credential_id?: string;
+}
 
-// Expertise areas
-const expertiseAreas = [
-  "Family Governance",
-  "Succession Planning",
-  "Conflict Resolution",
-  "Wealth Management",
-  "Business Strategy",
-  "Family Constitution",
-];
+interface Expertise {
+  id: number;
+  area: string;
+}
 
 // Settings links
 const settingsLinks = [
@@ -91,57 +88,247 @@ const settingsLinks = [
 ];
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(profileData);
-  const [expertiseList, setExpertiseList] = useState(expertiseAreas);
-  const [credentialsList, setCredentialsList] = useState(credentials);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [expertiseList, setExpertiseList] = useState<string[]>([]);
+  const [credentialsList, setCredentialsList] = useState<Credential[]>([]);
   
   // Form states
-  const [editProfileForm, setEditProfileForm] = useState(profileData);
+  const [editProfileForm, setEditProfileForm] = useState<Profile | null>(null);
   const [bioForm, setBioForm] = useState("");
   const [newCredential, setNewCredential] = useState({ name: "", issuer: "", year: "", id: "" });
-  const [editingCredential, setEditingCredential] = useState<{ id: number; name: string; status: string; year: string } | null>(null);
+  const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
   const [newExpertise, setNewExpertise] = useState("");
 
-  const handleSaveProfile = () => {
-    setProfile(editProfileForm);
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // For demo purposes if no user, use mock data or redirect
+        console.log("No user found");
+        setLoading(false);
+        return;
+      }
+
+      // Fetch Profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      if (profileData) {
+        setProfile(profileData);
+        setEditProfileForm(profileData);
+        setBioForm(profileData.bio || "");
+      } else {
+        // Create default profile if not exists
+        const defaultProfile = {
+          id: user.id,
+          first_name: "",
+          last_name: "",
+          title: "",
+          email: user.email || "",
+          phone: "",
+          location: "",
+          timezone: "",
+          company: "",
+          website: "",
+          linkedin: "",
+          twitter: "",
+          bio: "",
+          joined_date: new Date().toLocaleDateString(),
+          completion_percentage: 0
+        };
+        setProfile(defaultProfile as Profile);
+        setEditProfileForm(defaultProfile as Profile);
+      }
+
+      // Fetch Credentials
+      const { data: credentialsData, error: credentialsError } = await supabase
+        .from('credentials')
+        .select('*')
+        .eq('advisor_id', user.id);
+
+      if (credentialsData) {
+        setCredentialsList(credentialsData);
+      }
+
+      // Fetch Expertise
+      const { data: expertiseData, error: expertiseError } = await supabase
+        .from('expertise')
+        .select('area')
+        .eq('advisor_id', user.id);
+
+      if (expertiseData) {
+        setExpertiseList(expertiseData.map(e => e.area));
+      }
+
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveBio = () => {
-    setProfile({ ...profile, bio: bioForm });
+  const handleSaveProfile = async () => {
+    if (!editProfileForm || !profile) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          ...editProfileForm,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      
+      setProfile(editProfileForm);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
   };
 
-  const handleAddCredential = () => {
-    if (!newCredential.name || !newCredential.year) return;
-    const credential = {
-      id: credentialsList.length + 1,
-      name: newCredential.name,
-      status: "pending",
-      year: newCredential.year
-    };
-    setCredentialsList([...credentialsList, credential]);
-    setNewCredential({ name: "", issuer: "", year: "", id: "" });
+  const handleSaveBio = async () => {
+    if (!profile) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ bio: bioForm })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      
+      setProfile({ ...profile, bio: bioForm });
+    } catch (error) {
+      console.error('Error saving bio:', error);
+    }
   };
 
-  const handleUpdateCredential = () => {
+  const handleAddCredential = async () => {
+    if (!newCredential.name || !newCredential.year || !profile) return;
+    
+    try {
+      const newCred = {
+        advisor_id: profile.id,
+        name: newCredential.name,
+        issuer: newCredential.issuer,
+        year: newCredential.year,
+        credential_id: newCredential.id,
+        status: "pending"
+      };
+
+      const { data, error } = await supabase
+        .from('credentials')
+        .insert([newCred])
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setCredentialsList([...credentialsList, data]);
+        setNewCredential({ name: "", issuer: "", year: "", id: "" });
+      }
+    } catch (error) {
+      console.error('Error adding credential:', error);
+    }
+  };
+
+  const handleUpdateCredential = async () => {
     if (!editingCredential) return;
-    setCredentialsList(credentialsList.map(c => c.id === editingCredential.id ? editingCredential : c));
-    setEditingCredential(null);
+    
+    try {
+      const { error } = await supabase
+        .from('credentials')
+        .update({
+          name: editingCredential.name,
+          year: editingCredential.year,
+          // Add other fields if editable
+        })
+        .eq('id', editingCredential.id);
+
+      if (error) throw error;
+
+      setCredentialsList(credentialsList.map(c => c.id === editingCredential.id ? editingCredential : c));
+      setEditingCredential(null);
+    } catch (error) {
+      console.error('Error updating credential:', error);
+    }
   };
 
-  const handleDeleteCredential = (id: number) => {
-    setCredentialsList(credentialsList.filter(c => c.id !== id));
-    setEditingCredential(null);
+  const handleDeleteCredential = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('credentials')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCredentialsList(credentialsList.filter(c => c.id !== id));
+      setEditingCredential(null);
+    } catch (error) {
+      console.error('Error deleting credential:', error);
+    }
   };
 
-  const handleAddExpertise = () => {
-    if (!newExpertise || expertiseList.includes(newExpertise)) return;
-    setExpertiseList([...expertiseList, newExpertise]);
-    setNewExpertise("");
+  const handleAddExpertise = async () => {
+    if (!newExpertise || expertiseList.includes(newExpertise) || !profile) return;
+    
+    try {
+      const { error } = await supabase
+        .from('expertise')
+        .insert([{
+          advisor_id: profile.id,
+          area: newExpertise
+        }]);
+
+      if (error) throw error;
+
+      setExpertiseList([...expertiseList, newExpertise]);
+      setNewExpertise("");
+    } catch (error) {
+      console.error('Error adding expertise:', error);
+    }
   };
 
-  const handleRemoveExpertise = (item: string) => {
-    setExpertiseList(expertiseList.filter(i => i !== item));
+  const handleRemoveExpertise = async (item: string) => {
+    if (!profile) return;
+
+    try {
+      const { error } = await supabase
+        .from('expertise')
+        .delete()
+        .eq('advisor_id', profile.id)
+        .eq('area', item);
+
+      if (error) throw error;
+
+      setExpertiseList(expertiseList.filter(i => i !== item));
+    } catch (error) {
+      console.error('Error removing expertise:', error);
+    }
   };
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading profile...</div>;
+  }
+
+  if (!profile) {
+    return <div className="p-8 text-center">Please log in to view profile.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,13 +355,15 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-4">
                     <Avatar className="h-24 w-24">
-                      <AvatarFallback className="text-2xl bg-primary/10 text-primary">LR</AvatarFallback>
+                      <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                        {profile.first_name?.[0]}{profile.last_name?.[0]}
+                      </AvatarFallback>
                     </Avatar>
                     <Button size="icon" variant="outline" className="absolute bottom-0 right-0 h-8 w-8 rounded-full">
                       <Camera className="h-4 w-4" />
                     </Button>
                   </div>
-                  <h2 className="text-xl font-semibold text-foreground">{profile.name}</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{profile.first_name} {profile.last_name}</h2>
                   <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>
                   <Badge variant="secondary" className="mt-2 bg-green-100 text-green-700">
                     <CheckCircle className="h-3 w-3 mr-1" />
@@ -246,16 +435,16 @@ export default function ProfilePage() {
                             <Label htmlFor="firstName">First Name</Label>
                             <Input 
                               id="firstName" 
-                              value={editProfileForm.firstName} 
-                              onChange={(e) => setEditProfileForm({...editProfileForm, firstName: e.target.value})}
+                              value={editProfileForm?.first_name || ""} 
+                              onChange={(e) => setEditProfileForm(prev => prev ? {...prev, first_name: e.target.value} : null)}
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="lastName">Last Name</Label>
                             <Input 
                               id="lastName" 
-                              value={editProfileForm.lastName} 
-                              onChange={(e) => setEditProfileForm({...editProfileForm, lastName: e.target.value})}
+                              value={editProfileForm?.last_name || ""} 
+                              onChange={(e) => setEditProfileForm(prev => prev ? {...prev, last_name: e.target.value} : null)}
                             />
                           </div>
                         </div>
@@ -263,8 +452,8 @@ export default function ProfilePage() {
                           <Label htmlFor="title">Professional Title</Label>
                           <Input 
                             id="title" 
-                            value={editProfileForm.title} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, title: e.target.value})}
+                            value={editProfileForm?.title || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, title: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
@@ -272,32 +461,32 @@ export default function ProfilePage() {
                           <Input 
                             id="email" 
                             type="email" 
-                            value={editProfileForm.email} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, email: e.target.value})}
+                            value={editProfileForm?.email || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, email: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="phone">Phone</Label>
                           <Input 
                             id="phone" 
-                            value={editProfileForm.phone} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, phone: e.target.value})}
+                            value={editProfileForm?.phone || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, phone: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="location">Location</Label>
                           <Input 
                             id="location" 
-                            value={editProfileForm.location} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, location: e.target.value})}
+                            value={editProfileForm?.location || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, location: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="company">Company</Label>
                           <Input 
                             id="company" 
-                            value={editProfileForm.company} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, company: e.target.value})}
+                            value={editProfileForm?.company || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, company: e.target.value} : null)}
                           />
                         </div>
                         <Separator />
@@ -305,24 +494,24 @@ export default function ProfilePage() {
                           <Label htmlFor="website">Website</Label>
                           <Input 
                             id="website" 
-                            value={editProfileForm.website} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, website: e.target.value})}
+                            value={editProfileForm?.website || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, website: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="linkedin">LinkedIn</Label>
                           <Input 
                             id="linkedin" 
-                            value={editProfileForm.linkedin} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, linkedin: e.target.value})}
+                            value={editProfileForm?.linkedin || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, linkedin: e.target.value} : null)}
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="twitter">Twitter</Label>
                           <Input 
                             id="twitter" 
-                            value={editProfileForm.twitter} 
-                            onChange={(e) => setEditProfileForm({...editProfileForm, twitter: e.target.value})}
+                            value={editProfileForm?.twitter || ""} 
+                            onChange={(e) => setEditProfileForm(prev => prev ? {...prev, twitter: e.target.value} : null)}
                           />
                         </div>
                       </div>
@@ -376,9 +565,9 @@ export default function ProfilePage() {
                     <h3 className="text-base font-medium text-foreground">Profile Completion</h3>
                     <p className="text-sm text-muted-foreground">Complete your profile to attract more families</p>
                   </div>
-                  <span className="text-2xl font-semibold text-primary">{profile.completionPercentage}%</span>
+                  <span className="text-2xl font-semibold text-primary">{profile.completion_percentage}%</span>
                 </div>
-                <Progress value={profile.completionPercentage} className="h-2" />
+                <Progress value={profile.completion_percentage} className="h-2" />
                 <div className="mt-4 flex gap-2">
                   <Badge variant="outline" className="text-xs">Add photo</Badge>
                   <Badge variant="outline" className="text-xs">Verify credential</Badge>
@@ -679,7 +868,7 @@ export default function ProfilePage() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Member since {profile.joinedDate}</span>
+                  <span>Member since {profile.joined_date}</span>
                 </div>
               </CardContent>
             </Card>

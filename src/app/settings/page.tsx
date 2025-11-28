@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Home, 
@@ -39,6 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabaseClient";
 
 // Login sessions
 const loginSessions = [
@@ -90,6 +91,7 @@ const settingsNav = [
 ];
 
 export default function SettingsPage() {
+  const [userEmail, setUserEmail] = useState("");
   const [passwordState, setPasswordState] = useState({
     current: "",
     new: "",
@@ -100,20 +102,46 @@ export default function SettingsPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [sessions, setSessions] = useState(loginSessions);
 
-  const handleUpdatePassword = () => {
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.email) {
+        setUserEmail(user.email);
+      }
+    };
+    getUser();
+  }, []);
+
+  const handleUpdatePassword = async () => {
     if (passwordState.new !== passwordState.confirm) {
       alert("Passwords do not match");
       return;
     }
-    // Mock API call
-    console.log("Updating password...", passwordState);
-    setPasswordState({ current: "", new: "", confirm: "" });
-    alert("Password updated successfully");
+    
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordState.new
+      });
+
+      if (error) throw error;
+
+      setPasswordState({ current: "", new: "", confirm: "" });
+      alert("Password updated successfully");
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      alert("Error updating password: " + error.message);
+    }
   };
 
-  const handleSignOutAll = () => {
-    setSessions(sessions.filter(s => s.current));
-    alert("Signed out of all other devices");
+  const handleSignOutAll = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      // Redirect or handle UI update
+      window.location.href = '/auth/login';
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -180,7 +208,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex items-center gap-4">
-                  <Input value="logan.roy@advisor.com" className="max-w-md" readOnly />
+                  <Input value={userEmail} className="max-w-md" readOnly />
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Verified
