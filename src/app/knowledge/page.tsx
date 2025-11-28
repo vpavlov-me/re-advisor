@@ -581,39 +581,46 @@ export default function KnowledgeCenterPage() {
                 {filteredResources.map((resource) => {
                   const Icon = getIconForType(resource.type);
                   return (
-                    <Card key={resource.id} className="group hover:shadow-md transition-shadow">
+                    <Card key={resource.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/knowledge/${resource.id}`)}>
                       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                         <div className="flex items-center gap-2">
                           <div className="p-2 bg-primary/10 rounded-lg">
                             <Icon className="h-5 w-5 text-primary" />
                           </div>
                           <Badge variant="outline" className="capitalize">{resource.type.replace("-", " ")}</Badge>
+                          {resource.isFeatured && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          )}
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="-mr-2">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setSelectedResource(resource); setIsShareDialogOpen(true); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/knowledge/${resource.id}`); }}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
                               <Share2 className="h-4 w-4 mr-2" />
                               Share with Family
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toggleFeatured(resource.id)}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
                               <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
                               {resource.isFeatured ? "Unfeature" : "Feature"}
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/knowledge/${resource.id}?edit=true`); }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(resource)}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(resource); }}>
                               <Copy className="h-4 w-4 mr-2" />
                               Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600" onClick={() => confirmDeleteResource(resource)}>
+                            <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); confirmDeleteResource(resource); }}>
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
                             </DropdownMenuItem>

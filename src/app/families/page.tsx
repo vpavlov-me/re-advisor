@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -116,200 +117,12 @@ type Family = {
   consultations: { title: string; date: string; time: string; status: string; }[];
 };
 
-// Families data with extended info per Epic-013
-const families: Family[] = [
-  {
-    id: 1,
-    name: "Roye Family",
-    members: 8,
-    role: "personal-advisor" as AdvisorRole,
-    meetings: { upcoming: 3, nextDate: "Jan 20" },
-    payment: "pending" as const,
-    status: "active" as const,
-    lastContact: "2 hours ago",
-    industry: "Media & Entertainment",
-    location: "New York, NY",
-    email: "contact@royefamily.com",
-    phone: "+1 (212) 555-0123",
-    since: "January 2023",
-    description: "Multi-generational media conglomerate seeking governance restructuring and succession planning.",
-    membersList: [
-      { name: "Logan Roy", role: "Patriarch", avatar: "LR", email: "logan@royemedia.com" },
-      { name: "Kendall Roy", role: "Eldest Son", avatar: "KR", email: "kendall@royemedia.com" },
-      { name: "Siobhan Roy", role: "Daughter", avatar: "SR", email: "shiv@royemedia.com" },
-      { name: "Roman Roy", role: "Youngest Son", avatar: "RR", email: "roman@royemedia.com" },
-    ],
-    tasks: [
-      { id: 1, title: "Prepare succession proposal", dueDate: "Jan 25", priority: "high", completed: false },
-      { id: 2, title: "Review constitution draft", dueDate: "Jan 22", priority: "medium", completed: true },
-      { id: 3, title: "Schedule quarterly review", dueDate: "Jan 30", priority: "low", completed: false },
-    ],
-    services: [
-      { name: "Family Constitution", status: "In Progress", progress: 65, price: "$8,500", startDate: "Oct 2024" },
-      { name: "Succession Planning", status: "Scheduled", progress: 0, price: "$12,000", startDate: "Feb 2025" },
-      { name: "Governance Advisory", status: "Active", progress: 40, price: "$4,000", startDate: "Nov 2024" },
-    ],
-    consultations: [
-      { title: "Constitution Workshop", date: "Jan 20, 2025", time: "2:00 PM", status: "scheduled" },
-      { title: "Family Assembly", date: "Jan 25, 2025", time: "10:00 AM", status: "scheduled" },
-      { title: "Governance Review", date: "Dec 15, 2024", time: "3:00 PM", status: "completed" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Harrington Family",
-    members: 12,
-    role: "consultant" as AdvisorRole,
-    meetings: { upcoming: 2, nextDate: "Jan 22" },
-    payment: "paid" as const,
-    status: "active" as const,
-    lastContact: "1 day ago",
-    industry: "Real Estate",
-    location: "Los Angeles, CA",
-    email: "info@harringtonfamily.com",
-    phone: "+1 (310) 555-0456",
-    since: "March 2022",
-    description: "Established real estate family transitioning to next generation leadership.",
-    membersList: [
-      { name: "Clara Harrington", role: "Matriarch", avatar: "CH", email: "clara@harrington.com" },
-      { name: "Oliver Harrington", role: "CEO", avatar: "OH", email: "oliver@harrington.com" },
-      { name: "Emma Harrington", role: "CFO", avatar: "EH", email: "emma@harrington.com" },
-    ],
-    tasks: [
-      { id: 1, title: "Finalize leadership transition plan", dueDate: "Jan 28", priority: "high", completed: false },
-    ],
-    services: [
-      { name: "Leadership Transition", status: "In Progress", progress: 80, price: "$15,000", startDate: "Sep 2024" },
-      { name: "Family Office Setup", status: "Active", progress: 55, price: "$20,000", startDate: "Oct 2024" },
-    ],
-    consultations: [
-      { title: "Transition Review", date: "Jan 22, 2025", time: "11:00 AM", status: "scheduled" },
-      { title: "Office Setup Call", date: "Jan 18, 2025", time: "4:00 PM", status: "completed" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Chen Family",
-    members: 6,
-    role: "external-consul" as AdvisorRole,
-    meetings: { upcoming: 1, nextDate: "Jan 28" },
-    payment: "pending" as const,
-    status: "pending" as const,
-    lastContact: "3 days ago",
-    industry: "Technology",
-    location: "San Francisco, CA",
-    email: "chen@chenfamilyoffice.com",
-    phone: "+1 (415) 555-0789",
-    since: "August 2024",
-    description: "Tech startup founders preparing for IPO and family wealth structuring.",
-    membersList: [
-      { name: "Wei Chen", role: "Founder", avatar: "WC", email: "wei@chen.tech" },
-      { name: "Lin Chen", role: "Co-Founder", avatar: "LC", email: "lin@chen.tech" },
-    ],
-    tasks: [
-      { id: 1, title: "Initial wealth assessment", dueDate: "Jan 30", priority: "medium", completed: false },
-    ],
-    services: [
-      { name: "Wealth Structuring", status: "Pending", progress: 10, price: "$10,000", startDate: "Jan 2025" },
-    ],
-    consultations: [
-      { title: "IPO Planning", date: "Jan 28, 2025", time: "9:00 AM", status: "scheduled" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Morrison Family",
-    members: 4,
-    role: "consultant" as AdvisorRole,
-    meetings: { upcoming: 0, nextDate: null },
-    payment: "paid" as const,
-    status: "active" as const,
-    lastContact: "1 week ago",
-    industry: "Healthcare",
-    location: "Boston, MA",
-    email: "morrison@healthcare.com",
-    phone: "+1 (617) 555-0321",
-    since: "June 2024",
-    description: "Healthcare professionals establishing family governance framework.",
-    membersList: [
-      { name: "Dr. James Morrison", role: "Patriarch", avatar: "JM", email: "james@morrison.med" },
-      { name: "Dr. Sarah Morrison", role: "Matriarch", avatar: "SM", email: "sarah@morrison.med" },
-    ],
-    tasks: [],
-    services: [
-      { name: "Governance Framework", status: "Active", progress: 35, price: "$6,500", startDate: "Jul 2024" },
-    ],
-    consultations: [
-      { title: "Framework Review", date: "Dec 20, 2024", time: "2:00 PM", status: "completed" },
-    ],
-  },
-  {
-    id: 5,
-    name: "Blackwell Family",
-    members: 15,
-    role: "personal-advisor" as AdvisorRole,
-    meetings: { upcoming: 5, nextDate: "Jan 18" },
-    payment: "paid" as const,
-    status: "active" as const,
-    lastContact: "4 hours ago",
-    industry: "Finance",
-    location: "Chicago, IL",
-    email: "office@blackwellfamily.com",
-    phone: "+1 (312) 555-0654",
-    since: "November 2021",
-    description: "Multi-branch financial dynasty with complex governance needs.",
-    membersList: [
-      { name: "Richard Blackwell", role: "Chairman", avatar: "RB", email: "richard@blackwell.fin" },
-      { name: "Victoria Blackwell", role: "Vice Chair", avatar: "VB", email: "victoria@blackwell.fin" },
-      { name: "Thomas Blackwell", role: "Director", avatar: "TB", email: "thomas@blackwell.fin" },
-      { name: "Elizabeth Blackwell", role: "Director", avatar: "EB", email: "elizabeth@blackwell.fin" },
-    ],
-    tasks: [
-      { id: 1, title: "Quarterly trust review", dueDate: "Jan 20", priority: "high", completed: false },
-      { id: 2, title: "Update philanthropy strategy", dueDate: "Feb 1", priority: "medium", completed: false },
-    ],
-    services: [
-      { name: "Trust Management", status: "Active", progress: 90, price: "$25,000", startDate: "Dec 2021" },
-      { name: "Next-Gen Education", status: "In Progress", progress: 60, price: "$12,000", startDate: "Mar 2024" },
-      { name: "Philanthropy Strategy", status: "Active", progress: 45, price: "$8,000", startDate: "Jun 2024" },
-      { name: "Investment Advisory", status: "Active", progress: 75, price: "$18,000", startDate: "Jan 2023" },
-    ],
-    consultations: [
-      { title: "Trust Review", date: "Jan 18, 2025", time: "10:00 AM", status: "scheduled" },
-      { title: "Investment Call", date: "Jan 19, 2025", time: "3:00 PM", status: "scheduled" },
-      { title: "Philanthropy Workshop", date: "Dec 10, 2024", time: "1:00 PM", status: "completed" },
-    ],
-  },
-  {
-    id: 6,
-    name: "Williams Family",
-    members: 7,
-    role: "external-consul" as AdvisorRole,
-    meetings: { upcoming: 0, nextDate: null },
-    payment: "no-invoices" as const,
-    status: "inactive" as const,
-    lastContact: "2 weeks ago",
-    industry: "Manufacturing",
-    location: "Detroit, MI",
-    email: "williams@manufacturing.com",
-    phone: "+1 (313) 555-0987",
-    since: "September 2024",
-    description: "Manufacturing family on temporary hold.",
-    membersList: [
-      { name: "Robert Williams", role: "CEO", avatar: "RW", email: "robert@williams.mfg" },
-    ],
-    tasks: [],
-    services: [],
-    consultations: [],
-  },
-];
-
-// Stats
-const stats = [
-  { label: "Total Families", value: "6", icon: Users },
-  { label: "Active Engagements", value: "5", icon: Briefcase },
-  { label: "Upcoming Meetings", value: "11", icon: Calendar },
-  { label: "Pending Payments", value: "2", icon: DollarSign },
+// Stats component (dynamically calculated from data)
+const getStats = (familiesList: Family[]) => [
+  { label: "Total Families", value: String(familiesList.length), icon: Users },
+  { label: "Active Engagements", value: String(familiesList.filter(f => f.status === 'active').length), icon: Briefcase },
+  { label: "Upcoming Meetings", value: String(familiesList.reduce((sum, f) => sum + f.meetings.upcoming, 0)), icon: Calendar },
+  { label: "Pending Payments", value: String(familiesList.filter(f => f.payment === 'pending').length), icon: DollarSign },
 ];
 
 function getRoleBadge(role: AdvisorRole) {
@@ -343,7 +156,8 @@ function getStatusBadge(status: "active" | "pending" | "inactive") {
 const paginationOptions = [3, 5, 10];
 
 export default function FamiliesPage() {
-  const [selectedFamily, setSelectedFamily] = useState<typeof families[0] | null>(null);
+  const router = useRouter();
+  const [selectedFamily, setSelectedFamily] = useState<Family | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
@@ -354,7 +168,7 @@ export default function FamiliesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
-  const [familiesList, setFamiliesList] = useState<Family[]>(families);
+  const [familiesList, setFamiliesList] = useState<Family[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -901,7 +715,7 @@ export default function FamiliesPage() {
     }
   };
 
-  const openFamilyWorkspace = (family: typeof families[0]) => {
+  const openFamilyWorkspace = (family: Family) => {
     setSelectedFamily(family);
     setWorkspaceTab("overview");
     setIsDialogOpen(true);
@@ -942,7 +756,7 @@ export default function FamiliesPage() {
       <div className="container py-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => (
+          {getStats(familiesList).map((stat) => (
             <Card key={stat.label}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -1000,7 +814,7 @@ export default function FamiliesPage() {
                   <TableRow 
                     key={family.id} 
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => openFamilyWorkspace(family)}
+                    onClick={() => router.push(`/families/${family.id}`)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -1043,7 +857,7 @@ export default function FamiliesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => openFamilyWorkspace(family)}>
+                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push(`/families/${family.id}`)}>
                             <Eye className="h-4 w-4" />
                             Open Workspace
                           </DropdownMenuItem>

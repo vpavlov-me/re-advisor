@@ -130,6 +130,7 @@ export default function LoginPage() {
                       type="email" 
                       placeholder="you@example.com" 
                       className={`pl-10 ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      autoComplete="email"
                       {...register("email")}
                       disabled={isSubmitting}
                     />
@@ -155,6 +156,7 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••••••" 
                       className={`pl-10 pr-10 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      autoComplete="current-password"
                       {...register("password")}
                       disabled={isSubmitting}
                     />

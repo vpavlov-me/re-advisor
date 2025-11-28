@@ -30,7 +30,8 @@ import {
   Loader2,
   Clock,
   MessageSquare,
-  RefreshCw
+  RefreshCw,
+  Menu
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 // Message status type
 type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
@@ -74,168 +82,38 @@ interface Message {
   status?: MessageStatus;
 }
 
-// Family data for filtering and new conversation
-const familiesData = [
-  { 
-    id: 1, 
-    name: "Harrington Family", 
-    members: [
-      { id: 1, name: "Clara Harrington", role: "Matriarch", avatar: "CH", online: true },
-      { id: 2, name: "Oliver Harrington", role: "CEO", avatar: "OH", online: false },
-      { id: 3, name: "Eleanor Harrington", role: "Daughter", avatar: "EH", online: true },
-    ]
-  },
-  { 
-    id: 2, 
-    name: "Roye Family",
-    members: [
-      { id: 4, name: "Logan Roy", role: "Patriarch", avatar: "LR", online: false },
-      { id: 5, name: "Kendall Roy", role: "Eldest Son", avatar: "KR", online: true },
-      { id: 6, name: "Siobhan Roy", role: "Daughter", avatar: "SR", online: false },
-      { id: 7, name: "Roman Roy", role: "Youngest Son", avatar: "RR", online: true },
-    ]
-  },
-  { 
-    id: 3, 
-    name: "Chen Family",
-    members: [
-      { id: 8, name: "Wei Chen", role: "Founder", avatar: "WC", online: false },
-      { id: 9, name: "Lin Chen", role: "Co-Founder", avatar: "LC", online: false },
-    ]
-  },
-];
+interface FamilyMember {
+  id: number;
+  name: string;
+  role: string;
+  avatar: string;
+  online: boolean;
+}
 
-// Conversations data
-const conversations = [
-  {
-    id: 1,
-    title: "CEO Position Discussion",
-    familyId: 1,
-    familyName: "Harrington Family",
-    participants: ["Clara Harrington", "Oliver Harrington", "Eleanor Harrington"],
-    lastMessage: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate",
-    lastMessageTime: "12:05",
-    unread: 9,
-    pinned: true,
-    online: true,
-  },
-  {
-    id: 2,
-    title: "Investment Strategy Review",
-    familyId: 1,
-    familyName: "Harrington Family",
-    participants: ["Oliver Harrington"],
-    lastMessage: "I suggest we diversify into renewable energy funds before the next quarter.",
-    lastMessageTime: "18:33",
-    unread: 0,
-    pinned: true,
-    online: false,
-  },
-  {
-    id: 3,
-    title: "Philanthropy Initiatives",
-    familyId: 1,
-    familyName: "Harrington Family",
-    participants: ["Eleanor Harrington"],
-    lastMessage: "Let's prioritize education scholarships this year; it aligns with our long-term vision.",
-    lastMessageTime: "16:20",
-    unread: 0,
-    pinned: false,
-    online: true,
-  },
-  {
-    id: 4,
-    title: "Succession Planning",
-    familyId: 2,
-    familyName: "Roye Family",
-    participants: ["Logan Roy", "Kendall Roy"],
-    lastMessage: "We need to finalize the timeline before the next board meeting.",
-    lastMessageTime: "Yesterday",
-    unread: 2,
-    pinned: false,
-    online: false,
-  },
-  {
-    id: 5,
-    title: "IPO Preparation",
-    familyId: 3,
-    familyName: "Chen Family",
-    participants: ["Wei Chen", "Lin Chen"],
-    lastMessage: "The lawyers have reviewed the documents. Ready for next steps.",
-    lastMessageTime: "Mon",
-    unread: 0,
-    pinned: false,
-    online: false,
-  },
-];
+interface Family {
+  id: number;
+  name: string;
+  members: FamilyMember[];
+}
 
-// Messages in current conversation
-const messages: Message[] = [
-  {
-    id: 1,
-    sender: "Clara Harrington",
-    content: "I've been thinking about who should take over as CEO when father retires. It's a big decision for the family.",
-    time: "10:30 AM",
-    isOwn: false,
-    status: 'read',
-  },
-  {
-    id: 2,
-    sender: "Oliver Harrington",
-    content: "I agree. We need someone who understands both the business and the family values. It's not just about qualifications.",
-    time: "10:32 AM",
-    isOwn: false,
-    status: 'read',
-  },
-  {
-    id: 3,
-    sender: "You",
-    content: "As your advisor, I'd recommend we create a formal succession plan. This should include clear criteria, a timeline, and involvement from all key stakeholders.",
-    time: "10:35 AM",
-    isOwn: true,
-    status: 'read',
-  },
-  {
-    id: 4,
-    sender: "Eleanor Harrington",
-    content: "That sounds reasonable. What kind of criteria should we consider?",
-    time: "10:38 AM",
-    isOwn: false,
-    status: 'read',
-  },
-  {
-    id: 5,
-    sender: "You",
-    content: "We should look at leadership experience, understanding of family governance, strategic vision, and the ability to maintain family harmony while driving business growth.",
-    time: "10:42 AM",
-    isOwn: true,
-    status: 'delivered',
-  },
-  {
-    id: 6,
-    sender: "Clara Harrington",
-    content: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate.",
-    time: "12:05 PM",
-    isOwn: false,
-    status: 'read',
-  },
-];
-
-// Conversation participants for header
-const currentConversation = {
-  title: "CEO Position Discussion",
-  participants: [
-    { name: "Clara Harrington", online: true },
-    { name: "Oliver Harrington", online: false },
-    { name: "Eleanor Harrington", online: true },
-  ],
-};
+interface Conversation {
+  id: number;
+  title: string;
+  familyId: number;
+  familyName: string;
+  participants: string[];
+  lastMessage: string;
+  lastMessageTime: string;
+  unread: number;
+  pinned: boolean;
+  online: boolean;
+}
 
 export default function MessagesPage() {
-  const [conversationsList, setConversationsList] = useState<any[]>(conversations);
-  const [messagesList, setMessagesList] = useState<Message[]>(messages);
-  const [familiesList, setFamiliesList] = useState<any[]>(familiesData);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [conversationsList, setConversationsList] = useState<Conversation[]>([]);
+  const [messagesList, setMessagesList] = useState<Message[]>([]);
+  const [familiesList, setFamiliesList] = useState<Family[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   
   const [newMessage, setNewMessage] = useState("");
@@ -243,12 +121,13 @@ export default function MessagesPage() {
   const [selectedFamilyFilter, setSelectedFamilyFilter] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newConvStep, setNewConvStep] = useState<"family" | "participants">("family");
-  const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<any | null>(null);
+  const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<Family | null>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Typing indicator state
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -498,13 +377,14 @@ export default function MessagesPage() {
         }));
         setMessagesList(mappedMessages);
       } else {
-        // Use mock data for demo if no messages
-        setMessagesList(messages);
+        // No messages in this conversation yet
+        setMessagesList([]);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
-      // Keep mock data on error
-      setMessagesList(messages);
+      // Show empty state on error instead of mock data
+      setMessagesList([]);
+      toast.error("Failed to load messages");
     } finally {
       setLoadingMessages(false);
     }
@@ -612,7 +492,7 @@ export default function MessagesPage() {
     setIsNewConversationOpen(true);
   };
 
-  const handleSelectFamily = (family: typeof familiesData[0]) => {
+  const handleSelectFamily = (family: Family) => {
     setSelectedFamilyForConv(family);
     setNewConvStep("participants");
   };
@@ -634,8 +514,6 @@ export default function MessagesPage() {
   const handleStartConversation = async () => {
     const familyName = selectedFamilyForConv?.name || "Unknown Family";
     
-    type FamilyMember = { id: number; name: string; role: string; avatar: string; online: boolean };
-    
     setSending(true);
     try {
       // Create conversation in Supabase
@@ -654,14 +532,16 @@ export default function MessagesPage() {
 
       if (convError) throw convError;
 
-      const newConversation = {
-        id: convData?.id || Math.max(...conversations.map(c => c.id)) + 1,
+      const selectedMemberNames = selectedFamilyForConv?.members
+        .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
+        .map((m: FamilyMember) => m.name) || [];
+
+      const newConversation: Conversation = {
+        id: convData?.id || Date.now(),
         title: "New Conversation",
         familyId: selectedFamilyForConv?.id || 0,
         familyName: familyName,
-        participants: selectedFamilyForConv?.members
-          .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
-          .map((m: FamilyMember) => m.name) || [],
+        participants: selectedMemberNames,
         lastMessage: "Started a new conversation",
         lastMessageTime: "Just now",
         unread: 0,
@@ -671,6 +551,7 @@ export default function MessagesPage() {
 
       setConversationsList([newConversation, ...conversationsList]);
       setSelectedConversation(newConversation);
+      setMessagesList([]);
       setIsNewConversationOpen(false);
       toast.success('Conversation created');
     } catch (error) {
@@ -702,9 +583,9 @@ export default function MessagesPage() {
       </div>
 
       <div className="container py-6 h-[calc(100vh-130px)]">
-        <div className="grid grid-cols-12 gap-4 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
           {/* Conversations List */}
-          <div className="col-span-4 h-full">
+          <div className="lg:col-span-4 h-full hidden lg:block">
             <Card className="h-full flex flex-col overflow-hidden">
               <CardHeader className="pb-4 shrink-0">
                 <div className="flex items-center justify-between mb-4">
@@ -824,20 +705,29 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className="col-span-8 h-full">
+          <div className="lg:col-span-8 h-full">
             <Card className="h-full flex flex-col overflow-hidden">
               {/* Chat Header */}
               <div className="p-4 border-b border-border shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    {/* Mobile menu button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="lg:hidden"
+                      onClick={() => setIsMobileSidebarOpen(true)}
+                    >
+                      <Menu className="h-5 w-5" />
+                    </Button>
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>{selectedConversation?.title.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
+                      <AvatarFallback>{selectedConversation?.title?.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h2 className="font-semibold text-foreground">{selectedConversation?.title || "Select a conversation"}</h2>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         {selectedConversation?.participants && selectedConversation.participants.length > 0 ? (
-                          selectedConversation.participants.map((p: any, i: number) => (
+                          selectedConversation.participants.map((p: string, i: number) => (
                             <span key={i} className="flex items-center gap-1">
                               {p}
                               {i < selectedConversation.participants.length - 1 && ","}
@@ -853,16 +743,16 @@ export default function MessagesPage() {
                     <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
                       <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hidden sm:flex">
                       <UserPlus className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hidden sm:flex">
                       <Phone className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hidden sm:flex">
                       <Video className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hidden sm:flex">
                       <Star className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon">
@@ -1076,7 +966,7 @@ export default function MessagesPage() {
               <p className="text-sm text-muted-foreground">Select participants for the conversation:</p>
               
               <div className="space-y-2">
-                {selectedFamilyForConv?.members.map((member: { id: number; name: string; role: string; avatar: string; online: boolean }) => (
+                {selectedFamilyForConv?.members.map((member: FamilyMember) => (
                   <div
                     key={member.id}
                     onClick={() => toggleParticipant(member.id)}
@@ -1138,6 +1028,112 @@ export default function MessagesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Sidebar Sheet */}
+      <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+        <SheetContent side="left" className="w-[320px] p-0">
+          <SheetHeader className="p-4 border-b">
+            <SheetTitle>Conversations</SheetTitle>
+          </SheetHeader>
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Filter className="h-4 w-4 mr-2" />
+                    {selectedFamilyFilter 
+                      ? familiesList.find(f => f.id === selectedFamilyFilter)?.name 
+                      : "All Families"}
+                    <ChevronDown className="h-3 w-3 ml-auto" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem 
+                    onClick={() => setSelectedFamilyFilter(null)}
+                    className="cursor-pointer"
+                  >
+                    All Families
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {familiesList.map((family) => (
+                    <DropdownMenuItem 
+                      key={family.id}
+                      onClick={() => setSelectedFamilyFilter(family.id)}
+                      className="cursor-pointer"
+                    >
+                      {family.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search conversations..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <div className="px-4 space-y-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredConversations.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No conversations found</p>
+                </div>
+              ) : (
+                filteredConversations.map((conv) => (
+                  <div 
+                    key={conv.id}
+                    onClick={() => {
+                      setSelectedConversation(conv);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`p-3 rounded-[10px] cursor-pointer transition-colors ${
+                      selectedConversation?.id === conv.id ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback>
+                          {conv.title.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium text-foreground text-sm truncate">{conv.title}</h3>
+                          <span className="text-xs text-muted-foreground shrink-0 ml-2">{conv.lastMessageTime}</span>
+                        </div>
+                        <p className="text-xs text-primary truncate">{conv.familyName}</p>
+                        <p className="text-sm text-muted-foreground truncate mt-1">{conv.lastMessage}</p>
+                      </div>
+                      {conv.unread > 0 && (
+                        <Badge className="shrink-0">{conv.unread}</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+          <div className="p-4 border-t">
+            <Button onClick={() => {
+              setIsMobileSidebarOpen(false);
+              handleOpenNewConversation();
+            }} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              New Conversation
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

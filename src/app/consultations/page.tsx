@@ -104,186 +104,16 @@ type Consultation = {
   documents: { name: string; size: string; }[];
 };
 
-// Overview metrics
-const overviewMetrics = [
-  { label: "Total Consultations", value: "64", icon: Calendar, trend: "+12%", trendUp: true },
-  { label: "Upcoming Sessions", value: "8", icon: CalendarCheck, trend: "This month" },
-  { label: "Completed Rate", value: "94%", icon: TrendingUp, trend: "+3%" , trendUp: true },
-  { label: "Total Revenue", value: "$18,450", icon: DollarSign, trend: "+8%", trendUp: true },
+// Overview metrics - now calculated dynamically from state
+const getOverviewMetrics = (m: { total: number; upcoming: number; completedRate: number; totalRevenue: number }) => [
+  { label: "Total Consultations", value: m.total.toString(), icon: Calendar, trend: "All time" },
+  { label: "Upcoming Sessions", value: m.upcoming.toString(), icon: CalendarCheck, trend: "Scheduled" },
+  { label: "Completed Rate", value: `${m.completedRate}%`, icon: TrendingUp, trend: m.completedRate >= 90 ? "+Great" : "", trendUp: m.completedRate >= 90 },
+  { label: "Total Revenue", value: `$${m.totalRevenue.toLocaleString()}`, icon: DollarSign, trend: "From paid", trendUp: m.totalRevenue > 0 },
 ];
 
-// Consultations data with extended info
-const allConsultations: Consultation[] = [
-  {
-    id: 1,
-    title: "Constitution Workshop",
-    family: "Roye Family",
-    type: "Video Call",
-    date: "July 15, 2025",
-    time: "06:00 — 07:00 PM",
-    duration: "1 hour",
-    status: "scheduled" as const,
-    paymentStatus: "paid" as const,
-    price: "$500",
-    members: [
-      { name: "Shiv Roy", initials: "SR", role: "Daughter" },
-      { name: "Kendall Roy", initials: "KR", role: "Eldest Son" },
-      { name: "Roman Roy", initials: "RR", role: "Youngest Son" },
-    ],
-    moreMembers: 2,
-    meetingLink: "https://zoom.us/j/123456789",
-    agenda: [
-      "Review current family constitution draft",
-      "Discuss governance principles",
-      "Vote on key provisions",
-      "Next steps and timeline",
-    ],
-    notes: "Focus on succession provisions. Kendall has concerns about voting rights.",
-    documents: [
-      { name: "Family Constitution Draft v3.pdf", size: "2.4 MB" },
-      { name: "Meeting Agenda.docx", size: "45 KB" },
-    ],
-  },
-  {
-    id: 2,
-    title: "Governance Review Session",
-    family: "Harrington Family",
-    type: "In-Person",
-    date: "July 17, 2025",
-    time: "02:00 — 04:00 PM",
-    duration: "2 hours",
-    status: "confirmed" as const,
-    paymentStatus: "paid" as const,
-    price: "$800",
-    members: [
-      { name: "Clara Harrington", initials: "CH", role: "Matriarch" },
-      { name: "Oliver Harrington", initials: "OH", role: "CEO" },
-    ],
-    moreMembers: 0,
-    location: "Harrington Offices, 555 Wilshire Blvd, LA",
-    agenda: [
-      "Annual governance review",
-      "Board composition discussion",
-      "Policy updates",
-    ],
-    notes: "Bring printed copies of current governance documents.",
-    documents: [
-      { name: "Governance Report 2024.pdf", size: "5.1 MB" },
-    ],
-  },
-  {
-    id: 3,
-    title: "Family Meeting Facilitation",
-    family: "Chen Family",
-    type: "Video Call",
-    date: "July 22, 2025",
-    time: "10:00 — 11:30 AM",
-    duration: "1.5 hours",
-    status: "pending" as const,
-    paymentStatus: "awaiting" as const,
-    price: "$600",
-    members: [
-      { name: "Wei Chen", initials: "WC", role: "Founder" },
-      { name: "Lin Chen", initials: "LC", role: "Co-Founder" },
-    ],
-    moreMembers: 3,
-    meetingLink: "https://meet.google.com/abc-defg-hij",
-    agenda: [
-      "IPO readiness discussion",
-      "Wealth structuring options",
-      "Family office setup",
-    ],
-    notes: "First-time family meeting facilitation. Build rapport.",
-    documents: [],
-  },
-  {
-    id: 4,
-    title: "Succession Planning",
-    family: "Roye Family",
-    type: "Video Call",
-    date: "July 25, 2025",
-    time: "03:00 — 04:30 PM",
-    duration: "1.5 hours",
-    status: "scheduled" as const,
-    paymentStatus: "paid" as const,
-    price: "$750",
-    members: [
-      { name: "Logan Roy", initials: "LR", role: "Patriarch" },
-      { name: "Shiv Roy", initials: "SR", role: "Daughter" },
-    ],
-    moreMembers: 1,
-    meetingLink: "https://zoom.us/j/987654321",
-    agenda: [
-      "Review succession timeline",
-      "Discuss candidate qualifications",
-      "Training program outline",
-    ],
-    notes: "Sensitive topic - Logan may be resistant. Handle with care.",
-    documents: [
-      { name: "Succession Plan Draft.pdf", size: "1.8 MB" },
-      { name: "Leadership Assessment.xlsx", size: "320 KB" },
-    ],
-  },
-  {
-    id: 5,
-    title: "Wealth Distribution Review",
-    family: "Martinez Family",
-    type: "Video Call",
-    date: "June 10, 2025",
-    time: "11:00 — 12:00 PM",
-    duration: "1 hour",
-    status: "completed" as const,
-    paymentStatus: "paid" as const,
-    price: "$450",
-    members: [
-      { name: "Carlos Martinez", initials: "CM", role: "Patriarch" },
-      { name: "Sofia Martinez", initials: "SM", role: "Matriarch" },
-    ],
-    moreMembers: 0,
-    agenda: ["Review trust allocations", "Update beneficiary designations"],
-    notes: "All parties agreed on new distribution structure.",
-    documents: [{ name: "Trust Amendment.pdf", size: "890 KB" }],
-  },
-  {
-    id: 6,
-    title: "Annual Family Retreat Planning",
-    family: "Harrington Family",
-    type: "In-Person",
-    date: "May 25, 2025",
-    time: "09:00 — 11:00 AM",
-    duration: "2 hours",
-    status: "completed" as const,
-    paymentStatus: "paid" as const,
-    price: "$600",
-    members: [
-      { name: "Eleanor Harrington", initials: "EH", role: "Coordinator" },
-    ],
-    moreMembers: 2,
-    location: "Harrington Estate, Malibu",
-    agenda: ["Retreat logistics", "Agenda planning", "Guest speakers"],
-    notes: "Retreat confirmed for August 15-17.",
-    documents: [],
-  },
-  {
-    id: 7,
-    title: "Investment Strategy Session",
-    family: "Chen Family",
-    type: "Video Call",
-    date: "July 5, 2025",
-    time: "02:00 — 03:00 PM",
-    duration: "1 hour",
-    status: "cancelled" as const,
-    paymentStatus: "paid" as const,
-    price: "$500",
-    members: [
-      { name: "Wei Chen", initials: "WC", role: "Founder" },
-    ],
-    moreMembers: 0,
-    agenda: ["Review portfolio", "New investment opportunities"],
-    notes: "Client requested reschedule due to travel conflict.",
-    documents: [],
-  },
-];
+// Consultations data will be fetched from Supabase
+// (Removed hardcoded mock data)
 
 // Pagination options
 const paginationOptions = [3, 5, 10];
@@ -418,7 +248,7 @@ function ConsultationCard({
 }
 
 export default function ConsultationsPage() {
-  const [consultations, setConsultations] = useState<Consultation[]>(allConsultations);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [families, setFamilies] = useState<{id: number, name: string}[]>([]);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -429,6 +259,12 @@ export default function ConsultationsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [metrics, setMetrics] = useState({
+    total: 0,
+    upcoming: 0,
+    completedRate: 0,
+    totalRevenue: 0
+  });
   
   // React Hook Form for Schedule
   const {
@@ -471,28 +307,29 @@ export default function ConsultationsPage() {
           .order('date', { ascending: true });
 
         if (error) {
-          console.log("Supabase error (using mock data):", error.message);
+          console.log("Supabase error:", error.message);
+          setConsultations([]);
           return;
         }
 
-        if (consultationsData && consultationsData.length > 0) {
+        if (consultationsData) {
           const mappedConsultations: Consultation[] = consultationsData.map((c: any) => ({
             id: c.id,
             title: c.title,
             family: c.family?.name || "Unknown Family",
-            type: c.type,
+            type: c.type || "Video Call",
             date: new Date(c.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            time: c.time,
+            time: c.time || "TBD",
             duration: c.duration || "1 hour",
-            status: c.status,
+            status: c.status || "scheduled",
             paymentStatus: c.payment_status || "awaiting",
             price: c.price || "$0",
             members: c.members?.map((m: any) => ({
-              name: m.member.name,
-              initials: m.member.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
-              role: m.member.role
+              name: m.member?.name || "Unknown",
+              initials: (m.member?.name || "U").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+              role: m.member?.role || "Member"
             })) || [],
-            moreMembers: 0, // simplified for now
+            moreMembers: 0,
             meetingLink: c.meeting_link,
             location: c.location,
             agenda: c.agenda || [],
@@ -500,9 +337,28 @@ export default function ConsultationsPage() {
             documents: c.documents || []
           }));
           setConsultations(mappedConsultations);
+
+          // Calculate metrics
+          const total = mappedConsultations.length;
+          const upcoming = mappedConsultations.filter(c => ["scheduled", "confirmed", "pending"].includes(c.status)).length;
+          const completed = mappedConsultations.filter(c => c.status === "completed").length;
+          const completedRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const totalRevenue = mappedConsultations
+            .filter(c => c.paymentStatus === "paid")
+            .reduce((sum, c) => sum + parseFloat(c.price.replace(/[^0-9.-]+/g, "") || "0"), 0);
+
+          setMetrics({
+            total,
+            upcoming,
+            completedRate,
+            totalRevenue
+          });
+        } else {
+          setConsultations([]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        setConsultations([]);
       } finally {
         setIsLoading(false);
       }
@@ -784,7 +640,7 @@ export default function ConsultationsPage() {
       <div className="container py-6 space-y-6">
         {/* Overview Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {overviewMetrics.map((metric) => (
+          {getOverviewMetrics(metrics).map((metric) => (
             <Card key={metric.label}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">

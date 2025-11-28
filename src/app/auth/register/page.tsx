@@ -158,6 +158,7 @@ function PersonalInfoStep({
           <Input 
             placeholder="Logan"
             className={errors.firstName ? 'border-destructive' : ''}
+            autoComplete="given-name"
             {...register("firstName")}
           />
           {errors.firstName && (
@@ -169,6 +170,7 @@ function PersonalInfoStep({
           <Input 
             placeholder="Roy"
             className={errors.lastName ? 'border-destructive' : ''}
+            autoComplete="family-name"
             {...register("lastName")}
           />
           {errors.lastName && (
@@ -185,6 +187,7 @@ function PersonalInfoStep({
             type="tel" 
             placeholder="+1 (555) 000-0000" 
             className="pl-10"
+            autoComplete="tel"
             {...register("phone")}
           />
         </div>
@@ -199,6 +202,7 @@ function PersonalInfoStep({
           <Input 
             placeholder="Your company name" 
             className="pl-10"
+            autoComplete="organization"
             {...register("company")}
           />
         </div>
@@ -296,6 +300,7 @@ function AccountSetupStep({
               type="email" 
               placeholder="you@example.com" 
               className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
+              autoComplete="email"
               {...register("email")}
             />
           </div>
@@ -312,6 +317,7 @@ function AccountSetupStep({
               type={showPassword ? "text" : "password"}
               placeholder="Create a strong password" 
               className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+              autoComplete="new-password"
               {...register("password")}
             />
             <Button 
@@ -345,6 +351,7 @@ function AccountSetupStep({
               type={showConfirm ? "text" : "password"}
               placeholder="Confirm your password" 
               className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+              autoComplete="new-password"
               {...register("confirmPassword")}
             />
             <Button 

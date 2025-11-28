@@ -5,6 +5,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-provider";
 
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/callback',
+];
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
@@ -14,13 +24,21 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Check if current route is public
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route));
+
   // Client-side auth check (fallback for static export where middleware doesn't run)
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      const loginUrl = `/auth/login?redirect=${encodeURIComponent(pathname)}`;
+    if (!loading && !isAuthenticated && !isPublicRoute) {
+      const loginUrl = `/auth/login?redirect=${encodeURIComponent(pathname || '/')}`;
       router.replace(loginUrl);
     }
-  }, [loading, isAuthenticated, pathname, router]);
+  }, [loading, isAuthenticated, pathname, router, isPublicRoute]);
+
+  // Public routes - render immediately without auth check
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
 
   // Show loading state while checking auth
   if (loading) {
