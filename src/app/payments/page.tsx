@@ -163,8 +163,14 @@ export default function PaymentsPage() {
 
   const handleConnectStripe = async () => {
     try {
-      const response = await fetch('/api/stripe/connect', { method: 'POST' });
-      const data = await response.json();
+      // Mocking Stripe Connect behavior client-side for static export
+      // const response = await fetch('/api/stripe/connect', { method: 'POST' });
+      // const data = await response.json();
+      
+      const data = {
+        url: 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=ca_12345&scope=read_write'
+      };
+
       if (data.url) {
         // In a real app, we would redirect: window.location.href = data.url;
         // For demo, we'll just simulate connection

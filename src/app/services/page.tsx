@@ -55,6 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/lib/supabaseClient";
 
 // Constants
 const SERVICE_CATEGORIES = ["Governance", "Planning", "Mediation", "Assessment", "Education", "Other"];
@@ -128,11 +129,13 @@ export default function ServicesPage() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch('/api/services');
-      if (response.ok) {
-        const data = await response.json();
-        setServices(data);
-      }
+      const { data, error } = await supabase
+        .from('Service')
+        .select('*')
+        .order('createdAt', { ascending: false });
+
+      if (error) throw error;
+      if (data) setServices(data);
     } catch (error) {
       console.error("Error fetching services:", error);
     }
@@ -191,29 +194,41 @@ export default function ServicesPage() {
     }
 
     const formattedPrice = `$${formData.priceAmount}`; // Simple formatting
+    const serviceData = {
+      ...formData,
+      price: formattedPrice,
+      priceAmount: parseFloat(formData.priceAmount) || 0,
+    };
     
     try {
-      const response = await fetch('/api/services', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: formattedPrice,
-        }),
-      });
+      let result;
+      
+      if (editingService) {
+        result = await supabase
+          .from('Service')
+          .update(serviceData)
+          .eq('id', editingService.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('Service')
+          .insert([serviceData])
+          .select()
+          .single();
+      }
 
-      if (response.ok) {
-        const savedService = await response.json();
+      const { data: savedService, error } = result;
+
+      if (error) throw error;
+
+      if (savedService) {
         if (editingService) {
           setServices(services.map(s => s.id === editingService.id ? savedService : s));
         } else {
           setServices([savedService, ...services]);
         }
         setIsSheetOpen(false);
-      } else {
-        console.error("Failed to save service");
       }
     } catch (error) {
       console.error("Error saving service:", error);

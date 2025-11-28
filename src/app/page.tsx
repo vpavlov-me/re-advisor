@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/lib/supabaseClient";
 
 // Profile setup steps - Row 1
 const initialProfileStepsRow1 = [
@@ -174,10 +175,11 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         // Fetch Services Count
-        const servicesRes = await fetch('/api/services');
-        if (servicesRes.ok) {
-          const services = await servicesRes.json();
-          const count = services.length;
+        const { count, error } = await supabase
+          .from('Service')
+          .select('*', { count: 'exact', head: true });
+        
+        if (!error && count !== null) {
           
           // Update Stats
           setStats(prev => prev.map(s => 

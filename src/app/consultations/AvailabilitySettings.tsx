@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabaseClient";
 
 const DAYS = [
   "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
@@ -41,29 +42,27 @@ export function AvailabilitySettings() {
 
   const fetchAvailability = async () => {
     try {
-      const res = await fetch("/api/availability");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.length > 0) {
-          // Transform flat slots to structured schedule
-          const newSchedule = DAYS.map((_, i) => ({
-            dayOfWeek: i,
-            isEnabled: false,
-            slots: [] as TimeSlot[]
-          }));
+      const { data, error } = await supabase
+        .from('AvailabilitySlot')
+        .select('*');
 
-          data.forEach((slot: any) => {
-            const day = newSchedule[slot.dayOfWeek];
-            day.isEnabled = true;
-            day.slots.push({ startTime: slot.startTime, endTime: slot.endTime });
-          });
-          
-          // Ensure days with no slots but enabled have at least one empty slot structure if needed, 
-          // but here we just use the data.
-          // If a day has no slots in DB, it's disabled.
-          
-          setSchedule(newSchedule);
-        }
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Transform flat slots to structured schedule
+        const newSchedule = DAYS.map((_, i) => ({
+          dayOfWeek: i,
+          isEnabled: false,
+          slots: [] as TimeSlot[]
+        }));
+
+        data.forEach((slot: any) => {
+          const day = newSchedule[slot.dayOfWeek];
+          day.isEnabled = true;
+          day.slots.push({ startTime: slot.startTime, endTime: slot.endTime });
+        });
+        
+        setSchedule(newSchedule);
       }
     } catch (error) {
       console.error("Failed to load availability", error);
@@ -75,29 +74,49 @@ export function AvailabilitySettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Flatten schedule to slots
-      const slots = schedule
+      // 1. Delete all existing slots (Simulating "Replace All")
+      // In a real app with RLS, this would only delete the user's slots.
+      // We use a filter that is always true for our data to allow the delete.
+      const { error: deleteError } = await supabase
+        .from('AvailabilitySlot')
+        .delete()
+        .neq('id', 'placeholder'); // Deletes all rows where id is not 'placeholder'
+
+      if (deleteError) throw deleteError;
+
+      // 2. Prepare new slots
+      const slotsToInsert = schedule
         .filter(day => day.isEnabled)
         .flatMap(day => day.slots.map(slot => ({
+          // We let the DB handle ID generation if default is set to uuid(), 
+          // or we can generate one here if needed. 
+          // For now, assuming the DB has a default or we omit it.
+          // If Prisma schema has @default(cuid()), the DB column might not have a default if not migrated properly.
+          // Let's generate a UUID to be safe.
+          id: crypto.randomUUID(), 
           dayOfWeek: day.dayOfWeek,
           startTime: slot.startTime,
-          endTime: slot.endTime
+          endTime: slot.endTime,
+          updatedAt: new Date().toISOString(), // Supabase might expect ISO string
         })));
 
-      const res = await fetch("/api/availability", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slots }),
-      });
-
-      if (res.ok) {
-        // Success feedback
-        alert("Availability saved successfully!");
-      } else {
-        alert("Failed to save availability.");
+      if (slotsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('AvailabilitySlot')
+          .insert(slotsToInsert);
+          
+        if (insertError) throw insertError;
       }
+
+      // Success feedback
+      alert("Availability saved successfully!");
     } catch (error) {
       console.error("Error saving:", error);
+      alert("Failed to save availability.");
+    } finally {
+      setSaving(false);
+    }
+  };
       alert("Error saving availability.");
     } finally {
       setSaving(false);

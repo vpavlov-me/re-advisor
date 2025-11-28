@@ -39,6 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabaseClient";
 
 // Predefined Sections
 const SECTIONS = [
@@ -84,25 +85,18 @@ export default function CreateConstitutionTemplatePage() {
   const handleSave = async (asDraft = true) => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('ConstitutionTemplate')
+        .insert([{
           title: templateData.title,
           description: templateData.description,
           sections: templateData.sections,
-          isDraft: asDraft,
-        }),
-      });
+          // isDraft is not in schema, ignoring for now or could be added to schema
+        }]);
 
-      if (!response.ok) {
-        throw new Error('Failed to save template');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
-      console.log("Template saved:", data);
+      // Success handling
       alert(asDraft ? "Draft saved successfully!" : "Template published successfully!");
       // Optionally redirect or update UI state
     } catch (error) {
