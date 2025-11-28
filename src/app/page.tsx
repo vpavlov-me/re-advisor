@@ -376,7 +376,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex-1 bg-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

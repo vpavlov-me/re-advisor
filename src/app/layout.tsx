@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "A platform for trusted professionals to support family governance processes",
   icons: {
     icon: `${basePath}/favicon.png`,
-    apple: `${basePath}/icons/icon-192x192.png`,
+    apple: `${basePath}/favicon.png`,
   },
   manifest: `${basePath}/manifest.json`,
   appleWebApp: {
@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href={`${basePath}/icons/icon-192x192.png`} />
+        <link rel="apple-touch-icon" href={`${basePath}/favicon.png`} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
