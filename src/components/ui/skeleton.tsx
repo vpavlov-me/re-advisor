@@ -155,6 +155,75 @@ function MessageSkeleton({ className }: { className?: string }) {
   );
 }
 
+// Chart Skeleton
+function ChartSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("border rounded-lg p-6 space-y-4", className)}>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-20" />
+      </div>
+      <Skeleton className="h-[200px] w-full" />
+    </div>
+  );
+}
+
+// Table Skeleton
+function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-4 py-3 border-b bg-muted/30">
+        {Array.from({ length: columns }).map((_, i) => (
+          <Skeleton key={i} className="h-4 flex-1" />
+        ))}
+      </div>
+      {Array.from({ length: rows }).map((_, i) => (
+        <TableRowSkeleton key={i} columns={columns} />
+      ))}
+    </div>
+  );
+}
+
+// Stats Grid Skeleton
+function StatsGridSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <StatsSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+// Dashboard Skeleton
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 p-6">
+      <Skeleton className="h-20 w-full rounded-lg" />
+      <StatsGridSkeleton />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartSkeleton />
+        <ChartSkeleton />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+    </div>
+  );
+}
+
+// List Skeleton
+function ListSkeleton({ items = 5 }: { items?: number }) {
+  return (
+    <div className="space-y-1 divide-y">
+      {Array.from({ length: items }).map((_, i) => (
+        <ListItemSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 export { 
   Skeleton, 
   CardSkeleton, 
@@ -165,5 +234,10 @@ export {
   StatsSkeleton,
   PageHeaderSkeleton,
   NotificationSkeleton,
-  MessageSkeleton
+  MessageSkeleton,
+  ChartSkeleton,
+  TableSkeleton,
+  StatsGridSkeleton,
+  DashboardSkeleton,
+  ListSkeleton
 };
