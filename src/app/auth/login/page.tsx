@@ -13,13 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
+import { assetPath } from "@/lib/utils";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
     <div className={className}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={120}
         height={42}

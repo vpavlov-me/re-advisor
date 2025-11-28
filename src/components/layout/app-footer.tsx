@@ -1,13 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Settings } from "lucide-react";
+import { assetPath } from "@/lib/utils";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
     <div className={`flex items-center ${className || ''}`}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={87}
         height={31}

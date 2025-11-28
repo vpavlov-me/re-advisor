@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
+import { assetPath } from "@/lib/utils";
 
 // Extended register schema with additional fields
 const extendedRegisterSchema = z.object({
@@ -50,7 +51,7 @@ function Logo({ className }: { className?: string }) {
   return (
     <div className={className}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={120}
         height={42}

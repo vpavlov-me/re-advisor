@@ -11,13 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "@/lib/auth";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations";
+import { assetPath } from "@/lib/utils";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
     <div className={className}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={120}
         height={42}

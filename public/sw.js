@@ -4,11 +4,15 @@ const CACHE_NAME = 'advisor-portal-v1';
 const STATIC_CACHE_NAME = 'advisor-static-v1';
 const DYNAMIC_CACHE_NAME = 'advisor-dynamic-v1';
 
+// Base path for GitHub Pages (will be set during SW registration)
+// For now, detect from location
+const BASE_PATH = self.location.pathname.replace('/sw.js', '') || '';
+
 // Static assets to cache on install
 const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/offline.html'
+  BASE_PATH + '/',
+  BASE_PATH + '/manifest.json',
+  BASE_PATH + '/offline.html'
 ];
 
 // Assets to cache on first fetch
@@ -145,7 +149,7 @@ async function staleWhileRevalidate(request) {
     return response;
   }).catch(() => {
     // Return offline page for HTML requests
-    return caches.match('/offline.html');
+    return caches.match(BASE_PATH + '/offline.html');
   });
 
   return cached || fetchPromise;
@@ -170,11 +174,11 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: BASE_PATH + '/icons/icon-192x192.png',
+    badge: BASE_PATH + '/icons/badge-72x72.png',
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || '/'
+      url: data.url || BASE_PATH + '/'
     },
     actions: data.actions || []
   };
@@ -188,7 +192,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || '/';
+  const url = event.notification.data?.url || BASE_PATH + '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then((clientList) => {

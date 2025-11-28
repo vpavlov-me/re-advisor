@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, assetPath } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -35,7 +35,7 @@ function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center", className)}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={87}
         height={31}

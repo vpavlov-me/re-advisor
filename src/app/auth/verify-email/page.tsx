@@ -8,13 +8,14 @@ import { Mail, ArrowLeft, RefreshCw, CheckCircle2, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { resendVerificationEmail } from "@/lib/auth";
+import { assetPath } from "@/lib/utils";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
     <div className={className}>
       <Image 
-        src="/logo.svg" 
+        src={assetPath("/logo.svg")} 
         alt="RE:Advisor Logo" 
         width={120}
         height={42}

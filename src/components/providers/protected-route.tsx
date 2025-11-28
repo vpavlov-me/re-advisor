@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-provider";
+import { getBasePath } from "@/lib/utils";
 
-// Routes that don't require authentication
+// Routes that don't require authentication (without basePath)
 const publicRoutes = [
   "/auth/login",
   "/auth/register",
@@ -15,7 +16,7 @@ const publicRoutes = [
   "/auth/callback",
 ];
 
-// Routes that require authentication
+// Routes that require authentication (without basePath)
 const protectedRoutes = [
   "/",
   "/messages",
@@ -39,7 +40,16 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  
+  // Remove basePath from pathname for route matching
+  const basePath = getBasePath();
+  const pathname = useMemo(() => {
+    if (basePath && rawPathname.startsWith(basePath)) {
+      return rawPathname.slice(basePath.length) || '/';
+    }
+    return rawPathname;
+  }, [rawPathname, basePath]);
 
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -110,7 +120,16 @@ export function withAuth<P extends object>(
   return function AuthenticatedComponent(props: P) {
     const { isAuthenticated, loading } = useAuth();
     const router = useRouter();
-    const pathname = usePathname();
+    const rawPathname = usePathname();
+    
+    // Remove basePath from pathname
+    const basePath = getBasePath();
+    const pathname = useMemo(() => {
+      if (basePath && rawPathname.startsWith(basePath)) {
+        return rawPathname.slice(basePath.length) || '/';
+      }
+      return rawPathname;
+    }, [rawPathname, basePath]);
 
     useEffect(() => {
       if (!loading && !isAuthenticated) {

@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { assetPath } from "@/lib/utils";
 
 // Governance Modules
 const GOVERNANCE_MODULES = [
@@ -138,7 +139,7 @@ export default function OnboardingPage() {
                 {/* Photo Upload */}
                 <div className="flex items-center gap-6">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src="/placeholder-user.jpg" />
+                    <AvatarImage src={assetPath("/placeholder-user.jpg")} />
                     <AvatarFallback className="text-lg">UP</AvatarFallback>
                   </Avatar>
                   <div>
