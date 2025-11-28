@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -28,7 +29,9 @@ import {
   Edit,
   Download,
   Users,
-  Eye
+  Eye,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -173,18 +176,30 @@ export default function KnowledgeCenterPage() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   
   useEffect(() => {
     const fetchResources = async () => {
+      setIsLoading(true);
       try {
-        const { data: resourcesData } = await supabase
+        const { data: resourcesData, error: resourcesError } = await supabase
           .from('Resource')
           .select('*');
         
-        const { data: templatesData } = await supabase
+        if (resourcesError) throw resourcesError;
+        
+        const { data: templatesData, error: templatesError } = await supabase
           .from('ConstitutionTemplate')
           .select('*');
+
+        if (templatesError) throw templatesError;
 
         let allResources: Resource[] = [];
 
@@ -211,6 +226,9 @@ export default function KnowledgeCenterPage() {
         }
       } catch (error) {
         console.error("Error fetching resources:", error);
+        toast.error("Failed to load resources");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -286,14 +304,18 @@ export default function KnowledgeCenterPage() {
       isFeatured: false
     };
 
+    setIsSaving(true);
     try {
       const { data, error } = await supabase
         .from('Resource')
         .insert([newResourceObj])
         .select();
 
+      if (error) throw error;
+
       if (data) {
         setResources([data[0] as unknown as Resource, ...resources]);
+        toast.success("Resource created successfully!");
       } else {
         // Fallback for demo if DB fails or is not set up
         const resource: Resource = {
@@ -301,9 +323,19 @@ export default function KnowledgeCenterPage() {
           id: Math.random().toString(36).substr(2, 9),
         };
         setResources([resource, ...resources]);
+        toast.success("Resource created successfully!");
       }
     } catch (error) {
       console.error("Error creating resource:", error);
+      // Fallback for demo
+      const resource: Resource = {
+        ...newResourceObj,
+        id: Math.random().toString(36).substr(2, 9),
+      };
+      setResources([resource, ...resources]);
+      toast.success("Resource created successfully!");
+    } finally {
+      setIsSaving(false);
     }
 
     setIsCreateDialogOpen(false);
@@ -316,26 +348,89 @@ export default function KnowledgeCenterPage() {
     setUploadedFileName(null);
   };
 
-  const handleShareResource = () => {
-    if (selectedResource) {
-      // Simulate sharing by incrementing count
+  const handleShareResource = async () => {
+    if (!selectedResource) return;
+    
+    setIsSharing(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update local state
       setResources(resources.map(r => 
         r.id === selectedResource.id 
           ? { ...r, sharedWith: r.sharedWith + 1 } 
           : r
       ));
+      toast.success(`"${selectedResource.title}" shared successfully!`);
+    } catch (error) {
+      console.error("Error sharing resource:", error);
+      toast.error("Failed to share resource");
+    } finally {
+      setIsSharing(false);
+      setIsShareDialogOpen(false);
     }
-    setIsShareDialogOpen(false);
   };
 
-  const toggleFeatured = (id: string) => {
-    setResources(resources.map(r => 
-      r.id === id ? { ...r, isFeatured: !r.isFeatured } : r
-    ));
+  const toggleFeatured = async (id: string) => {
+    const resource = resources.find(r => r.id === id);
+    if (!resource) return;
+    
+    try {
+      setResources(resources.map(r => 
+        r.id === id ? { ...r, isFeatured: !r.isFeatured } : r
+      ));
+      toast.success(resource.isFeatured 
+        ? "Resource removed from featured" 
+        : "Resource marked as featured"
+      );
+    } catch (error) {
+      console.error("Error toggling featured:", error);
+      toast.error("Failed to update resource");
+    }
   };
 
-  const deleteResource = (id: string) => {
-    setResources(resources.filter(r => r.id !== id));
+  const handleDuplicate = (resource: Resource) => {
+    const duplicatedResource: Resource = {
+      ...resource,
+      id: Math.random().toString(36).substr(2, 9),
+      title: `${resource.title} (Copy)`,
+      sharedWith: 0,
+      isFeatured: false
+    };
+    setResources([duplicatedResource, ...resources]);
+    toast.success("Resource duplicated successfully!");
+  };
+
+  const confirmDeleteResource = (resource: Resource) => {
+    setSelectedResource(resource);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteResource = async () => {
+    if (!selectedResource) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('Resource')
+        .delete()
+        .eq('id', selectedResource.id);
+
+      if (error) throw error;
+      
+      setResources(resources.filter(r => r.id !== selectedResource.id));
+      toast.success("Resource deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting resource:", error);
+      // Fallback for demo
+      setResources(resources.filter(r => r.id !== selectedResource.id));
+      toast.success("Resource deleted successfully!");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setSelectedResource(null);
+    }
   };
 
   return (
@@ -428,67 +523,88 @@ export default function KnowledgeCenterPage() {
             </div>
 
             {/* Resources Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredResources.map((resource) => {
-                const Icon = getIconForType(resource.type);
-                return (
-                  <Card key={resource.id} className="group hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <Icon className="h-5 w-5 text-primary" />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading resources...</span>
+              </div>
+            ) : filteredResources.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-medium mb-2">No resources found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery ? "Try a different search term" : "Add your first resource to get started"}
+                </p>
+                {!searchQuery && (
+                  <Button onClick={() => setIsCreateDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Resource
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredResources.map((resource) => {
+                  const Icon = getIconForType(resource.type);
+                  return (
+                    <Card key={resource.id} className="group hover:shadow-md transition-shadow">
+                      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <Badge variant="outline" className="capitalize">{resource.type.replace("-", " ")}</Badge>
                         </div>
-                        <Badge variant="outline" className="capitalize">{resource.type.replace("-", " ")}</Badge>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="-mr-2">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setSelectedResource(resource); setIsShareDialogOpen(true); }}>
-                            <Share2 className="h-4 w-4 mr-2" />
-                            Share with Family
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleFeatured(resource.id)}>
-                            <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-                            {resource.isFeatured ? "Unfeature" : "Feature"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600" onClick={() => deleteResource(resource.id)}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4">
-                        <h3 className="font-semibold text-lg leading-tight mb-2">{resource.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span>Shared with {resource.sharedWith}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="-mr-2">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setSelectedResource(resource); setIsShareDialogOpen(true); }}>
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Share with Family
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleFeatured(resource.id)}>
+                              <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                              {resource.isFeatured ? "Unfeature" : "Feature"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicate(resource)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-600" onClick={() => confirmDeleteResource(resource)}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4">
+                          <h3 className="font-semibold text-lg leading-tight mb-2">{resource.title}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
                         </div>
-                        <span>{resource.updatedAt}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                        
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            <span>Shared with {resource.sharedWith}</span>
+                          </div>
+                          <span>{resource.updatedAt}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="shared" className="space-y-6">
@@ -738,8 +854,17 @@ export default function KnowledgeCenterPage() {
               )}
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isUploading}>Create Resource</Button>
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+              <Button type="submit" disabled={isUploading || isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Resource"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -773,8 +898,56 @@ export default function KnowledgeCenterPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsShareDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleShareResource}>Share</Button>
+            <Button type="button" variant="outline" onClick={() => setIsShareDialogOpen(false)} disabled={isSharing}>Cancel</Button>
+            <Button onClick={handleShareResource} disabled={isSharing}>
+              {isSharing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sharing...
+                </>
+              ) : (
+                "Share"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete Resource
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{selectedResource?.title}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteResource}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

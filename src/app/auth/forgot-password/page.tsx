@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, ArrowLeft, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "@/lib/auth";
+import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
@@ -26,35 +29,43 @@ function Logo({ className }: { className?: string }) {
 }
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email) {
-      setError("Please enter your email address");
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-    setLoading(true);
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setError(null);
 
     try {
-      const { error } = await resetPassword(email);
+      const { error } = await resetPassword(data.email);
       
       if (error) {
         setError(error.message || "Failed to send reset link. Please try again.");
       } else {
+        setSubmittedEmail(data.email);
         setSuccess(true);
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleTryDifferentEmail = () => {
+    setSuccess(false);
+    setSubmittedEmail("");
+    reset();
   };
 
   if (success) {
@@ -70,7 +81,7 @@ export default function ForgotPasswordPage() {
             <p className="text-muted-foreground mt-2">
               We've sent a password reset link to
             </p>
-            <p className="font-medium text-foreground mt-1">{email}</p>
+            <p className="font-medium text-foreground mt-1">{submittedEmail}</p>
           </div>
 
           <Card>
@@ -85,7 +96,7 @@ export default function ForgotPasswordPage() {
               <Button 
                 variant="outline" 
                 className="w-full" 
-                onClick={() => setSuccess(false)}
+                onClick={handleTryDifferentEmail}
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Try different email
@@ -120,7 +131,7 @@ export default function ForgotPasswordPage() {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Error Alert */}
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -138,17 +149,19 @@ export default function ForgotPasswordPage() {
                   <Input 
                     type="email" 
                     placeholder="Enter your email" 
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
+                    className={`pl-10 ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register("email")}
+                    disabled={isSubmitting}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               {/* Reset Button */}
-              <Button className="w-full" size="lg" type="submit" disabled={loading}>
-                {loading ? (
+              <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Sending...

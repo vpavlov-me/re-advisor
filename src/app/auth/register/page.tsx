@@ -4,13 +4,46 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Building2, Phone, ArrowRight, Check, Loader2, AlertCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Mail, Lock, Eye, EyeOff, Building2, Phone, ArrowRight, Check, Loader2, AlertCircle, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
+
+// Extended register schema with additional fields
+const extendedRegisterSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, 'First name is required')
+    .min(2, 'First name must be at least 2 characters'),
+  lastName: z
+    .string()
+    .min(1, 'Last name is required')
+    .min(2, 'Last name must be at least 2 characters'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one symbol'),
+  terms: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+});
+
+type ExtendedRegisterFormData = z.infer<typeof extendedRegisterSchema>;
 
 // Logo component
 function Logo({ className }: { className?: string }) {
@@ -37,60 +70,55 @@ const benefits = [
   "Secure payment processing",
 ];
 
-// Password validation
-function validatePassword(password: string) {
-  const checks = {
-    length: password.length >= 8,
-    number: /\d/.test(password),
-    symbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    uppercase: /[A-Z]/.test(password),
-  };
-  return checks;
-}
-
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, loginWithGoogle, loginWithApple, loginWithLinkedIn } = useAuth();
+  const { register: authRegister, loginWithGoogle, loginWithApple, loginWithLinkedIn } = useAuth();
   
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"basic" | "pro">("pro");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const passwordChecks = validatePassword(password);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm<ExtendedRegisterFormData>({
+    resolver: zodResolver(extendedRegisterSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      company: "",
+      password: "",
+      terms: false,
+    },
+  });
+
+  const password = watch("password");
+  
+  // Password validation checks
+  const passwordChecks = {
+    length: (password?.length || 0) >= 8,
+    number: /\d/.test(password || ""),
+    symbol: /[!@#$%^&*(),.?":{}|<>]/.test(password || ""),
+    uppercase: /[A-Z]/.test(password || ""),
+  };
+
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ExtendedRegisterFormData) => {
     setError(null);
 
-    if (!termsAccepted) {
-      setError("Please accept the Terms of Service and Privacy Policy.");
-      return;
-    }
-
-    if (!isPasswordValid) {
-      setError("Please ensure your password meets all requirements.");
-      return;
-    }
-
-    setLoading(true);
-
     try {
-      const { error, needsVerification } = await register({
-        email,
-        password,
-        firstName,
-        lastName,
-        phone,
-        company,
+      const { error, needsVerification } = await authRegister({
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        company: data.company,
       });
 
       if (error) {
@@ -100,14 +128,12 @@ export default function RegisterPage() {
           setError(error.message);
         }
       } else if (needsVerification) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+        router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
       } else {
         router.push("/");
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -176,7 +202,7 @@ export default function RegisterPage() {
 
           <Card>
             <CardContent className="p-6">
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Error Alert */}
                 {error && (
                   <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -193,11 +219,13 @@ export default function RegisterPage() {
                     </label>
                     <Input 
                       placeholder="Logan"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                      disabled={loading}
+                      className={errors.firstName ? 'border-destructive focus-visible:ring-destructive' : ''}
+                      {...register("firstName")}
+                      disabled={isSubmitting}
                     />
+                    {errors.firstName && (
+                      <p className="text-sm text-destructive mt-1">{errors.firstName.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground block mb-1.5">
@@ -205,11 +233,13 @@ export default function RegisterPage() {
                     </label>
                     <Input 
                       placeholder="Roy"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                      disabled={loading}
+                      className={errors.lastName ? 'border-destructive focus-visible:ring-destructive' : ''}
+                      {...register("lastName")}
+                      disabled={isSubmitting}
                     />
+                    {errors.lastName && (
+                      <p className="text-sm text-destructive mt-1">{errors.lastName.message}</p>
+                    )}
                   </div>
                 </div>
 
@@ -223,13 +253,14 @@ export default function RegisterPage() {
                     <Input 
                       type="email" 
                       placeholder="you@example.com" 
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={loading}
+                      className={`pl-10 ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      {...register("email")}
+                      disabled={isSubmitting}
                     />
                   </div>
+                  {errors.email && (
+                    <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                  )}
                 </div>
 
                 {/* Phone */}
@@ -243,9 +274,8 @@ export default function RegisterPage() {
                       type="tel" 
                       placeholder="+1 (555) 000-0000" 
                       className="pl-10"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      disabled={loading}
+                      {...register("phone")}
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -261,9 +291,8 @@ export default function RegisterPage() {
                     <Input 
                       placeholder="Your company name" 
                       className="pl-10"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      disabled={loading}
+                      {...register("company")}
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -278,11 +307,9 @@ export default function RegisterPage() {
                     <Input 
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a strong password" 
-                      className="pl-10 pr-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={loading}
+                      className={`pl-10 pr-10 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                      {...register("password")}
+                      disabled={isSubmitting}
                     />
                     <Button 
                       type="button"
@@ -290,7 +317,7 @@ export default function RegisterPage() {
                       size="icon" 
                       className="absolute right-0 top-0 h-full px-3"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -299,6 +326,9 @@ export default function RegisterPage() {
                       )}
                     </Button>
                   </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+                  )}
                   
                   {/* Password Requirements */}
                   {password && (
@@ -329,9 +359,8 @@ export default function RegisterPage() {
                     type="checkbox" 
                     id="terms" 
                     className="rounded border-border mt-1"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    disabled={loading}
+                    {...register("terms")}
+                    disabled={isSubmitting}
                   />
                   <label htmlFor="terms" className="text-sm text-muted-foreground">
                     I agree to the{" "}
@@ -340,14 +369,17 @@ export default function RegisterPage() {
                     <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
                   </label>
                 </div>
+                {errors.terms && (
+                  <p className="text-sm text-destructive -mt-2">{errors.terms.message}</p>
+                )}
 
                 {/* Subscription Selection */}
                 <div className="space-y-3 pt-2">
                   <label className="text-sm font-medium text-foreground block">Select Subscription Plan</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div 
-                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "basic" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${loading ? "opacity-50 pointer-events-none" : ""}`}
-                      onClick={() => !loading && setSelectedPlan("basic")}
+                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "basic" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${isSubmitting ? "opacity-50 pointer-events-none" : ""}`}
+                      onClick={() => !isSubmitting && setSelectedPlan("basic")}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <span className="font-medium text-sm">Basic</span>
@@ -358,8 +390,8 @@ export default function RegisterPage() {
                     </div>
                     
                     <div 
-                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "pro" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${loading ? "opacity-50 pointer-events-none" : ""}`}
-                      onClick={() => !loading && setSelectedPlan("pro")}
+                      className={`cursor-pointer rounded-lg border p-3 relative transition-colors ${selectedPlan === "pro" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"} ${isSubmitting ? "opacity-50 pointer-events-none" : ""}`}
+                      onClick={() => !isSubmitting && setSelectedPlan("pro")}
                     >
                       <div className="absolute -top-2 -right-2">
                         <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 h-5">POPULAR</Badge>
@@ -375,8 +407,8 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Create Account Button */}
-                <Button className="w-full" size="lg" type="submit" disabled={loading}>
-                  {loading ? (
+                <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Creating account...
@@ -399,7 +431,7 @@ export default function RegisterPage() {
                   className="w-full" 
                   size="lg"
                   onClick={handleGoogleSignup}
-                  disabled={loading}
+                  disabled={isSubmitting}
                 >
                   <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -414,7 +446,7 @@ export default function RegisterPage() {
                   className="w-full" 
                   size="lg"
                   onClick={handleAppleSignup}
-                  disabled={loading}
+                  disabled={isSubmitting}
                 >
                    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.37-1.54 1.81.07 3.2 1.06 4.06 2.09-3.53 1.97-2.93 6.67.6 8.06-.53 1.42-1.24 2.8-2.11 3.62zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -426,7 +458,7 @@ export default function RegisterPage() {
                   className="w-full" 
                   size="lg"
                   onClick={handleLinkedInSignup}
-                  disabled={loading}
+                  disabled={isSubmitting}
                 >
                    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>

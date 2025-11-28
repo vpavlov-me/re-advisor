@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { 
   Home, 
   ChevronRight, 
@@ -20,7 +23,8 @@ import {
   AlertCircle,
   Settings,
   Check,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,6 +60,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
+import { serviceSchema, type ServiceFormData } from "@/lib/validations";
 
 // Constants
 const SERVICE_CATEGORIES = ["Governance", "Planning", "Mediation", "Assessment", "Education", "Other"];
@@ -100,9 +105,14 @@ function getStatusBadge(status: "active" | "draft" | "paused") {
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>(initialServices);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | number | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   
   // Global Policies State
@@ -129,13 +139,23 @@ export default function ServicesPage() {
 
   const fetchServices = async () => {
     try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('services')
         .select('*')
+        .eq('advisor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.log("Supabase error (using mock data if needed):", error.message);
+        setLoading(false);
         return;
       }
       
@@ -159,6 +179,9 @@ export default function ServicesPage() {
       }
     } catch (error) {
       console.error("Error fetching services:", error);
+      toast.error("Failed to load services");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -214,19 +237,30 @@ export default function ServicesPage() {
       return;
     }
 
+    setSaving(true);
     const formattedPrice = `$${formData.priceAmount}`; // Simple formatting
-    const serviceData = {
-      name: formData.name,
-      description: formData.description,
-      price_model: formData.priceModel,
-      price_amount: parseFloat(formData.priceAmount) || 0,
-      price: formattedPrice,
-      duration: formData.duration,
-      category: formData.category,
-      status: formData.status
-    };
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Please log in to save services");
+        setSaving(false);
+        return;
+      }
+
+      const serviceData = {
+        name: formData.name,
+        description: formData.description,
+        price_model: formData.priceModel,
+        price_amount: parseFloat(formData.priceAmount) || 0,
+        price: formattedPrice,
+        duration: formData.duration,
+        category: formData.category,
+        status: formData.status,
+        advisor_id: user.id
+      };
+      
       let result;
       
       if (editingService) {
@@ -267,18 +301,122 @@ export default function ServicesPage() {
 
         if (editingService) {
           setServices(services.map(s => s.id === editingService.id ? mappedService : s));
+          toast.success("Service updated successfully");
         } else {
           setServices([mappedService, ...services]);
+          toast.success("Service created successfully");
         }
         setIsSheetOpen(false);
       }
     } catch (error) {
       console.error("Error saving service:", error);
+      toast.error("Failed to save service");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = (id: number | string) => {
-    setServices(services.filter(s => s.id !== id));
+  const handleDeleteClick = (service: Service) => {
+    setServiceToDelete(service);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!serviceToDelete) return;
+
+    setDeleting(serviceToDelete.id);
+    
+    try {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .eq('id', serviceToDelete.id);
+
+      if (error) throw error;
+
+      setServices(services.filter(s => s.id !== serviceToDelete.id));
+      toast.success("Service deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setServiceToDelete(null);
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      toast.error("Failed to delete service");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleDuplicate = async (service: Service) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Please log in to duplicate services");
+        return;
+      }
+
+      const newServiceData = {
+        name: `${service.name} (Copy)`,
+        description: service.description,
+        price_model: service.priceModel,
+        price_amount: parseFloat(service.priceAmount || "0"),
+        price: service.price,
+        duration: service.duration,
+        category: service.category,
+        status: "draft" as const,
+        advisor_id: user.id
+      };
+
+      const { data, error } = await supabase
+        .from('services')
+        .insert([newServiceData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedService: Service = {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          priceModel: data.price_model,
+          priceAmount: data.price_amount,
+          price: data.price,
+          duration: data.duration,
+          category: data.category,
+          status: data.status,
+          activeClients: 0,
+          totalRevenue: "$0",
+          rating: 0,
+          reviews: 0
+        };
+        setServices([mappedService, ...services]);
+        toast.success("Service duplicated successfully");
+      }
+    } catch (error) {
+      console.error("Error duplicating service:", error);
+      toast.error("Failed to duplicate service");
+    }
+  };
+
+  const handlePublish = async (service: Service) => {
+    try {
+      const { error } = await supabase
+        .from('services')
+        .update({ status: 'active' })
+        .eq('id', service.id);
+
+      if (error) throw error;
+
+      setServices(services.map(s => 
+        s.id === service.id ? { ...s, status: 'active' as const } : s
+      ));
+      toast.success("Service published successfully");
+    } catch (error) {
+      console.error("Error publishing service:", error);
+      toast.error("Failed to publish service");
+    }
   };
 
   return (
@@ -331,16 +469,37 @@ export default function ServicesPage() {
           ))}
         </div>
 
-        {/* Tabs */}
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+        /* Tabs */
         <Tabs defaultValue="all" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="all">All Services</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="drafts">Drafts</TabsTrigger>
+            <TabsTrigger value="all">All Services ({services.length})</TabsTrigger>
+            <TabsTrigger value="active">Active ({services.filter(s => s.status === "active").length})</TabsTrigger>
+            <TabsTrigger value="drafts">Drafts ({services.filter(s => s.status === "draft").length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            {services.map((service) => (
+            {services.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <DollarSign className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">No services yet</h3>
+                  <p className="text-muted-foreground mb-4">Create your first service to start attracting clients</p>
+                  <Button onClick={handleOpenCreate}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Service
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              services.map((service) => (
               <Card key={service.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -404,7 +563,11 @@ export default function ServicesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleDelete(service.id)} className="text-destructive">
+                          <DropdownMenuItem onClick={() => handleDuplicate(service)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteClick(service)} className="text-destructive">
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -414,11 +577,19 @@ export default function ServicesPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            )}
           </TabsContent>
 
           <TabsContent value="active" className="space-y-4">
-            {services.filter(s => s.status === "active").map((service) => (
+            {services.filter(s => s.status === "active").length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <p className="text-muted-foreground">No active services. Publish a draft to make it visible to clients.</p>
+                </CardContent>
+              </Card>
+            ) : (
+            services.filter(s => s.status === "active").map((service) => (
               <Card key={service.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -478,7 +649,11 @@ export default function ServicesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleDelete(service.id)} className="text-destructive">
+                          <DropdownMenuItem onClick={() => handleDuplicate(service)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteClick(service)} className="text-destructive">
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -488,7 +663,8 @@ export default function ServicesPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ))
+            )}
           </TabsContent>
 
           <TabsContent value="drafts" className="space-y-4">
@@ -519,8 +695,8 @@ export default function ServicesPage() {
                         <Edit className="h-4 w-4 mr-2" />
                         Continue Editing
                       </Button>
-                      <Button size="sm">Publish</Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(service.id)}>
+                      <Button size="sm" onClick={() => handlePublish(service)}>Publish</Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(service)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -538,6 +714,7 @@ export default function ServicesPage() {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </div>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -678,12 +855,48 @@ export default function ServicesPage() {
           </div>
           <SheetFooter>
             <SheetClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" disabled={saving}>Cancel</Button>
             </SheetClose>
-            <Button onClick={handleSave}>Save Service</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Service"
+              )}
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Service</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{serviceToDelete?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={!!deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm} disabled={!!deleting}>
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Policies Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>

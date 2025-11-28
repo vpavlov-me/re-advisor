@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -21,7 +25,8 @@ import {
   Download,
   Lock,
   Fingerprint,
-  History
+  History,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +45,22 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
+
+// Password change schema
+const passwordSchema = z.object({
+  current: z.string().min(1, "Current password is required"),
+  new: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  confirm: z.string().min(1, "Please confirm your password")
+}).refine((data) => data.new === data.confirm, {
+  message: "Passwords do not match",
+  path: ["confirm"]
+});
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 // Login sessions
 const loginSessions = [
@@ -92,61 +113,144 @@ const settingsNav = [
 
 export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
-  const [passwordState, setPasswordState] = useState({
-    current: "",
-    new: "",
-    confirm: ""
-  });
   const [showPassword, setShowPassword] = useState(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [sessions, setSessions] = useState(loginSessions);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling2FA, setIsToggling2FA] = useState(false);
+  const [revokingSessionId, setRevokingSessionId] = useState<number | null>(null);
+
+  // React Hook Form for password
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPassword,
+    watch: watchPassword
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema)
+  });
+
+  const newPassword = watchPassword("new");
+
+  // Password strength indicator
+  const getPasswordStrength = (password: string) => {
+    if (!password) return { score: 0, label: "" };
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    
+    if (score <= 2) return { score: 1, label: "Weak" };
+    if (score <= 4) return { score: 2, label: "Medium" };
+    return { score: 3, label: "Strong" };
+  };
+
+  const passwordStrength = getPasswordStrength(newPassword || "");
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.email) {
-        setUserEmail(user.email);
+      setIsLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          setUserEmail(user.email);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        toast.error("Failed to load user data");
+      } finally {
+        setIsLoading(false);
       }
     };
     getUser();
   }, []);
 
-  const handleUpdatePassword = async () => {
-    if (passwordState.new !== passwordState.confirm) {
-      alert("Passwords do not match");
-      return;
-    }
-    
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    setIsUpdatingPassword(true);
     try {
       const { error } = await supabase.auth.updateUser({
-        password: passwordState.new
+        password: data.new
       });
 
       if (error) throw error;
 
-      setPasswordState({ current: "", new: "", confirm: "" });
-      alert("Password updated successfully");
+      resetPassword();
+      toast.success("Password updated successfully");
     } catch (error: any) {
       console.error("Error updating password:", error);
-      alert("Error updating password: " + error.message);
+      toast.error(error.message || "Failed to update password");
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
   const handleSignOutAll = async () => {
+    setIsSigningOut(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      // Redirect or handle UI update
+      toast.success("Signed out from all devices");
       window.location.href = '/auth/login';
     } catch (error) {
       console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+      setIsSigningOut(false);
     }
   };
 
-  const handleDeleteAccount = () => {
-    setIsDeleteOpen(false);
-    alert("Account deletion scheduled. You will receive an email confirmation.");
+  const handleRevokeSession = async (sessionId: number) => {
+    setRevokingSessionId(sessionId);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setSessions(sessions.filter(s => s.id !== sessionId));
+      toast.success("Session revoked successfully");
+    } catch (error) {
+      console.error("Error revoking session:", error);
+      toast.error("Failed to revoke session");
+    } finally {
+      setRevokingSessionId(null);
+    }
+  };
+
+  const handleToggle2FA = async () => {
+    setIsToggling2FA(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIs2FAEnabled(!is2FAEnabled);
+      toast.success(is2FAEnabled ? "2FA disabled" : "2FA enabled successfully");
+    } catch (error) {
+      console.error("Error toggling 2FA:", error);
+      toast.error("Failed to update 2FA settings");
+    } finally {
+      setIsToggling2FA(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Account deletion scheduled. You will receive an email confirmation.");
+      setIsDeleteOpen(false);
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to schedule account deletion");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -225,7 +329,7 @@ export default function SettingsPage() {
                 <CardDescription>Last changed 30 days ago</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="space-y-4">
+                <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="flex-1 max-w-md">
                       <Label className="text-sm text-muted-foreground block mb-1.5">Current Password</Label>
@@ -233,10 +337,10 @@ export default function SettingsPage() {
                         <Input 
                           type={showPassword ? "text" : "password"} 
                           placeholder="••••••••••••" 
-                          value={passwordState.current}
-                          onChange={(e) => setPasswordState({...passwordState, current: e.target.value})}
+                          {...registerPassword("current")}
                         />
                         <Button 
+                          type="button"
                           variant="ghost" 
                           size="icon" 
                           className="absolute right-0 top-0 h-full"
@@ -245,6 +349,9 @@ export default function SettingsPage() {
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                       </div>
+                      {passwordErrors.current && (
+                        <p className="text-sm text-destructive mt-1">{passwordErrors.current.message}</p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 max-w-md">
@@ -253,24 +360,61 @@ export default function SettingsPage() {
                       <Input 
                         type={showPassword ? "text" : "password"} 
                         placeholder="••••••••••••" 
-                        value={passwordState.new}
-                        onChange={(e) => setPasswordState({...passwordState, new: e.target.value})}
+                        {...registerPassword("new")}
                       />
+                      {passwordErrors.new && (
+                        <p className="text-sm text-destructive mt-1">{passwordErrors.new.message}</p>
+                      )}
+                      {newPassword && (
+                        <div className="mt-2">
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1 flex-1 rounded-full transition-colors ${
+                                  passwordStrength.score >= level
+                                    ? level === 1
+                                      ? "bg-red-500"
+                                      : level === 2
+                                      ? "bg-yellow-500"
+                                      : "bg-green-500"
+                                    : "bg-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className={`text-xs mt-1 ${
+                            passwordStrength.score === 1 ? "text-red-500" :
+                            passwordStrength.score === 2 ? "text-yellow-500" : "text-green-500"
+                          }`}>
+                            {passwordStrength.label}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground block mb-1.5">Confirm New Password</Label>
                       <Input 
                         type={showPassword ? "text" : "password"} 
                         placeholder="••••••••••••" 
-                        value={passwordState.confirm}
-                        onChange={(e) => setPasswordState({...passwordState, confirm: e.target.value})}
+                        {...registerPassword("confirm")}
                       />
+                      {passwordErrors.confirm && (
+                        <p className="text-sm text-destructive mt-1">{passwordErrors.confirm.message}</p>
+                      )}
                     </div>
                   </div>
-                  <Button onClick={handleUpdatePassword} disabled={!passwordState.current || !passwordState.new}>
-                    Update Password
+                  <Button type="submit" disabled={isUpdatingPassword}>
+                    {isUpdatingPassword ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Password"
+                    )}
                   </Button>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
@@ -304,9 +448,14 @@ export default function SettingsPage() {
                       <Button 
                         variant={is2FAEnabled ? "outline" : "default"} 
                         size="sm"
-                        onClick={() => setIs2FAEnabled(!is2FAEnabled)}
+                        onClick={handleToggle2FA}
+                        disabled={isToggling2FA}
                       >
-                        {is2FAEnabled ? "Configure" : "Enable"}
+                        {isToggling2FA ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          is2FAEnabled ? "Configure" : "Enable"
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -334,8 +483,12 @@ export default function SettingsPage() {
                     <CardTitle className="text-base">Active Sessions</CardTitle>
                     <CardDescription>Devices currently logged into your account</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleSignOutAll}>
-                    <LogOut className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" onClick={handleSignOutAll} disabled={isSigningOut}>
+                    {isSigningOut ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <LogOut className="h-4 w-4 mr-2" />
+                    )}
                     Sign Out All
                   </Button>
                 </div>
@@ -365,8 +518,18 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       {!session.current && (
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          <LogOut className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleRevokeSession(session.id)}
+                          disabled={revokingSessionId === session.id}
+                        >
+                          {revokingSessionId === session.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <LogOut className="h-4 w-4" />
+                          )}
                         </Button>
                       )}
                     </div>
@@ -439,15 +602,29 @@ export default function SettingsPage() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Are you absolutely sure?
+                        </DialogTitle>
                         <DialogDescription>
                           This action cannot be undone. This will permanently delete your account
                           and remove your data from our servers.
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDeleteAccount}>Delete Account</Button>
+                        <Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={isDeleting}>
+                          Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Delete Account"
+                          )}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>

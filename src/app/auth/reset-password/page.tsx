@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Eye, EyeOff, ArrowRight, Check, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updatePassword } from "@/lib/auth";
+import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
@@ -30,14 +33,27 @@ function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [tokenError, setTokenError] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const password = watch("password");
+  const confirmPassword = watch("confirmPassword");
 
   // Check for valid reset token in URL (Supabase adds hash params)
   useEffect(() => {
@@ -46,10 +62,10 @@ function ResetPasswordContent() {
     const hash = window.location.hash;
     if (!hash.includes("access_token") && !hash.includes("type=recovery")) {
       // No token in URL - check if this is a direct access (invalid)
-      const error = searchParams.get("error");
+      const errorParam = searchParams.get("error");
       const errorDescription = searchParams.get("error_description");
       
-      if (error) {
+      if (errorParam) {
         setTokenError(true);
         setError(errorDescription || "Invalid or expired reset link");
       }
@@ -57,34 +73,21 @@ function ResetPasswordContent() {
   }, [searchParams]);
 
   // Password requirements checker
-  const requirements = useMemo(() => [
-    { label: "At least 8 characters", met: password.length >= 8 },
-    { label: "Contains a number", met: /\d/.test(password) },
-    { label: "Contains a symbol", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
-    { label: "Contains uppercase letter", met: /[A-Z]/.test(password) },
-  ], [password]);
+  const requirements = [
+    { label: "At least 8 characters", met: (password?.length || 0) >= 8 },
+    { label: "Contains a number", met: /\d/.test(password || "") },
+    { label: "Contains a symbol", met: /[!@#$%^&*(),.?":{}|<>]/.test(password || "") },
+    { label: "Contains uppercase letter", met: /[A-Z]/.test(password || "") },
+  ];
 
   const allRequirementsMet = requirements.every(req => req.met);
-  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+  const passwordsMatch = password === confirmPassword && (confirmPassword?.length || 0) > 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!allRequirementsMet) {
-      setError("Please meet all password requirements");
-      return;
-    }
-
-    if (!passwordsMatch) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
+  const onSubmit = async (data: ResetPasswordFormData) => {
     setError(null);
 
     try {
-      const { error } = await updatePassword(password);
+      const { error } = await updatePassword(data.password);
       
       if (error) {
         setError(error.message || "Failed to reset password. Please try again.");
@@ -97,8 +100,6 @@ function ResetPasswordContent() {
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -190,7 +191,7 @@ function ResetPasswordContent() {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Error Alert */}
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -208,10 +209,9 @@ function ResetPasswordContent() {
                   <Input 
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a new password" 
-                    className="pl-10 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
+                    className={`pl-10 pr-10 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register("password")}
+                    disabled={isSubmitting}
                   />
                   <Button 
                     type="button"
@@ -227,6 +227,9 @@ function ResetPasswordContent() {
                     )}
                   </Button>
                 </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+                )}
               </div>
 
               {/* Confirm Password */}
@@ -239,10 +242,9 @@ function ResetPasswordContent() {
                   <Input 
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your new password" 
-                    className="pl-10 pr-10"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={loading}
+                    className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register("confirmPassword")}
+                    disabled={isSubmitting}
                   />
                   <Button 
                     type="button"
@@ -258,7 +260,10 @@ function ResetPasswordContent() {
                     )}
                   </Button>
                 </div>
-                {confirmPassword && !passwordsMatch && (
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive mt-1">{errors.confirmPassword.message}</p>
+                )}
+                {confirmPassword && !errors.confirmPassword && !passwordsMatch && (
                   <p className="text-sm text-destructive mt-1">Passwords do not match</p>
                 )}
                 {passwordsMatch && (
@@ -292,9 +297,9 @@ function ResetPasswordContent() {
                 className="w-full" 
                 size="lg" 
                 type="submit" 
-                disabled={loading || !allRequirementsMet || !passwordsMatch}
+                disabled={isSubmitting || !allRequirementsMet || !passwordsMatch}
               >
-                {loading ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Resetting...
