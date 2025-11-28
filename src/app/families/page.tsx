@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
@@ -66,6 +69,31 @@ import {
 
 // Advisor roles
 type AdvisorRole = "external-consul" | "consultant" | "personal-advisor";
+
+// Validation Schemas
+const inviteSchema = z.object({
+  familyName: z.string().optional(),
+  contactName: z.string().min(2, "Contact name is required"),
+  contactEmail: z.string().email("Invalid email address"),
+  role: z.enum(["external-consul", "consultant", "personal-advisor"]),
+  message: z.string().optional()
+});
+
+const taskSchema = z.object({
+  title: z.string().min(2, "Task title is required"),
+  dueDate: z.string().min(1, "Due date is required"),
+  priority: z.enum(["low", "medium", "high"])
+});
+
+const memberSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  role: z.string().min(2, "Role is required")
+});
+
+type InviteFormData = z.infer<typeof inviteSchema>;
+type TaskFormData = z.infer<typeof taskSchema>;
+type MemberFormData = z.infer<typeof memberSchema>;
 
 type Family = {
   id: number;
@@ -319,6 +347,9 @@ export default function FamiliesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingFamilyId, setDeletingFamilyId] = useState<number | null>(null);
   const [workspaceTab, setWorkspaceTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -326,85 +357,129 @@ export default function FamiliesPage() {
   const [familiesList, setFamiliesList] = useState<Family[]>(families);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // React Hook Form for Invite
+  const {
+    register: registerInvite,
+    handleSubmit: handleInviteSubmit,
+    formState: { errors: inviteErrors },
+    reset: resetInvite,
+    setValue: setInviteValue
+  } = useForm<InviteFormData>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: { role: "consultant" }
+  });
+
+  // React Hook Form for Task
+  const {
+    register: registerTask,
+    handleSubmit: handleTaskSubmit,
+    formState: { errors: taskErrors },
+    reset: resetTask,
+    setValue: setTaskValue
+  } = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: { priority: "medium" }
+  });
+
+  // React Hook Form for Member
+  const {
+    register: registerMember,
+    handleSubmit: handleMemberSubmit,
+    formState: { errors: memberErrors },
+    reset: resetMember
+  } = useForm<MemberFormData>({
+    resolver: zodResolver(memberSchema)
+  });
+
+  const fetchFamilies = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('families')
+        .select(`
+          *,
+          members:family_members(*),
+          tasks:tasks(*),
+          services:services(*),
+          consultations:consultations(*)
+        `);
+      
+      if (error) {
+        console.log("Supabase error (using mock data):", error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const mappedFamilies: Family[] = data.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          members: f.members?.length || 0,
+          role: (f.role as AdvisorRole) || "consultant",
+          meetings: { 
+            upcoming: f.consultations?.filter((c: any) => c.status === 'scheduled').length || 0, 
+            nextDate: f.consultations?.find((c: any) => c.status === 'scheduled')?.date || null 
+          },
+          payment: (f.payment_status as any) || "pending",
+          status: (f.status as any) || "active",
+          lastContact: f.last_contact ? new Date(f.last_contact).toLocaleDateString() : "Recently",
+          industry: f.industry || "Unknown",
+          location: f.location || "Unknown",
+          email: f.email || "",
+          phone: f.phone || "",
+          since: f.created_at ? new Date(f.created_at).toLocaleDateString() : "Recently",
+          description: f.description || "",
+          membersList: f.members?.map((m: any) => ({
+            name: m.name,
+            role: m.role,
+            avatar: m.name.substring(0, 2).toUpperCase(),
+            email: m.email
+          })) || [],
+          tasks: f.tasks?.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            dueDate: t.due_date,
+            priority: t.priority,
+            completed: t.completed
+          })) || [],
+          services: f.services?.map((s: any) => ({
+            name: s.name,
+            status: s.status,
+            progress: s.progress,
+            price: s.price,
+            startDate: s.start_date
+          })) || [],
+          consultations: f.consultations?.map((c: any) => ({
+            title: c.title,
+            date: c.date,
+            time: c.time,
+            status: c.status
+          })) || []
+        }));
+        
+        setFamiliesList(mappedFamilies);
+      }
+    } catch (error) {
+      console.error("Error fetching families:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchFamilies = async () => {
+    const init = async () => {
       setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('families')
-          .select(`
-            *,
-            members:family_members(*),
-            tasks:tasks(*),
-            services:services(*),
-            consultations:consultations(*)
-          `);
-        
-        if (error) {
-          console.log("Supabase error (using mock data):", error.message);
-          setLoading(false);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const mappedFamilies: Family[] = data.map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            members: f.members?.length || 0,
-            role: (f.role as AdvisorRole) || "consultant",
-            meetings: { 
-              upcoming: f.consultations?.filter((c: any) => c.status === 'scheduled').length || 0, 
-              nextDate: f.consultations?.find((c: any) => c.status === 'scheduled')?.date || null 
-            },
-            payment: (f.payment_status as any) || "pending",
-            status: (f.status as any) || "active",
-            lastContact: f.last_contact ? new Date(f.last_contact).toLocaleDateString() : "Recently",
-            industry: f.industry || "Unknown",
-            location: f.location || "Unknown",
-            email: f.email || "",
-            phone: f.phone || "",
-            since: f.created_at ? new Date(f.created_at).toLocaleDateString() : "Recently",
-            description: f.description || "",
-            membersList: f.members?.map((m: any) => ({
-              name: m.name,
-              role: m.role,
-              avatar: m.name.substring(0, 2).toUpperCase(),
-              email: m.email
-            })) || [],
-            tasks: f.tasks?.map((t: any) => ({
-              id: t.id,
-              title: t.title,
-              dueDate: t.due_date,
-              priority: t.priority,
-              completed: t.completed
-            })) || [],
-            services: f.services?.map((s: any) => ({
-              name: s.name,
-              status: s.status,
-              progress: s.progress,
-              price: s.price,
-              startDate: s.start_date
-            })) || [],
-            consultations: f.consultations?.map((c: any) => ({
-              title: c.title,
-              date: c.date,
-              time: c.time,
-              status: c.status
-            })) || []
-          }));
-          
-          setFamiliesList(mappedFamilies);
-        }
-      } catch (error) {
-        console.error("Error fetching families:", error);
-      } finally {
-        setLoading(false);
-      }
+      await fetchFamilies();
+      setLoading(false);
     };
+    init();
+  }, [fetchFamilies]);
 
-    fetchFamilies();
-  }, []);
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchFamilies();
+    setIsRefreshing(false);
+    toast.success("Families refreshed");
+  };
 
   // Invite Form State
   const [inviteForm, setInviteForm] = useState({
@@ -572,6 +647,99 @@ export default function FamiliesPage() {
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast.error('Failed to create invoice');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteFamily = async () => {
+    if (!deletingFamilyId) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('families')
+        .delete()
+        .eq('id', deletingFamilyId);
+
+      if (error) throw error;
+
+      setFamiliesList(familiesList.filter(f => f.id !== deletingFamilyId));
+      toast.success('Family removed successfully');
+    } catch (error) {
+      console.error('Error deleting family:', error);
+      // Fallback for demo
+      setFamiliesList(familiesList.filter(f => f.id !== deletingFamilyId));
+      toast.success('Family removed successfully');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setDeletingFamilyId(null);
+    }
+  };
+
+  const confirmDeleteFamily = (familyId: number) => {
+    setDeletingFamilyId(familyId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddMember = async (data: MemberFormData) => {
+    if (!selectedFamily) return;
+
+    setSaving(true);
+    try {
+      const { data: memberData, error } = await supabase
+        .from('family_members')
+        .insert([{
+          family_id: selectedFamily.id,
+          name: data.name,
+          email: data.email,
+          role: data.role
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newMember = {
+        name: data.name,
+        role: data.role,
+        avatar: data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        email: data.email
+      };
+
+      const updatedFamily = {
+        ...selectedFamily,
+        membersList: [...selectedFamily.membersList, newMember],
+        members: selectedFamily.members + 1
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsAddMemberDialogOpen(false);
+      resetMember();
+      toast.success('Member added successfully');
+    } catch (error) {
+      console.error('Error adding member:', error);
+      // Fallback for demo
+      const newMember = {
+        name: data.name,
+        role: data.role,
+        avatar: data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        email: data.email
+      };
+
+      const updatedFamily = {
+        ...selectedFamily,
+        membersList: [...selectedFamily.membersList, newMember],
+        members: selectedFamily.members + 1
+      };
+
+      setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
+      setSelectedFamily(updatedFamily);
+      setIsAddMemberDialogOpen(false);
+      resetMember();
+      toast.success('Member added successfully');
     } finally {
       setSaving(false);
     }
@@ -892,6 +1060,14 @@ export default function FamiliesPage() {
                             <Edit className="h-4 w-4" />
                             Edit Details
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                            onClick={() => confirmDeleteFamily(family.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remove Family
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -1093,7 +1269,7 @@ export default function FamiliesPage() {
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base">Family Members</CardTitle>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => setIsAddMemberDialogOpen(true)}>
                               <UserPlus className="h-4 w-4 mr-2" />
                               Add Member
                             </Button>
@@ -1558,6 +1734,107 @@ export default function FamiliesPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleCreateInvoice}>Generate Invoice</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Member Dialog */}
+      <Dialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Family Member</DialogTitle>
+            <DialogDescription>Add a new member to {selectedFamily?.name}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleMemberSubmit(handleAddMember)}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="memberName">Full Name</Label>
+                <Input 
+                  id="memberName" 
+                  placeholder="e.g. John Smith"
+                  {...registerMember("name")}
+                />
+                {memberErrors.name && (
+                  <p className="text-sm text-red-500">{memberErrors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memberEmail">Email</Label>
+                <Input 
+                  id="memberEmail" 
+                  type="email"
+                  placeholder="john@example.com"
+                  {...registerMember("email")}
+                />
+                {memberErrors.email && (
+                  <p className="text-sm text-red-500">{memberErrors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memberRole">Role in Family</Label>
+                <select 
+                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...registerMember("role")}
+                >
+                  <option value="Child">Child</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Grandparent">Grandparent</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddMemberDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Member"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Family Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Family</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this family? This action cannot be undone and will remove all associated data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setDeletingFamilyId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteFamily}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Family"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

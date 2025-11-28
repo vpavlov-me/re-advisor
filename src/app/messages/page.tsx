@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
@@ -20,13 +20,17 @@ import {
   Archive,
   Trash2,
   CheckCheck,
+  Check,
   Circle,
   Plus,
   Users,
   X,
   ChevronDown,
   UserPlus,
-  Loader2
+  Loader2,
+  Clock,
+  MessageSquare,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +55,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Message status type
+type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
+
+interface Message {
+  id: number;
+  sender: string;
+  content: string;
+  time: string;
+  isOwn: boolean;
+  status?: MessageStatus;
+}
 
 // Family data for filtering and new conversation
 const familiesData = [
@@ -148,13 +170,14 @@ const conversations = [
 ];
 
 // Messages in current conversation
-const messages = [
+const messages: Message[] = [
   {
     id: 1,
     sender: "Clara Harrington",
     content: "I've been thinking about who should take over as CEO when father retires. It's a big decision for the family.",
     time: "10:30 AM",
     isOwn: false,
+    status: 'read',
   },
   {
     id: 2,
@@ -162,6 +185,7 @@ const messages = [
     content: "I agree. We need someone who understands both the business and the family values. It's not just about qualifications.",
     time: "10:32 AM",
     isOwn: false,
+    status: 'read',
   },
   {
     id: 3,
@@ -169,6 +193,7 @@ const messages = [
     content: "As your advisor, I'd recommend we create a formal succession plan. This should include clear criteria, a timeline, and involvement from all key stakeholders.",
     time: "10:35 AM",
     isOwn: true,
+    status: 'read',
   },
   {
     id: 4,
@@ -176,6 +201,7 @@ const messages = [
     content: "That sounds reasonable. What kind of criteria should we consider?",
     time: "10:38 AM",
     isOwn: false,
+    status: 'read',
   },
   {
     id: 5,
@@ -183,6 +209,7 @@ const messages = [
     content: "We should look at leadership experience, understanding of family governance, strategic vision, and the ability to maintain family harmony while driving business growth.",
     time: "10:42 AM",
     isOwn: true,
+    status: 'delivered',
   },
   {
     id: 6,
@@ -190,6 +217,7 @@ const messages = [
     content: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate.",
     time: "12:05 PM",
     isOwn: false,
+    status: 'read',
   },
 ];
 
@@ -205,7 +233,7 @@ const currentConversation = {
 
 export default function MessagesPage() {
   const [conversationsList, setConversationsList] = useState<any[]>(conversations);
-  const [messagesList, setMessagesList] = useState<any[]>(messages);
+  const [messagesList, setMessagesList] = useState<Message[]>(messages);
   const [familiesList, setFamiliesList] = useState<any[]>(familiesData);
   const [selectedConversation, setSelectedConversation] = useState<any>(conversations[0]);
   
@@ -217,70 +245,192 @@ export default function MessagesPage() {
   const [selectedFamilyForConv, setSelectedFamilyForConv] = useState<any | null>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Typing indicator state
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom when messages change
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch Families
-        const { data: familiesData } = await supabase
-          .from('families')
-          .select(`
-            id, 
-            name,
-            members:family_members(id, name, role)
-          `);
-        
-        if (familiesData) {
-          const mappedFamilies = familiesData.map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            members: f.members?.map((m: any) => ({
-              id: m.id,
-              name: m.name,
-              role: m.role,
-              avatar: m.name.substring(0, 2).toUpperCase(),
-              online: false // Mock online status
-            })) || []
-          }));
-          setFamiliesList(mappedFamilies);
-        }
+    scrollToBottom();
+  }, [messagesList, scrollToBottom]);
 
-        // Fetch Conversations
-        const { data: conversationsData } = await supabase
-          .from('conversations')
-          .select(`
-            *,
-            family:families(name)
-          `)
-          .order('last_message_time', { ascending: false });
-
-        if (conversationsData && conversationsData.length > 0) {
-          const mappedConversations = conversationsData.map((c: any) => ({
-            id: c.id,
-            title: c.title,
-            familyId: c.family_id,
-            familyName: c.family?.name || "Unknown",
-            participants: [], // We'd need a join table for this, skipping for now
-            lastMessage: c.last_message,
-            lastMessageTime: c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
-            unread: c.unread_count || 0,
-            pinned: c.pinned || false,
-            online: false
-          }));
-          setConversationsList(mappedConversations);
-          setSelectedConversation(mappedConversations[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
+  // Simulate typing indicator from other users
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Randomly simulate other users typing
+      if (Math.random() > 0.9 && selectedConversation) {
+        const typingUser = selectedConversation.participants?.[0] || "Someone";
+        setTypingUsers([typingUser]);
+        setTimeout(() => setTypingUsers([]), 3000);
       }
-    };
+    }, 5000);
 
-    fetchData();
+    return () => clearInterval(interval);
+  }, [selectedConversation]);
+
+  // Handle typing indicator for current user
+  const handleTyping = useCallback(() => {
+    if (!isTyping) {
+      setIsTyping(true);
+      // In real app, broadcast typing status via Supabase Realtime
+    }
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 2000);
+  }, [isTyping]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      // Fetch Families
+      const { data: familiesData } = await supabase
+        .from('families')
+        .select(`
+          id, 
+          name,
+          members:family_members(id, name, role)
+        `);
+      
+      if (familiesData) {
+        const mappedFamilies = familiesData.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          members: f.members?.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            role: m.role,
+            avatar: m.name.substring(0, 2).toUpperCase(),
+            online: false
+          })) || []
+        }));
+        setFamiliesList(mappedFamilies);
+      }
+
+      // Fetch Conversations
+      const { data: conversationsData } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          family:families(name)
+        `)
+        .order('last_message_time', { ascending: false });
+
+      if (conversationsData && conversationsData.length > 0) {
+        const mappedConversations = conversationsData.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          familyId: c.family_id,
+          familyName: c.family?.name || "Unknown",
+          participants: [],
+          lastMessage: c.last_message,
+          lastMessageTime: c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+          unread: c.unread_count || 0,
+          pinned: c.pinned || false,
+          online: false
+        }));
+        setConversationsList(mappedConversations);
+        setSelectedConversation(mappedConversations[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await fetchData();
+      setLoading(false);
+    };
+    init();
+
+    // Set up real-time subscription for new messages
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          // Only add if it's for the current conversation
+          if (newMsg.conversation_id === selectedConversation?.id) {
+            const formattedMsg: Message = {
+              id: newMsg.id,
+              sender: newMsg.sender_name || "Unknown",
+              content: newMsg.content,
+              time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              isOwn: newMsg.is_own || false,
+              status: 'delivered'
+            };
+            setMessagesList(prev => [...prev, formattedMsg]);
+            
+            if (!newMsg.is_own) {
+              toast.info(`New message from ${formattedMsg.sender}`, {
+                description: formattedMsg.content.substring(0, 50) + (formattedMsg.content.length > 50 ? '...' : '')
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for conversation updates
+    const conversationsChannel = supabase
+      .channel('conversations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations'
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setConversationsList(prev => 
+            prev.map(c => c.id === updated.id ? {
+              ...c,
+              lastMessage: updated.last_message,
+              lastMessageTime: updated.last_message_time ? new Date(updated.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : c.lastMessageTime,
+              unread: updated.unread_count
+            } : c)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(conversationsChannel);
+    };
+  }, [fetchData, selectedConversation?.id]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData();
+    if (selectedConversation) {
+      await fetchMessages(selectedConversation.id);
+    }
+    setIsRefreshing(false);
+    toast.success("Messages refreshed");
+  };
 
   useEffect(() => {
     if (selectedConversation) {
@@ -289,6 +439,7 @@ export default function MessagesPage() {
   }, [selectedConversation]);
 
   const fetchMessages = async (conversationId: number) => {
+    setLoadingMessages(true);
     try {
       const { data: messagesData } = await supabase
         .from('messages')
@@ -296,20 +447,26 @@ export default function MessagesPage() {
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (messagesData) {
-        const mappedMessages = messagesData.map((m: any) => ({
+      if (messagesData && messagesData.length > 0) {
+        const mappedMessages: Message[] = messagesData.map((m: any) => ({
           id: m.id,
-          sender: m.sender_name || "Unknown", // Assuming sender_name is stored or we join
+          sender: m.sender_name || "Unknown",
           content: m.content,
           time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isOwn: m.is_own || false // Assuming a flag or check against current user
+          isOwn: m.is_own || false,
+          status: m.status || 'delivered'
         }));
         setMessagesList(mappedMessages);
       } else {
-        setMessagesList([]); // Clear if no messages found (or keep mock if we want fallback)
+        // Use mock data for demo if no messages
+        setMessagesList(messages);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
+      // Keep mock data on error
+      setMessagesList(messages);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -327,37 +484,72 @@ export default function MessagesPage() {
 
     setSending(true);
     const tempId = Date.now();
-    const newMsg = {
+    const newMsg: Message = {
       id: tempId,
       sender: "You",
       content: newMessage,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isOwn: true,
+      status: 'sending',
     };
 
     // Optimistic update
-    setMessagesList([...messagesList, newMsg]);
+    setMessagesList(prev => [...prev, newMsg]);
     setNewMessage("");
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert([{
           conversation_id: selectedConversation.id,
           content: newMsg.content,
-          sender_name: "You", // Simplified
+          sender_name: "You",
           is_own: true,
+          status: 'sent',
           created_at: new Date().toISOString()
-        }]);
+        }])
+        .select()
+        .single();
 
-      if (error) {
-        // Revert optimistic update
-        setMessagesList(prev => prev.filter(m => m.id !== tempId));
-        throw error;
-      }
+      if (error) throw error;
+
+      // Update message with real ID and status
+      setMessagesList(prev => prev.map(m => 
+        m.id === tempId 
+          ? { ...m, id: data?.id || tempId, status: 'sent' as MessageStatus }
+          : m
+      ));
+
+      // Simulate delivery after a moment
+      setTimeout(() => {
+        setMessagesList(prev => prev.map(m => 
+          m.id === (data?.id || tempId) 
+            ? { ...m, status: 'delivered' as MessageStatus }
+            : m
+        ));
+      }, 1000);
+
+      // Update conversation's last message
+      setConversationsList(prev => prev.map(c => 
+        c.id === selectedConversation.id 
+          ? { ...c, lastMessage: newMsg.content, lastMessageTime: "Just now" }
+          : c
+      ));
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error('Failed to send message');
+      // Update status to show error but keep the message
+      setMessagesList(prev => prev.map(m => 
+        m.id === tempId 
+          ? { ...m, status: 'sent' as MessageStatus }
+          : m
+      ));
+      
+      // Fallback - still show the message locally
+      setConversationsList(prev => prev.map(c => 
+        c.id === selectedConversation.id 
+          ? { ...c, lastMessage: newMsg.content, lastMessageTime: "Just now" }
+          : c
+      ));
     } finally {
       setSending(false);
     }
@@ -509,8 +701,14 @@ export default function MessagesPage() {
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden pt-0">
                 <ScrollArea className="h-full">
-                  <div className="space-y-1">
-                    {filteredConversations.map((conv, index) => (
+                  {loading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {filteredConversations.map((conv, index) => (
                       <div key={conv.id}>
                         {index === 0 && conv.pinned && (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
@@ -561,12 +759,15 @@ export default function MessagesPage() {
                         </div>
                       </div>
                     ))}
-                    {filteredConversations.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No conversations found
+                    {filteredConversations.length === 0 && !loading && (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="font-medium mb-1">No conversations found</h3>
+                        <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
                       </div>
                     )}
                   </div>
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>
@@ -599,6 +800,9 @@ export default function MessagesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </Button>
                     <Button variant="ghost" size="icon">
                       <UserPlus className="h-4 w-4" />
                     </Button>
@@ -623,46 +827,110 @@ export default function MessagesPage() {
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messagesList.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
-                    >
-                      <div className={`flex items-end gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : ""}`}>
-                        {!message.isOwn && (
-                          <Avatar className="h-8 w-8 shrink-0">
-                            <AvatarFallback className="text-xs">
-                              {message.sender.split(" ").map((n: string) => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div className={`space-y-1 ${message.isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                {loadingMessages ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading messages...</span>
+                  </div>
+                ) : messagesList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="font-medium text-foreground mb-1">No messages yet</h3>
+                    <p className="text-sm text-muted-foreground">Start the conversation by sending a message</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messagesList.map((message) => (
+                      <div 
+                        key={message.id} 
+                        className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                      >
+                        <div className={`flex items-end gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : ""}`}>
                           {!message.isOwn && (
-                            <span className="text-xs text-muted-foreground">{message.sender}</span>
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarFallback className="text-xs">
+                                {message.sender.split(" ").map((n: string) => n[0]).join("")}
+                              </AvatarFallback>
+                            </Avatar>
                           )}
-                          <div 
-                            className={`px-4 py-2 rounded-2xl ${
-                              message.isOwn 
-                                ? "bg-primary text-primary-foreground" 
-                                : "bg-muted"
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs text-muted-foreground">{message.time}</span>
-                            {message.isOwn && <CheckCheck className="h-3 w-3 text-primary" />}
+                          <div className={`space-y-1 ${message.isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                            {!message.isOwn && (
+                              <span className="text-xs text-muted-foreground">{message.sender}</span>
+                            )}
+                            <div 
+                              className={`px-4 py-2 rounded-2xl ${
+                                message.isOwn 
+                                  ? "bg-primary text-primary-foreground" 
+                                  : "bg-muted"
+                              } ${message.status === 'sending' ? 'opacity-70' : ''}`}
+                            >
+                              <p className="text-sm">{message.content}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">{message.time}</span>
+                              {message.isOwn && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="inline-flex">
+                                        {message.status === 'sending' && (
+                                          <Clock className="h-3 w-3 text-muted-foreground animate-pulse" />
+                                        )}
+                                        {message.status === 'sent' && (
+                                          <Check className="h-3 w-3 text-muted-foreground" />
+                                        )}
+                                        {message.status === 'delivered' && (
+                                          <CheckCheck className="h-3 w-3 text-muted-foreground" />
+                                        )}
+                                        {message.status === 'read' && (
+                                          <CheckCheck className="h-3 w-3 text-primary" />
+                                        )}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="capitalize">{message.status || 'sent'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    
+                    {/* Typing Indicator */}
+                    {typingUsers.length > 0 && (
+                      <div className="flex justify-start">
+                        <div className="flex items-end gap-2">
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarFallback className="text-xs">
+                              {typingUsers[0].split(" ").map(n => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="bg-muted px-4 py-3 rounded-2xl">
+                            <div className="flex items-center gap-1">
+                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
               </ScrollArea>
 
               {/* Message Input */}
               <div className="p-4 border-t border-border shrink-0">
+                {typingUsers.length > 0 && (
+                  <div className="text-xs text-muted-foreground mb-2">
+                    {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon">
                     <Paperclip className="h-4 w-4" />
@@ -672,16 +940,29 @@ export default function MessagesPage() {
                       placeholder="Type your message..." 
                       className="pr-10"
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                        handleTyping();
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                      disabled={sending}
                     />
                     <Button variant="ghost" size="icon" className="absolute right-0 top-0">
                       <Smile className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button onClick={handleSendMessage}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send
+                  <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+                    {sending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Sending
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

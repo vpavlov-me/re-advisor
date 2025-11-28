@@ -19,6 +19,8 @@ import {
 import { useAuth } from "@/components/providers/auth-provider";
 import { signOut } from "@/lib/auth";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
+import { SearchCommand } from "@/components/search/search-command";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const navItems = [
   { label: "Dashboard", href: "/" },
@@ -37,7 +39,7 @@ function Logo({ className }: { className?: string }) {
         alt="RE:Advisor Logo" 
         width={87}
         height={31}
-        className="object-contain"
+        className="object-contain dark:invert"
         priority
       />
     </div>
@@ -80,7 +82,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-10">
@@ -97,8 +99,8 @@ export function AppHeader() {
                 className={cn(
                   "text-sm font-medium transition-colors",
                   pathname === item.href
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.label}
@@ -108,16 +110,22 @@ export function AppHeader() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          {/* Search Command */}
+          <SearchCommand />
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Notifications Dropdown */}
           <NotificationsDropdown />
 
           {/* User Avatar with Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar className="h-9 w-9 cursor-pointer border border-gray-200">
+              <Avatar className="h-9 w-9 cursor-pointer border border-border">
                 <AvatarImage src={user?.user_metadata?.avatar_url || "/avatar.jpg"} alt={userName} />
-                <AvatarFallback className="bg-orange-100 text-orange-600 text-sm font-medium">{userInitials}</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">{userInitials}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -182,7 +190,7 @@ export function AppHeader() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t bg-white">
+        <div className="lg:hidden border-t border-border bg-background">
           <nav className="container py-4 flex flex-col gap-1">
             {navItems.map((item) => (
               <Link
@@ -192,7 +200,7 @@ export function AppHeader() {
                   "px-3 py-2 text-sm rounded-md",
                   pathname === item.href
                     ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-muted-foreground hover:bg-muted"
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >

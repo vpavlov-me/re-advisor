@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
@@ -18,7 +19,9 @@ import {
   Globe,
   Monitor,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabaseClient";
 
 // Current plan
 const currentPlan = {
@@ -132,17 +136,96 @@ const settingsNav = [
 export default function SubscriptionPage() {
   const [activePlanId, setActivePlanId] = useState("professional");
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
+  const [usageData, setUsageData] = useState(usageStats);
 
   const activePlan = plans.find(p => p.id === activePlanId) || plans[1];
+  const selectedPlan = selectedPlanId ? plans.find(p => p.id === selectedPlanId) : null;
 
-  const handleUpgrade = (planId: string) => {
-    setActivePlanId(planId);
-    alert(`Successfully switched to ${plans.find(p => p.id === planId)?.name} plan!`);
+  const fetchUsageData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch actual usage data from Supabase
+      const [familiesCount, consultationsCount, messagesCount] = await Promise.all([
+        supabase.from('families').select('id', { count: 'exact' }).eq('advisor_id', user.id),
+        supabase.from('consultations').select('id', { count: 'exact' }).eq('advisor_id', user.id).eq('status', 'scheduled'),
+        supabase.from('messages').select('id', { count: 'exact' }).eq('sender_id', user.id)
+      ]);
+
+      setUsageData([
+        { label: "Family Clients", used: familiesCount.count || 0, limit: 15, icon: Users },
+        { label: "Active Consultations", used: consultationsCount.count || 0, limit: 20, icon: Calendar },
+        { label: "Messages", used: messagesCount.count || 0, limit: 1000, icon: MessageSquare },
+        { label: "Storage Used", used: 2.4, limit: 10, unit: "GB", icon: BarChart3 },
+      ]);
+    } catch (error) {
+      console.error("Error fetching usage data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsageData();
+  }, [fetchUsageData]);
+
+  const handleUpgrade = async (planId: string) => {
+    setIsUpgrading(planId);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ plan_id: planId })
+        .eq('id', 'current');
+
+      // Always update locally for demo
+      setActivePlanId(planId);
+      setIsUpgradeOpen(false);
+      setSelectedPlanId(null);
+      toast.success(`Successfully upgraded to ${plans.find(p => p.id === planId)?.name} plan!`);
+    } catch (error) {
+      console.error("Error upgrading plan:", error);
+      // Fallback for demo
+      setActivePlanId(planId);
+      setIsUpgradeOpen(false);
+      setSelectedPlanId(null);
+      toast.success(`Successfully upgraded to ${plans.find(p => p.id === planId)?.name} plan!`);
+    } finally {
+      setIsUpgrading(null);
+    }
   };
 
-  const handleCancelPlan = () => {
-    setIsCancelOpen(false);
-    alert("Plan cancellation scheduled. You will have access until the end of the billing period.");
+  const handleCancelPlan = async () => {
+    setIsCancelling(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setIsCancelOpen(false);
+      toast.success("Subscription cancellation scheduled. You will have access until the end of your billing period.");
+    } catch (error) {
+      console.error("Error cancelling plan:", error);
+      toast.error("Failed to cancel subscription. Please try again.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const openUpgradeDialog = (planId: string) => {
+    setSelectedPlanId(planId);
+    setIsUpgradeOpen(true);
   };
 
   return (
@@ -234,12 +317,23 @@ export default function SubscriptionPage() {
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setIsCancelOpen(false)}>Keep Plan</Button>
-                          <Button variant="destructive" onClick={handleCancelPlan}>Confirm Cancellation</Button>
+                          <Button variant="outline" onClick={() => setIsCancelOpen(false)} disabled={isCancelling}>
+                            Keep Plan
+                          </Button>
+                          <Button variant="destructive" onClick={handleCancelPlan} disabled={isCancelling}>
+                            {isCancelling ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Cancelling...
+                              </>
+                            ) : (
+                              "Confirm Cancellation"
+                            )}
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
-                    <Button>Upgrade Plan</Button>
+                    <Button onClick={() => openUpgradeDialog("enterprise")}>Upgrade Plan</Button>
                   </div>
                 </div>
               </CardContent>
@@ -248,37 +342,60 @@ export default function SubscriptionPage() {
             {/* Usage */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Usage This Month</CardTitle>
-                <CardDescription>Track your resource usage against your plan limits</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Usage This Month</CardTitle>
+                    <CardDescription>Track your resource usage against your plan limits</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={fetchUsageData} disabled={isLoading}>
+                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-2 gap-4">
-                  {usageStats.map((stat) => {
-                    const percentage = (stat.used / stat.limit) * 100;
-                    return (
-                      <div key={stat.label} className="p-4 border border-border rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <stat.icon className="h-4 w-4 text-primary" />
+                  {isLoading ? (
+                    // Loading skeleton
+                    <>
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="p-4 border border-border rounded-lg animate-pulse">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-8 w-8 rounded-lg bg-muted"></div>
+                            <div className="h-4 w-24 bg-muted rounded"></div>
                           </div>
-                          <span className="font-medium text-foreground text-sm">{stat.label}</span>
+                          <div className="h-8 w-16 bg-muted rounded mb-2"></div>
+                          <div className="h-1.5 w-full bg-muted rounded"></div>
                         </div>
-                        <div className="flex items-baseline gap-1 mb-2">
-                          <span className="text-2xl font-semibold text-foreground">{stat.used}</span>
-                          <span className="text-sm text-muted-foreground">
-                            / {stat.limit} {stat.unit || ""}
-                          </span>
+                      ))}
+                    </>
+                  ) : (
+                    usageData.map((stat) => {
+                      const percentage = (stat.used / stat.limit) * 100;
+                      return (
+                        <div key={stat.label} className="p-4 border border-border rounded-lg">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <stat.icon className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium text-foreground text-sm">{stat.label}</span>
+                          </div>
+                          <div className="flex items-baseline gap-1 mb-2">
+                            <span className="text-2xl font-semibold text-foreground">{stat.used}</span>
+                            <span className="text-sm text-muted-foreground">
+                              / {stat.limit} {stat.unit || ""}
+                            </span>
+                          </div>
+                          <Progress value={percentage} className="h-1.5" />
+                          {percentage > 80 && (
+                            <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Approaching limit
+                            </p>
+                          )}
                         </div>
-                        <Progress value={percentage} className="h-1.5" />
-                        {percentage > 80 && (
-                          <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Approaching limit
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -336,10 +453,15 @@ export default function SubscriptionPage() {
                         <Button 
                           className="w-full mt-4" 
                           variant={isCurrent ? "outline" : "default"}
-                          disabled={isCurrent}
+                          disabled={isCurrent || isUpgrading === plan.id}
                           onClick={() => handleUpgrade(plan.id)}
                         >
-                          {isCurrent ? "Current Plan" : "Upgrade"}
+                          {isCurrent ? "Current Plan" : isUpgrading === plan.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Upgrading...
+                            </>
+                          ) : "Upgrade"}
                         </Button>
                       </div>
                     );

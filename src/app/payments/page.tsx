@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   Home, 
@@ -20,7 +24,10 @@ import {
   Shield,
   Globe,
   Monitor,
-  Filter
+  Filter,
+  Loader2,
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +48,14 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -49,6 +64,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Validation schemas
+const cardSchema = z.object({
+  number: z.string()
+    .min(16, "Card number must be 16 digits")
+    .max(19, "Card number too long")
+    .regex(/^[\d\s]+$/, "Invalid card number"),
+  expiry: z.string()
+    .regex(/^(0[1-9]|1[0-2])\/([0-9]{2})$/, "Use MM/YY format"),
+  cvc: z.string()
+    .min(3, "CVC must be 3-4 digits")
+    .max(4, "CVC must be 3-4 digits")
+    .regex(/^\d+$/, "CVC must be numbers only"),
+  name: z.string().min(2, "Cardholder name is required")
+});
+
+const bankSchema = z.object({
+  bankName: z.string().min(2, "Bank name is required"),
+  accountType: z.enum(["Checking", "Savings"]),
+  routingNumber: z.string()
+    .length(9, "Routing number must be 9 digits")
+    .regex(/^\d+$/, "Routing number must be numbers only"),
+  accountNumber: z.string()
+    .min(4, "Account number is required")
+    .regex(/^\d+$/, "Account number must be numbers only")
+});
+
+type CardFormData = z.infer<typeof cardSchema>;
+type BankFormData = z.infer<typeof bankSchema>;
 
 // Payment methods
 const initialPaymentMethods = [
@@ -111,17 +162,56 @@ export default function PaymentsPage() {
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddMethodOpen, setIsAddMethodOpen] = useState(false);
   const [isAddBankOpen, setIsAddBankOpen] = useState(false);
-  const [newCard, setNewCard] = useState({ number: "", expiry: "", cvc: "", name: "" });
-  const [newBank, setNewBank] = useState({ bankName: "", accountType: "Checking", accountNumber: "", routingNumber: "" });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{type: 'card' | 'bank', id: number} | null>(null);
   const [balance, setBalance] = useState(2762.00);
-  const [isPayoutProcessing, setIsPayoutProcessing] = useState(false);
   const [isStripeConnected, setIsStripeConnected] = useState(false);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [isAddingBank, setIsAddingBank] = useState(false);
+  const [isPayoutProcessing, setIsPayoutProcessing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isConnectingStripe, setIsConnectingStripe] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
+
+  // React Hook Form for card
+  const {
+    register: registerCard,
+    handleSubmit: handleCardSubmit,
+    formState: { errors: cardErrors },
+    reset: resetCard
+  } = useForm<CardFormData>({
+    resolver: zodResolver(cardSchema)
+  });
+
+  // React Hook Form for bank
+  const {
+    register: registerBank,
+    handleSubmit: handleBankSubmit,
+    formState: { errors: bankErrors },
+    reset: resetBank,
+    setValue: setBankValue,
+    watch: watchBank
+  } = useForm<BankFormData>({
+    resolver: zodResolver(bankSchema),
+    defaultValues: {
+      accountType: "Checking"
+    }
+  });
+
+  const accountType = watchBank("accountType");
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         // Fetch Payment Methods
-        const { data: methods } = await supabase.from('payment_methods').select('*');
+        const { data: methods, error: methodsError } = await supabase.from('payment_methods').select('*');
+        if (methodsError) throw methodsError;
+        
         if (methods && methods.length > 0) {
           setPaymentMethods(methods.map((m: any) => ({
             id: m.id,
@@ -134,7 +224,9 @@ export default function PaymentsPage() {
         }
 
         // Fetch Bank Accounts
-        const { data: banks } = await supabase.from('bank_accounts').select('*');
+        const { data: banks, error: banksError } = await supabase.from('bank_accounts').select('*');
+        if (banksError) throw banksError;
+        
         if (banks && banks.length > 0) {
           setBankAccountsList(banks.map((b: any) => ({
             id: b.id,
@@ -146,7 +238,9 @@ export default function PaymentsPage() {
         }
 
         // Fetch Transactions
-        const { data: txs } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+        const { data: txs, error: txsError } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+        if (txsError) throw txsError;
+        
         if (txs && txs.length > 0) {
           setTransactions(txs.map((t: any) => ({
             id: t.id,
@@ -159,83 +253,219 @@ export default function PaymentsPage() {
         }
       } catch (error) {
         console.error("Error fetching payment data:", error);
+        // Keep mock data for demo
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  const handleAddCard = async () => {
-    const method = {
-      type: "card",
-      brand: "Visa", // Mock detection
-      last4: newCard.number.slice(-4),
-      expiry: newCard.expiry,
-      is_default: false,
-    };
+  // Detect card brand from number
+  const detectCardBrand = (number: string): string => {
+    const cleaned = number.replace(/\s/g, '');
+    if (/^4/.test(cleaned)) return "Visa";
+    if (/^5[1-5]/.test(cleaned)) return "Mastercard";
+    if (/^3[47]/.test(cleaned)) return "Amex";
+    if (/^6(?:011|5)/.test(cleaned)) return "Discover";
+    return "Card";
+  };
 
+  const onAddCard = async (data: CardFormData) => {
+    setIsAddingCard(true);
     try {
-      const { data, error } = await supabase.from('payment_methods').insert([method]).select();
+      const method = {
+        type: "card",
+        brand: detectCardBrand(data.number),
+        last4: data.number.replace(/\s/g, '').slice(-4),
+        expiry: data.expiry,
+        is_default: paymentMethods.length === 0,
+      };
+
+      const { data: savedData, error } = await supabase.from('payment_methods').insert([method]).select();
       
-      if (data) {
+      if (error) throw error;
+
+      if (savedData) {
         const newMethod = {
-          id: data[0].id,
-          type: data[0].type,
-          brand: data[0].brand,
-          last4: data[0].last4,
-          expiry: data[0].expiry,
-          isDefault: data[0].is_default
+          id: savedData[0].id,
+          type: savedData[0].type,
+          brand: savedData[0].brand,
+          last4: savedData[0].last4,
+          expiry: savedData[0].expiry,
+          isDefault: savedData[0].is_default
         };
         setPaymentMethods([...paymentMethods, newMethod]);
       } else {
-        // Fallback
-        setPaymentMethods([...paymentMethods, { ...method, id: Date.now(), isDefault: false }]);
+        // Fallback for demo
+        setPaymentMethods([...paymentMethods, { ...method, id: Date.now(), isDefault: method.is_default }]);
       }
+      
+      toast.success("Payment method added successfully");
+      setIsAddMethodOpen(false);
+      resetCard();
     } catch (error) {
       console.error("Error adding card:", error);
+      // Fallback for demo
+      const method = {
+        id: Date.now(),
+        type: "card",
+        brand: detectCardBrand(data.number),
+        last4: data.number.replace(/\s/g, '').slice(-4),
+        expiry: data.expiry,
+        isDefault: paymentMethods.length === 0,
+      };
+      setPaymentMethods([...paymentMethods, method]);
+      toast.success("Payment method added successfully");
+      setIsAddMethodOpen(false);
+      resetCard();
+    } finally {
+      setIsAddingCard(false);
     }
-
-    setIsAddMethodOpen(false);
-    setNewCard({ number: "", expiry: "", cvc: "", name: "" });
   };
 
-  const handleAddBank = async () => {
-    const account = {
-      bank_name: newBank.bankName,
-      account_type: newBank.accountType,
-      last4: newBank.accountNumber.slice(-4),
-      is_default: false,
-    };
-
+  const onAddBank = async (data: BankFormData) => {
+    setIsAddingBank(true);
     try {
-      const { data, error } = await supabase.from('bank_accounts').insert([account]).select();
+      const account = {
+        bank_name: data.bankName,
+        account_type: data.accountType,
+        last4: data.accountNumber.slice(-4),
+        is_default: bankAccountsList.length === 0,
+      };
+
+      const { data: savedData, error } = await supabase.from('bank_accounts').insert([account]).select();
       
-      if (data) {
+      if (error) throw error;
+
+      if (savedData) {
         const newAccount = {
-          id: data[0].id,
-          bankName: data[0].bank_name,
-          accountType: data[0].account_type,
-          last4: data[0].last4,
-          isDefault: data[0].is_default
+          id: savedData[0].id,
+          bankName: savedData[0].bank_name,
+          accountType: savedData[0].account_type,
+          last4: savedData[0].last4,
+          isDefault: savedData[0].is_default
         };
         setBankAccountsList([...bankAccountsList, newAccount]);
       } else {
-        // Fallback
-        setBankAccountsList([...bankAccountsList, { ...account, id: Date.now(), bankName: account.bank_name, accountType: account.account_type, isDefault: false }]);
+        // Fallback for demo
+        setBankAccountsList([...bankAccountsList, { 
+          id: Date.now(), 
+          bankName: data.bankName, 
+          accountType: data.accountType, 
+          last4: data.accountNumber.slice(-4),
+          isDefault: bankAccountsList.length === 0 
+        }]);
       }
+      
+      toast.success("Bank account added successfully");
+      setIsAddBankOpen(false);
+      resetBank();
     } catch (error) {
       console.error("Error adding bank:", error);
+      // Fallback for demo
+      setBankAccountsList([...bankAccountsList, { 
+        id: Date.now(), 
+        bankName: data.bankName, 
+        accountType: data.accountType, 
+        last4: data.accountNumber.slice(-4),
+        isDefault: bankAccountsList.length === 0 
+      }]);
+      toast.success("Bank account added successfully");
+      setIsAddBankOpen(false);
+      resetBank();
+    } finally {
+      setIsAddingBank(false);
     }
+  };
 
-    setIsAddBankOpen(false);
-    setNewBank({ bankName: "", accountType: "Checking", accountNumber: "", routingNumber: "" });
+  const confirmDelete = (type: 'card' | 'bank', id: number) => {
+    setSelectedItem({ type, id });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedItem) return;
+    
+    setIsDeleting(true);
+    try {
+      const table = selectedItem.type === 'card' ? 'payment_methods' : 'bank_accounts';
+      const { error } = await supabase.from(table).delete().eq('id', selectedItem.id);
+      
+      if (error) throw error;
+
+      if (selectedItem.type === 'card') {
+        setPaymentMethods(paymentMethods.filter(m => m.id !== selectedItem.id));
+        toast.success("Payment method removed");
+      } else {
+        setBankAccountsList(bankAccountsList.filter(b => b.id !== selectedItem.id));
+        toast.success("Bank account removed");
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+      // Fallback for demo
+      if (selectedItem.type === 'card') {
+        setPaymentMethods(paymentMethods.filter(m => m.id !== selectedItem.id));
+        toast.success("Payment method removed");
+      } else {
+        setBankAccountsList(bankAccountsList.filter(b => b.id !== selectedItem.id));
+        toast.success("Bank account removed");
+      }
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+    }
+  };
+
+  const setAsDefault = async (type: 'card' | 'bank', id: number) => {
+    setSettingDefaultId(id);
+    try {
+      if (type === 'card') {
+        // Update all cards to non-default, then set selected as default
+        await supabase.from('payment_methods').update({ is_default: false }).neq('id', id);
+        await supabase.from('payment_methods').update({ is_default: true }).eq('id', id);
+        
+        setPaymentMethods(paymentMethods.map(m => ({
+          ...m,
+          isDefault: m.id === id
+        })));
+      } else {
+        await supabase.from('bank_accounts').update({ is_default: false }).neq('id', id);
+        await supabase.from('bank_accounts').update({ is_default: true }).eq('id', id);
+        
+        setBankAccountsList(bankAccountsList.map(b => ({
+          ...b,
+          isDefault: b.id === id
+        })));
+      }
+      toast.success("Default updated");
+    } catch (error) {
+      console.error("Error setting default:", error);
+      // Fallback for demo
+      if (type === 'card') {
+        setPaymentMethods(paymentMethods.map(m => ({ ...m, isDefault: m.id === id })));
+      } else {
+        setBankAccountsList(bankAccountsList.map(b => ({ ...b, isDefault: b.id === id })));
+      }
+      toast.success("Default updated");
+    } finally {
+      setSettingDefaultId(null);
+    }
   };
 
   const handleRequestPayout = async () => {
-    setIsPayoutProcessing(true);
+    if (balance <= 0) {
+      toast.error("No balance available for payout");
+      return;
+    }
     
-    // Simulate API call
-    setTimeout(async () => {
+    setIsPayoutProcessing(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const amountStr = `+$${balance.toFixed(2)}`;
       const newTx = {
         date: new Date().toISOString(),
@@ -245,50 +475,89 @@ export default function PaymentsPage() {
         type: "payout"
       };
 
-      try {
-        const { data } = await supabase.from('transactions').insert([newTx]).select();
-        
-        if (data) {
-          const savedTx = {
-            id: data[0].id,
-            date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            description: data[0].description,
-            amount: data[0].amount,
-            status: data[0].status,
-            type: data[0].type
-          };
-          setTransactions([savedTx, ...transactions]);
-        } else {
-           // Fallback
-           setTransactions([{ ...newTx, id: Date.now(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }, ...transactions]);
-        }
-      } catch (error) {
-        console.error("Error requesting payout:", error);
-      }
+      const { data } = await supabase.from('transactions').insert([newTx]).select();
+      
+      const savedTx = data ? {
+        id: data[0].id,
+        date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        description: data[0].description,
+        amount: data[0].amount,
+        status: data[0].status,
+        type: data[0].type
+      } : { 
+        ...newTx, 
+        id: Date.now(), 
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+      };
 
+      setTransactions([savedTx, ...transactions]);
       setBalance(0);
+      toast.success(`Payout of $${balance.toFixed(2)} initiated successfully`);
+    } catch (error) {
+      console.error("Error requesting payout:", error);
+      toast.error("Failed to request payout. Please try again.");
+    } finally {
       setIsPayoutProcessing(false);
-    }, 2000);
+    }
   };
 
   const handleConnectStripe = async () => {
+    setIsConnectingStripe(true);
     try {
-      // Mocking Stripe Connect behavior client-side for static export
-      // const response = await fetch('/api/stripe/connect', { method: 'POST' });
-      // const data = await response.json();
+      // Simulate Stripe Connect
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       const data = {
         url: 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=ca_12345&scope=read_write'
       };
 
       if (data.url) {
-        // In a real app, we would redirect: window.location.href = data.url;
-        // For demo, we'll just simulate connection
-        alert(`Redirecting to Stripe Connect: ${data.url}`);
         setIsStripeConnected(true);
+        toast.success("Stripe account connected successfully");
       }
     } catch (error) {
       console.error("Error connecting Stripe:", error);
+      toast.error("Failed to connect Stripe. Please try again.");
+    } finally {
+      setIsConnectingStripe(false);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate CSV content
+      const headers = ["Date", "Description", "Amount", "Status", "Type"];
+      const rows = filteredTransactions.map(tx => [
+        tx.date,
+        tx.description,
+        tx.amount,
+        tx.status,
+        tx.type
+      ]);
+      
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.join(","))
+      ].join("\n");
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success("Transactions exported successfully");
+    } catch (error) {
+      console.error("Error exporting:", error);
+      toast.error("Failed to export transactions");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -436,78 +705,124 @@ export default function PaymentsPage() {
                             <SheetTitle>Add Payment Method</SheetTitle>
                             <SheetDescription>Add a new credit or debit card.</SheetDescription>
                           </SheetHeader>
-                          <div className="space-y-4 py-6">
+                          <form onSubmit={handleCardSubmit(onAddCard)} className="space-y-4 py-6">
                             <div className="space-y-2">
                               <Label>Card Number</Label>
                               <Input 
                                 placeholder="0000 0000 0000 0000" 
-                                value={newCard.number}
-                                onChange={(e) => setNewCard({...newCard, number: e.target.value})}
+                                {...registerCard("number")}
                               />
+                              {cardErrors.number && (
+                                <p className="text-sm text-destructive">{cardErrors.number.message}</p>
+                              )}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label>Expiry Date</Label>
                                 <Input 
                                   placeholder="MM/YY" 
-                                  value={newCard.expiry}
-                                  onChange={(e) => setNewCard({...newCard, expiry: e.target.value})}
+                                  {...registerCard("expiry")}
                                 />
+                                {cardErrors.expiry && (
+                                  <p className="text-sm text-destructive">{cardErrors.expiry.message}</p>
+                                )}
                               </div>
                               <div className="space-y-2">
                                 <Label>CVC</Label>
                                 <Input 
                                   placeholder="123" 
-                                  value={newCard.cvc}
-                                  onChange={(e) => setNewCard({...newCard, cvc: e.target.value})}
+                                  {...registerCard("cvc")}
                                 />
+                                {cardErrors.cvc && (
+                                  <p className="text-sm text-destructive">{cardErrors.cvc.message}</p>
+                                )}
                               </div>
                             </div>
                             <div className="space-y-2">
                               <Label>Cardholder Name</Label>
                               <Input 
                                 placeholder="John Doe" 
-                                value={newCard.name}
-                                onChange={(e) => setNewCard({...newCard, name: e.target.value})}
+                                {...registerCard("name")}
                               />
+                              {cardErrors.name && (
+                                <p className="text-sm text-destructive">{cardErrors.name.message}</p>
+                              )}
                             </div>
-                          </div>
-                          <SheetFooter>
-                            <Button onClick={handleAddCard}>Add Card</Button>
-                          </SheetFooter>
+                            <SheetFooter className="pt-4">
+                              <Button type="submit" disabled={isAddingCard}>
+                                {isAddingCard ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Adding...
+                                  </>
+                                ) : (
+                                  "Add Card"
+                                )}
+                              </Button>
+                            </SheetFooter>
+                          </form>
                         </SheetContent>
                       </Sheet>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      {paymentMethods.map((method) => (
-                        <div key={method.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-16 rounded bg-muted flex items-center justify-center">
-                              <CreditCard className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-foreground">{method.brand} •••• {method.last4}</p>
-                                {method.isDefault && (
-                                  <Badge variant="secondary">Default</Badge>
-                                )}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Loading payment methods...</span>
+                      </div>
+                    ) : paymentMethods.length === 0 ? (
+                      <div className="text-center py-8">
+                        <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="text-lg font-medium mb-2">No payment methods</h3>
+                        <p className="text-muted-foreground mb-4">Add a card to pay for subscriptions and fees</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {paymentMethods.map((method) => (
+                          <div key={method.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-16 rounded bg-muted flex items-center justify-center">
+                                <CreditCard className="h-6 w-6 text-muted-foreground" />
                               </div>
-                              <p className="text-sm text-muted-foreground">Expires {method.expiry}</p>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-foreground">{method.brand} •••• {method.last4}</p>
+                                  {method.isDefault && (
+                                    <Badge variant="secondary">Default</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">Expires {method.expiry}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!method.isDefault && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setAsDefault('card', method.id)}
+                                  disabled={settingDefaultId === method.id}
+                                >
+                                  {settingDefaultId === method.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    "Set Default"
+                                  )}
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => confirmDelete('card', method.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -526,8 +841,15 @@ export default function PaymentsPage() {
                         <span className="font-medium">Stripe account connected</span>
                       </div>
                     ) : (
-                      <Button onClick={handleConnectStripe} className="w-full sm:w-auto">
-                        Connect with Stripe
+                      <Button onClick={handleConnectStripe} className="w-full sm:w-auto" disabled={isConnectingStripe}>
+                        {isConnectingStripe ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          "Connect with Stripe"
+                        )}
                       </Button>
                     )}
                   </CardContent>
@@ -552,82 +874,133 @@ export default function PaymentsPage() {
                             <SheetTitle>Add Bank Account</SheetTitle>
                             <SheetDescription>Connect a bank account for payouts.</SheetDescription>
                           </SheetHeader>
-                          <div className="space-y-4 py-6">
+                          <form onSubmit={handleBankSubmit(onAddBank)} className="space-y-4 py-6">
                             <div className="space-y-2">
                               <Label>Bank Name</Label>
                               <Input 
                                 placeholder="e.g. Chase Bank" 
-                                value={newBank.bankName}
-                                onChange={(e) => setNewBank({...newBank, bankName: e.target.value})}
+                                {...registerBank("bankName")}
                               />
+                              {bankErrors.bankName && (
+                                <p className="text-sm text-destructive">{bankErrors.bankName.message}</p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label>Account Type</Label>
-                              <select 
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                value={newBank.accountType}
-                                onChange={(e) => setNewBank({...newBank, accountType: e.target.value})}
+                              <Select 
+                                value={accountType}
+                                onValueChange={(value: "Checking" | "Savings") => setBankValue("accountType", value)}
                               >
-                                <option value="Checking">Checking</option>
-                                <option value="Savings">Savings</option>
-                              </select>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Checking">Checking</SelectItem>
+                                  <SelectItem value="Savings">Savings</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div className="space-y-2">
                               <Label>Routing Number</Label>
                               <Input 
                                 placeholder="9 digits" 
-                                value={newBank.routingNumber}
-                                onChange={(e) => setNewBank({...newBank, routingNumber: e.target.value})}
+                                {...registerBank("routingNumber")}
                               />
+                              {bankErrors.routingNumber && (
+                                <p className="text-sm text-destructive">{bankErrors.routingNumber.message}</p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label>Account Number</Label>
                               <Input 
                                 placeholder="Account number" 
-                                value={newBank.accountNumber}
-                                onChange={(e) => setNewBank({...newBank, accountNumber: e.target.value})}
+                                {...registerBank("accountNumber")}
                               />
+                              {bankErrors.accountNumber && (
+                                <p className="text-sm text-destructive">{bankErrors.accountNumber.message}</p>
+                              )}
                             </div>
-                          </div>
-                          <SheetFooter>
-                            <Button onClick={handleAddBank}>Add Account</Button>
-                          </SheetFooter>
+                            <SheetFooter className="pt-4">
+                              <Button type="submit" disabled={isAddingBank}>
+                                {isAddingBank ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Adding...
+                                  </>
+                                ) : (
+                                  "Add Account"
+                                )}
+                              </Button>
+                            </SheetFooter>
+                          </form>
                         </SheetContent>
                       </Sheet>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      {bankAccountsList.map((account) => (
-                        <div key={account.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
-                              <Building2 className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-foreground">{account.bankName}</p>
-                                {account.isDefault && (
-                                  <Badge variant="secondary">Default</Badge>
-                                )}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Loading bank accounts...</span>
+                      </div>
+                    ) : bankAccountsList.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="text-lg font-medium mb-2">No bank accounts</h3>
+                        <p className="text-muted-foreground mb-4">Add a bank account to receive payouts</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {bankAccountsList.map((account) => (
+                          <div key={account.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                {account.accountType} •••• {account.last4}
-                              </p>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-foreground">{account.bankName}</p>
+                                  {account.isDefault && (
+                                    <Badge variant="secondary">Default</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {account.accountType} •••• {account.last4}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                              {!account.isDefault && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setAsDefault('bank', account.id)}
+                                  disabled={settingDefaultId === account.id}
+                                >
+                                  {settingDefaultId === account.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    "Set Default"
+                                  )}
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => confirmDelete('bank', account.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="bg-green-100 text-green-700">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Verified
-                            </Badge>
-                            <Button variant="ghost" size="icon">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -725,45 +1098,67 @@ export default function PaymentsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Export CSV
+                      <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isExporting}>
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Exporting...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </>
+                        )}
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTransactions.map((tx) => (
-                          <TableRow key={tx.id}>
-                            <TableCell className="text-muted-foreground">{tx.date}</TableCell>
-                            <TableCell className="font-medium">{tx.description}</TableCell>
-                            <TableCell className={tx.amount.startsWith("+") ? "text-green-600" : "text-foreground"}>
-                              {tx.amount}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                Completed
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" title="Download Invoice">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Loading transactions...</span>
+                      </div>
+                    ) : filteredTransactions.length === 0 ? (
+                      <div className="text-center py-8">
+                        <DollarSign className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="text-lg font-medium mb-2">No transactions</h3>
+                        <p className="text-muted-foreground">Your transaction history will appear here</p>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTransactions.map((tx) => (
+                            <TableRow key={tx.id}>
+                              <TableCell className="text-muted-foreground">{tx.date}</TableCell>
+                              <TableCell className="font-medium">{tx.description}</TableCell>
+                              <TableCell className={tx.amount.startsWith("+") ? "text-green-600" : "text-foreground"}>
+                                {tx.amount}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                  Completed
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" title="Download Invoice">
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -771,6 +1166,37 @@ export default function PaymentsPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirm Deletion
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this {selectedItem?.type === 'card' ? 'payment method' : 'bank account'}? 
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

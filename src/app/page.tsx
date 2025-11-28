@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { 
   Home, 
@@ -30,7 +30,10 @@ import {
   ArrowRight,
   CalendarClock,
   XCircle,
-  Eye
+  Eye,
+  TrendingUp,
+  TrendingDown,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from 'recharts';
 
 type ProfileStep = {
   id: number;
@@ -78,6 +92,27 @@ const initialStats = [
   { label: "Services", value: "0", icon: Briefcase, href: "/services" },
   { label: "Active consultations", value: "0", icon: MessageSquare, href: "/consultations" },
   { label: "Monthly revenue", value: "$0.00", icon: DollarSign, href: "/payments" },
+];
+
+// Revenue chart data (last 6 months)
+const revenueChartData = [
+  { month: 'Jun', revenue: 2400, consultations: 12 },
+  { month: 'Jul', revenue: 3200, consultations: 16 },
+  { month: 'Aug', revenue: 2800, consultations: 14 },
+  { month: 'Sep', revenue: 4100, consultations: 19 },
+  { month: 'Oct', revenue: 3600, consultations: 17 },
+  { month: 'Nov', revenue: 4800, consultations: 22 },
+];
+
+// Consultation activity data (last 7 days)
+const activityChartData = [
+  { day: 'Mon', scheduled: 3, completed: 2 },
+  { day: 'Tue', scheduled: 5, completed: 4 },
+  { day: 'Wed', scheduled: 2, completed: 2 },
+  { day: 'Thu', scheduled: 4, completed: 3 },
+  { day: 'Fri', scheduled: 6, completed: 5 },
+  { day: 'Sat', scheduled: 1, completed: 1 },
+  { day: 'Sun', scheduled: 0, completed: 0 },
 ];
 
 // Onboarding Step Card
@@ -386,6 +421,121 @@ export default function HomePage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Analytics Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Revenue Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Revenue Overview</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Last 6 months</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-green-600">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="text-sm font-medium">+18%</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueChartData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      tickFormatter={(value) => `$${value/1000}k`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#colorRevenue)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Consultation Activity Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Weekly Activity</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Scheduled vs Completed</p>
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <span className="text-muted-foreground">Scheduled</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="text-muted-foreground">Completed</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activityChartData} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis 
+                      dataKey="day" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar dataKey="scheduled" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Grid */}

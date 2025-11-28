@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
@@ -62,6 +65,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AvailabilitySettings } from "./AvailabilitySettings";
 import { Label } from "@/components/ui/label";
+
+// Zod Validation Schemas
+const scheduleSchema = z.object({
+  family: z.string().min(1, "Please select a family"),
+  type: z.enum(["Video Call", "In-Person", "Phone Call"]),
+  date: z.string().min(1, "Date is required").refine((val) => {
+    const selectedDate = new Date(val);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  }, "Cannot schedule in the past"),
+  time: z.string().min(1, "Time is required"),
+  topic: z.string().min(3, "Topic must be at least 3 characters").max(100, "Topic is too long"),
+  duration: z.string().optional()
+});
+
+type ScheduleFormData = z.infer<typeof scheduleSchema>;
 
 // Define Consultation Type
 type Consultation = {
@@ -294,11 +314,13 @@ function getPaymentBadge(status: "paid" | "awaiting" | "overdue") {
 function ConsultationCard({ 
   consultation, 
   onViewDetails,
-  onCancel
+  onCancel,
+  onDelete
 }: { 
   consultation: typeof allConsultations[0];
   onViewDetails: () => void;
   onCancel: (id: number) => void;
+  onDelete: (id: number) => void;
 }) {
   return (
     <div 
@@ -368,7 +390,7 @@ function ConsultationCard({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                    className="gap-2 cursor-pointer text-orange-600 focus:text-orange-600"
                     onClick={() => onCancel(consultation.id)}
                   >
                     <XCircle className="h-4 w-4" />
@@ -376,6 +398,14 @@ function ConsultationCard({
                   </DropdownMenuItem>
                 </>
               )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                onClick={() => onDelete(consultation.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onViewDetails}>
@@ -394,9 +424,30 @@ export default function ConsultationsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  useEffect(() => {
-    const fetchData = async () => {
+  // React Hook Form for Schedule
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue
+  } = useForm<ScheduleFormData>({
+    resolver: zodResolver(scheduleSchema),
+    defaultValues: {
+      type: "Video Call",
+      duration: "1 hour"
+    }
+  });
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
       try {
         // Fetch Families for the dropdown
         const { data: familiesData } = await supabase
@@ -452,20 +503,14 @@ export default function ConsultationsPage() {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    fetchData();
   }, []);
-  
-  // Schedule Form State
-  const [scheduleForm, setScheduleForm] = useState({
-    family: "",
-    type: "Video Call",
-    date: "",
-    time: "",
-    topic: ""
-  });
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -509,90 +554,126 @@ export default function ConsultationsPage() {
     }
   };
 
-  const handleSchedule = async () => {
-    if (!scheduleForm.family || !scheduleForm.date || !scheduleForm.time || !scheduleForm.topic) {
-      return; // Basic validation
-    }
-
-    const selectedFamily = families.find(f => f.id.toString() === scheduleForm.family);
+  const handleSchedule = async (data: ScheduleFormData) => {
+    setIsSubmitting(true);
+    
+    const selectedFamily = families.find(f => f.id.toString() === data.family);
     const familyName = selectedFamily ? selectedFamily.name : "Unknown Family";
 
     const newConsultationObj = {
-      title: scheduleForm.topic,
-      family_id: parseInt(scheduleForm.family),
-      type: scheduleForm.type,
-      date: scheduleForm.date,
-      time: scheduleForm.time,
-      duration: "1 hour",
+      title: data.topic,
+      family_id: parseInt(data.family),
+      type: data.type,
+      date: data.date,
+      time: data.time,
+      duration: data.duration || "1 hour",
       status: "scheduled",
       payment_status: "awaiting",
       price: "$500",
-      meeting_link: scheduleForm.type === "Video Call" ? "https://zoom.us/j/..." : null,
-      location: scheduleForm.type === "In-Person" ? "TBD" : null,
+      meeting_link: data.type === "Video Call" ? "https://zoom.us/j/..." : null,
+      location: data.type === "In-Person" ? "TBD" : null,
       agenda: [],
       notes: "",
       documents: []
     };
 
     try {
-      const { data, error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('consultations')
         .insert([newConsultationObj])
         .select();
 
-      if (data) {
+      if (insertedData) {
         const newConsultation: Consultation = {
-          id: data[0].id,
-          title: data[0].title,
+          id: insertedData[0].id,
+          title: insertedData[0].title,
           family: familyName,
-          type: data[0].type,
-          date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          time: data[0].time,
-          duration: data[0].duration,
-          status: data[0].status,
-          paymentStatus: data[0].payment_status,
-          price: data[0].price,
+          type: insertedData[0].type,
+          date: new Date(insertedData[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          time: insertedData[0].time,
+          duration: insertedData[0].duration,
+          status: insertedData[0].status,
+          paymentStatus: insertedData[0].payment_status,
+          price: insertedData[0].price,
           members: [],
           moreMembers: 0,
-          meetingLink: data[0].meeting_link,
-          location: data[0].location,
-          agenda: data[0].agenda || [],
-          notes: data[0].notes || "",
-          documents: data[0].documents || []
+          meetingLink: insertedData[0].meeting_link,
+          location: insertedData[0].location,
+          agenda: insertedData[0].agenda || [],
+          notes: insertedData[0].notes || "",
+          documents: insertedData[0].documents || []
         };
         setConsultations([newConsultation, ...consultations]);
+        toast.success('Consultation scheduled successfully');
       } else {
-        // Fallback
-        const newId = Math.max(...consultations.map(c => c.id)) + 1;
+        // Fallback for demo
+        const newId = Math.max(...consultations.map(c => c.id), 0) + 1;
         const fallbackConsultation: Consultation = {
-          ...newConsultationObj,
           id: newId,
+          title: data.topic,
           family: familyName,
-          date: new Date(scheduleForm.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          type: data.type,
+          date: new Date(data.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          time: data.time,
+          duration: data.duration || "1 hour",
+          status: "scheduled",
           paymentStatus: "awaiting",
+          price: "$500",
           members: [],
           moreMembers: 0,
-          meetingLink: newConsultationObj.meeting_link || undefined,
-          location: newConsultationObj.location || undefined,
-        } as Consultation;
+          meetingLink: data.type === "Video Call" ? "https://zoom.us/j/..." : undefined,
+          location: data.type === "In-Person" ? "TBD" : undefined,
+          agenda: [],
+          notes: "",
+          documents: []
+        };
         setConsultations([fallbackConsultation, ...consultations]);
+        toast.success('Consultation scheduled successfully');
       }
-      toast.success('Consultation scheduled successfully');
     } catch (error) {
       console.error("Error creating consultation:", error);
       toast.error('Failed to schedule consultation');
+    } finally {
+      setIsSubmitting(false);
+      setIsScheduleOpen(false);
+      reset();
+      setActiveTab("all");
     }
+  };
 
-    setIsScheduleOpen(false);
-    setScheduleForm({
-      family: "",
-      type: "Video Call",
-      date: "",
-      time: "",
-      topic: ""
-    });
-    // Switch to upcoming or all to see it
-    setActiveTab("all");
+  const handleDeleteConsultation = async () => {
+    if (!deletingId) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('consultations')
+        .delete()
+        .eq('id', deletingId);
+
+      if (error) throw error;
+
+      setConsultations(prev => prev.filter(c => c.id !== deletingId));
+      toast.success('Consultation deleted successfully');
+    } catch (error) {
+      console.error("Error deleting consultation:", error);
+      // Fallback for demo
+      setConsultations(prev => prev.filter(c => c.id !== deletingId));
+      toast.success('Consultation deleted successfully');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setDeletingId(null);
+      if (selectedConsultation?.id === deletingId) {
+        setIsSheetOpen(false);
+        setSelectedConsultation(null);
+      }
+    }
+  };
+
+  const confirmDeleteConsultation = (id: number) => {
+    setDeletingId(id);
+    setIsDeleteDialogOpen(true);
   };
 
   const openConsultationDetail = (consultation: typeof allConsultations[0]) => {
@@ -768,13 +849,32 @@ export default function ConsultationsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
-                  {paginatedConsultations.length > 0 ? (
+                  {isLoading ? (
+                    // Loading skeleton
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="bg-muted/50 rounded-xl p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="h-12 w-12 rounded-xl bg-muted"></div>
+                              <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-muted rounded w-1/3"></div>
+                                <div className="h-3 bg-muted rounded w-1/4"></div>
+                              </div>
+                              <div className="h-6 w-20 bg-muted rounded"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : paginatedConsultations.length > 0 ? (
                     paginatedConsultations.map((consultation) => (
                       <ConsultationCard 
                         key={consultation.id}
                         consultation={consultation}
                         onViewDetails={() => openConsultationDetail(consultation)}
                         onCancel={handleCancelConsultation}
+                        onDelete={confirmDeleteConsultation}
                       />
                     ))
                   ) : (
@@ -1128,7 +1228,10 @@ export default function ConsultationsPage() {
       </Sheet>
 
       {/* Schedule Consultation Dialog */}
-      <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+      <Dialog open={isScheduleOpen} onOpenChange={(open) => {
+        setIsScheduleOpen(open);
+        if (!open) reset();
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Schedule Consultation</DialogTitle>
@@ -1136,68 +1239,103 @@ export default function ConsultationsPage() {
               Book a new session with a family client.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="family">Family Client</Label>
-              <select 
-                id="family"
-                className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={scheduleForm.family}
-                onChange={(e) => setScheduleForm({...scheduleForm, family: e.target.value})}
-              >
-                <option value="">Select family...</option>
-                {families.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="type">Consultation Type</Label>
-              <select 
-                id="type"
-                className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={scheduleForm.type}
-                onChange={(e) => setScheduleForm({...scheduleForm, type: e.target.value})}
-              >
-                <option value="Video Call">Video Call</option>
-                <option value="In-Person">In-Person Meeting</option>
-                <option value="Phone Call">Phone Call</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(handleSchedule)}>
+            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
-                <Input 
-                  id="date" 
-                  type="date" 
-                  value={scheduleForm.date}
-                  onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
-                />
+                <Label htmlFor="family">Family Client</Label>
+                <select 
+                  id="family"
+                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...register("family")}
+                >
+                  <option value="">Select family...</option>
+                  {families.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+                {errors.family && (
+                  <p className="text-sm text-red-500">{errors.family.message}</p>
+                )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="type">Consultation Type</Label>
+                <select 
+                  id="type"
+                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...register("type")}
+                >
+                  <option value="Video Call">Video Call</option>
+                  <option value="In-Person">In-Person Meeting</option>
+                  <option value="Phone Call">Phone Call</option>
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="duration">Duration</Label>
+                <select 
+                  id="duration"
+                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...register("duration")}
+                >
+                  <option value="30 minutes">30 minutes</option>
+                  <option value="1 hour">1 hour</option>
+                  <option value="90 minutes">90 minutes</option>
+                  <option value="2 hours">2 hours</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input 
+                    id="date" 
+                    type="date" 
+                    min={new Date().toISOString().split('T')[0]}
+                    {...register("date")}
+                  />
+                  {errors.date && (
+                    <p className="text-sm text-red-500">{errors.date.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="time">Time</Label>
+                  <Input 
+                    id="time" 
+                    type="time" 
+                    {...register("time")}
+                  />
+                  {errors.time && (
+                    <p className="text-sm text-red-500">{errors.time.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="topic">Topic / Title</Label>
                 <Input 
-                  id="time" 
-                  type="time" 
-                  value={scheduleForm.time}
-                  onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})}
+                  id="topic" 
+                  placeholder="e.g. Quarterly Review" 
+                  {...register("topic")}
                 />
+                {errors.topic && (
+                  <p className="text-sm text-red-500">{errors.topic.message}</p>
+                )}
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="topic">Topic / Title</Label>
-              <Input 
-                id="topic" 
-                placeholder="e.g. Quarterly Review" 
-                value={scheduleForm.topic}
-                onChange={(e) => setScheduleForm({...scheduleForm, topic: e.target.value})}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsScheduleOpen(false)}>Cancel</Button>
-            <Button onClick={handleSchedule}>Schedule</Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setIsScheduleOpen(false);
+                reset();
+              }}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  "Schedule"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -1211,6 +1349,43 @@ export default function ConsultationsPage() {
             </DialogDescription>
           </DialogHeader>
           <AvailabilitySettings />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Consultation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this consultation? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setDeletingId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConsultation}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Consultation"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

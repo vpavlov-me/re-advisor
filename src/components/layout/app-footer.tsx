@@ -11,7 +11,7 @@ function Logo({ className }: { className?: string }) {
         alt="RE:Advisor Logo" 
         width={87}
         height={31}
-        className="object-contain"
+        className="object-contain dark:invert"
       />
     </div>
   );
@@ -19,13 +19,13 @@ function Logo({ className }: { className?: string }) {
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-gray-200 bg-white mt-auto">
+    <footer className="border-t border-border bg-background mt-auto">
       <div className="container py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <div className="space-y-3">
             <Logo />
-            <p className="text-sm text-gray-500 leading-relaxed max-w-[280px]">
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
               A platform for trusted professionals to support
               family governance processes while maintaining
               strict confidentiality.
@@ -34,25 +34,25 @@ export function AppFooter() {
 
           {/* Navigation */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-4">Navigation</h4>
+            <h4 className="font-medium text-foreground mb-4">Navigation</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/families" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/families" className="text-sm text-muted-foreground hover:text-foreground">
                   Families
                 </Link>
               </li>
               <li>
-                <Link href="/knowledge" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/knowledge" className="text-sm text-muted-foreground hover:text-foreground">
                   Knowledge Center
                 </Link>
               </li>
               <li>
-                <Link href="/consultations" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/consultations" className="text-sm text-muted-foreground hover:text-foreground">
                   Consultations
                 </Link>
               </li>
@@ -61,30 +61,30 @@ export function AppFooter() {
 
           {/* Account */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-4">Account</h4>
+            <h4 className="font-medium text-foreground mb-4">Account</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="/profile" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground">
                   Profile
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/services" className="text-sm text-muted-foreground hover:text-foreground">
                   Services
                 </Link>
               </li>
               <li>
-                <Link href="/payments" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/payments" className="text-sm text-muted-foreground hover:text-foreground">
                   Payments
                 </Link>
               </li>
               <li>
-                <Link href="/subscription" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/subscription" className="text-sm text-muted-foreground hover:text-foreground">
                   Subscription
                 </Link>
               </li>
               <li>
-                <Link href="/settings" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground">
                   Settings
                 </Link>
               </li>
@@ -93,8 +93,8 @@ export function AppFooter() {
 
           {/* Support */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-4">Support</h4>
-            <p className="text-sm text-gray-500 mb-2">
+            <h4 className="font-medium text-foreground mb-4">Support</h4>
+            <p className="text-sm text-muted-foreground mb-2">
               Need assistance? Contact our<br />support team:
             </p>
             <ul className="space-y-1.5">
@@ -114,25 +114,25 @@ export function AppFooter() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-border">
         <div className="container py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground/70">
             © 2025 Reluna Family. All rights reserved.  v0.1.3 Beta
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-900">
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
               Privacy Policy
             </Link>
-            <span className="text-gray-300">·</span>
-            <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-900">
+            <span className="text-border">·</span>
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
               Terms of Service
             </Link>
-            <span className="text-gray-300">·</span>
-            <Link href="/sitemap" className="text-sm text-gray-500 hover:text-gray-900">
+            <span className="text-border">·</span>
+            <Link href="/sitemap" className="text-sm text-muted-foreground hover:text-foreground">
               Sitemap
             </Link>
-            <span className="text-gray-300">·</span>
-            <button className="text-gray-400 hover:text-gray-600">
+            <span className="text-border">·</span>
+            <button className="text-muted-foreground/70 hover:text-foreground">
               <Settings className="h-4 w-4" />
             </button>
           </div>
