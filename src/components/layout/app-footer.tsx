@@ -1,13 +1,17 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Settings } from "lucide-react";
 
 // Logo component
 function Logo({ className }: { className?: string }) {
   return (
-    <div className={className}>
-      <span className="text-base font-medium text-gray-900">(</span>
-      <span className="text-base font-bold text-primary">RE:</span>
-      <span className="text-base font-medium text-gray-900">Advisor</span>
+    <div className={`relative h-8 w-32 ${className || ''}`}>
+      <Image 
+        src="/logo.svg" 
+        alt="RE:Advisor Logo" 
+        fill
+        className="object-contain object-left"
+      />
     </div>
   );
 }

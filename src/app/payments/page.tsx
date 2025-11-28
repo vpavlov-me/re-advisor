@@ -121,7 +121,7 @@ export default function PaymentsPage() {
     const fetchData = async () => {
       try {
         // Fetch Payment Methods
-        const { data: methods } = await supabase.from('PaymentMethod').select('*');
+        const { data: methods } = await supabase.from('payment_methods').select('*');
         if (methods && methods.length > 0) {
           setPaymentMethods(methods.map((m: any) => ({
             id: m.id,
@@ -134,7 +134,7 @@ export default function PaymentsPage() {
         }
 
         // Fetch Bank Accounts
-        const { data: banks } = await supabase.from('BankAccount').select('*');
+        const { data: banks } = await supabase.from('bank_accounts').select('*');
         if (banks && banks.length > 0) {
           setBankAccountsList(banks.map((b: any) => ({
             id: b.id,
@@ -146,7 +146,7 @@ export default function PaymentsPage() {
         }
 
         // Fetch Transactions
-        const { data: txs } = await supabase.from('Transaction').select('*').order('date', { ascending: false });
+        const { data: txs } = await supabase.from('transactions').select('*').order('date', { ascending: false });
         if (txs && txs.length > 0) {
           setTransactions(txs.map((t: any) => ({
             id: t.id,
@@ -175,7 +175,7 @@ export default function PaymentsPage() {
     };
 
     try {
-      const { data, error } = await supabase.from('PaymentMethod').insert([method]).select();
+      const { data, error } = await supabase.from('payment_methods').insert([method]).select();
       
       if (data) {
         const newMethod = {
@@ -208,7 +208,7 @@ export default function PaymentsPage() {
     };
 
     try {
-      const { data, error } = await supabase.from('BankAccount').insert([account]).select();
+      const { data, error } = await supabase.from('bank_accounts').insert([account]).select();
       
       if (data) {
         const newAccount = {
@@ -246,7 +246,7 @@ export default function PaymentsPage() {
       };
 
       try {
-        const { data } = await supabase.from('Transaction').insert([newTx]).select();
+        const { data } = await supabase.from('transactions').insert([newTx]).select();
         
         if (data) {
           const savedTx = {

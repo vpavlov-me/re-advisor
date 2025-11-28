@@ -130,7 +130,7 @@ export default function ServicesPage() {
   const fetchServices = async () => {
     try {
       const { data, error } = await supabase
-        .from('Service')
+        .from('services')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -231,14 +231,14 @@ export default function ServicesPage() {
       
       if (editingService) {
         result = await supabase
-          .from('Service')
+          .from('services')
           .update(serviceData)
           .eq('id', editingService.id)
           .select()
           .single();
       } else {
         result = await supabase
-          .from('Service')
+          .from('services')
           .insert([serviceData])
           .select()
           .single();

@@ -220,11 +220,11 @@ export default function MessagesPage() {
       try {
         // Fetch Families
         const { data: familiesData } = await supabase
-          .from('Family')
+          .from('families')
           .select(`
             id, 
             name,
-            members:FamilyMember(id, name, role)
+            members:family_members(id, name, role)
           `);
         
         if (familiesData) {
@@ -244,10 +244,10 @@ export default function MessagesPage() {
 
         // Fetch Conversations
         const { data: conversationsData } = await supabase
-          .from('Conversation')
+          .from('conversations')
           .select(`
             *,
-            family:Family(name)
+            family:families(name)
           `)
           .order('last_message_time', { ascending: false });
 
@@ -284,7 +284,7 @@ export default function MessagesPage() {
   const fetchMessages = async (conversationId: number) => {
     try {
       const { data: messagesData } = await supabase
-        .from('Message')
+        .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -333,7 +333,7 @@ export default function MessagesPage() {
 
     try {
       const { error } = await supabase
-        .from('Message')
+        .from('messages')
         .insert([{
           conversation_id: selectedConversation.id,
           content: newMsg.content,

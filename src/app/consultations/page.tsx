@@ -398,7 +398,7 @@ export default function ConsultationsPage() {
       try {
         // Fetch Families for the dropdown
         const { data: familiesData } = await supabase
-          .from('Family')
+          .from('families')
           .select('id, name');
         
         if (familiesData) {
@@ -407,12 +407,12 @@ export default function ConsultationsPage() {
 
         // Fetch Consultations
         const { data: consultationsData, error } = await supabase
-          .from('Consultation')
+          .from('consultations')
           .select(`
             *,
-            family:Family(name),
-            members:ConsultationMember(
-              member:FamilyMember(name, role)
+            family:families(name),
+            members:consultation_members(
+              member:family_members(name, role)
             )
           `)
           .order('date', { ascending: true });
@@ -478,7 +478,7 @@ export default function ConsultationsPage() {
   const handleCancelConsultation = async (id: number) => {
     try {
       const { error } = await supabase
-        .from('Consultation')
+        .from('consultations')
         .update({ status: 'cancelled' })
         .eq('id', id);
 
@@ -532,7 +532,7 @@ export default function ConsultationsPage() {
 
     try {
       const { data, error } = await supabase
-        .from('Consultation')
+        .from('consultations')
         .insert([newConsultationObj])
         .select();
 

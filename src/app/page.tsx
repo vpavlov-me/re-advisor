@@ -74,70 +74,10 @@ const initialProfileStepsRow2: ProfileStep[] = [
 
 // Stats data
 const initialStats = [
-  { label: "Family Clients", value: "6", icon: Users, href: "/families" },
+  { label: "Family Clients", value: "0", icon: Users, href: "/families" },
   { label: "Services", value: "0", icon: Briefcase, href: "/services" },
-  { label: "Active consultations", value: "2", icon: MessageSquare, href: "/consultations" },
-  { label: "Monthly revenue", value: "$7,012.00", icon: DollarSign, href: "/revenue" },
-];
-
-// Upcoming consultations
-const consultations = [
-  {
-    id: 1,
-    title: "Constitution Workshop",
-    family: "Roye Family",
-    date: "15 July",
-    time: "06:00 — 07:00 PM",
-  },
-  {
-    id: 2,
-    title: "Constitution Workshop",
-    family: "Roye Family",
-    date: "15 July",
-    time: "06:00 — 07:00 PM",
-  },
-  {
-    id: 3,
-    title: "Constitution Workshop",
-    family: "Roye Family",
-    date: "15 July",
-    time: "06:00 — 07:00 PM",
-  },
-  {
-    id: 4,
-    title: "Constitution Workshop",
-    family: "Roye Family",
-    date: "15 July",
-    time: "06:00 — 07:00 PM",
-  },
-];
-
-// Recent messages
-const messages = [
-  {
-    id: 1,
-    title: "CEO Position Discussion",
-    sender: "Clara Harrington",
-    date: "Sep 1, 2025 12:05",
-    preview: "I agree, but it can't just be about tradition. The CEO has to be innovative and ready to modernize how we operate",
-    unread: 9,
-  },
-  {
-    id: 2,
-    title: "Investment Strategy Review",
-    sender: "Oliver Harrington",
-    date: "Aug 30, 2025 18:33",
-    preview: "I suggest we diversify into renewable energy funds before the next quarter.",
-    unread: 0,
-  },
-  {
-    id: 3,
-    title: "Philanthropy Initiatives",
-    sender: "Eleanor Harrington",
-    date: "Aug 29, 2025 16:20",
-    preview: "Let's prioritize education scholarships this year; it aligns with our long-term vision.",
-    unread: 0,
-  },
+  { label: "Active consultations", value: "0", icon: MessageSquare, href: "/consultations" },
+  { label: "Monthly revenue", value: "$0.00", icon: DollarSign, href: "/payments" },
 ];
 
 // Onboarding Step Card
@@ -179,40 +119,140 @@ export default function HomePage() {
   const [profileStepsRow1, setProfileStepsRow1] = useState<ProfileStep[]>(initialProfileStepsRow1);
   const [profileStepsRow2, setProfileStepsRow2] = useState<ProfileStep[]>(initialProfileStepsRow2);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [consultations, setConsultations] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [userName, setUserName] = useState("Advisor");
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Fetch Profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
+        }
+
+        // Fetch Counts
+        const { count: familiesCount } = await supabase
+          .from('families')
+          .select('*', { count: 'exact', head: true })
+          .eq('advisor_id', user.id);
+
+        const { count: servicesCount } = await supabase
+          .from('services')
+          .select('*', { count: 'exact', head: true })
+          .eq('advisor_id', user.id);
+
+        const { count: consultationsCount } = await supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .eq('advisor_id', user.id)
+          .eq('status', 'scheduled');
+
+        // Fetch Revenue (Transactions)
+        const { data: transactions } = await supabase
+          .from('transactions')
+          .select('amount')
+          .eq('advisor_id', user.id)
+          .eq('type', 'income');
+
+        const revenue = transactions?.reduce((acc, curr) => {
+          const amount = parseFloat(curr.amount?.replace(/[^0-9.-]+/g, "") || "0");
+          return acc + amount;
+        }, 0) || 0;
+
+        setStats([
+          { label: "Family Clients", value: familiesCount?.toString() || "0", icon: Users, href: "/families" },
+          { label: "Services", value: servicesCount?.toString() || "0", icon: Briefcase, href: "/services" },
+          { label: "Active consultations", value: consultationsCount?.toString() || "0", icon: MessageSquare, href: "/consultations" },
+          { label: "Monthly revenue", value: `$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: DollarSign, href: "/payments" },
+        ]);
+
+        // Update Onboarding Steps based on data
+        if ((servicesCount || 0) > 0) {
+          setProfileStepsRow2(prev => prev.map(step => 
+            step.label === "Services & Pricing" ? { ...step, status: "completed" } : step
+          ));
+        }
+
+        // Fetch Upcoming Consultations
+        const { data: upcomingConsultations } = await supabase
+          .from('consultations')
+          .select(`
+            id,
+            title,
+            date,
+            time,
+            status,
+            families (name),
+            consultation_members (
+              family_members (name, avatar)
+            )
+          `)
+          .eq('advisor_id', user.id)
+          .eq('status', 'scheduled')
+          .order('date', { ascending: true })
+          .limit(4);
+
+        if (upcomingConsultations) {
+          setConsultations(upcomingConsultations.map(c => ({
+            id: c.id,
+            title: c.title,
+            family: c.families?.name || "Unknown Family",
+            date: c.date ? new Date(c.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : "TBD",
+            time: c.time,
+            members: c.consultation_members?.map((m: any) => m.family_members) || []
+          })));
+        }
+
+        // Fetch Recent Messages (Conversations)
+        const { data: recentConversations } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            title,
+            last_message,
+            last_message_time,
+            unread_count,
+            families (name)
+          `)
+          .order('last_message_time', { ascending: false })
+          .limit(3);
+
+        if (recentConversations) {
+          setMessages(recentConversations.map(c => ({
+            id: c.id,
+            title: c.title || c.families?.name || "Conversation",
+            sender: c.families?.name || "Family Member", // Simplified
+            date: c.last_message_time ? new Date(c.last_message_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "",
+            preview: c.last_message,
+            unread: c.unread_count
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch Services Count
-        const { count, error } = await supabase
-          .from('Service')
-          .select('*', { count: 'exact', head: true });
-        
-        if (!error && count !== null) {
-          
-          // Update Stats
-          setStats(prev => prev.map(s => 
-            s.label === "Services" ? { ...s, value: count.toString() } : s
-          ));
-
-          // Update Onboarding Steps
-          if (count > 0) {
-            setProfileStepsRow2(prev => prev.map(step => 
-              step.label === "Services & Pricing" ? { ...step, status: "completed" } : step
-            ));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
   const handleRefresh = () => {
     setLastUpdated(new Date());
-    // In a real app, this would re-fetch data
+    fetchData();
   };
 
   return (
@@ -259,23 +299,23 @@ export default function HomePage() {
               <span className="text-muted-foreground">Welcome Back,</span>
               <div className="flex items-center gap-1.5">
                 <Avatar className="h-6 w-6">
-                  <AvatarFallback>LR</AvatarFallback>
+                  <AvatarFallback>{userName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-foreground">Logan Roy</span>
+                <span className="font-medium text-foreground">{userName}</span>
               </div>
               <span className="text-muted-foreground">You Have</span>
               <div className="flex items-center gap-1 text-foreground">
                 <Calendar className="h-5 w-5" />
-                <span className="font-medium">3 Meetings</span>
+                <span className="font-medium">{consultations.length} Meetings</span>
               </div>
               <div className="flex items-center gap-1 text-foreground">
                 <CheckCircle2 className="h-5 w-5" />
-                <span className="font-medium">2 tasks today</span>
+                <span className="font-medium">0 tasks today</span>
               </div>
               <span className="text-muted-foreground">and</span>
               <div className="flex items-center gap-1 text-foreground">
                 <DollarSign className="h-5 w-5" />
-                <span className="font-medium">Monthly revenue is $7,012.00</span>
+                <span className="font-medium">Monthly revenue is {stats.find(s => s.label === "Monthly revenue")?.value}</span>
               </div>
             </div>
           </CardContent>
@@ -358,7 +398,10 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
-                {consultations.map((consultation) => (
+                {consultations.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No upcoming consultations</div>
+                ) : (
+                  consultations.map((consultation) => (
                   <div key={consultation.id} className="border border-border rounded-[10px] p-4 hover:border-primary/30 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -377,14 +420,17 @@ export default function HomePage() {
                             <span className="text-xs text-muted-foreground block mb-1">Members</span>
                             <div className="flex items-center gap-2">
                               <div className="flex -space-x-2">
-                                <Avatar className="h-6 w-6 border-2 border-card">
-                                  <AvatarFallback className="text-xs">SR</AvatarFallback>
-                                </Avatar>
-                                <Avatar className="h-6 w-6 border-2 border-card">
-                                  <AvatarFallback className="text-xs">KR</AvatarFallback>
-                                </Avatar>
+                                {consultation.members.slice(0, 3).map((member: any, i: number) => (
+                                  <Avatar key={i} className="h-6 w-6 border-2 border-card">
+                                    <AvatarFallback className="text-xs">{member.name.split(" ").map((n: string) => n[0]).join("")}</AvatarFallback>
+                                  </Avatar>
+                                ))}
                               </div>
-                              <span className="text-sm text-muted-foreground">Shiv Roy, Kendal Roy and 3 more</span>
+                              <span className="text-sm text-muted-foreground">
+                                {consultation.members.length > 0 
+                                  ? `${consultation.members[0].name}${consultation.members.length > 1 ? ` and ${consultation.members.length - 1} more` : ''}`
+                                  : 'No members'}
+                              </span>
                             </div>
                           </div>
                           <div>
@@ -424,7 +470,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )))}
               </CardContent>
             </Card>
 
@@ -440,12 +486,15 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="divide-y divide-border">
-                  {messages.map((message) => (
+                  {messages.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No recent messages</div>
+                  ) : (
+                    messages.map((message) => (
                     <div key={message.id} className="py-4 first:pt-0 last:pb-0">
                       <div className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                           <span className="text-xs text-muted-foreground font-medium">
-                            {message.title.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                            {message.title.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -458,7 +507,7 @@ export default function HomePage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <Avatar className="h-5 w-5">
                                   <AvatarFallback className="text-xs">
-                                    {message.sender.split(" ").map(n => n[0]).join("")}
+                                    {message.sender.split(" ").map((n: string) => n[0]).join("")}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="text-sm text-muted-foreground">{message.sender}</span>
@@ -474,7 +523,7 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )))}
                 </div>
               </CardContent>
             </Card>

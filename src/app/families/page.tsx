@@ -326,13 +326,13 @@ export default function FamiliesPage() {
     const fetchFamilies = async () => {
       try {
         const { data, error } = await supabase
-          .from('Family')
+          .from('families')
           .select(`
             *,
-            members:FamilyMember(*),
-            tasks:Task(*),
-            services:Service(*),
-            consultations:Consultation(*)
+            members:family_members(*),
+            tasks:tasks(*),
+            services:services(*),
+            consultations:consultations(*)
           `);
         
         if (error) {

@@ -284,21 +284,22 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAddExpertise = async () => {
-    if (!newExpertise || expertiseList.includes(newExpertise) || !profile) return;
+  const handleAddExpertise = async (areaToAdd?: string | any) => {
+    const area = typeof areaToAdd === 'string' ? areaToAdd : newExpertise;
+    if (!area || expertiseList.includes(area) || !profile) return;
     
     try {
       const { error } = await supabase
         .from('expertise')
         .insert([{
           advisor_id: profile.id,
-          area: newExpertise
+          area: area
         }]);
 
       if (error) throw error;
 
-      setExpertiseList([...expertiseList, newExpertise]);
-      setNewExpertise("");
+      setExpertiseList([...expertiseList, area]);
+      if (typeof areaToAdd !== 'string') setNewExpertise("");
     } catch (error) {
       console.error('Error adding expertise:', error);
     }
@@ -830,11 +831,7 @@ export default function ProfilePage() {
                                 variant="outline" 
                                 size="sm" 
                                 className="h-7"
-                                onClick={() => {
-                                  if (!expertiseList.includes(area)) {
-                                    setExpertiseList([...expertiseList, area]);
-                                  }
-                                }}
+                                onClick={() => handleAddExpertise(area)}
                               >
                                 <Plus className="h-3 w-3 mr-1" />
                                 {area}
