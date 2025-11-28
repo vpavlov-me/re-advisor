@@ -9,14 +9,17 @@ import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Get base path from environment
+const basePath = process.env.NODE_ENV === 'production' ? '/re-advisor' : '';
+
 export const metadata: Metadata = {
   title: "RE:Advisor | Dashboard",
   description: "A platform for trusted professionals to support family governance processes",
   icons: {
-    icon: "/favicon.png",
-    apple: "/icons/icon-192x192.png",
+    icon: `${basePath}/favicon.png`,
+    apple: `${basePath}/icons/icon-192x192.png`,
   },
-  manifest: "/manifest.json",
+  manifest: `${basePath}/manifest.json`,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -43,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href={`${basePath}/icons/icon-192x192.png`} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
@@ -66,7 +69,8 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
+                  var basePath = '${basePath}';
+                  navigator.serviceWorker.register(basePath + '/sw.js', { scope: basePath + '/' }).then(
                     function(registration) {
                       console.log('ServiceWorker registration successful');
                     },
