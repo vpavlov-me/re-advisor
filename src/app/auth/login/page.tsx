@@ -55,8 +55,9 @@ export default function LoginPage() {
           setError(error.message);
         }
       } else {
-        router.push(redirectTo);
-        router.refresh();
+        // Use window.location for hard redirect to ensure cookies are sent with request
+        // This is necessary for GitHub Pages static deployment
+        window.location.href = redirectTo;
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");

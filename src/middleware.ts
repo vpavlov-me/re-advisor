@@ -100,7 +100,9 @@ export async function middleware(request: NextRequest) {
   if (isAuthRoute && user) {
     // Check for redirect parameter
     const redirectTo = request.nextUrl.searchParams.get('redirect')
-    const destination = redirectTo || '/'
+    // Ensure we don't redirect to another auth route (prevent loops)
+    const isRedirectToAuthRoute = redirectTo && AUTH_ROUTES.some(route => redirectTo.startsWith(route))
+    const destination = (redirectTo && !isRedirectToAuthRoute) ? redirectTo : '/'
     return NextResponse.redirect(new URL(destination, request.url))
   }
 
