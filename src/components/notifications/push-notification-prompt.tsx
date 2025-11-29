@@ -22,10 +22,10 @@ export function PushNotificationPrompt() {
     // Show prompt after a delay if:
     // 1. Push is supported
     // 2. User is not subscribed
-    // 3. Permission is not denied
+    // 3. Permission is 'default' (not yet asked) - don't show if 'granted' or 'denied'
     // 4. User hasn't dismissed the prompt
     const timer = setTimeout(() => {
-      if (isSupported && !isSubscribed && permission !== 'denied' && !dismissed) {
+      if (isSupported && !isSubscribed && permission === 'default' && !dismissed) {
         setVisible(true);
       }
     }, 3000); // Show after 3 seconds
