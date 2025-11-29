@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { signIn, signUp, signOut, signInWithOAuth, type SignUpData } from '@/lib/auth';
 
 // Timeout for profile fetch to prevent infinite loading
@@ -55,16 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fetch profile with timeout to prevent infinite loading
   const fetchProfile = async (userId: string): Promise<Profile | null> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), PROFILE_FETCH_TIMEOUT);
+    const timeoutId = setTimeout(() => {
+      console.warn('Profile fetch taking too long');
+    }, PROFILE_FETCH_TIMEOUT);
     
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
-        .abortSignal(controller.signal);
+        .single();
       
       clearTimeout(timeoutId);
       
@@ -83,13 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
-      // Handle abort (timeout)
-      if (error?.name === 'AbortError') {
-        console.error('Profile fetch timed out');
-        return null;
-      }
-      
       console.error('Error fetching profile:', error);
       return null;
     }
@@ -136,6 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Get initial session with guaranteed loading state resolution
     const initializeAuth = async () => {
       console.log('Initializing auth...');
+      
+      // If Supabase is not configured, skip auth and show demo mode
+      if (!isSupabaseConfigured()) {
+        console.log('Supabase not configured, running in demo mode');
+        safeSetLoading(false);
+        return;
+      }
+      
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -167,6 +168,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initializeAuth();
+
+    // Skip auth listener if Supabase is not configured
+    if (!isSupabaseConfigured()) {
+      return () => {
+        isMountedRef.current = false;
+        clearTimeout(authInitTimeoutId);
+      };
+    }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

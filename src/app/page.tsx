@@ -48,7 +48,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
 import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
 import {
@@ -133,6 +133,15 @@ export default function HomePage() {
 
   const fetchData = async () => {
     setLoading(true);
+    
+    // Demo mode when Supabase is not configured
+    if (!isSupabaseConfigured()) {
+      console.log('Running in demo mode - Supabase not configured');
+      setUserName("Demo User");
+      setLoading(false);
+      return;
+    }
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       

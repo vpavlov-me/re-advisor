@@ -1,5 +1,5 @@
 // Onboarding Progress Tracking
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 export type OnboardingStepName = 
   | 'account_security'
@@ -130,6 +130,26 @@ export async function getOnboardingProgress(userId: string): Promise<{
   progress: OnboardingProgress;
   error: Error | null;
 }> {
+  // Return default progress if Supabase is not configured
+  if (!isSupabaseConfigured()) {
+    return {
+      progress: {
+        currentStep: 1,
+        totalSteps: ONBOARDING_STEPS.length,
+        percentage: 0,
+        steps: ONBOARDING_STEPS.map(config => ({
+          config,
+          completed: false,
+          completedAt: null,
+        })),
+        isComplete: false,
+        requiredComplete: false,
+        nextStep: ONBOARDING_STEPS[0],
+      },
+      error: null,
+    };
+  }
+  
   try {
     // Fetch completed steps from database
     const { data: completedSteps, error } = await supabase
@@ -331,6 +351,11 @@ export async function syncOnboardingProgress(userId: string): Promise<{
   progress: OnboardingProgress;
   error: Error | null;
 }> {
+  // Return default progress if Supabase is not configured
+  if (!isSupabaseConfigured()) {
+    return getOnboardingProgress(userId);
+  }
+  
   try {
     // Fetch profile data
     const { data: profile } = await supabase

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-provider";
+import { isSupabaseConfigured } from "@/lib/supabaseClient";
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -26,14 +27,25 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route));
+  
+  // Demo mode when Supabase is not configured
+  const isDemoMode = !isSupabaseConfigured();
 
   // Client-side auth check (fallback for static export where middleware doesn't run)
   useEffect(() => {
+    // Skip redirect in demo mode
+    if (isDemoMode) return;
+    
     if (!loading && !isAuthenticated && !isPublicRoute) {
       const loginUrl = `/auth/login?redirect=${encodeURIComponent(pathname || '/')}`;
       router.replace(loginUrl);
     }
-  }, [loading, isAuthenticated, pathname, router, isPublicRoute]);
+  }, [loading, isAuthenticated, pathname, router, isPublicRoute, isDemoMode]);
+
+  // Demo mode - show content without auth
+  if (isDemoMode) {
+    return <>{children}</>;
+  }
 
   // Public routes - render immediately without auth check
   if (isPublicRoute) {

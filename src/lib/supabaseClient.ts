@@ -1,22 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-  });
+// Helper to check if Supabase is properly configured
+export const isSupabaseConfigured = (): boolean => {
+  return !!(supabaseUrl && supabaseAnonKey && 
+    supabaseUrl.startsWith('https://') &&
+    supabaseAnonKey.length > 20);
+};
+
+// Log warning only in development
+if (typeof window !== 'undefined' && !isSupabaseConfigured()) {
+  console.warn('Supabase not configured. Running in demo mode.');
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
-  {
+// Create client with placeholder if not configured (for static build)
+const createSupabaseClient = (): SupabaseClient => {
+  // Use real credentials if available, otherwise use placeholder for build
+  const url = supabaseUrl || 'https://placeholder.supabase.co';
+  const key = supabaseAnonKey || 'placeholder-key';
+  
+  return createClient(url, key, {
     auth: {
-      persistSession: true,
+      persistSession: typeof window !== 'undefined',
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
@@ -25,12 +32,7 @@ export const supabase = createClient(
         'Accept': 'application/json',
       },
     },
-  }
-);
-
-// Helper to check if Supabase is properly configured
-export const isSupabaseConfigured = (): boolean => {
-  return !!(supabaseUrl && supabaseAnonKey && 
-    !supabaseUrl.includes('placeholder') && 
-    !supabaseAnonKey.includes('placeholder'));
+  });
 };
+
+export const supabase = createSupabaseClient();
