@@ -2,7 +2,108 @@ import { supabase } from '@/lib/supabaseClient';
 
 const AVATAR_BUCKET = 'avatars';
 
-// Upload avatar image
+// Upload avatar via API route (recommended - uses service role on server)
+export async function uploadAvatarViaAPI(file: File): Promise<string> {
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.');
+  }
+
+  // Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    throw new Error('File is too large. Maximum size is 5MB.');
+  }
+
+  // Get current session token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Please log in to upload an avatar.');
+  }
+
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // Upload via API route
+  const response = await fetch('/api/avatar', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to upload avatar');
+  }
+
+  return result.url;
+}
+
+// Delete avatar via API route
+export async function deleteAvatarViaAPI(): Promise<void> {
+  // Get current session token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Please log in to remove avatar.');
+  }
+
+  const response = await fetch('/api/avatar', {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to remove avatar');
+  }
+}
+
+// Check if bucket exists and create it if needed
+async function ensureBucketExists(): Promise<boolean> {
+  try {
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+    
+    if (error) {
+      console.error('Error listing buckets:', error);
+      return false;
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.id === AVATAR_BUCKET);
+    
+    if (!bucketExists) {
+      // Try to create the bucket
+      const { error: createError } = await supabase.storage.createBucket(AVATAR_BUCKET, {
+        public: true,
+        fileSizeLimit: 5 * 1024 * 1024, // 5MB
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      });
+      
+      if (createError) {
+        console.error('Error creating bucket:', createError);
+        // Bucket creation might fail due to permissions, but upload might still work
+        // if bucket was created by admin
+        return true; // Continue and let upload attempt
+      }
+      
+      console.log('Created avatars bucket');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Bucket check error:', error);
+    return true; // Continue and let upload attempt
+  }
+}
+
+// Upload avatar image (direct - fallback method)
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -15,6 +116,9 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   if (file.size > maxSize) {
     throw new Error('File is too large. Maximum size is 5MB.');
   }
+
+  // Ensure bucket exists
+  await ensureBucketExists();
 
   // Generate unique filename
   const fileExt = file.name.split('.').pop();
@@ -31,7 +135,19 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
 
   if (uploadError) {
     console.error('Upload error:', uploadError);
-    throw new Error('Failed to upload avatar');
+    
+    // Provide more specific error messages
+    if (uploadError.message?.includes('Bucket not found')) {
+      throw new Error('Storage is not configured. Please contact support.');
+    }
+    if (uploadError.message?.includes('row-level security') || uploadError.message?.includes('policy')) {
+      throw new Error('Permission denied. Please try logging in again.');
+    }
+    if (uploadError.message?.includes('Payload too large')) {
+      throw new Error('File is too large. Maximum size is 5MB.');
+    }
+    
+    throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
   }
 
   // Get public URL
@@ -42,7 +158,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   return publicUrl;
 }
 
-// Delete avatar image
+// Delete avatar image (direct - fallback method)
 export async function deleteAvatar(avatarUrl: string): Promise<void> {
   // Extract file path from URL
   const urlParts = avatarUrl.split('/');
@@ -61,65 +177,16 @@ export async function deleteAvatar(avatarUrl: string): Promise<void> {
   }
 }
 
-// Update profile avatar
+// Update profile avatar - uses API route for reliable uploads
 export async function updateProfileAvatar(userId: string, file: File): Promise<string> {
-  // Get current avatar URL
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('avatar_url')
-    .eq('id', userId)
-    .single();
-
-  // Delete old avatar if exists
-  if (profile?.avatar_url) {
-    try {
-      await deleteAvatar(profile.avatar_url);
-    } catch (error) {
-      console.error('Failed to delete old avatar:', error);
-    }
-  }
-
-  // Upload new avatar
-  const newAvatarUrl = await uploadAvatar(userId, file);
-
-  // Update profile with new avatar URL
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ avatar_url: newAvatarUrl, updated_at: new Date().toISOString() })
-    .eq('id', userId);
-
-  if (updateError) {
-    console.error('Profile update error:', updateError);
-    throw new Error('Failed to update profile with new avatar');
-  }
-
-  return newAvatarUrl;
+  // Use API route which has service role access
+  return await uploadAvatarViaAPI(file);
 }
 
-// Remove profile avatar
+// Remove profile avatar - uses API route for reliable deletion
 export async function removeProfileAvatar(userId: string): Promise<void> {
-  // Get current avatar URL
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('avatar_url')
-    .eq('id', userId)
-    .single();
-
-  // Delete avatar from storage
-  if (profile?.avatar_url) {
-    await deleteAvatar(profile.avatar_url);
-  }
-
-  // Update profile to remove avatar URL
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ avatar_url: null, updated_at: new Date().toISOString() })
-    .eq('id', userId);
-
-  if (updateError) {
-    console.error('Profile update error:', updateError);
-    throw new Error('Failed to remove avatar from profile');
-  }
+  // Use API route which has service role access
+  await deleteAvatarViaAPI();
 }
 
 // Get signed URL for private files (if needed)
