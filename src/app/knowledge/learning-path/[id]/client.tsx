@@ -72,6 +72,10 @@ function formatUpdatedAt(dateString: string): string {
 }
 
 // Helper to calculate total duration from modules
+// Pre-compiled regex patterns for parsing duration strings
+const HOUR_REGEX = /(\d+)\s*h/;
+const MIN_REGEX = /(\d+)\s*m/;
+
 function calculateTotalDuration(modules: LearningModule[]): string {
   let totalMinutes = 0;
   
@@ -79,8 +83,8 @@ function calculateTotalDuration(modules: LearningModule[]): string {
     module.learning_resources.forEach(resource => {
       if (resource.duration) {
         // Parse duration strings like "15 min", "1h 30m", "2h"
-        const hourMatch = resource.duration.match(/(\d+)\s*h/);
-        const minMatch = resource.duration.match(/(\d+)\s*m/);
+        const hourMatch = resource.duration.match(HOUR_REGEX);
+        const minMatch = resource.duration.match(MIN_REGEX);
         
         if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
         if (minMatch) totalMinutes += parseInt(minMatch[1]);
@@ -105,6 +109,14 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
     const fetchLearningPath = async () => {
       setIsLoading(true);
       setError(null);
+      
+      // Validate that id is a valid number
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId) || numericId <= 0) {
+        setError("Invalid learning path ID");
+        setIsLoading(false);
+        return;
+      }
       
       try {
         // Fetch learning path with modules and resources using joins
@@ -134,7 +146,7 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
               )
             )
           `)
-          .eq('id', id)
+          .eq('id', numericId)
           .single();
 
         if (fetchError) throw fetchError;
