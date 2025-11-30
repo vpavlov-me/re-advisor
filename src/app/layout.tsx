@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -7,8 +6,6 @@ import { ProtectedRoute } from "@/components/providers/protected-route";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { Toaster } from "@/components/ui/toaster";
 import { PushNotificationPrompt } from "@/components/notifications/push-notification-prompt";
-
-const inter = Inter({ subsets: ["latin"] });
 
 // Get base path from environment
 const basePath = process.env.NODE_ENV === 'production' ? '/re-advisor' : '';
@@ -51,7 +48,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+      <body className="font-sans min-h-screen flex flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
