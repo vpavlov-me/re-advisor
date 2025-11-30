@@ -78,45 +78,17 @@ const settingsNav = [
   { label: "Subscription", href: "/subscription", icon: Monitor, active: false },
 ];
 
-// Mock Team Data
-const initialTeam = [
-  {
-    id: 1,
-    name: "Victor Pavlov",
-    email: "victor@advisor.com",
-    role: "Owner",
-    status: "active",
-    lastActive: "Now",
-    avatar: "/avatars/01.png"
-  },
-  {
-    id: 2,
-    name: "Sarah Chen",
-    email: "sarah@advisor.com",
-    role: "Senior Advisor",
-    status: "active",
-    lastActive: "2 hours ago",
-    avatar: "/avatars/02.png"
-  },
-  {
-    id: 3,
-    name: "Michael Ross",
-    email: "mike@advisor.com",
-    role: "Junior Advisor",
-    status: "invited",
-    lastActive: "-",
-    avatar: ""
-  },
-  {
-    id: 4,
-    name: "Emma Wilson",
-    email: "emma.legal@firm.com",
-    role: "External Expert",
-    status: "active",
-    lastActive: "1 day ago",
-    avatar: "/avatars/04.png"
-  }
-];
+// Team member type based on database schema
+interface TeamMember {
+  id: number;
+  advisor_id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  avatar_url: string | null;
+  created_at: string;
+}
 
 const roles = [
   { value: "admin", label: "Admin", description: "Full access to all settings and data." },
@@ -126,10 +98,10 @@ const roles = [
 ];
 
 export default function TeamSettingsPage() {
-  const [team, setTeam] = useState(initialTeam);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<typeof initialTeam[0] | null>(null);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
@@ -161,17 +133,16 @@ export default function TeamSettingsPage() {
       setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from('TeamMember')
+          .from('team_members')
           .select('*');
         
         if (error) throw error;
         
-        if (data && data.length > 0) {
-          setTeam(data as any);
+        if (data) {
+          setTeam(data);
         }
       } catch (error) {
         console.error("Error fetching team:", error);
-        // Keep mock data for demo
       } finally {
         setIsLoading(false);
       }
@@ -182,48 +153,41 @@ export default function TeamSettingsPage() {
   const onInviteSubmit = async (data: InviteFormData) => {
     setIsInviting(true);
     try {
-      const newMember = {
-        id: team.length + 1,
+      // Get the current user's ID for advisor_id
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const newMemberData = {
+        advisor_id: user?.id,
         name: data.email.split("@")[0],
         email: data.email,
         role: roles.find(r => r.value === data.role)?.label || "Junior Advisor",
-        status: "invited",
-        lastActive: "-",
-        avatar: ""
+        status: "pending",
+        avatar_url: null
       };
 
-      const { error } = await supabase
-        .from('TeamMember')
-        .insert([newMember]);
+      const { data: insertedData, error } = await supabase
+        .from('team_members')
+        .insert([newMemberData])
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setTeam([...team, newMember]);
+      if (insertedData) {
+        setTeam([...team, insertedData]);
+      }
       toast.success(`Invitation sent to ${data.email}`);
       setIsInviteOpen(false);
       reset();
     } catch (error) {
       console.error("Error inviting member:", error);
-      // Fallback for demo
-      const newMember = {
-        id: team.length + 1,
-        name: data.email.split("@")[0],
-        email: data.email,
-        role: roles.find(r => r.value === data.role)?.label || "Junior Advisor",
-        status: "invited",
-        lastActive: "-",
-        avatar: ""
-      };
-      setTeam([...team, newMember]);
-      toast.success(`Invitation sent to ${data.email}`);
-      setIsInviteOpen(false);
-      reset();
+      toast.error("Failed to invite team member");
     } finally {
       setIsInviting(false);
     }
   };
 
-  const confirmRemove = (member: typeof initialTeam[0]) => {
+  const confirmRemove = (member: TeamMember) => {
     if (member.role === "Owner") {
       toast.error("Cannot remove the workspace owner");
       return;
@@ -238,7 +202,7 @@ export default function TeamSettingsPage() {
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .from('TeamMember')
+        .from('team_members')
         .delete()
         .eq('id', selectedMember.id);
 
@@ -248,9 +212,7 @@ export default function TeamSettingsPage() {
       toast.success(`${selectedMember.name} removed from team`);
     } catch (error) {
       console.error("Error removing member:", error);
-      // Fallback for demo
-      setTeam(team.filter(m => m.id !== selectedMember.id));
-      toast.success(`${selectedMember.name} removed from team`);
+      toast.error("Failed to remove team member");
     } finally {
       setIsDeleting(false);
       setIsDeleteOpen(false);
@@ -258,10 +220,10 @@ export default function TeamSettingsPage() {
     }
   };
 
-  const handleResendInvite = async (member: typeof initialTeam[0]) => {
+  const handleResendInvite = async (member: TeamMember) => {
     setResendingId(member.id);
     try {
-      // Simulate API call
+      // Simulate API call for resending invite
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success(`Invitation resent to ${member.email}`);
     } catch (error) {
@@ -274,9 +236,18 @@ export default function TeamSettingsPage() {
 
   const handleChangeRole = async (memberId: number, newRole: string) => {
     try {
+      const newRoleLabel = roles.find(r => r.value === newRole)?.label;
+      
+      const { error } = await supabase
+        .from('team_members')
+        .update({ role: newRoleLabel })
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
       setTeam(team.map(m => 
         m.id === memberId 
-          ? { ...m, role: roles.find(r => r.value === newRole)?.label || m.role }
+          ? { ...m, role: newRoleLabel || m.role }
           : m
       ));
       toast.success("Role updated successfully");
@@ -363,7 +334,7 @@ export default function TeamSettingsPage() {
                       <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                           <Avatar>
-                            <AvatarImage src={member.avatar} />
+                            <AvatarImage src={member.avatar_url || undefined} />
                             <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div>
@@ -373,7 +344,7 @@ export default function TeamSettingsPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <Badge variant={member.status === "active" ? "default" : "secondary"}>
-                            {member.status === "invited" ? (
+                            {member.status === "pending" ? (
                               <span className="flex items-center gap-1">
                                 <Mail className="h-3 w-3" />
                                 Invited
@@ -384,7 +355,7 @@ export default function TeamSettingsPage() {
                             {member.role}
                           </div>
                           <div className="flex items-center gap-2">
-                            {member.status === "invited" && (
+                            {member.status === "pending" && (
                               <Button 
                                 variant="outline" 
                                 size="sm"
