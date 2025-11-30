@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Check if Supabase is configured
+const isConfigured = supabaseUrl && supabaseServiceKey && supabaseAnonKey;
+
 // Create Supabase client with service role (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+const supabaseAdmin = isConfigured ? createClient(
+  supabaseUrl,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   }
-);
+) : null;
 
 // Create regular Supabase client to verify user session
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseClient = isConfigured ? createClient(
+  supabaseUrl,
+  supabaseAnonKey
+) : null;
 
 const AVATAR_BUCKET = 'avatars';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -25,6 +33,14 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!isConfigured || !supabaseClient || !supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Service not configured' },
+        { status: 503 }
+      );
+    }
+
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -154,6 +170,14 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!isConfigured || !supabaseClient || !supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Service not configured' },
+        { status: 503 }
+      );
+    }
+
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
