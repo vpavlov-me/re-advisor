@@ -1197,14 +1197,16 @@ export default function ConsultationsPage() {
 
       {/* Availability Settings Dialog */}
       <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Availability Settings</DialogTitle>
             <DialogDescription>
               Set your weekly recurring availability for consultations.
             </DialogDescription>
           </DialogHeader>
-          <AvailabilitySettings />
+          <ScrollArea className="flex-1 -mr-4 pr-4">
+            <AvailabilitySettings />
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
