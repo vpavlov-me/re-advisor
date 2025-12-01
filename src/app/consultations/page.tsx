@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
@@ -16,7 +17,6 @@ import {
   Clock,
   Video,
   MapPin,
-  Users,
   MoreVertical,
   ChevronLeft,
   ChevronDown,
@@ -59,7 +59,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AvailabilitySettings } from "./AvailabilitySettings";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 
@@ -250,7 +249,6 @@ export default function ConsultationsPage() {
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -623,9 +621,11 @@ export default function ConsultationsPage() {
               <span className="text-foreground font-medium">Consultations</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setIsAvailabilityOpen(true)}>
-                <CalendarClock className="h-4 w-4 mr-2" />
-                Availability
+              <Button variant="outline" asChild>
+                <Link href="/consultations/availability">
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  Availability
+                </Link>
               </Button>
               <Button onClick={() => setIsScheduleOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -1203,21 +1203,6 @@ export default function ConsultationsPage() {
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Availability Settings Dialog */}
-      <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>Availability Settings</DialogTitle>
-            <DialogDescription>
-              Set your weekly recurring availability for consultations.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="flex-1 -mr-4 pr-4">
-            <AvailabilitySettings />
-          </ScrollArea>
         </DialogContent>
       </Dialog>
 
