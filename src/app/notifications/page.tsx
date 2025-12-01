@@ -42,16 +42,6 @@ interface Notification {
   read: boolean;
 }
 
-// Mock notifications for demo
-const mockNotifications: Notification[] = [
-  { id: 1, type: "consultation", title: "Consultation Reminder", description: "Your session with the Harrington family is in 1 hour", created_at: new Date().toISOString(), read: false },
-  { id: 2, type: "message", title: "New Message", description: "Sarah Chen sent you a message about the upcoming workshop", created_at: new Date(Date.now() - 1800000).toISOString(), read: false },
-  { id: 3, type: "payment", title: "Payment Received", description: "You received $2,500 from the Harrington family", created_at: new Date(Date.now() - 3600000).toISOString(), read: false },
-  { id: 4, type: "family", title: "New Connection Request", description: "The Johnson family wants to connect with you", created_at: new Date(Date.now() - 86400000).toISOString(), read: true },
-  { id: 5, type: "system", title: "Security Alert", description: "New login detected from Chrome on Mac", created_at: new Date(Date.now() - 86400000 * 2).toISOString(), read: true },
-  { id: 6, type: "consultation", title: "Consultation Completed", description: "Session with the Roye family has been marked as complete", created_at: new Date(Date.now() - 86400000 * 3).toISOString(), read: true },
-];
-
 function getNotificationIcon(type: "message" | "consultation" | "payment" | "system" | "family") {
   const icons = {
     message: MessageSquare,
@@ -145,17 +135,17 @@ export default function NotificationsPage() {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        if (data && data.length > 0) {
-          setNotifications(data);
-          return;
-        }
+        // Set real data from database, or empty array if no notifications
+        setNotifications(data || []);
+        return;
       }
       
-      // Use mock data for demo
-      setNotifications(mockNotifications);
+      // Not logged in - show empty state
+      setNotifications([]);
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      setNotifications(mockNotifications);
+      // On error, show empty state instead of mock data
+      setNotifications([]);
     }
   }, []);
 
