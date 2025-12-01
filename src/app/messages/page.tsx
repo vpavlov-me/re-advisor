@@ -17,14 +17,10 @@ import {
   Video,
   Info,
   Pin,
-  Archive,
-  Trash2,
   CheckCheck,
   Check,
-  Circle,
   Plus,
   Users,
-  X,
   ChevronDown,
   UserPlus,
   Loader2,
@@ -36,17 +32,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -67,7 +60,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 
 // Message status type

@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
-  User,
   Mail,
   Phone,
   MapPin,
@@ -27,13 +26,11 @@ import {
   Clock,
   Plus,
   Trash2,
-  Loader2,
-  RefreshCw
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";

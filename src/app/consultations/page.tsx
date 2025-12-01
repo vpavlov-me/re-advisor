@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,9 +19,8 @@ import {
   Users,
   MoreVertical,
   ChevronLeft,
+  ChevronDown,
   CheckCircle,
-  FileText,
-  MessageSquare,
   Link2,
   Copy,
   Edit,
@@ -31,13 +29,12 @@ import {
   PlayCircle,
   TrendingUp,
   CalendarCheck,
-  CalendarX,
   ArrowRight,
   CalendarClock,
   XCircle,
   Eye,
-  ChevronDown,
-  Loader2
+  Loader2,
+  FileText
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,12 +54,11 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AvailabilitySettings } from "./AvailabilitySettings";
 import { Label } from "@/components/ui/label";
 

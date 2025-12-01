@@ -18,8 +18,6 @@ import { supabase, isSupabaseConfigured } from '../supabaseClient';
 export const EMAIL_MODE = process.env.NEXT_PUBLIC_EMAIL_MODE || 'mock';
 export const IS_MOCK_MODE = EMAIL_MODE === 'mock';
 
-const APP_NAME = 'RE:Advisor';
-
 // ============================================
 // TYPES
 // ============================================

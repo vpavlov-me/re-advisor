@@ -444,7 +444,7 @@ export async function startStripeOnboarding(): Promise<{
 /**
  * Complete Stripe onboarding (mock)
  */
-export async function completeStripeOnboarding(data: {
+export async function completeStripeOnboarding(_data: {
   businessName: string;
   website?: string;
   bankAccount?: {

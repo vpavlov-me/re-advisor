@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { 
   Home, 
   ChevronRight, 
-  Bell,
   MessageSquare,
   Calendar,
   DollarSign,

@@ -12,8 +12,6 @@ import {
   ChevronLeft, 
   Save, 
   Upload,
-  Building2,
-  Calendar,
   Award,
   Shield,
   Lock,
@@ -22,12 +20,9 @@ import {
   DollarSign,
   ClipboardCheck,
   Loader2,
-  Users,
   MapPin,
   Globe,
-  Linkedin,
-  Phone,
-  Mail
+  Linkedin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -41,7 +36,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/lib/hooks";
 import { supabase } from "@/lib/supabaseClient";
-import { ONBOARDING_STEPS, syncOnboardingProgress, getStepStatus, canSubmitProfile } from "@/lib/onboarding";
+import { ONBOARDING_STEPS, syncOnboardingProgress } from "@/lib/onboarding";
 import { assetPath } from "@/lib/utils";
 
 // Governance Modules for expertise selection

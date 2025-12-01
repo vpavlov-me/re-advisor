@@ -47,7 +47,7 @@ import {
 export default function InvitationsClient() {
   const params = useParams();
   const familyId = params.familyId as string;
-  const router = useRouter();
+  const _router = useRouter();
   const { toast } = useToast();
 
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
@@ -62,6 +62,7 @@ export default function InvitationsClient() {
 
   useEffect(() => {
     fetchInvitations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [familyId]);
 
   const fetchInvitations = async () => {

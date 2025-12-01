@@ -18,26 +18,21 @@ import {
   Calendar,
   DollarSign,
   MoreVertical,
-  Star,
   Building2,
   MapPin,
   Mail,
   Phone,
   FileText,
-  Clock,
   X,
   Edit,
   MessageSquare,
   Video,
   CheckCircle,
-  AlertCircle,
-  ArrowRight,
   Eye,
   UserPlus,
   ListTodo,
   ChevronDown,
   ChevronLeft,
-  Loader2,
   Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +42,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -169,34 +163,10 @@ export default function FamiliesPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [familiesList, setFamiliesList] = useState<Family[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // React Hook Form for Invite
-  const {
-    register: registerInvite,
-    handleSubmit: handleInviteSubmit,
-    formState: { errors: inviteErrors },
-    reset: resetInvite,
-    setValue: setInviteValue
-  } = useForm<InviteFormData>({
-    resolver: zodResolver(inviteSchema),
-    defaultValues: { role: "consultant" }
-  });
-
-  // React Hook Form for Task
-  const {
-    register: registerTask,
-    handleSubmit: handleTaskSubmit,
-    formState: { errors: taskErrors },
-    reset: resetTask,
-    setValue: setTaskValue
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: { priority: "medium" }
-  });
+  const [, setIsRefreshing] = useState(false);
 
   // React Hook Form for Member
   const {
@@ -287,13 +257,6 @@ export default function FamiliesPage() {
     };
     init();
   }, [fetchFamilies]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchFamilies();
-    setIsRefreshing(false);
-    toast.success("Families refreshed");
-  };
 
   // Invite Form State
   const [inviteForm, setInviteForm] = useState({
@@ -502,7 +465,7 @@ export default function FamiliesPage() {
 
     setSaving(true);
     try {
-      const { data: memberData, error } = await supabase
+      const { error } = await supabase
         .from('family_members')
         .insert([{
           family_id: selectedFamily.id,
@@ -713,12 +676,6 @@ export default function FamiliesPage() {
       console.error('Error updating task:', error);
       toast.error('Failed to update task');
     }
-  };
-
-  const openFamilyWorkspace = (family: Family) => {
-    setSelectedFamily(family);
-    setWorkspaceTab("overview");
-    setIsDialogOpen(true);
   };
 
   // Filter families

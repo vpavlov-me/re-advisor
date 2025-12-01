@@ -1,10 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { 
   Home, 
   ChevronRight, 
@@ -18,7 +15,6 @@ import {
   Star,
   Eye,
   Copy,
-  Calendar,
   TrendingUp,
   AlertCircle,
   Settings,
@@ -26,11 +22,10 @@ import {
   ChevronDown,
   Loader2
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,7 +35,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
@@ -51,7 +45,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -60,7 +53,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
-import { serviceSchema, type ServiceFormData } from "@/lib/validations";
 
 // Constants
 const SERVICE_CATEGORIES = ["Governance", "Planning", "Mediation", "Assessment", "Education", "Other"];

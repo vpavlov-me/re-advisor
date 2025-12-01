@@ -27,7 +27,7 @@ export default function AcceptInvitePage() {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -47,7 +47,7 @@ export default function AcceptInvitePage() {
         } else {
           setInvitation(data);
         }
-      } catch (err) {
+      } catch (_err) {
         setError("Failed to load invitation");
       } finally {
         setLoading(false);
@@ -74,10 +74,11 @@ export default function AcceptInvitePage() {
       } else {
         throw error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to accept invitation";
       toast({
         title: "Error",
-        description: err.message || "Failed to accept invitation",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
