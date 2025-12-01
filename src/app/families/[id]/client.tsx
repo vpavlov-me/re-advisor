@@ -61,6 +61,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Types
 type AdvisorRole = "external-consul" | "consultant" | "personal-advisor";
@@ -171,10 +172,10 @@ export default function FamilyDetailPage() {
 
   // Form states
   const [newMember, setNewMember] = useState({ name: "", email: "", role: "Child" });
-  const [newTask, setNewTask] = useState({ title: "", dueDate: "", priority: "medium" });
+  const [newTask, setNewTask] = useState<{ title: string; dueDate: Date | undefined; priority: string }>({ title: "", dueDate: undefined, priority: "medium" });
   const [newProposal, setNewProposal] = useState({ name: "", price: "", description: "" });
-  const [newConsultation, setNewConsultation] = useState({ title: "", date: "", time: "" });
-  const [newInvoice, setNewInvoice] = useState({ amount: "", dueDate: "", serviceId: "" });
+  const [newConsultation, setNewConsultation] = useState<{ title: string; date: Date | undefined; time: string }>({ title: "", date: undefined, time: "" });
+  const [newInvoice, setNewInvoice] = useState<{ amount: string; dueDate: Date | undefined; serviceId: string }>({ amount: "", dueDate: undefined, serviceId: "" });
 
   const fetchFamily = useCallback(async () => {
     setIsLoading(true);
@@ -312,7 +313,7 @@ export default function FamilyDetailPage() {
   };
 
   const handleAddTask = async () => {
-    if (!family || !newTask.title) return;
+    if (!family || !newTask.title || !newTask.dueDate) return;
 
     setSaving(true);
     try {
@@ -321,7 +322,7 @@ export default function FamilyDetailPage() {
         .insert([{
           family_id: family.id,
           title: newTask.title,
-          due_date: newTask.dueDate,
+          due_date: newTask.dueDate.toISOString().split('T')[0],
           priority: newTask.priority,
           completed: false
         }])
@@ -340,7 +341,7 @@ export default function FamilyDetailPage() {
 
       setFamily({ ...family, tasks: [task, ...family.tasks] });
       setIsAddTaskDialogOpen(false);
-      setNewTask({ title: "", dueDate: "", priority: "medium" });
+      setNewTask({ title: "", dueDate: undefined, priority: "medium" });
       toast.success("Task added successfully");
     } catch (error) {
       console.error("Error adding task:", error);
@@ -430,7 +431,7 @@ export default function FamilyDetailPage() {
         .insert([{
           family_id: family.id,
           title: newConsultation.title,
-          date: newConsultation.date,
+          date: newConsultation.date.toISOString().split('T')[0],
           time: newConsultation.time || "10:00 AM",
           status: "scheduled"
         }])
@@ -449,7 +450,7 @@ export default function FamilyDetailPage() {
 
       setFamily({ ...family, consultations: [consultation, ...family.consultations] });
       setIsScheduleDialogOpen(false);
-      setNewConsultation({ title: "", date: "", time: "" });
+      setNewConsultation({ title: "", date: undefined, time: "" });
       toast.success("Consultation scheduled");
     } catch (error) {
       console.error("Error scheduling consultation:", error);
@@ -471,7 +472,7 @@ export default function FamilyDetailPage() {
           type: "invoice",
           amount: parseFloat(newInvoice.amount),
           status: "pending",
-          due_date: newInvoice.dueDate,
+          due_date: newInvoice.dueDate.toISOString().split('T')[0],
           description: newInvoice.serviceId ? `Invoice for ${newInvoice.serviceId}` : "Service invoice"
         }]);
 
@@ -479,7 +480,7 @@ export default function FamilyDetailPage() {
 
       setFamily({ ...family, payment_status: "pending" });
       setIsInvoiceDialogOpen(false);
-      setNewInvoice({ amount: "", dueDate: "", serviceId: "" });
+      setNewInvoice({ amount: "", dueDate: undefined, serviceId: "" });
       toast.success("Invoice created");
     } catch (error) {
       console.error("Error creating invoice:", error);
@@ -1032,10 +1033,11 @@ export default function FamilyDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Due Date</Label>
-                <Input
-                  type="date"
-                  value={newTask.dueDate}
-                  onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                <DatePicker
+                  date={newTask.dueDate}
+                  onDateChange={(date) => setNewTask({ ...newTask, dueDate: date })}
+                  placeholder="Select due date"
+                  minDate={new Date()}
                 />
               </div>
               <div className="space-y-2">
@@ -1130,10 +1132,11 @@ export default function FamilyDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date</Label>
-                <Input
-                  type="date"
-                  value={newConsultation.date}
-                  onChange={(e) => setNewConsultation({ ...newConsultation, date: e.target.value })}
+                <DatePicker
+                  date={newConsultation.date}
+                  onDateChange={(date) => setNewConsultation({ ...newConsultation, date })}
+                  placeholder="Select date"
+                  minDate={new Date()}
                 />
               </div>
               <div className="space-y-2">
@@ -1177,10 +1180,11 @@ export default function FamilyDetailPage() {
             </div>
             <div className="space-y-2">
               <Label>Due Date</Label>
-              <Input
-                type="date"
-                value={newInvoice.dueDate}
-                onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
+              <DatePicker
+                date={newInvoice.dueDate}
+                onDateChange={(date) => setNewInvoice({ ...newInvoice, dueDate: date })}
+                placeholder="Select due date"
+                minDate={new Date()}
               />
             </div>
             <div className="space-y-2">

@@ -61,6 +61,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Advisor roles
 type AdvisorRole = "external-consul" | "consultant" | "personal-advisor";
@@ -268,9 +269,13 @@ export default function FamiliesPage() {
   });
 
   // Task Form State
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<{
+    title: string;
+    dueDate: Date | undefined;
+    priority: string;
+  }>({
     title: "",
-    dueDate: "",
+    dueDate: undefined,
     priority: "medium"
   });
 
@@ -330,9 +335,13 @@ export default function FamiliesPage() {
 
   // Schedule Consultation State
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
-  const [newConsultation, setNewConsultation] = useState({
+  const [newConsultation, setNewConsultation] = useState<{
+    title: string;
+    date: Date | undefined;
+    time: string;
+  }>({
     title: "",
-    date: "",
+    date: undefined,
     time: ""
   });
 
@@ -343,7 +352,7 @@ export default function FamiliesPage() {
     try {
       const consultation = {
         title: newConsultation.title,
-        date: new Date(newConsultation.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: newConsultation.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         time: newConsultation.time || "10:00 AM",
         status: "scheduled" as const
       };
@@ -354,7 +363,7 @@ export default function FamiliesPage() {
         .insert([{
           family_id: selectedFamily.id,
           title: consultation.title,
-          date: newConsultation.date,
+          date: newConsultation.date.toISOString().split('T')[0],
           time: consultation.time,
           status: 'scheduled'
         }]);
@@ -374,7 +383,7 @@ export default function FamiliesPage() {
       setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
       setSelectedFamily(updatedFamily);
       setIsScheduleDialogOpen(false);
-      setNewConsultation({ title: "", date: "", time: "" });
+      setNewConsultation({ title: "", date: undefined, time: "" });
       toast.success('Consultation scheduled successfully');
     } catch (error) {
       console.error('Error scheduling consultation:', error);
@@ -386,10 +395,14 @@ export default function FamiliesPage() {
 
   // Create Invoice State
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
-  const [newInvoice, setNewInvoice] = useState({
+  const [newInvoice, setNewInvoice] = useState<{
+    serviceId: string;
+    amount: string;
+    dueDate: Date | undefined;
+  }>({
     serviceId: "",
     amount: "",
-    dueDate: ""
+    dueDate: undefined
   });
 
   const handleCreateInvoice = async () => {
@@ -405,7 +418,7 @@ export default function FamiliesPage() {
           type: 'invoice',
           amount: parseFloat(newInvoice.amount),
           status: 'pending',
-          due_date: newInvoice.dueDate,
+          due_date: newInvoice.dueDate.toISOString().split('T')[0],
           description: newInvoice.serviceId ? `Invoice for ${newInvoice.serviceId}` : 'Service invoice'
         }]);
 
@@ -419,7 +432,7 @@ export default function FamiliesPage() {
       setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
       setSelectedFamily(updatedFamily);
       setIsInvoiceDialogOpen(false);
-      setNewInvoice({ serviceId: "", amount: "", dueDate: "" });
+      setNewInvoice({ serviceId: "", amount: "", dueDate: undefined });
       toast.success('Invoice created successfully');
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -604,7 +617,7 @@ export default function FamiliesPage() {
   };
 
   const handleAddTask = async () => {
-    if (!selectedFamily || !newTask.title) return;
+    if (!selectedFamily || !newTask.title || !newTask.dueDate) return;
 
     setSaving(true);
     try {
@@ -614,7 +627,7 @@ export default function FamiliesPage() {
         .insert([{
           family_id: selectedFamily.id,
           title: newTask.title,
-          due_date: newTask.dueDate,
+          due_date: newTask.dueDate.toISOString().split('T')[0],
           priority: newTask.priority,
           completed: false
         }])
@@ -626,7 +639,7 @@ export default function FamiliesPage() {
       const task = {
         id: taskData?.id || Math.random(),
         title: newTask.title,
-        dueDate: new Date(newTask.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        dueDate: newTask.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         priority: newTask.priority,
         completed: false
       };
@@ -639,7 +652,7 @@ export default function FamiliesPage() {
       setFamiliesList(familiesList.map(f => f.id === selectedFamily.id ? updatedFamily : f));
       setSelectedFamily(updatedFamily);
       setIsAddTaskDialogOpen(false);
-      setNewTask({ title: "", dueDate: "", priority: "medium" });
+      setNewTask({ title: "", dueDate: undefined, priority: "medium" });
       toast.success('Task added successfully');
     } catch (error) {
       console.error('Error adding task:', error);
@@ -1343,11 +1356,11 @@ export default function FamiliesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Due Date</Label>
-                <Input 
-                  id="dueDate" 
-                  type="date" 
-                  value={newTask.dueDate}
-                  onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                <DatePicker
+                  date={newTask.dueDate}
+                  onDateChange={(date) => setNewTask({...newTask, dueDate: date})}
+                  placeholder="Select due date"
+                  minDate={new Date()}
                 />
               </div>
               <div className="space-y-2">
@@ -1436,11 +1449,11 @@ export default function FamiliesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="consultationDate">Date</Label>
-                <Input 
-                  id="consultationDate" 
-                  type="date" 
-                  value={newConsultation.date}
-                  onChange={(e) => setNewConsultation({...newConsultation, date: e.target.value})}
+                <DatePicker
+                  date={newConsultation.date}
+                  onDateChange={(date) => setNewConsultation({...newConsultation, date})}
+                  placeholder="Select date"
+                  minDate={new Date()}
                 />
               </div>
               <div className="space-y-2">
@@ -1481,11 +1494,11 @@ export default function FamiliesPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoiceDate">Due Date</Label>
-              <Input 
-                id="invoiceDate" 
-                type="date" 
-                value={newInvoice.dueDate}
-                onChange={(e) => setNewInvoice({...newInvoice, dueDate: e.target.value})}
+              <DatePicker
+                date={newInvoice.dueDate}
+                onDateChange={(date) => setNewInvoice({...newInvoice, dueDate: date})}
+                placeholder="Select due date"
+                minDate={new Date()}
               />
             </div>
             <div className="space-y-2">

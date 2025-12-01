@@ -61,6 +61,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AvailabilitySettings } from "./AvailabilitySettings";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Zod Validation Schemas
 const scheduleSchema = z.object({
@@ -370,7 +371,7 @@ export default function ConsultationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   
   // Sidebar Filter State
-  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [selectedTypes, setSelectedTypes] = useState<string[]>(["Video Call", "In-Person"]);
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string[]>(["paid", "awaiting", "overdue"]);
 
@@ -575,10 +576,12 @@ export default function ConsultationsPage() {
 
     // Filter by Date Range
     if (dateRange.from) {
-      filtered = filtered.filter(c => new Date(c.date) >= new Date(dateRange.from));
+      const fromDate = dateRange.from;
+      filtered = filtered.filter(c => new Date(c.date) >= fromDate);
     }
     if (dateRange.to) {
-      filtered = filtered.filter(c => new Date(c.date) <= new Date(dateRange.to));
+      const toDate = dateRange.to;
+      filtered = filtered.filter(c => new Date(c.date) <= toDate);
     }
 
     // Filter by Type
@@ -814,17 +817,16 @@ export default function ConsultationsPage() {
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">Date Range</label>
                     <div className="space-y-2">
-                      <Input 
-                        type="date" 
-                        className="w-full" 
-                        value={dateRange.from}
-                        onChange={(e) => setDateRange({...dateRange, from: e.target.value})}
+                      <DatePicker
+                        date={dateRange.from}
+                        onDateChange={(date) => setDateRange({...dateRange, from: date})}
+                        placeholder="From date"
                       />
-                      <Input 
-                        type="date" 
-                        className="w-full" 
-                        value={dateRange.to}
-                        onChange={(e) => setDateRange({...dateRange, to: e.target.value})}
+                      <DatePicker
+                        date={dateRange.to}
+                        onDateChange={(date) => setDateRange({...dateRange, to: date})}
+                        placeholder="To date"
+                        minDate={dateRange.from}
                       />
                     </div>
                   </div>
@@ -864,7 +866,7 @@ export default function ConsultationsPage() {
                     variant="outline" 
                     className="w-full"
                     onClick={() => {
-                      setDateRange({ from: "", to: "" });
+                      setDateRange({ from: undefined, to: undefined });
                       setSelectedTypes(["Video Call", "In-Person"]);
                       setSelectedPaymentStatus(["paid", "awaiting", "overdue"]);
                       setCurrentPage(1);
