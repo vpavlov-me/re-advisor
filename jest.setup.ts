@@ -21,19 +21,23 @@ class MockHeaders {
 }
 
 class MockRequest {
-  url: string;
+  private _url: string;
   method: string;
   headers: MockHeaders;
   private _body: unknown;
   
   constructor(url: string, init?: { method?: string; headers?: Record<string, string>; body?: unknown }) {
-    this.url = url;
+    this._url = url;
     this.method = init?.method || 'GET';
     this.headers = new MockHeaders();
     if (init?.headers) {
       Object.entries(init.headers).forEach(([k, v]) => this.headers.set(k, v));
     }
     this._body = init?.body;
+  }
+  
+  get url(): string {
+    return this._url;
   }
   
   async json() {
