@@ -103,14 +103,14 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  // Use centralized messaging hook
-  const messaging = useMessaging();
-  
   const [conversationsList, setConversationsList] = useState<Conversation[]>([]);
   const [messagesList, setMessagesList] = useState<Message[]>([]);
   const [familiesList, setFamiliesList] = useState<Family[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  
+  // Use centralized messaging hook with userId
+  const messaging = useMessaging(userId);
   
   const [newMessage, setNewMessage] = useState("");
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
@@ -463,20 +463,20 @@ export default function MessagesPage() {
 
     try {
       // Use hook's sendMessage method
-      const result = await messaging.sendMessage(selectedConversation.id, messageContent);
+      const result = await messaging.sendMessage(messageContent);
       
-      if (result) {
-        // Update message with real ID and status
+      if (result.success) {
+        // Update message with status
         setMessagesList(prev => prev.map(m => 
           m.id === tempId 
-            ? { ...m, id: result.id || tempId, status: 'sent' as MessageStatus }
+            ? { ...m, status: 'sent' as MessageStatus }
             : m
         ));
 
         // Simulate delivery after a moment
         setTimeout(() => {
           setMessagesList(prev => prev.map(m => 
-            m.id === (result.id || tempId) 
+            m.id === tempId 
               ? { ...m, status: 'delivered' as MessageStatus }
               : m
           ));
