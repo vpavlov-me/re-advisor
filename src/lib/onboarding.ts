@@ -1,15 +1,9 @@
 // Onboarding Progress Tracking
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import type { OnboardingStepName } from './database.types';
 
-export type OnboardingStepName = 
-  | 'account_security'
-  | 'profile_basics'
-  | 'credentials'
-  | 'expertise_mapping'
-  | 'services_pricing'
-  | 'payments'
-  | 'kyc_verification'
-  | 'review_submit';
+// Re-export the type for convenience
+export type { OnboardingStepName };
 
 export interface OnboardingStepConfig {
   name: OnboardingStepName;

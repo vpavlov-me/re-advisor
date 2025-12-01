@@ -1,11 +1,21 @@
-// Database Types for Supabase
-// Auto-generated from schema.sql
+/**
+ * Database Types for Supabase
+ * 
+ * These types are synchronized with the database schema.
+ * Update this file when you make schema changes.
+ * 
+ * Schema source: supabase/schema.sql + supabase/migrations/*
+ */
+
+// ============================================
+// ENUM TYPES
+// ============================================
 
 export type ProfileStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'revision_required';
 export type StripeAccountStatus = 'not_started' | 'initiated' | 'pending' | 'active' | 'failed';
 export type KycStatus = 'not_started' | 'pending' | 'verified' | 'failed';
 export type SubscriptionPlan = 'free' | 'starter' | 'professional' | 'enterprise';
-export type SubscriptionStatus = 'inactive' | 'active' | 'cancelled' | 'past_due';
+export type SubscriptionStatus = 'inactive' | 'active' | 'cancelled' | 'past_due' | 'trialing';
 export type RateType = 'hourly' | 'fixed' | 'retainer';
 export type ServiceCategory = 'financial' | 'legal' | 'family' | 'business' | 'personal';
 export type ConsultationStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
@@ -18,6 +28,19 @@ export type TransactionType = 'income' | 'payout' | 'fee' | 'subscription';
 export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
 export type ResourceType = 'document' | 'article' | 'video' | 'podcast' | 'template' | 'guide' | 'link' | 'checklist' | 'learning-path';
 export type LearningPathDifficulty = 'beginner' | 'intermediate' | 'advanced';
+export type OnboardingStepName = 
+  | 'account_security'
+  | 'profile_basics'
+  | 'credentials'
+  | 'expertise_mapping'
+  | 'services_pricing'
+  | 'payments'
+  | 'kyc_verification'
+  | 'review_submit';
+
+// ============================================
+// TABLE TYPES
+// ============================================
 
 export interface Profile {
   id: string;
@@ -34,24 +57,27 @@ export interface Profile {
   twitter: string | null;
   bio: string | null;
   avatar_url: string | null;
+  stripe_customer_id: string | null;
   joined_date: string;
   completion_percentage: number;
+  updated_at: string;
+  // From migration 001
   is_first_login: boolean;
   onboarding_progress: number;
-  onboarding_step: number;
-  onboarding_completed: boolean;
-  onboarding_skipped: boolean;
-  onboarding_completed_at: string | null;
   profile_status: ProfileStatus;
   stripe_account_id: string | null;
-  stripe_account_status: StripeAccountStatus;
-  kyc_status: KycStatus;
+  stripe_account_status: StripeAccountStatus | null;
+  kyc_status: KycStatus | null;
   kyc_submitted_at: string | null;
   kyc_verified_at: string | null;
   subscription_plan: SubscriptionPlan;
   subscription_status: SubscriptionStatus;
   subscription_expires_at: string | null;
-  updated_at: string;
+  // From migration 003
+  onboarding_step: number;
+  onboarding_completed: boolean;
+  onboarding_skipped: boolean;
+  onboarding_completed_at: string | null;
 }
 
 export interface Family {
@@ -71,6 +97,9 @@ export interface Family {
   description: string | null;
   created_at: string;
   updated_at: string;
+  // From migration 003
+  invite_code: string | null;
+  invite_link_enabled: boolean;
 }
 
 export interface FamilyMember {
@@ -123,7 +152,7 @@ export interface Service {
   max_clients: number | null;
   current_clients: number;
   created_at: string;
-  // Joined
+  // Joined relations
   service_type?: ServiceType;
 }
 
@@ -137,9 +166,11 @@ export interface Consultation {
   status: ConsultationStatus;
   meeting_link: string | null;
   created_at: string;
-  // Joined
+  // Joined relations
   family?: Family;
+  families?: Family;
   members?: FamilyMember[];
+  consultation_members?: Array<{ family_members: FamilyMember }>;
 }
 
 export interface ConsultationMember {
@@ -186,8 +217,9 @@ export interface Conversation {
   unread_count: number;
   pinned: boolean;
   created_at: string;
-  // Joined
+  // Joined relations
   family?: Family;
+  families?: Family;
 }
 
 export interface Message {
@@ -212,7 +244,7 @@ export interface Transaction {
   type: TransactionType | null;
   invoice_id: string | null;
   created_at: string;
-  // Joined
+  // Joined relations
   family?: Family;
 }
 
@@ -237,10 +269,35 @@ export interface BankAccount {
   created_at: string;
 }
 
+export interface TeamMember {
+  id: number;
+  advisor_id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'member' | 'viewer';
+  status: 'active' | 'pending' | 'inactive';
+  avatar_url: string | null;
+  created_at: string;
+}
+
+export interface Subscription {
+  id: number;
+  advisor_id: string;
+  plan_id: string;
+  status: SubscriptionStatus;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// From migration 001
 export interface OnboardingStep {
   id: number;
   advisor_id: string;
-  step_name: 'profile_basics' | 'credentials' | 'services' | 'stripe_setup' | 'availability';
+  step_name: OnboardingStepName;
   completed: boolean;
   completed_at: string | null;
   data: Record<string, unknown> | null;
@@ -278,9 +335,9 @@ export interface BlockedDate {
   created_at: string;
 }
 
-// Family Invitations
+// From migration 003 - Family Invitations
 export interface FamilyInvitation {
-  id: string;
+  id: string; // UUID
   family_id: number;
   invited_by: string;
   email: string;
@@ -295,7 +352,7 @@ export interface FamilyInvitation {
   updated_at: string;
 }
 
-// Knowledge Resources
+// From migration 005 - Knowledge Resources
 export interface KnowledgeResource {
   id: number;
   advisor_id: string;
@@ -368,7 +425,7 @@ export interface ConstitutionSection {
   created_at: string;
 }
 
-// Push Notifications
+// From migration 006 - Push Notifications
 export interface PushSubscription {
   id: number;
   user_id: string;
@@ -402,7 +459,10 @@ export interface NotificationPreferences {
   updated_at: string;
 }
 
-// Database helper type for Supabase queries
+// ============================================
+// DATABASE HELPER TYPE
+// ============================================
+
 export interface Database {
   public: {
     Tables: {
@@ -485,6 +545,16 @@ export interface Database {
         Row: BankAccount;
         Insert: Omit<BankAccount, 'id' | 'created_at'>;
         Update: Partial<BankAccount>;
+      };
+      team_members: {
+        Row: TeamMember;
+        Insert: Omit<TeamMember, 'id' | 'created_at'>;
+        Update: Partial<TeamMember>;
+      };
+      subscriptions: {
+        Row: Subscription;
+        Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Subscription>;
       };
       onboarding_steps: {
         Row: OnboardingStep;

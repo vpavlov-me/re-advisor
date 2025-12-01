@@ -1,25 +1,33 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === 'production';
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 
 const nextConfig = {
   reactStrictMode: true,
-  // Ignore ESLint errors during build (warnings only)
+  
+  // Enable linting and type checking in production builds
+  // Only ignore during development or explicit skip
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.SKIP_LINT === 'true',
   },
-  // Ignore TypeScript errors during build
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === 'true',
   },
-  // output: 'export' is only for GitHub Pages static deployment
-  // For local development and Vercel, we don't use static export
-  ...(isProd && process.env.GITHUB_PAGES === 'true' ? { output: 'export' } : {}),
-  // GitHub Pages uses /re-advisor/ as base path
-  basePath: isProd && process.env.GITHUB_PAGES === 'true' ? '/re-advisor' : '',
-  assetPrefix: isProd && process.env.GITHUB_PAGES === 'true' ? '/re-advisor/' : '',
+  
+  // Static export for GitHub Pages
+  ...(isProd && isGitHubPages ? { output: 'export' } : {}),
+  
+  // GitHub Pages base path configuration
+  basePath: isProd && isGitHubPages ? '/re-advisor' : '',
+  assetPrefix: isProd && isGitHubPages ? '/re-advisor/' : '',
+  
+  // Disable image optimization for static export
   images: {
     unoptimized: true,
   },
+  
+  // Trailing slashes for static export compatibility
+  trailingSlash: isGitHubPages,
 };
 
 export default nextConfig;
