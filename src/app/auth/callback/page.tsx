@@ -72,14 +72,17 @@ export default function AuthCallbackPage() {
                 const metadata = user.user_metadata || {};
                 await supabase.from("profiles").insert({
                   id: user.id,
-                  email: user.email,
-                  first_name: metadata.first_name || "",
-                  last_name: metadata.last_name || "",
-                  phone: metadata.phone || "",
-                  company: metadata.company || "",
+                  email: user.email || null,
+                  first_name: metadata.first_name || null,
+                  last_name: metadata.last_name || null,
+                  phone: metadata.phone || null,
+                  company: metadata.company || null,
                   is_first_login: true,
                   onboarding_progress: 0,
                   profile_status: "draft",
+                  onboarding_step: 0,
+                  onboarding_completed: false,
+                  onboarding_skipped: false,
                 });
               }
 
@@ -110,13 +113,16 @@ export default function AuthCallbackPage() {
               
               await supabase.from("profiles").insert({
                 id: user.id,
-                email: user.email,
-                first_name: metadata.first_name || nameParts[0] || "",
-                last_name: metadata.last_name || nameParts.slice(1).join(" ") || "",
-                avatar_url: metadata.avatar_url || metadata.picture || "",
+                email: user.email || null,
+                first_name: metadata.first_name || nameParts[0] || null,
+                last_name: metadata.last_name || nameParts.slice(1).join(" ") || null,
+                avatar_url: metadata.avatar_url || metadata.picture || null,
                 is_first_login: true,
                 onboarding_progress: 0,
                 profile_status: "draft",
+                onboarding_step: 0,
+                onboarding_completed: false,
+                onboarding_skipped: false,
               });
             }
 
