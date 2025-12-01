@@ -676,6 +676,163 @@ ALTER TABLE family_constitutions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 
+-- ============================================
+-- DROP EXISTING POLICIES (if any)
+-- ============================================
+
+-- Profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
+
+-- Families
+DROP POLICY IF EXISTS "Advisors can view their families" ON families;
+DROP POLICY IF EXISTS "Advisors can insert families" ON families;
+DROP POLICY IF EXISTS "Advisors can update their families" ON families;
+DROP POLICY IF EXISTS "Advisors can delete their families" ON families;
+
+-- Family members
+DROP POLICY IF EXISTS "Advisors can view members" ON family_members;
+DROP POLICY IF EXISTS "Advisors can insert members" ON family_members;
+DROP POLICY IF EXISTS "Advisors can update members" ON family_members;
+DROP POLICY IF EXISTS "Advisors can delete members" ON family_members;
+DROP POLICY IF EXISTS "Advisors can view members of their families" ON family_members;
+DROP POLICY IF EXISTS "Advisors can insert members to their families" ON family_members;
+DROP POLICY IF EXISTS "Advisors can update members of their families" ON family_members;
+DROP POLICY IF EXISTS "Advisors can delete members from their families" ON family_members;
+
+-- Family invitations
+DROP POLICY IF EXISTS "Advisors can view their invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can create invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can update invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can delete invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Anyone can view invitation by code" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can view their family invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can create family invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can update their family invitations" ON family_invitations;
+DROP POLICY IF EXISTS "Advisors can delete their family invitations" ON family_invitations;
+
+-- Tasks
+DROP POLICY IF EXISTS "Advisors can manage tasks" ON tasks;
+DROP POLICY IF EXISTS "Advisors can view their tasks" ON tasks;
+DROP POLICY IF EXISTS "Advisors can insert tasks" ON tasks;
+DROP POLICY IF EXISTS "Advisors can update their tasks" ON tasks;
+DROP POLICY IF EXISTS "Advisors can delete their tasks" ON tasks;
+
+-- Service types
+DROP POLICY IF EXISTS "Service types are viewable by everyone" ON service_types;
+
+-- Services
+DROP POLICY IF EXISTS "Advisors can manage services" ON services;
+DROP POLICY IF EXISTS "Advisors can view their services" ON services;
+
+-- Consultations
+DROP POLICY IF EXISTS "Advisors can manage consultations" ON consultations;
+DROP POLICY IF EXISTS "Advisors can view their consultations" ON consultations;
+
+-- Consultation members
+DROP POLICY IF EXISTS "Advisors can manage consultation members" ON consultation_members;
+DROP POLICY IF EXISTS "Advisors can view consultation members" ON consultation_members;
+
+-- Credentials
+DROP POLICY IF EXISTS "Advisors can manage credentials" ON credentials;
+DROP POLICY IF EXISTS "Advisors can manage their credentials" ON credentials;
+
+-- Expertise
+DROP POLICY IF EXISTS "Advisors can manage expertise" ON expertise;
+DROP POLICY IF EXISTS "Advisors can manage their expertise" ON expertise;
+
+-- Notifications
+DROP POLICY IF EXISTS "Users can manage notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can view their notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can insert their notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can update their notifications" ON notifications;
+DROP POLICY IF EXISTS "Users can delete their notifications" ON notifications;
+
+-- Conversations
+DROP POLICY IF EXISTS "Advisors can manage conversations" ON conversations;
+DROP POLICY IF EXISTS "Advisors can view their conversations" ON conversations;
+
+-- Messages
+DROP POLICY IF EXISTS "Advisors can view messages" ON messages;
+DROP POLICY IF EXISTS "Advisors can insert messages" ON messages;
+DROP POLICY IF EXISTS "Advisors can update messages" ON messages;
+DROP POLICY IF EXISTS "Advisors can view messages in their conversations" ON messages;
+
+-- Transactions
+DROP POLICY IF EXISTS "Advisors can view transactions" ON transactions;
+DROP POLICY IF EXISTS "Advisors can insert transactions" ON transactions;
+DROP POLICY IF EXISTS "Advisors can view their transactions" ON transactions;
+
+-- Payment methods
+DROP POLICY IF EXISTS "Advisors can manage payment methods" ON payment_methods;
+DROP POLICY IF EXISTS "Advisors can manage their payment methods" ON payment_methods;
+
+-- Bank accounts
+DROP POLICY IF EXISTS "Advisors can manage bank accounts" ON bank_accounts;
+DROP POLICY IF EXISTS "Advisors can manage their bank accounts" ON bank_accounts;
+
+-- Team members
+DROP POLICY IF EXISTS "Advisors can manage team" ON team_members;
+
+-- Subscriptions
+DROP POLICY IF EXISTS "Advisors can manage subscription" ON subscriptions;
+DROP POLICY IF EXISTS "Advisors can view their subscription" ON subscriptions;
+
+-- Onboarding steps
+DROP POLICY IF EXISTS "Advisors can manage onboarding" ON onboarding_steps;
+DROP POLICY IF EXISTS "Advisors can manage their onboarding steps" ON onboarding_steps;
+
+-- Availability
+DROP POLICY IF EXISTS "Advisors can manage availability" ON availability_settings;
+DROP POLICY IF EXISTS "Advisors can manage their availability settings" ON availability_settings;
+DROP POLICY IF EXISTS "Advisors can manage schedule" ON weekly_schedule;
+DROP POLICY IF EXISTS "Advisors can manage their weekly schedule" ON weekly_schedule;
+DROP POLICY IF EXISTS "Advisors can manage blocked dates" ON blocked_dates;
+DROP POLICY IF EXISTS "Advisors can manage their blocked dates" ON blocked_dates;
+
+-- Knowledge resources
+DROP POLICY IF EXISTS "Advisors can manage resources" ON knowledge_resources;
+DROP POLICY IF EXISTS "Advisors can view their resources" ON knowledge_resources;
+DROP POLICY IF EXISTS "Advisors can insert their resources" ON knowledge_resources;
+DROP POLICY IF EXISTS "Advisors can update their resources" ON knowledge_resources;
+DROP POLICY IF EXISTS "Advisors can delete their resources" ON knowledge_resources;
+
+-- Resource shares
+DROP POLICY IF EXISTS "Advisors can manage shares" ON resource_shares;
+DROP POLICY IF EXISTS "Advisors can view their shared resources" ON resource_shares;
+DROP POLICY IF EXISTS "Advisors can share their resources" ON resource_shares;
+DROP POLICY IF EXISTS "Advisors can unshare their resources" ON resource_shares;
+
+-- Learning paths
+DROP POLICY IF EXISTS "Advisors can manage learning paths" ON learning_paths;
+DROP POLICY IF EXISTS "Advisors can manage path steps" ON learning_path_steps;
+DROP POLICY IF EXISTS "Advisors can manage their learning path steps" ON learning_path_steps;
+DROP POLICY IF EXISTS "Advisors can manage path resources" ON learning_path_resources;
+
+-- Constitution
+DROP POLICY IF EXISTS "Advisors can manage constitution templates" ON constitution_templates;
+DROP POLICY IF EXISTS "Advisors can manage constitution sections" ON constitution_sections;
+DROP POLICY IF EXISTS "Advisors can manage their constitution sections" ON constitution_sections;
+DROP POLICY IF EXISTS "Advisors can manage family constitutions" ON family_constitutions;
+
+-- Push subscriptions
+DROP POLICY IF EXISTS "Users can manage push subscriptions" ON push_subscriptions;
+DROP POLICY IF EXISTS "Users can view their push subscriptions" ON push_subscriptions;
+DROP POLICY IF EXISTS "Users can insert their push subscriptions" ON push_subscriptions;
+DROP POLICY IF EXISTS "Users can delete their push subscriptions" ON push_subscriptions;
+
+-- Notification preferences
+DROP POLICY IF EXISTS "Users can manage preferences" ON notification_preferences;
+DROP POLICY IF EXISTS "Users can view their notification preferences" ON notification_preferences;
+DROP POLICY IF EXISTS "Users can insert their notification preferences" ON notification_preferences;
+DROP POLICY IF EXISTS "Users can update their notification preferences" ON notification_preferences;
+
+-- ============================================
+-- CREATE POLICIES
+-- ============================================
+
 -- Profiles policies
 CREATE POLICY "Users can view their own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can insert their own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
@@ -816,10 +973,27 @@ CREATE POLICY "Users can manage preferences" ON notification_preferences FOR ALL
 -- REALTIME
 -- ============================================
 
--- Enable Realtime for specific tables
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+-- Enable Realtime for specific tables (ignore errors if already added)
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
 
 -- ============================================
 -- SEED DATA
