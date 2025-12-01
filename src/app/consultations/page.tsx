@@ -867,6 +867,7 @@ export default function ConsultationsPage() {
                       setDateRange({ from: "", to: "" });
                       setSelectedTypes(["Video Call", "In-Person"]);
                       setSelectedPaymentStatus(["paid", "awaiting", "overdue"]);
+                      setCurrentPage(1);
                     }}
                   >
                     Clear Filters
@@ -880,15 +881,27 @@ export default function ConsultationsPage() {
                   <CardTitle className="text-base">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start gap-2"
+                    onClick={() => setIsScheduleOpen(true)}
+                  >
                     <Plus className="h-4 w-4 text-primary" />
                     New Consultation
                   </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start gap-2"
+                    onClick={() => toast.info("Calendar view coming soon")}
+                  >
                     <Calendar className="h-4 w-4 text-primary" />
                     View Calendar
                   </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start gap-2"
+                    onClick={() => toast.info("Report export coming soon")}
+                  >
                     <FileText className="h-4 w-4 text-primary" />
                     Export Report
                   </Button>

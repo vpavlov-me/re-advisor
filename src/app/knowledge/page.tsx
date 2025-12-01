@@ -544,12 +544,38 @@ export default function KnowledgeCenterPage() {
 
             {/* Folders Section */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <Button variant="outline" className="h-auto py-4 flex flex-col gap-2 border-dashed">
+              <Button 
+                variant="outline" 
+                className="h-auto py-4 flex flex-col gap-2 border-dashed"
+                onClick={() => {
+                  const folderName = prompt("Enter folder name:");
+                  if (folderName && folderName.trim()) {
+                    toast.success(`Folder "${folderName}" created`);
+                  }
+                }}
+              >
                 <Plus className="h-6 w-6 text-muted-foreground" />
                 <span className="text-xs">New Folder</span>
               </Button>
               {["Governance", "Financial", "Education", "Legal"].map(folder => (
-                <Button key={folder} variant="secondary" className="h-auto py-4 flex flex-col gap-2 hover:bg-secondary/80">
+                <Button 
+                  key={folder} 
+                  variant="secondary" 
+                  className="h-auto py-4 flex flex-col gap-2 hover:bg-secondary/80"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedType("all");
+                    // Filter resources by category matching folder name
+                    const filtered = resources.filter(r => 
+                      r.category.toLowerCase().includes(folder.toLowerCase())
+                    );
+                    if (filtered.length > 0) {
+                      toast.info(`Showing ${filtered.length} resources in "${folder}"`);
+                    } else {
+                      toast.info(`No resources in "${folder}" folder`);
+                    }
+                  }}
+                >
                   <Folder className="h-6 w-6 text-blue-500 fill-blue-500/20" />
                   <span className="text-xs font-medium">{folder}</span>
                 </Button>

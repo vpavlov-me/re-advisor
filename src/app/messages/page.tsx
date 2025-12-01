@@ -731,205 +731,230 @@ export default function MessagesPage() {
           {/* Chat Area */}
           <div className="lg:col-span-8 h-full">
             <Card className="h-full flex flex-col overflow-hidden">
-              {/* Chat Header */}
-              <div className="p-4 border-b border-border shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {/* Mobile menu button */}
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="lg:hidden"
-                      onClick={() => setIsMobileSidebarOpen(true)}
-                    >
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>{selectedConversation?.title?.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h2 className="font-semibold text-foreground">{selectedConversation?.title || "Select a conversation"}</h2>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {selectedConversation?.participants && selectedConversation.participants.length > 0 ? (
-                          selectedConversation.participants.map((p: string, i: number) => (
-                            <span key={i} className="flex items-center gap-1">
-                              {p}
-                              {i < selectedConversation.participants.length - 1 && ","}
-                            </span>
-                          ))
-                        ) : (
-                          <span>{selectedConversation?.familyName}</span>
-                        )}
+              {/* Show empty state when no conversations exist */}
+              {!loading && conversationsList.length === 0 && !selectedConversation ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-6" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No conversations yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm">
+                    Start a new conversation with a family to begin messaging
+                  </p>
+                  <Button onClick={handleOpenNewConversation}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start a Conversation
+                  </Button>
+                </div>
+              ) : !selectedConversation ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-6" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Select a conversation</h3>
+                  <p className="text-muted-foreground max-w-sm">
+                    Choose a conversation from the list to view messages
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-border shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* Mobile menu button */}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="lg:hidden"
+                          onClick={() => setIsMobileSidebarOpen(true)}
+                        >
+                          <Menu className="h-5 w-5" />
+                        </Button>
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback>{selectedConversation?.title?.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h2 className="font-semibold text-foreground">{selectedConversation?.title || "Select a conversation"}</h2>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            {selectedConversation?.participants && selectedConversation.participants.length > 0 ? (
+                              selectedConversation.participants.map((p: string, i: number) => (
+                                <span key={i} className="flex items-center gap-1">
+                                  {p}
+                                  {i < selectedConversation.participants.length - 1 && ","}
+                                </span>
+                              ))
+                            ) : (
+                              <span>{selectedConversation?.familyName}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
+                          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="hidden sm:flex">
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="hidden sm:flex">
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="hidden sm:flex">
+                          <Video className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="hidden sm:flex">
+                          <Star className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Info className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
-                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="hidden sm:flex">
-                      <UserPlus className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="hidden sm:flex">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="hidden sm:flex">
-                      <Video className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="hidden sm:flex">
-                      <Star className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Info className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
 
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                {loadingMessages ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Loading messages...</span>
-                  </div>
-                ) : messagesList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="font-medium text-foreground mb-1">No messages yet</h3>
-                    <p className="text-sm text-muted-foreground">Start the conversation by sending a message</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messagesList.map((message) => (
-                      <div 
-                        key={message.id} 
-                        className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
-                      >
-                        <div className={`flex items-end gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : ""}`}>
-                          {!message.isOwn && (
-                            <Avatar className="h-8 w-8 shrink-0">
-                              <AvatarFallback className="text-xs">
-                                {message.sender.split(" ").map((n: string) => n[0]).join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                          )}
-                          <div className={`space-y-1 ${message.isOwn ? "items-end" : "items-start"} flex flex-col`}>
-                            {!message.isOwn && (
-                              <span className="text-xs text-muted-foreground">{message.sender}</span>
-                            )}
-                            <div 
-                              className={`px-4 py-2 rounded-2xl ${
-                                message.isOwn 
-                                  ? "bg-primary text-primary-foreground" 
-                                  : "bg-muted"
-                              } ${message.status === 'sending' ? 'opacity-70' : ''}`}
-                            >
-                              <p className="text-sm">{message.content}</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">{message.time}</span>
-                              {message.isOwn && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="inline-flex">
-                                        {message.status === 'sending' && (
-                                          <Clock className="h-3 w-3 text-muted-foreground animate-pulse" />
-                                        )}
-                                        {message.status === 'sent' && (
-                                          <Check className="h-3 w-3 text-muted-foreground" />
-                                        )}
-                                        {message.status === 'delivered' && (
-                                          <CheckCheck className="h-3 w-3 text-muted-foreground" />
-                                        )}
-                                        {message.status === 'read' && (
-                                          <CheckCheck className="h-3 w-3 text-primary" />
-                                        )}
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="capitalize">{message.status || 'sent'}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                  {/* Messages */}
+                  <ScrollArea className="flex-1 p-4">
+                    {loadingMessages ? (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Loading messages...</span>
                       </div>
-                    ))}
-                    
-                    {/* Typing Indicator */}
-                    {typingUsers.length > 0 && (
-                      <div className="flex justify-start">
-                        <div className="flex items-end gap-2">
-                          <Avatar className="h-8 w-8 shrink-0">
-                            <AvatarFallback className="text-xs">
-                              {typingUsers[0].split(" ").map(n => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="bg-muted px-4 py-3 rounded-2xl">
-                            <div className="flex items-center gap-1">
-                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                              <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
-                          </div>
-                        </div>
+                    ) : messagesList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                        <h3 className="font-medium text-foreground mb-1">No messages yet</h3>
+                        <p className="text-sm text-muted-foreground">Start the conversation by sending a message</p>
                       </div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
-              </ScrollArea>
-
-              {/* Message Input */}
-              <div className="p-4 border-t border-border shrink-0">
-                {typingUsers.length > 0 && (
-                  <div className="text-xs text-muted-foreground mb-2">
-                    {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <div className="flex-1 relative">
-                    <Input 
-                      placeholder="Type your message..." 
-                      className="pr-10"
-                      value={newMessage}
-                      onChange={(e) => {
-                        setNewMessage(e.target.value);
-                        handleTyping();
-                      }}
-                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                      disabled={sending}
-                    />
-                    <Button variant="ghost" size="icon" className="absolute right-0 top-0">
-                      <Smile className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
-                    {sending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Sending
-                      </>
                     ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Send
-                      </>
+                      <div className="space-y-4">
+                        {messagesList.map((message) => (
+                          <div 
+                            key={message.id} 
+                            className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                          >
+                            <div className={`flex items-end gap-2 max-w-[70%] ${message.isOwn ? "flex-row-reverse" : ""}`}>
+                              {!message.isOwn && (
+                                <Avatar className="h-8 w-8 shrink-0">
+                                  <AvatarFallback className="text-xs">
+                                    {message.sender.split(" ").map((n: string) => n[0]).join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              <div className={`space-y-1 ${message.isOwn ? "items-end" : "items-start"} flex flex-col`}>
+                                {!message.isOwn && (
+                                  <span className="text-xs text-muted-foreground">{message.sender}</span>
+                                )}
+                                <div 
+                                  className={`px-4 py-2 rounded-2xl ${
+                                    message.isOwn 
+                                      ? "bg-primary text-primary-foreground" 
+                                      : "bg-muted"
+                                  } ${message.status === 'sending' ? 'opacity-70' : ''}`}
+                                >
+                                  <p className="text-sm">{message.content}</p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground">{message.time}</span>
+                                  {message.isOwn && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="inline-flex">
+                                            {message.status === 'sending' && (
+                                              <Clock className="h-3 w-3 text-muted-foreground animate-pulse" />
+                                            )}
+                                            {message.status === 'sent' && (
+                                              <Check className="h-3 w-3 text-muted-foreground" />
+                                            )}
+                                            {message.status === 'delivered' && (
+                                              <CheckCheck className="h-3 w-3 text-muted-foreground" />
+                                            )}
+                                            {message.status === 'read' && (
+                                              <CheckCheck className="h-3 w-3 text-primary" />
+                                            )}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="capitalize">{message.status || 'sent'}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Typing Indicator */}
+                        {typingUsers.length > 0 && (
+                          <div className="flex justify-start">
+                            <div className="flex items-end gap-2">
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarFallback className="text-xs">
+                                  {typingUsers[0].split(" ").map(n => n[0]).join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="bg-muted px-4 py-3 rounded-2xl">
+                                <div className="flex items-center gap-1">
+                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div ref={messagesEndRef} />
+                      </div>
                     )}
-                  </Button>
-                </div>
-              </div>
+                  </ScrollArea>
+
+                  {/* Message Input */}
+                  <div className="p-4 border-t border-border shrink-0">
+                    {typingUsers.length > 0 && (
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon">
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <div className="flex-1 relative">
+                        <Input 
+                          placeholder="Type your message..." 
+                          className="pr-10"
+                          value={newMessage}
+                          onChange={(e) => {
+                            setNewMessage(e.target.value);
+                            handleTyping();
+                          }}
+                          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                          disabled={sending}
+                        />
+                        <Button variant="ghost" size="icon" className="absolute right-0 top-0">
+                          <Smile className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+                        {sending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Sending
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Send
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
         </div>
