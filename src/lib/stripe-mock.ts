@@ -100,7 +100,7 @@ export async function startStripeOnboarding(): Promise<{
       onboardingUrl: mockOnboardingUrl,
       error: null 
     };
-  } catch (err) {
+  } catch {
     return { 
       success: false, 
       onboardingUrl: null, 
@@ -171,7 +171,7 @@ export async function completeStripeOnboarding(data: {
 
       return { success: false, error: 'Verification failed. Please try again.' };
     }
-  } catch (err) {
+  } catch {
     return { success: false, error: 'Failed to complete onboarding' };
   }
 }
@@ -230,7 +230,7 @@ export async function getStripeAccountStatus(): Promise<{
     };
 
     return { account, error: null };
-  } catch (err) {
+  } catch {
     return { account: null, error: 'Failed to get account status' };
   }
 }
