@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { updatePassword } from "@/lib/auth";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations";
+import { supabase } from "@/lib/supabaseClient";
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -22,6 +23,7 @@ function ResetPasswordContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [tokenError, setTokenError] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
 
   const {
     register,
@@ -39,21 +41,70 @@ function ResetPasswordContent() {
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
-  // Check for valid reset token in URL (Supabase adds hash params)
+  // Verify that user has a valid session for password reset
   useEffect(() => {
-    // Supabase adds the token as a hash fragment, which is handled by the auth callback
-    // If there's no access_token in the URL hash, check if we have a session
-    const hash = window.location.hash;
-    if (!hash.includes("access_token") && !hash.includes("type=recovery")) {
-      // No token in URL - check if this is a direct access (invalid)
-      const errorParam = searchParams.get("error");
-      const errorDescription = searchParams.get("error_description");
-      
-      if (errorParam) {
+    const verifySession = async () => {
+      try {
+        // Check for URL errors
+        const errorParam = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
+        
+        if (errorParam) {
+          setTokenError(true);
+          setError(errorDescription || "Invalid or expired reset link");
+          setIsVerifying(false);
+          return;
+        }
+
+        // Check if there's a hash with recovery tokens (direct link from email)
+        const hash = window.location.hash;
+        if (hash.includes("access_token") && hash.includes("type=recovery")) {
+          // Parse and set the session from hash
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+          
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            
+            if (sessionError) {
+              setTokenError(true);
+              setError(sessionError.message);
+              setIsVerifying(false);
+              return;
+            }
+            
+            // Clear the hash to prevent token reuse
+            window.history.replaceState(null, '', window.location.pathname);
+            setIsVerifying(false);
+            return;
+          }
+        }
+
+        // Check if we already have a valid session (from callback redirect)
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setTokenError(true);
+          setError("No valid session found. Please request a new password reset link.");
+          setIsVerifying(false);
+          return;
+        }
+        
+        // Valid session exists
+        setIsVerifying(false);
+      } catch (err) {
+        console.error("Session verification error:", err);
         setTokenError(true);
-        setError(errorDescription || "Invalid or expired reset link");
+        setError("Failed to verify session. Please try again.");
+        setIsVerifying(false);
       }
-    }
+    };
+
+    verifySession();
   }, [searchParams]);
 
   // Password requirements checker
@@ -86,6 +137,17 @@ function ResetPasswordContent() {
       setError("An unexpected error occurred. Please try again.");
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">Verifying your reset link...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (tokenError) {
     return (

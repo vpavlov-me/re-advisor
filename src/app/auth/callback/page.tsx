@@ -15,14 +15,15 @@ export default function AuthCallbackPage() {
       try {
         // Get the hash from the URL (Supabase adds tokens as hash fragments)
         const hash = window.location.hash;
+        const searchParams = new URLSearchParams(window.location.search);
         
         // Parse the hash params
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get("access_token");
         const refreshToken = params.get("refresh_token");
         const type = params.get("type");
-        const error = params.get("error");
-        const errorDescription = params.get("error_description");
+        const error = params.get("error") || searchParams.get("error");
+        const errorDescription = params.get("error_description") || searchParams.get("error_description");
 
         // Handle errors from Supabase
         if (error) {
@@ -52,14 +53,16 @@ export default function AuthCallbackPage() {
             if (type === "recovery") {
               setStatus("success");
               setMessage("Redirecting to reset password...");
+              // Clear the hash to prevent token reuse and redirect
+              window.history.replaceState(null, '', window.location.pathname);
               setTimeout(() => {
                 router.push("/auth/reset-password");
-              }, 1000);
+              }, 500);
               return;
             }
 
             // Check if this is email verification
-            if (type === "signup" || type === "magiclink") {
+            if (type === "signup" || type === "email_change") {
               // Check if profile exists, if not create it
               const { data: profile } = await supabase
                 .from("profiles")
@@ -88,6 +91,38 @@ export default function AuthCallbackPage() {
 
               setStatus("success");
               setMessage("Email verified! Redirecting...");
+              setTimeout(() => {
+                router.push("/onboarding");
+              }, 1500);
+              return;
+            }
+
+            // Magic link login
+            if (type === "magiclink") {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+              if (!profile) {
+                const metadata = user.user_metadata || {};
+                await supabase.from("profiles").insert({
+                  id: user.id,
+                  email: user.email || null,
+                  first_name: metadata.first_name || null,
+                  last_name: metadata.last_name || null,
+                  is_first_login: true,
+                  onboarding_progress: 0,
+                  profile_status: "draft",
+                  onboarding_step: 0,
+                  onboarding_completed: false,
+                  onboarding_skipped: false,
+                });
+              }
+
+              setStatus("success");
+              setMessage("Signed in successfully! Redirecting...");
               setTimeout(() => {
                 router.push("/");
               }, 1500);
@@ -124,6 +159,12 @@ export default function AuthCallbackPage() {
                 onboarding_completed: false,
                 onboarding_skipped: false,
               });
+
+              // New OAuth users go to onboarding
+              setTimeout(() => {
+                router.push("/onboarding");
+              }, 1500);
+              return;
             }
 
             setTimeout(() => {
