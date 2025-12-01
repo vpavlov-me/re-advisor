@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,25 +9,9 @@ import { Lock, Eye, EyeOff, ArrowRight, Check, Loader2, CheckCircle2, XCircle } 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
 import { updatePassword } from "@/lib/auth";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations";
-import { assetPath } from "@/lib/utils";
-
-// Logo component
-function Logo({ className }: { className?: string }) {
-  return (
-    <div className={className}>
-      <Image 
-        src={assetPath("/logo.svg")} 
-        alt="RE:Advisor Logo" 
-        width={120}
-        height={42}
-        className="object-contain"
-        priority
-      />
-    </div>
-  );
-}
 
 function ResetPasswordContent() {
   const router = useRouter();

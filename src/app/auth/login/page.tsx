@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,9 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
-import { assetPath } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -90,14 +89,7 @@ export default function LoginPage() {
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
                     <div className="mb-4">
-                      <Image 
-                        src={assetPath("/logo.svg")} 
-                        alt="RE:Advisor Logo" 
-                        width={120}
-                        height={42}
-                        className="object-contain"
-                        priority
-                      />
+                      <Logo width={120} height={42} />
                     </div>
                     <h1 className="text-2xl font-bold">Welcome back</h1>
                     <p className="text-balance text-muted-foreground">

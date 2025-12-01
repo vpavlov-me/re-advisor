@@ -2,29 +2,12 @@
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { resendVerificationEmail } from "@/lib/auth";
-import { assetPath } from "@/lib/utils";
-
-// Logo component
-function Logo({ className }: { className?: string }) {
-  return (
-    <div className={className}>
-      <Image 
-        src={assetPath("/logo.svg")} 
-        alt="RE:Advisor Logo" 
-        width={120}
-        height={42}
-        className="object-contain"
-        priority
-      />
-    </div>
-  );
-}
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();

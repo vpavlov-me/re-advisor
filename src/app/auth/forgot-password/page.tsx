@@ -2,32 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, ArrowLeft, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Logo } from "@/components/ui/logo";
 import { resetPassword } from "@/lib/auth";
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validations";
-import { assetPath } from "@/lib/utils";
-
-// Logo component
-function Logo({ className }: { className?: string }) {
-  return (
-    <div className={className}>
-      <Image 
-        src={assetPath("/logo.svg")} 
-        alt="RE:Advisor Logo" 
-        width={120}
-        height={42}
-        className="object-contain"
-        priority
-      />
-    </div>
-  );
-}
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);

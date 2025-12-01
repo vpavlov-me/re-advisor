@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -15,8 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/components/providers/auth-provider";
-import { assetPath } from "@/lib/utils";
 
 // Registration schema
 const registerSchema = z.object({
@@ -130,14 +129,7 @@ export default function RegisterPage() {
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <div className="mb-2">
-                      <Image 
-                        src={assetPath("/logo.svg")} 
-                        alt="RE:Advisor Logo" 
-                        width={120}
-                        height={42}
-                        className="object-contain"
-                        priority
-                      />
+                      <Logo width={120} height={42} />
                     </div>
                     <h1 className="text-2xl font-bold">Create your account</h1>
                     <p className="text-muted-foreground text-sm text-balance">

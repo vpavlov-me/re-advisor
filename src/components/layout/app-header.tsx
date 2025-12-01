@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2 } from "lucide-react";
-import { cn, assetPath } from "@/lib/utils";
+import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,6 +20,7 @@ import { signOut } from "@/lib/auth";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchCommand } from "@/components/search/search-command";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Logo } from "@/components/ui/logo";
 
 const navItems = [
   { label: "Dashboard", href: "/" },
@@ -29,22 +29,6 @@ const navItems = [
   { label: "Families & Services", href: "/families" },
   { label: "Knowledge Center", href: "/knowledge" },
 ];
-
-// Logo component
-function Logo({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex items-center", className)}>
-      <Image 
-        src={assetPath("/logo.svg")} 
-        alt="RE:Advisor Logo" 
-        width={87}
-        height={31}
-        className="object-contain dark:invert"
-        priority
-      />
-    </div>
-  );
-}
 
 export function AppHeader() {
   const pathname = usePathname();
