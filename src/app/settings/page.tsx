@@ -15,25 +15,21 @@ import {
   Monitor,
   Globe,
   Users,
-  Clock,
   LogOut,
   Eye,
   EyeOff,
   CheckCircle,
   AlertTriangle,
   Trash2,
-  Download,
-  Lock,
   Fingerprint,
   History,
-  Loader2
+  Loader2,
+  RotateCcw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -43,8 +39,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
+import { resetAllSettings } from "@/lib/settings";
 
 // Password change schema
 const passwordSchema = z.object({
@@ -124,6 +132,7 @@ export default function SettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isToggling2FA, setIsToggling2FA] = useState(false);
+  const [isResettingSettings, setIsResettingSettings] = useState(false);
   const [revokingSessionId, setRevokingSessionId] = useState<number | null>(null);
 
   // React Hook Form for password
@@ -250,6 +259,29 @@ export default function SettingsPage() {
       toast.error("Failed to schedule account deletion");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleResetAllSettings = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to reset settings");
+      return;
+    }
+
+    setIsResettingSettings(true);
+    try {
+      const result = await resetAllSettings(user.id);
+      if (result.success) {
+        toast.success("All settings have been reset to defaults");
+      } else {
+        toast.error(result.error || "Failed to reset settings");
+      }
+    } catch (error) {
+      console.error("Error resetting settings:", error);
+      toast.error("Failed to reset settings");
+    } finally {
+      setIsResettingSettings(false);
     }
   };
 
@@ -575,6 +607,59 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Reset All Settings */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Reset Settings
+                </CardTitle>
+                <CardDescription>Reset all your preferences to their default values</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground text-sm">Reset All Settings</p>
+                    <p className="text-xs text-muted-foreground">
+                      This will reset notification preferences and availability settings to defaults
+                    </p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" disabled={isResettingSettings}>
+                        {isResettingSettings ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Resetting...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                            Reset to Defaults
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Reset all settings?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will reset all your preferences to their default values, including 
+                          notification settings and availability preferences. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetAllSettings}>
+                          Reset Settings
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>

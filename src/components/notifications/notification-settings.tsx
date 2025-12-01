@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { 
-  Bell, 
   BellOff, 
   Mail, 
   Smartphone,
   Moon,
   Clock,
   Loader2,
-  CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +17,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
@@ -30,6 +40,10 @@ import {
   updateNotificationPreferences,
   type NotificationPreferences,
 } from "@/lib/push-notifications";
+import {
+  resetNotificationPreferences,
+  DEFAULT_NOTIFICATION_PREFERENCES,
+} from "@/lib/settings";
 
 const timezones = [
   { value: 'UTC', label: 'UTC' },
@@ -55,6 +69,7 @@ export function NotificationSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [pushSupported, setPushSupported] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
@@ -143,13 +158,30 @@ export function NotificationSettings() {
     setPreferences(newPreferences);
 
     setSaving(true);
-    const { success, error } = await updateNotificationPreferences(user.id, { [key]: value });
+    const { success } = await updateNotificationPreferences(user.id, { [key]: value });
     setSaving(false);
 
     if (!success) {
       toast.error('Failed to save preferences');
       // Revert on error
       setPreferences(preferences);
+    }
+  };
+
+  // Handle reset to defaults
+  const handleResetToDefaults = async () => {
+    if (!user) return;
+
+    setResetting(true);
+    const result = await resetNotificationPreferences(user.id);
+    setResetting(false);
+
+    if (result.success) {
+      // Update local state with defaults
+      setPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
+      toast.success('Notification settings reset to defaults');
+    } else {
+      toast.error(result.error || 'Failed to reset settings');
     }
   };
 
@@ -395,6 +427,53 @@ export function NotificationSettings() {
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Reset to Defaults */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <RotateCcw className="h-5 w-5" />
+            Reset Settings
+          </CardTitle>
+          <CardDescription>
+            Reset all notification preferences to their default values
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={resetting || saving}>
+                {resetting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset to Defaults
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset notification settings?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will reset all your notification preferences to their default values. 
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetToDefaults}>
+                  Reset Settings
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 
