@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useMessaging } from "@/lib/hooks/use-messaging";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -102,6 +103,9 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
+  // Use centralized messaging hook
+  const messaging = useMessaging();
+  
   const [conversationsList, setConversationsList] = useState<Conversation[]>([]);
   const [messagesList, setMessagesList] = useState<Message[]>([]);
   const [familiesList, setFamiliesList] = useState<Family[]>([]);
@@ -126,6 +130,49 @@ export default function MessagesPage() {
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Sync data from messaging hook when available
+  useEffect(() => {
+    if (!messaging.isLoading && messaging.conversations.length > 0) {
+      const mappedConvs = messaging.conversations.map((c: any) => ({
+        id: c.id,
+        title: c.title || c.name || `Conversation ${c.id}`,
+        familyId: c.family_id,
+        familyName: c.family_name || 'Family',
+        participants: c.participants || [],
+        lastMessage: c.last_message || '',
+        lastMessageTime: c.updated_at ? new Date(c.updated_at).toLocaleTimeString() : '',
+        unread: c.unread_count || 0,
+        pinned: c.pinned || false,
+        online: false
+      }));
+      setConversationsList(mappedConvs);
+      setLoading(false);
+    }
+  }, [messaging.isLoading, messaging.conversations]);
+  
+  // Sync messages from hook
+  useEffect(() => {
+    if (messaging.messages.length > 0) {
+      const mappedMsgs = messaging.messages.map((m: any) => ({
+        id: m.id,
+        sender: m.sender_name || 'User',
+        content: m.content,
+        time: m.created_at ? new Date(m.created_at).toLocaleTimeString() : '',
+        isOwn: m.is_own || false,
+        status: m.status || 'sent'
+      }));
+      setMessagesList(mappedMsgs);
+      setLoadingMessages(false);
+    }
+  }, [messaging.messages]);
+  
+  // Sync typing users from hook
+  useEffect(() => {
+    if (messaging.typingUsers.length > 0) {
+      setTypingUsers(messaging.typingUsers);
+    }
+  }, [messaging.typingUsers]);
   
   // Scroll to bottom when messages change
   const scrollToBottom = useCallback(() => {
@@ -154,7 +201,8 @@ export default function MessagesPage() {
   const handleTyping = useCallback(() => {
     if (!isTyping) {
       setIsTyping(true);
-      // In real app, broadcast typing status via Supabase Realtime
+      // Use hook's setTyping method to broadcast typing status
+      messaging.setTyping(true);
     }
     
     if (typingTimeoutRef.current) {
@@ -163,8 +211,9 @@ export default function MessagesPage() {
     
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
+      messaging.setTyping(false);
     }, 2000);
-  }, [isTyping]);
+  }, [isTyping, messaging]);
 
   const fetchData = useCallback(async (advisorId: string) => {
     try {
@@ -335,6 +384,8 @@ export default function MessagesPage() {
   const handleRefresh = async () => {
     if (!userId) return;
     setIsRefreshing(true);
+    // Use hook's refresh method
+    await messaging.refresh();
     await fetchData(userId);
     if (selectedConversation) {
       await fetchMessages(selectedConversation.id);
@@ -407,56 +458,37 @@ export default function MessagesPage() {
 
     // Optimistic update
     setMessagesList(prev => [...prev, newMsg]);
+    const messageContent = newMessage;
     setNewMessage("");
 
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([{
-          conversation_id: selectedConversation.id,
-          sender_id: userId,
-          content: newMsg.content,
-          sender_name: "You",
-          is_own: true,
-          read: false,
-          created_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update message with real ID and status
-      setMessagesList(prev => prev.map(m => 
-        m.id === tempId 
-          ? { ...m, id: data?.id || tempId, status: 'sent' as MessageStatus }
-          : m
-      ));
-
-      // Update conversation's last message in DB
-      await supabase
-        .from('conversations')
-        .update({
-          last_message: newMsg.content,
-          last_message_time: new Date().toISOString()
-        })
-        .eq('id', selectedConversation.id);
-
-      // Simulate delivery after a moment
-      setTimeout(() => {
+      // Use hook's sendMessage method
+      const result = await messaging.sendMessage(selectedConversation.id, messageContent);
+      
+      if (result) {
+        // Update message with real ID and status
         setMessagesList(prev => prev.map(m => 
-          m.id === (data?.id || tempId) 
-            ? { ...m, status: 'delivered' as MessageStatus }
+          m.id === tempId 
+            ? { ...m, id: result.id || tempId, status: 'sent' as MessageStatus }
             : m
         ));
-      }, 1000);
 
-      // Update conversation's last message locally
-      setConversationsList(prev => prev.map(c => 
-        c.id === selectedConversation.id 
-          ? { ...c, lastMessage: newMsg.content, lastMessageTime: "Just now" }
-          : c
-      ));
+        // Simulate delivery after a moment
+        setTimeout(() => {
+          setMessagesList(prev => prev.map(m => 
+            m.id === (result.id || tempId) 
+              ? { ...m, status: 'delivered' as MessageStatus }
+              : m
+          ));
+        }, 1000);
+
+        // Update conversation's last message locally
+        setConversationsList(prev => prev.map(c => 
+          c.id === selectedConversation.id 
+            ? { ...c, lastMessage: messageContent, lastMessageTime: "Just now" }
+            : c
+        ));
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       // Update status to show error but keep the message
@@ -469,7 +501,7 @@ export default function MessagesPage() {
       // Fallback - still show the message locally
       setConversationsList(prev => prev.map(c => 
         c.id === selectedConversation.id 
-          ? { ...c, lastMessage: newMsg.content, lastMessageTime: "Just now" }
+          ? { ...c, lastMessage: messageContent, lastMessageTime: "Just now" }
           : c
       ));
     } finally {

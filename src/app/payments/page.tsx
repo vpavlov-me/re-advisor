@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
+import { usePayments } from "@/lib/hooks/use-payments";
 import { 
   Home, 
   ChevronRight, 
@@ -156,6 +157,9 @@ const settingsNav = [
 ];
 
 export default function PaymentsPage() {
+  // Use centralized payments hook
+  const payments = usePayments();
+  
   const [paymentMethods, setPaymentMethods] = useState<any[]>(initialPaymentMethods);
   const [bankAccountsList, setBankAccountsList] = useState<any[]>(bankAccounts);
   const [transactions, setTransactions] = useState<any[]>(initialTransactions);
@@ -176,6 +180,21 @@ export default function PaymentsPage() {
   const [isConnectingStripe, setIsConnectingStripe] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
+
+  // Sync data from hook when available
+  useEffect(() => {
+    if (!payments.isLoading && payments.paymentMethods.length > 0) {
+      setPaymentMethods(payments.paymentMethods);
+    }
+    if (!payments.isLoading && payments.transactions.length > 0) {
+      setTransactions(payments.transactions);
+    }
+    if (!payments.isLoading) {
+      setBalance(payments.balance.available);
+      setIsStripeConnected(payments.stripeAccount?.status === 'active');
+      setIsLoading(false);
+    }
+  }, [payments.isLoading, payments.paymentMethods, payments.transactions, payments.balance, payments.stripeAccount]);
 
   // React Hook Form for card
   const {
@@ -517,44 +536,14 @@ export default function PaymentsPage() {
     
     setIsPayoutProcessing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Use hook's requestPayout method
+      const result = await payments.requestPayout(balance);
       
-      const amountStr = `+$${balance.toFixed(2)}`;
-      const invoiceId = `PAY-${Date.now().toString(36).toUpperCase()}`;
-      const newTx = {
-        advisor_id: user.id,
-        date: new Date().toISOString(),
-        description: "Payout - Manual Request",
-        amount: amountStr,
-        status: "completed",
-        type: "payout",
-        invoice_id: invoiceId
-      };
-
-      const { data } = await supabase.from('transactions').insert([newTx]).select();
-      
-      const savedTx = data ? {
-        id: data[0].id,
-        date: new Date(data[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        description: data[0].description,
-        amount: data[0].amount,
-        status: data[0].status,
-        type: data[0].type,
-        invoiceId: data[0].invoice_id
-      } : { 
-        ...newTx, 
-        id: Date.now(), 
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        invoiceId
-      };
-
-      setTransactions([savedTx, ...transactions]);
-      setBalance(0);
-      toast.success(`Payout of $${balance.toFixed(2)} initiated successfully`);
+      if (result) {
+        // Refresh data from hook
+        await payments.refresh();
+        toast.success(`Payout of $${balance.toFixed(2)} initiated successfully`);
+      }
     } catch (error) {
       console.error("Error requesting payout:", error);
       toast.error("Failed to request payout. Please try again.");
@@ -566,14 +555,13 @@ export default function PaymentsPage() {
   const handleConnectStripe = async () => {
     setIsConnectingStripe(true);
     try {
-      // Simulate Stripe Connect
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Use hook's startOnboarding method
+      const result = await payments.startOnboarding();
       
-      const data = {
-        url: 'https://connect.stripe.com/oauth/authorize?response_type=code&client_id=ca_12345&scope=read_write'
-      };
-
-      if (data.url) {
+      if (result?.url) {
+        // Redirect to Stripe Connect
+        window.location.href = result.url;
+      } else {
         setIsStripeConnected(true);
         toast.success("Stripe account connected successfully");
       }
