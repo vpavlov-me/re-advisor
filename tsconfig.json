@@ -37,6 +37,9 @@
   "exclude": [
     "node_modules",
     "playwright.config.ts",
-    "e2e/**/*"
+    "e2e/**/*",
+    "__tests__/**/*",
+    "jest.config.ts",
+    "jest.setup.ts"
   ]
 }
