@@ -37,7 +37,15 @@ import {
   ExternalLink,
   Save,
   EyeOff,
-  ArrowLeft
+  ArrowLeft,
+  LayoutGrid,
+  List,
+  ChevronDown,
+  FolderOpen,
+  Tag,
+  SlidersHorizontal,
+  PanelLeftClose,
+  PanelLeft
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +60,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -189,6 +203,10 @@ function KnowledgeCenterContent() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showSidebar, setShowSidebar] = useState(true);
 
   const fetchData = useCallback(async (advisorId: string) => {
     try {
@@ -1002,174 +1020,437 @@ function KnowledgeCenterContent() {
             <TabsTrigger value="constitution">Constitution Templates</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="library" className="space-y-6">
-            {/* Filters */}
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search resources..." 
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Resource Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="document">Documents</SelectItem>
-                  <SelectItem value="video">Videos</SelectItem>
-                  <SelectItem value="guide">Guides</SelectItem>
-                  <SelectItem value="template">Templates</SelectItem>
-                  <SelectItem value="constitution-template">Constitution</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+          <TabsContent value="library" className="space-y-0">
+            <div className="flex gap-6">
+              {/* Sidebar - Categories/Folders */}
+              {showSidebar && (
+                <div className="w-64 shrink-0 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Categories</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6"
+                      onClick={() => setIsFolderDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {/* All Resources */}
+                    <button
+                      onClick={() => setSelectedFolder(null)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                        selectedFolder === null 
+                          ? "bg-primary text-primary-foreground" 
+                          : "hover:bg-muted text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Folder className="h-4 w-4" />
+                        <span>All Resources</span>
+                      </div>
+                      <Badge variant={selectedFolder === null ? "secondary" : "outline"} className="text-xs">
+                        {resources.length}
+                      </Badge>
+                    </button>
+                    
+                    {/* Category folders */}
+                    {folders.map(folder => {
+                      const count = resources.filter(r => r.category === folder).length;
+                      return (
+                        <button
+                          key={folder}
+                          onClick={() => setSelectedFolder(selectedFolder === folder ? null : folder)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selectedFolder === folder 
+                              ? "bg-primary text-primary-foreground" 
+                              : "hover:bg-muted text-foreground"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {selectedFolder === folder ? (
+                              <FolderOpen className="h-4 w-4" />
+                            ) : (
+                              <Folder className="h-4 w-4" />
+                            )}
+                            <span className="truncate">{folder}</span>
+                          </div>
+                          <Badge variant={selectedFolder === folder ? "secondary" : "outline"} className="text-xs">
+                            {count}
+                          </Badge>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-            {/* Folders Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <Button 
-                variant="outline" 
-                className="h-auto py-4 flex flex-col gap-2 border-dashed"
-                onClick={() => setIsFolderDialogOpen(true)}
-              >
-                <Plus className="h-6 w-6 text-muted-foreground" />
-                <span className="text-xs">New Folder</span>
-              </Button>
-              {selectedFolder && (
-                <Button 
-                  variant="outline" 
-                  className="h-auto py-4 flex flex-col gap-2"
-                  onClick={() => setSelectedFolder(null)}
-                >
-                  <X className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs">Clear Filter</span>
-                </Button>
+                  <Separator />
+
+                  {/* Resource Types Filter */}
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Types</h3>
+                    <div className="space-y-1">
+                      {[
+                        { value: "all", label: "All Types", icon: LayoutGrid },
+                        { value: "document", label: "Documents", icon: FileText },
+                        { value: "article", label: "Articles", icon: LayoutTemplate },
+                        { value: "video", label: "Videos", icon: Video },
+                        { value: "podcast", label: "Podcasts", icon: Mic },
+                        { value: "guide", label: "Guides", icon: BookOpen },
+                        { value: "template", label: "Templates", icon: File },
+                        { value: "checklist", label: "Checklists", icon: CheckSquare },
+                        { value: "link", label: "Links", icon: LinkIcon },
+                      ].map(type => {
+                        const count = type.value === "all" 
+                          ? resources.length 
+                          : resources.filter(r => r.type === type.value).length;
+                        const Icon = type.icon;
+                        return (
+                          <button
+                            key={type.value}
+                            onClick={() => setSelectedType(type.value)}
+                            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm transition-colors ${
+                              selectedType === type.value 
+                                ? "bg-muted font-medium" 
+                                : "hover:bg-muted/50 text-muted-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-3.5 w-3.5" />
+                              <span>{type.label}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               )}
-              {folders.map(folder => (
-                <Button 
-                  key={folder} 
-                  variant={selectedFolder === folder ? "default" : "secondary"} 
-                  className="h-auto py-4 flex flex-col gap-2 hover:bg-secondary/80"
-                  onClick={() => {
-                    if (selectedFolder === folder) {
-                      setSelectedFolder(null);
-                    } else {
-                      setSelectedFolder(folder);
-                      setSearchQuery("");
-                      setSelectedType("all");
-                    }
-                  }}
-                >
-                  <Folder className={`h-6 w-6 ${selectedFolder === folder ? "text-primary-foreground" : "text-blue-500 fill-blue-500/20"}`} />
-                  <span className="text-xs font-medium">{folder}</span>
-                  <span className="text-[10px] opacity-70">
-                    {resources.filter(r => r.category === folder).length} items
-                  </span>
-                </Button>
-              ))}
-            </div>
 
-            {/* Resources Grid */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Loading resources...</span>
-              </div>
-            ) : filteredResources.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                <h3 className="text-lg font-medium mb-2">No resources found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery ? "Try a different search term" : "Add your first resource to get started"}
-                </p>
-                {!searchQuery && (
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Resource
-                  </Button>
+              {/* Main Content */}
+              <div className="flex-1 min-w-0 space-y-4">
+                {/* Toolbar */}
+                <div className="flex items-center gap-3">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => setShowSidebar(!showSidebar)}
+                        >
+                          {showSidebar ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {showSidebar ? "Hide sidebar" : "Show sidebar"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search resources..." 
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setSearchQuery("")}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <TooltipProvider>
+                    <div className="flex items-center border rounded-lg">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={viewMode === "grid" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="rounded-r-none"
+                            onClick={() => setViewMode("grid")}
+                          >
+                            <LayoutGrid className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Grid view</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={viewMode === "list" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="rounded-l-none"
+                            onClick={() => setViewMode("list")}
+                          >
+                            <List className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>List view</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
+                </div>
+
+                {/* Active Filters */}
+                {(selectedFolder || selectedType !== "all" || searchQuery) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-muted-foreground">Filters:</span>
+                    {selectedFolder && (
+                      <Badge variant="secondary" className="gap-1 pr-1">
+                        <Folder className="h-3 w-3" />
+                        {selectedFolder}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 ml-1 hover:bg-transparent"
+                          onClick={() => setSelectedFolder(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {selectedType !== "all" && (
+                      <Badge variant="secondary" className="gap-1 pr-1 capitalize">
+                        <Tag className="h-3 w-3" />
+                        {selectedType}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 ml-1 hover:bg-transparent"
+                          onClick={() => setSelectedType("all")}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {searchQuery && (
+                      <Badge variant="secondary" className="gap-1 pr-1">
+                        <Search className="h-3 w-3" />
+                        "{searchQuery}"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 ml-1 hover:bg-transparent"
+                          onClick={() => setSearchQuery("")}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-6"
+                      onClick={() => {
+                        setSelectedFolder(null);
+                        setSelectedType("all");
+                        setSearchQuery("");
+                      }}
+                    >
+                      Clear all
+                    </Button>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredResources.map((resource) => {
-                  const Icon = getIconForType(resource.type);
-                  return (
-                    <Card key={resource.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => openResourceDetail(resource.id)}>
-                      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 bg-primary/10 rounded-lg">
+
+                {/* Results count */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {filteredResources.length} {filteredResources.length === 1 ? "resource" : "resources"}
+                    {selectedFolder && ` in ${selectedFolder}`}
+                  </p>
+                </div>
+
+                {/* Resources Grid/List */}
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading resources...</span>
+                  </div>
+                ) : filteredResources.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                    <h3 className="text-lg font-medium mb-2">No resources found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery ? "Try a different search term" : selectedFolder ? `No resources in "${selectedFolder}"` : "Add your first resource to get started"}
+                    </p>
+                    {!searchQuery && (
+                      <Button onClick={() => setIsCreateDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Resource
+                      </Button>
+                    )}
+                  </div>
+                ) : viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredResources.map((resource) => {
+                      const Icon = getIconForType(resource.type);
+                      return (
+                        <Card key={resource.id} className="group hover:shadow-md transition-all hover:border-primary/50 cursor-pointer" onClick={() => openResourceDetail(resource.id)}>
+                          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="p-2 bg-primary/10 rounded-lg">
+                                <Icon className="h-5 w-5 text-primary" />
+                              </div>
+                              <Badge variant="outline" className="capitalize text-xs">{resource.type.replace("-", " ")}</Badge>
+                              {resource.isFeatured && (
+                                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                              )}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="-mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id); }}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
+                                    <Share2 className="h-4 w-4 mr-2" />
+                                    Share with Family
+                                  </DropdownMenuItem>
+                                )}
+                                {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
+                                    <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                                    {resource.isFeatured ? "Unfeature" : "Feature"}
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id, true); }}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(resource); }}>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); confirmDeleteResource(resource); }}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="mb-3">
+                              <h3 className="font-semibold leading-tight mb-1 line-clamp-1">{resource.title}</h3>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1">
+                                  <Folder className="h-3 w-3" />
+                                  {resource.category}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {resource.sharedWith}
+                                </span>
+                              </div>
+                              <span>{resource.updatedAt}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* List View */
+                  <div className="border rounded-lg divide-y">
+                    {filteredResources.map((resource) => {
+                      const Icon = getIconForType(resource.type);
+                      return (
+                        <div 
+                          key={resource.id} 
+                          className="flex items-center gap-4 p-4 hover:bg-muted/50 cursor-pointer group transition-colors"
+                          onClick={() => openResourceDetail(resource.id)}
+                        >
+                          <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                             <Icon className="h-5 w-5 text-primary" />
                           </div>
-                          <Badge variant="outline" className="capitalize">{resource.type.replace("-", " ")}</Badge>
-                          {resource.isFeatured && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          )}
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="-mr-2">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id); }}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
-                                <Share2 className="h-4 w-4 mr-2" />
-                                Share with Family
-                              </DropdownMenuItem>
-                            )}
-                            {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
-                                <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-                                {resource.isFeatured ? "Unfeature" : "Feature"}
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id, true); }}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(resource); }}>
-                              <Copy className="h-4 w-4 mr-2" />
-                              Duplicate
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); confirmDeleteResource(resource); }}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="mb-4">
-                          <h3 className="font-semibold text-lg leading-tight mb-2">{resource.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            <span>Shared with {resource.sharedWith}</span>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium truncate">{resource.title}</h3>
+                              {resource.isFeatured && (
+                                <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{resource.description}</p>
                           </div>
-                          <span>{resource.updatedAt}</span>
+                          
+                          <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground shrink-0">
+                            <Badge variant="outline" className="capitalize text-xs">{resource.type.replace("-", " ")}</Badge>
+                            <span className="w-24 truncate">{resource.category}</span>
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {resource.sharedWith}
+                            </span>
+                            <span className="w-24">{resource.updatedAt}</span>
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id); }}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Share with Family
+                                </DropdownMenuItem>
+                              )}
+                              {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
+                                  <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                                  {resource.isFeatured ? "Unfeature" : "Feature"}
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id, true); }}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(resource); }}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Duplicate
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); confirmDeleteResource(resource); }}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </TabsContent>
 
           <TabsContent value="shared" className="space-y-6">
