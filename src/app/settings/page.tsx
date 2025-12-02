@@ -26,7 +26,8 @@ import {
   Lock,
   Fingerprint,
   History,
-  Loader2
+  Loader2,
+  Tablet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,18 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  getUserSessions,
+  getLoginHistory,
+  upsertCurrentSession,
+  revokeSession,
+  revokeAllOtherSessions,
+  parseUserAgent,
+  formatLastActive,
+  formatLoginDate,
+  type UserSession,
+  type LoginHistoryEntry,
+} from "@/lib/sessions";
 
 // Password change schema
 const passwordSchema = z.object({
@@ -62,46 +75,6 @@ const passwordSchema = z.object({
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-// Login sessions
-const loginSessions = [
-  {
-    id: 1,
-    device: "MacBook Pro",
-    browser: "Chrome 119",
-    location: "New York, NY",
-    ip: "192.168.1.xxx",
-    lastActive: "Active now",
-    current: true,
-  },
-  {
-    id: 2,
-    device: "iPhone 15 Pro",
-    browser: "Safari Mobile",
-    location: "New York, NY",
-    ip: "192.168.1.xxx",
-    lastActive: "2 hours ago",
-    current: false,
-  },
-  {
-    id: 3,
-    device: "Windows PC",
-    browser: "Firefox 120",
-    location: "Boston, MA",
-    ip: "10.0.0.xxx",
-    lastActive: "3 days ago",
-    current: false,
-  },
-];
-
-// Login history
-const loginHistory = [
-  { date: "Nov 27, 2025 09:15 AM", device: "MacBook Pro", location: "New York, NY", status: "success" as const },
-  { date: "Nov 26, 2025 08:30 AM", device: "iPhone 15 Pro", location: "New York, NY", status: "success" as const },
-  { date: "Nov 25, 2025 02:45 PM", device: "MacBook Pro", location: "New York, NY", status: "success" as const },
-  { date: "Nov 24, 2025 11:20 AM", device: "Unknown Device", location: "Los Angeles, CA", status: "blocked" as const },
-  { date: "Nov 23, 2025 09:00 AM", device: "MacBook Pro", location: "New York, NY", status: "success" as const },
-];
-
 // Sidebar navigation
 const settingsNav = [
   { label: "Account & Security", href: "/settings", icon: Shield, active: true },
@@ -116,10 +89,13 @@ export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [sessions, setSessions] = useState(loginSessions);
+  const [sessions, setSessions] = useState<UserSession[]>([]);
+  const [loginHistoryData, setLoginHistoryData] = useState<LoginHistoryEntry[]>([]);
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -164,6 +140,15 @@ export default function SettingsPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && user.email) {
           setUserEmail(user.email);
+          
+          // Register/update current session
+          if (typeof window !== 'undefined') {
+            const deviceInfo = parseUserAgent(navigator.userAgent);
+            await upsertCurrentSession({
+              ...deviceInfo,
+              location: 'Unknown', // Would need IP geolocation service
+            });
+          }
         }
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -172,7 +157,36 @@ export default function SettingsPage() {
         setIsLoading(false);
       }
     };
+    
+    const loadSessions = async () => {
+      setIsLoadingSessions(true);
+      try {
+        const { data, error } = await getUserSessions();
+        if (error) throw error;
+        setSessions(data || []);
+      } catch (error) {
+        console.error("Error loading sessions:", error);
+      } finally {
+        setIsLoadingSessions(false);
+      }
+    };
+    
+    const loadLoginHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const { data, error } = await getLoginHistory({ limit: 10 });
+        if (error) throw error;
+        setLoginHistoryData(data || []);
+      } catch (error) {
+        console.error("Error loading login history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    
     getUser();
+    loadSessions();
+    loadLoginHistory();
   }, []);
 
   const onPasswordSubmit = async (data: PasswordFormData) => {
@@ -211,8 +225,8 @@ export default function SettingsPage() {
   const handleRevokeSession = async (sessionId: number) => {
     setRevokingSessionId(sessionId);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { success, error } = await revokeSession(sessionId);
+      if (error) throw error;
       setSessions(sessions.filter(s => s.id !== sessionId));
       toast.success("Session revoked successfully");
     } catch (error) {
@@ -495,29 +509,40 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3">
-                  {sessions.map((session) => (
+                  {isLoadingSessions ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Monitor className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No active sessions</p>
+                    </div>
+                  ) : sessions.map((session) => (
                     <div key={session.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                          {session.device.includes("iPhone") ? (
+                          {session.device_type === 'mobile' ? (
                             <Smartphone className="h-5 w-5 text-muted-foreground" />
+                          ) : session.device_type === 'tablet' ? (
+                            <Tablet className="h-5 w-5 text-muted-foreground" />
                           ) : (
                             <Monitor className="h-5 w-5 text-muted-foreground" />
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground text-sm">{session.device}</p>
-                            {session.current && (
+                            <p className="font-medium text-foreground text-sm">{session.device_name || 'Unknown Device'}</p>
+                            {session.is_current && (
                               <Badge variant="secondary" className="text-xs">Current</Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {session.browser} · {session.location} · {session.lastActive}
+                            {session.browser || 'Unknown Browser'} · {session.location || 'Unknown Location'} · {formatLastActive(session.last_active_at)}
                           </p>
                         </div>
                       </div>
-                      {!session.current && (
+                      {!session.is_current && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -554,23 +579,37 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="divide-y divide-border">
-                  {loginHistory.map((entry, index) => (
-                    <div key={index} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
+                  {isLoadingHistory ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : loginHistoryData.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No login history</p>
+                    </div>
+                  ) : loginHistoryData.map((entry) => (
+                    <div key={entry.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {entry.status === "success" ? (
                           <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
+                        ) : entry.status === "blocked" ? (
                           <AlertTriangle className="h-5 w-5 text-red-500" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-yellow-500" />
                         )}
                         <div>
-                          <p className="text-sm text-foreground">{entry.device}</p>
-                          <p className="text-xs text-muted-foreground">{entry.location}</p>
+                          <p className="text-sm text-foreground">{entry.device_name || 'Unknown Device'} · {entry.browser || ''}</p>
+                          <p className="text-xs text-muted-foreground">{entry.location || 'Unknown Location'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">{entry.date}</p>
+                        <p className="text-sm text-muted-foreground">{formatLoginDate(entry.created_at)}</p>
                         {entry.status === "blocked" && (
                           <Badge variant="destructive" className="text-xs">Blocked</Badge>
+                        )}
+                        {entry.status === "failed" && (
+                          <Badge variant="outline" className="text-xs text-yellow-600">Failed</Badge>
                         )}
                       </div>
                     </div>
