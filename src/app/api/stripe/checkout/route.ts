@@ -14,11 +14,16 @@ export async function POST(request: NextRequest) {
 
     const { planId } = await request.json();
     
-    if (!planId || !PLANS[planId as PlanId]) {
+    // Map legacy plan IDs to new ones
+    let resolvedPlanId = planId;
+    if (planId === 'starter') resolvedPlanId = 'standard';
+    if (planId === 'professional' || planId === 'enterprise') resolvedPlanId = 'premium';
+    
+    if (!resolvedPlanId || !PLANS[resolvedPlanId as PlanId]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    const plan = PLANS[planId as PlanId];
+    const plan = PLANS[resolvedPlanId as PlanId];
 
     // Get or create Stripe customer
     const { data: profile } = await supabase
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession(
       customerId,
       plan.priceId,
-      `${baseUrl}/subscription?success=true`,
+      `${baseUrl}/subscription?success=true&plan=${resolvedPlanId}`,
       `${baseUrl}/subscription?canceled=true`
     );
 

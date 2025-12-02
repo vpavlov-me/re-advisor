@@ -55,11 +55,19 @@ export async function POST(request: NextRequest) {
         const priceId = subscriptionItem.price.id;
 
         // Determine plan from price ID
-        let planId = "starter";
-        if (priceId === process.env.STRIPE_PROFESSIONAL_PRICE_ID) {
-          planId = "professional";
-        } else if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) {
-          planId = "enterprise";
+        let planId = "standard";
+        if (priceId === process.env.STRIPE_PREMIUM_PRICE_ID || priceId === process.env.STRIPE_PROFESSIONAL_PRICE_ID) {
+          planId = "premium";
+        } else if (priceId === process.env.STRIPE_ADDITIONAL_PORTAL_PRICE_ID) {
+          // This is an additional portal slot, increment the counter
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({
+              additional_portals: supabaseAdmin.rpc('increment_portals'),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("advisor_id", userId);
+          break;
         }
 
         // Upsert subscription in database
@@ -73,6 +81,8 @@ export async function POST(request: NextRequest) {
             stripe_customer_id: customerId,
             current_period_start: new Date(subscriptionItem.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscriptionItem.current_period_end * 1000).toISOString(),
+            portals_used: 0,
+            additional_portals: 0,
             updated_at: new Date().toISOString(),
           }, { onConflict: "advisor_id" });
 
@@ -94,11 +104,9 @@ export async function POST(request: NextRequest) {
         const priceId = subscriptionItem.price.id;
 
         // Determine plan from price ID
-        let planId = "starter";
-        if (priceId === process.env.STRIPE_PROFESSIONAL_PRICE_ID) {
-          planId = "professional";
-        } else if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) {
-          planId = "enterprise";
+        let planId = "standard";
+        if (priceId === process.env.STRIPE_PREMIUM_PRICE_ID || priceId === process.env.STRIPE_PROFESSIONAL_PRICE_ID) {
+          planId = "premium";
         }
 
         // Update subscription in database

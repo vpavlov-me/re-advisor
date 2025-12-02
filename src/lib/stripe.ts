@@ -40,63 +40,68 @@ export const stripe = {
 
 // Subscription plans
 export const PLANS = {
-  starter: {
-    id: "starter",
-    name: "Starter",
+  standard: {
+    id: "standard",
+    name: "Standard Consultant",
     price: 49,
-    priceId: process.env.STRIPE_STARTER_PRICE_ID!,
+    priceId: process.env.STRIPE_STANDARD_PRICE_ID || process.env.STRIPE_STARTER_PRICE_ID!,
     features: [
-      "Up to 5 family clients",
-      "10 consultations/month",
-      "Basic messaging",
-      "5GB storage",
-      "Email support",
+      "Доступ к маркетплейсу семей",
+      "Неограниченные консультации",
+      "Профиль в каталоге консультантов",
+      "Базовая аналитика",
+      "Email поддержка",
     ],
     limits: {
-      families: 5,
-      consultations: 10,
+      families: -1,
+      consultations: -1,
       storage: 5, // GB
+      familyPortals: 0,
     },
+  },
+  premium: {
+    id: "premium",
+    name: "Premium Consultant",
+    price: 99,
+    priceId: process.env.STRIPE_PREMIUM_PRICE_ID || process.env.STRIPE_PROFESSIONAL_PRICE_ID!,
+    features: [
+      "Всё из Standard плана",
+      "До 3 Family Portals включено",
+      "Приоритетная поддержка",
+      "Расширенная аналитика",
+      "Кастомный брендинг",
+    ],
+    limits: {
+      families: -1,
+      consultations: -1,
+      storage: 10,
+      familyPortals: 3,
+    },
+  },
+  // Legacy plan aliases for backwards compatibility
+  starter: {
+    id: "starter",
+    name: "Standard Consultant",
+    price: 49,
+    priceId: process.env.STRIPE_STANDARD_PRICE_ID || process.env.STRIPE_STARTER_PRICE_ID!,
+    features: [],
+    limits: { families: -1, consultations: -1, storage: 5, familyPortals: 0 },
   },
   professional: {
     id: "professional",
-    name: "Professional",
+    name: "Premium Consultant",
     price: 99,
-    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID!,
-    features: [
-      "Up to 15 family clients",
-      "20 consultations/month",
-      "Priority messaging",
-      "10GB storage",
-      "Priority support",
-      "Analytics dashboard",
-    ],
-    limits: {
-      families: 15,
-      consultations: 20,
-      storage: 10,
-    },
+    priceId: process.env.STRIPE_PREMIUM_PRICE_ID || process.env.STRIPE_PROFESSIONAL_PRICE_ID!,
+    features: [],
+    limits: { families: -1, consultations: -1, storage: 10, familyPortals: 3 },
   },
   enterprise: {
     id: "enterprise",
-    name: "Enterprise",
-    price: 249,
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID!,
-    features: [
-      "Unlimited family clients",
-      "Unlimited consultations",
-      "Priority messaging",
-      "50GB storage",
-      "Dedicated support",
-      "Advanced analytics",
-      "Custom branding",
-      "API access",
-    ],
-    limits: {
-      families: -1, // unlimited
-      consultations: -1,
-      storage: 50,
-    },
+    name: "Premium Consultant",
+    price: 99,
+    priceId: process.env.STRIPE_PREMIUM_PRICE_ID || process.env.STRIPE_ENTERPRISE_PRICE_ID!,
+    features: [],
+    limits: { families: -1, consultations: -1, storage: 50, familyPortals: 3 },
   },
 } as const;
 

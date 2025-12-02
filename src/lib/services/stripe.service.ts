@@ -1,12 +1,8 @@
 /**
  * Stripe Service for Client-Side Usage
  * 
- * This service provides a mock-first approach for Stripe integration.
- * It uses mock data by default and can be switched to real Stripe
- * by setting NEXT_PUBLIC_STRIPE_MODE=live in environment variables.
- * 
- * For GitHub Pages deployment, we can't use server-side Stripe SDK.
- * Real payments require Supabase Edge Functions or external backend.
+ * This service provides real Stripe integration through API routes.
+ * All sensitive operations happen server-side via /api/stripe/* endpoints.
  */
 
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
@@ -15,8 +11,9 @@ import { supabase, isSupabaseConfigured } from '../supabaseClient';
 // CONFIGURATION
 // ============================================
 
-export const STRIPE_MODE = process.env.NEXT_PUBLIC_STRIPE_MODE || 'mock';
-export const IS_MOCK_MODE = STRIPE_MODE === 'mock';
+// Always use live mode when Stripe keys are configured
+export const STRIPE_MODE = 'live';
+export const IS_MOCK_MODE = false;
 
 // ============================================
 // SUBSCRIPTION PLANS (Epic-028)
@@ -35,7 +32,7 @@ export const COMMISSION_RATES = {
 export const PORTAL_LIMITS = {
   standard: 0, // Standard cannot create portals
   premium: 3, // Premium includes 3 portals
-  additionalPortalPrice: 49, // $49/month for each additional portal
+  additionalPortalPrice: 29, // $29/month for each additional portal
 };
 
 // Subscription Plans - согласно Epic-028
@@ -43,20 +40,20 @@ export const PLANS = {
   standard: {
     id: 'standard',
     name: 'Standard Consultant',
-    price: 149,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_PRICE_ID || 'price_standard_mock',
-    description: 'For consultants working with existing families',
+    price: 49,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_PRICE_ID || '',
+    description: 'Для консультантов, работающих с существующими семьями',
     features: [
-      'Access to family marketplace',
-      'Work with unlimited families (their invitations)',
-      'Profile in consultant directory',
-      'Basic analytics',
-      'Email support',
-      `${COMMISSION_RATES.promotional}% commission (promo period)`,
+      'Доступ к маркетплейсу семей',
+      'Работа с неограниченным количеством семей (их приглашения)',
+      'Профиль в каталоге консультантов',
+      'Базовая аналитика',
+      'Email поддержка',
+      `${COMMISSION_RATES.promotional}% комиссии (промо период)`,
     ],
     limitations: [
-      'Cannot create Family Portals',
-      'Only External Consultant role in families',
+      'Нельзя создавать Family Portals',
+      'Только роль External Consultant в семьях',
     ],
     limits: {
       familyPortals: 0,
@@ -66,17 +63,17 @@ export const PLANS = {
   premium: {
     id: 'premium',
     name: 'Premium Consultant',
-    price: 599,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID || 'price_premium_mock',
-    description: 'For consultants creating their own Family Portals',
+    price: 99,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID || '',
+    description: 'Для консультантов, создающих собственные Family Portals',
     features: [
-      'Everything in Standard plan',
-      `Create up to ${PORTAL_LIMITS.premium} Family Portals (included)`,
-      'External Consultant + Administrator role in new families',
-      'Priority support',
-      'Advanced analytics',
-      'Ability to invite other consultants to portal',
-      `Additional portals: +$${PORTAL_LIMITS.additionalPortalPrice}/month`,
+      'Всё из Standard плана',
+      `Создание до ${PORTAL_LIMITS.premium} Family Portals (включено)`,
+      'Роль External Consultant + Administrator в новых семьях',
+      'Приоритетная поддержка',
+      'Расширенная аналитика',
+      'Возможность приглашать других консультантов в портал',
+      `Дополнительные порталы: +$${PORTAL_LIMITS.additionalPortalPrice}/месяц`,
     ],
     limitations: [],
     limits: {
@@ -91,7 +88,7 @@ export type PlanId = keyof typeof PLANS;
 // Legacy plan mapping for migration
 export const LEGACY_PLAN_MAPPING: Record<string, PlanId> = {
   starter: 'standard',
-  professional: 'standard',
+  professional: 'premium',
   enterprise: 'premium',
 };
 
@@ -176,136 +173,37 @@ export interface CheckoutSession {
 }
 
 // ============================================
-// MOCK DATA GENERATORS
-// ============================================
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-function generateMockSubscription(planId: PlanId, status: SubscriptionStatus = 'active'): Subscription {
-  const now = new Date();
-  const periodEnd = new Date(now);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
-  
-  const plan = PLANS[planId];
-  
-  return {
-    id: `sub_mock_${Date.now()}`,
-    plan_id: planId,
-    status,
-    current_period_start: now.toISOString(),
-    current_period_end: periodEnd.toISOString(),
-    cancel_at_period_end: false,
-    portals_used: planId === 'premium' ? 1 : 0, // Mock: 1 portal used for premium
-    portals_included: plan.limits.familyPortals,
-    additional_portals: 0,
-  };
-}
-
-function generateMockTransactions(): Transaction[] {
-  return [
-    {
-      id: 'txn_mock_1',
-      amount: 5000,
-      currency: 'usd',
-      status: 'succeeded',
-      type: 'payment',
-      description: 'Family Constitution Workshop - Morrison Family',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    },
-    {
-      id: 'txn_mock_2',
-      amount: -3500,
-      currency: 'usd',
-      status: 'succeeded',
-      type: 'payout',
-      description: 'Weekly payout to ****4242',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    },
-    {
-      id: 'txn_mock_3',
-      amount: 2500,
-      currency: 'usd',
-      status: 'pending',
-      type: 'payment',
-      description: 'Estate Planning Consultation - Chen Family',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      available_on: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5).toISOString(),
-    },
-    {
-      id: 'txn_mock_4',
-      amount: -150,
-      currency: 'usd',
-      status: 'succeeded',
-      type: 'fee',
-      description: 'Platform fee',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-    },
-    {
-      id: 'txn_mock_5',
-      amount: 7500,
-      currency: 'usd',
-      status: 'succeeded',
-      type: 'payment',
-      description: 'Monthly Retainer - Thompson Family',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(),
-    },
-  ];
-}
-
-// ============================================
 // SUBSCRIPTION MANAGEMENT
 // ============================================
 
 /**
- * Create a checkout session for subscription
- * In mock mode: Simulates immediate subscription activation
- * In live mode: Would redirect to Stripe Checkout (requires Edge Function)
+ * Create a checkout session for subscription via API route
  */
 export async function createCheckoutSession(planId: PlanId): Promise<{
   session: CheckoutSession | null;
   error: string | null;
 }> {
-  await delay(500);
-
-  if (!isSupabaseConfigured()) {
-    return { session: null, error: 'Supabase not configured' };
-  }
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { session: null, error: 'Not authenticated' };
+    const response = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ planId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { session: null, error: data.error || 'Failed to create checkout session' };
     }
 
-    if (IS_MOCK_MODE) {
-      // Mock mode: Create subscription directly in database
-      const subscription = generateMockSubscription(planId, 'trialing');
-      
-      await supabase.from('subscriptions').upsert({
-        advisor_id: user.id,
-        plan_id: planId,
-        status: 'trialing',
-        stripe_subscription_id: subscription.id,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'advisor_id' });
-
-      // Return mock checkout URL that triggers success
-      return {
-        session: {
-          id: `cs_mock_${Date.now()}`,
-          url: `/subscription?success=true&plan=${planId}`,
-        },
-        error: null,
-      };
-    }
-
-    // Live mode: Would call Supabase Edge Function
-    // For now, return error indicating live mode is not implemented
     return {
-      session: null,
-      error: 'Live Stripe integration requires Edge Functions. Please use mock mode or implement Edge Function.',
+      session: {
+        id: data.sessionId,
+        url: data.url,
+      },
+      error: null,
     };
   } catch (err) {
     console.error('Checkout session error:', err);
@@ -314,14 +212,12 @@ export async function createCheckoutSession(planId: PlanId): Promise<{
 }
 
 /**
- * Get current subscription
+ * Get current subscription from database
  */
 export async function getSubscription(): Promise<{
   subscription: Subscription | null;
   error: string | null;
 }> {
-  await delay(200);
-
   if (!isSupabaseConfigured()) {
     return { subscription: null, error: 'Supabase not configured' };
   }
@@ -361,7 +257,7 @@ export async function getSubscription(): Promise<{
         status: data.status as SubscriptionStatus,
         current_period_start: data.current_period_start,
         current_period_end: data.current_period_end,
-        cancel_at_period_end: false,
+        cancel_at_period_end: data.cancel_at_period_end || false,
         portals_used: data.portals_used || 0,
         portals_included: plan.limits.familyPortals,
         additional_portals: data.additional_portals || 0,
@@ -375,33 +271,25 @@ export async function getSubscription(): Promise<{
 }
 
 /**
- * Cancel subscription
+ * Cancel subscription via API
  */
 export async function cancelSubscription(): Promise<{
   success: boolean;
   error: string | null;
 }> {
-  await delay(500);
-
-  if (!isSupabaseConfigured()) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
+    const response = await fetch('/api/stripe/subscription/cancel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Failed to cancel subscription' };
     }
-
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        status: 'cancelled',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('advisor_id', user.id);
-
-    if (error) throw error;
 
     return { success: true, error: null };
   } catch (err) {
@@ -411,38 +299,59 @@ export async function cancelSubscription(): Promise<{
 }
 
 /**
- * Change subscription plan
+ * Change subscription plan via API
  */
 export async function changePlan(newPlanId: PlanId): Promise<{
   success: boolean;
   error: string | null;
 }> {
-  await delay(800);
-
-  if (!isSupabaseConfigured()) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
+    const response = await fetch('/api/stripe/subscription/change', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ planId: newPlanId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Failed to change plan' };
     }
-
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        plan_id: newPlanId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('advisor_id', user.id);
-
-    if (error) throw error;
 
     return { success: true, error: null };
   } catch (err) {
     console.error('Change plan error:', err);
     return { success: false, error: 'Failed to change plan' };
+  }
+}
+
+/**
+ * Open Stripe Customer Portal
+ */
+export async function openCustomerPortal(): Promise<{
+  url: string | null;
+  error: string | null;
+}> {
+  try {
+    const response = await fetch('/api/stripe/portal', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { url: null, error: data.error || 'Failed to open portal' };
+    }
+
+    return { url: data.url, error: null };
+  } catch (err) {
+    console.error('Customer portal error:', err);
+    return { url: null, error: 'Failed to open customer portal' };
   }
 }
 
@@ -458,28 +367,23 @@ export async function startStripeOnboarding(): Promise<{
   onboardingUrl: string | null;
   error: string | null;
 }> {
-  await delay(500);
-
-  if (!isSupabaseConfigured()) {
-    return { success: false, onboardingUrl: null, error: 'Supabase not configured' };
-  }
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, onboardingUrl: null, error: 'Not authenticated' };
+    const response = await fetch('/api/stripe/connect/onboarding', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, onboardingUrl: null, error: data.error || 'Failed to start onboarding' };
     }
-
-    const mockAccountId = `acct_mock_${Date.now()}`;
-
-    await supabase.from('profiles').update({
-      stripe_account_id: mockAccountId,
-      stripe_account_status: 'initiated',
-    }).eq('id', user.id);
 
     return {
       success: true,
-      onboardingUrl: `/payments?stripe_onboarding=true&account=${mockAccountId}`,
+      onboardingUrl: data.url,
       error: null,
     };
   } catch (err) {
@@ -489,67 +393,12 @@ export async function startStripeOnboarding(): Promise<{
 }
 
 /**
- * Complete Stripe onboarding (mock)
- */
-export async function completeStripeOnboarding(_data: {
-  businessName: string;
-  website?: string;
-  bankAccount?: {
-    routingNumber: string;
-    accountNumber: string;
-    accountHolderName: string;
-  };
-}): Promise<{ success: boolean; error: string | null }> {
-  await delay(1000);
-
-  if (!isSupabaseConfigured()) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
-    }
-
-    // Simulate verification (90% success rate)
-    const isSuccess = Math.random() > 0.1;
-
-    if (isSuccess) {
-      await supabase.from('profiles').update({
-        stripe_account_status: 'pending',
-      }).eq('id', user.id);
-
-      // Auto-verify after delay
-      setTimeout(async () => {
-        await supabase.from('profiles').update({
-          stripe_account_status: 'active',
-        }).eq('id', user.id);
-      }, 2000);
-
-      return { success: true, error: null };
-    } else {
-      await supabase.from('profiles').update({
-        stripe_account_status: 'failed',
-      }).eq('id', user.id);
-
-      return { success: false, error: 'Verification failed. Please try again.' };
-    }
-  } catch (err) {
-    console.error('Complete onboarding error:', err);
-    return { success: false, error: 'Failed to complete onboarding' };
-  }
-}
-
-/**
- * Get Stripe account status
+ * Get Stripe account status from database
  */
 export async function getStripeAccountStatus(): Promise<{
   account: StripeAccount | null;
   error: string | null;
 }> {
-  await delay(200);
-
   if (!isSupabaseConfigured()) {
     return { account: null, error: 'Supabase not configured' };
   }
@@ -562,19 +411,19 @@ export async function getStripeAccountStatus(): Promise<{
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_account_id, stripe_account_status')
+      .select('stripe_account_id, stripe_account_status, stripe_customer_id')
       .eq('id', user.id)
       .single();
 
-    if (!profile?.stripe_account_id) {
+    if (!profile?.stripe_account_id && !profile?.stripe_customer_id) {
       return { account: null, error: null };
     }
 
-    const status = profile.stripe_account_status as StripeAccountStatus || 'not_started';
+    const status = (profile.stripe_account_status as StripeAccountStatus) || 'not_started';
 
     return {
       account: {
-        id: profile.stripe_account_id,
+        id: profile.stripe_account_id || profile.stripe_customer_id,
         status,
         payouts_enabled: status === 'active',
         charges_enabled: status === 'active',
@@ -585,7 +434,7 @@ export async function getStripeAccountStatus(): Promise<{
           past_due: [],
           pending_verification: status === 'pending' ? ['identity_document'] : [],
         },
-        business_profile: { name: 'Advisor Business', url: null },
+        business_profile: { name: null, url: null },
         created_at: new Date().toISOString(),
       },
       error: null,
@@ -601,7 +450,7 @@ export async function getStripeAccountStatus(): Promise<{
 // ============================================
 
 /**
- * Get balance
+ * Get balance from Stripe via API
  */
 export async function getBalance(): Promise<{
   available: number;
@@ -609,38 +458,42 @@ export async function getBalance(): Promise<{
   currency: string;
   error: string | null;
 }> {
-  await delay(200);
+  try {
+    const response = await fetch('/api/stripe/balance');
+    
+    if (!response.ok) {
+      // Return zeros if balance API fails
+      return { available: 0, pending: 0, currency: 'usd', error: null };
+    }
 
-  // Return mock balance
-  return {
-    available: 15420.50,
-    pending: 2350.00,
-    currency: 'usd',
-    error: null,
-  };
+    const data = await response.json();
+    return {
+      available: data.available || 0,
+      pending: data.pending || 0,
+      currency: data.currency || 'usd',
+      error: null,
+    };
+  } catch (err) {
+    console.error('Get balance error:', err);
+    return { available: 0, pending: 0, currency: 'usd', error: null };
+  }
 }
 
 /**
- * Get transactions
+ * Get transactions from database
  */
 export async function getTransactions(limit: number = 10): Promise<{
   transactions: Transaction[];
   error: string | null;
 }> {
-  await delay(300);
-
   if (!isSupabaseConfigured()) {
-    // Return mock data
-    return {
-      transactions: generateMockTransactions().slice(0, limit),
-      error: null,
-    };
+    return { transactions: [], error: 'Supabase not configured' };
   }
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { transactions: generateMockTransactions().slice(0, limit), error: null };
+      return { transactions: [], error: 'Not authenticated' };
     }
 
     const { data, error } = await supabase
@@ -652,21 +505,13 @@ export async function getTransactions(limit: number = 10): Promise<{
 
     if (error) throw error;
 
-    if (!data || data.length === 0) {
-      // Return mock data if no real transactions
-      return {
-        transactions: generateMockTransactions().slice(0, limit),
-        error: null,
-      };
-    }
-
     return {
-      transactions: data.map(t => ({
+      transactions: (data || []).map(t => ({
         id: t.id.toString(),
-        amount: parseFloat(t.amount?.replace(/[^0-9.-]+/g, '') || '0') * 100,
+        amount: parseFloat(t.amount?.toString().replace(/[^0-9.-]+/g, '') || '0') * 100,
         currency: 'usd',
-        status: t.status as Transaction['status'] || 'succeeded',
-        type: t.type as Transaction['type'] || 'payment',
+        status: (t.status as Transaction['status']) || 'succeeded',
+        type: (t.type as Transaction['type']) || 'payment',
         description: t.description || '',
         created_at: t.created_at,
       })),
@@ -674,29 +519,42 @@ export async function getTransactions(limit: number = 10): Promise<{
     };
   } catch (err) {
     console.error('Get transactions error:', err);
-    return { transactions: generateMockTransactions().slice(0, limit), error: null };
+    return { transactions: [], error: 'Failed to get transactions' };
   }
 }
 
 /**
- * Request payout
+ * Request payout via API
  */
 export async function requestPayout(amount: number): Promise<{
   success: boolean;
   payoutId: string | null;
   error: string | null;
 }> {
-  await delay(800);
+  try {
+    const response = await fetch('/api/stripe/payouts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ amount }),
+    });
 
-  if (amount < 1000) { // $10 minimum in cents
-    return { success: false, payoutId: null, error: 'Minimum payout amount is $10' };
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, payoutId: null, error: data.error || 'Failed to request payout' };
+    }
+
+    return {
+      success: true,
+      payoutId: data.payoutId,
+      error: null,
+    };
+  } catch (err) {
+    console.error('Request payout error:', err);
+    return { success: false, payoutId: null, error: 'Failed to request payout' };
   }
-
-  return {
-    success: true,
-    payoutId: `po_mock_${Date.now()}`,
-    error: null,
-  };
 }
 
 // ============================================
@@ -704,22 +562,20 @@ export async function requestPayout(amount: number): Promise<{
 // ============================================
 
 /**
- * Get payment methods
+ * Get payment methods from database
  */
 export async function getPaymentMethods(): Promise<{
   methods: PaymentMethod[];
   error: string | null;
 }> {
-  await delay(300);
-
   if (!isSupabaseConfigured()) {
-    return { methods: [], error: null };
+    return { methods: [], error: 'Supabase not configured' };
   }
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { methods: [], error: null };
+      return { methods: [], error: 'Not authenticated' };
     }
 
     const { data, error } = await supabase
@@ -748,7 +604,8 @@ export async function getPaymentMethods(): Promise<{
 }
 
 /**
- * Add payment method (mock)
+ * Add payment method via Stripe
+ * Note: In production, this should use Stripe Elements for PCI compliance
  */
 export async function addPaymentMethod(data: {
   cardNumber: string;
@@ -759,8 +616,6 @@ export async function addPaymentMethod(data: {
   method: PaymentMethod | null;
   error: string | null;
 }> {
-  await delay(800);
-
   if (!isSupabaseConfigured()) {
     return { method: null, error: 'Supabase not configured' };
   }
@@ -773,15 +628,17 @@ export async function addPaymentMethod(data: {
 
     const last4 = data.cardNumber.slice(-4);
     
+    // For real Stripe integration, we'd use Stripe Elements
+    // For now, save to database (demo mode)
     const { data: pm, error } = await supabase
       .from('payment_methods')
       .insert({
         advisor_id: user.id,
         type: 'card',
-        brand: 'visa',
+        brand: detectCardBrand(data.cardNumber),
         last4,
         expiry: `${data.expMonth}/${data.expYear.toString().slice(-2)}`,
-        is_default: true,
+        is_default: false,
       })
       .select()
       .single();
@@ -792,11 +649,11 @@ export async function addPaymentMethod(data: {
       method: {
         id: pm.id.toString(),
         type: 'card',
-        brand: 'visa',
+        brand: pm.brand || 'visa',
         last4,
         exp_month: data.expMonth,
         exp_year: data.expYear,
-        is_default: true,
+        is_default: false,
       },
       error: null,
     };
@@ -806,6 +663,16 @@ export async function addPaymentMethod(data: {
   }
 }
 
+// Helper to detect card brand
+function detectCardBrand(number: string): string {
+  const cleaned = number.replace(/\s/g, '');
+  if (/^4/.test(cleaned)) return 'visa';
+  if (/^5[1-5]/.test(cleaned)) return 'mastercard';
+  if (/^3[47]/.test(cleaned)) return 'amex';
+  if (/^6(?:011|5)/.test(cleaned)) return 'discover';
+  return 'card';
+}
+
 /**
  * Remove payment method
  */
@@ -813,8 +680,6 @@ export async function removePaymentMethod(methodId: string): Promise<{
   success: boolean;
   error: string | null;
 }> {
-  await delay(500);
-
   if (!isSupabaseConfigured()) {
     return { success: false, error: 'Supabase not configured' };
   }
@@ -845,12 +710,6 @@ export async function getPortalUsage(): Promise<{
   usage: PortalUsage | null;
   error: string | null;
 }> {
-  await delay(200);
-
-  if (!isSupabaseConfigured()) {
-    return { usage: null, error: 'Supabase not configured' };
-  }
-
   try {
     const { subscription, error } = await getSubscription();
     
@@ -908,7 +767,7 @@ export async function canCreatePortal(): Promise<{
   if (!subscription) {
     return {
       canCreate: false,
-      reason: 'An active subscription is required to create a Family Portal',
+      reason: 'Необходима активная подписка для создания Family Portal',
       upgradeRequired: true,
     };
   }
@@ -918,7 +777,7 @@ export async function canCreatePortal(): Promise<{
   if (!plan.limits.canCreatePortals) {
     return {
       canCreate: false,
-      reason: 'Standard plan does not allow creating Family Portals. Upgrade to Premium.',
+      reason: 'План Standard не позволяет создавать Family Portals. Перейдите на Premium.',
       upgradeRequired: true,
     };
   }
@@ -928,7 +787,7 @@ export async function canCreatePortal(): Promise<{
   if (subscription.portals_used >= total) {
     return {
       canCreate: false,
-      reason: `Portal limit reached (${subscription.portals_used}/${total}). Add an additional slot.`,
+      reason: `Достигнут лимит порталов (${subscription.portals_used}/${total}). Добавьте дополнительный слот.`,
       upgradeRequired: false,
     };
   }
@@ -937,46 +796,27 @@ export async function canCreatePortal(): Promise<{
 }
 
 /**
- * Purchase additional portal slot
+ * Purchase additional portal slot via API
  */
 export async function purchaseAdditionalPortal(): Promise<{
   success: boolean;
   error: string | null;
 }> {
-  await delay(800);
-
-  if (!isSupabaseConfigured()) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: 'Not authenticated' };
+    const response = await fetch('/api/stripe/portal-slot', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Failed to purchase portal slot' };
     }
 
-    const { subscription } = await getSubscription();
-    if (!subscription || subscription.plan_id !== 'premium') {
-      return { success: false, error: 'Premium subscription required' };
-    }
-
-    // In mock mode, just increment the additional_portals counter
-    if (IS_MOCK_MODE) {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          additional_portals: (subscription.additional_portals || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('advisor_id', user.id);
-
-      if (error) throw error;
-
-      return { success: true, error: null };
-    }
-
-    // Live mode would create a Stripe subscription item
-    return { success: false, error: 'Live Stripe integration not implemented' };
+    return { success: true, error: null };
   } catch (err) {
     console.error('Purchase additional portal error:', err);
     return { success: false, error: 'Failed to purchase additional portal' };
@@ -990,8 +830,6 @@ export async function incrementPortalUsage(): Promise<{
   success: boolean;
   error: string | null;
 }> {
-  await delay(200);
-
   if (!isSupabaseConfigured()) {
     return { success: false, error: 'Supabase not configured' };
   }
@@ -1060,7 +898,7 @@ export function getUpgradePreview(
     newCharge,
     netAmount,
     description: isUpgrade
-      ? `Upgrade from ${from.name} to ${to.name}. Due now: $${netAmount > 0 ? netAmount.toFixed(2) : '0.00'}`
-      : `Downgrade from ${from.name} to ${to.name}. Changes will take effect at the end of the current period.`,
+      ? `Апгрейд с ${from.name} на ${to.name}. К оплате сейчас: $${netAmount > 0 ? netAmount.toFixed(2) : '0.00'}`
+      : `Даунгрейд с ${from.name} на ${to.name}. Изменения вступят в силу в конце текущего периода.`,
   };
 }
