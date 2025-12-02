@@ -29,6 +29,16 @@ export interface Message {
   created_at: string;
 }
 
+export interface ConversationParticipant {
+  id: number;
+  conversation_id: number;
+  user_id?: string;
+  family_member_id?: number;
+  participant_name: string;
+  role: 'owner' | 'member';
+  added_at: string;
+}
+
 export interface CreateMessageInput {
   conversation_id: number;
   content: string;
@@ -170,6 +180,65 @@ export async function deleteConversation(conversationId: number): Promise<{
     .from('conversations')
     .delete()
     .eq('id', conversationId);
+
+  return { success: !error, error };
+}
+
+// ============ PARTICIPANTS ============
+
+/**
+ * Get participants for a conversation
+ */
+export async function getConversationParticipants(
+  conversationId: number
+): Promise<{ data: ConversationParticipant[] | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('conversation_participants')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('added_at', { ascending: true });
+
+  return { data, error };
+}
+
+/**
+ * Add a participant to a conversation
+ */
+export async function addConversationParticipant(input: {
+  conversation_id: number;
+  family_member_id?: number;
+  user_id?: string;
+  participant_name: string;
+  role?: 'owner' | 'member';
+}): Promise<{ data: ConversationParticipant | null; error: Error | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  const { data, error } = await supabase
+    .from('conversation_participants')
+    .insert({
+      conversation_id: input.conversation_id,
+      family_member_id: input.family_member_id,
+      user_id: input.user_id,
+      participant_name: input.participant_name,
+      role: input.role || 'member',
+      added_by: user?.id,
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
+ * Remove a participant from a conversation
+ */
+export async function removeConversationParticipant(
+  participantId: number
+): Promise<{ success: boolean; error: Error | null }> {
+  const { error } = await supabase
+    .from('conversation_participants')
+    .delete()
+    .eq('id', participantId);
 
   return { success: !error, error };
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useMessaging } from "@/lib/hooks/use-messaging";
+import { togglePinConversation, addConversationParticipant, getConversationParticipants } from "@/lib/messages";
+import type { ConversationParticipant } from "@/lib/messages";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -120,6 +122,12 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isConversationInfoOpen, setIsConversationInfoOpen] = useState(false);
+  const [isAddParticipantsOpen, setIsAddParticipantsOpen] = useState(false);
+  const [availableMembersForAdd, setAvailableMembersForAdd] = useState<FamilyMember[]>([]);
+  const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<number[]>([]);
+  const [existingParticipants, setExistingParticipants] = useState<ConversationParticipant[]>([]);
+  const [addingParticipants, setAddingParticipants] = useState(false);
   
   // Typing indicator state
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -489,6 +497,82 @@ export default function MessagesPage() {
     }
   };
 
+  const handleOpenAddParticipants = async () => {
+    if (!selectedConversation) return;
+    
+    // Get the family for this conversation
+    const family = familiesList.find(f => f.id === selectedConversation.familyId);
+    if (!family) {
+      toast.error("Could not find family for this conversation");
+      return;
+    }
+
+    // Get existing participants
+    const { data: participants } = await getConversationParticipants(selectedConversation.id);
+    setExistingParticipants(participants || []);
+    
+    // Filter out members who are already participants
+    const existingMemberIds = (participants || [])
+      .filter(p => p.family_member_id)
+      .map(p => p.family_member_id);
+    
+    const availableMembers = family.members.filter(
+      m => !existingMemberIds.includes(m.id)
+    );
+    
+    setAvailableMembersForAdd(availableMembers);
+    setSelectedMembersToAdd([]);
+    setIsAddParticipantsOpen(true);
+  };
+
+  const handleAddSelectedParticipants = async () => {
+    if (!selectedConversation || selectedMembersToAdd.length === 0) return;
+    
+    setAddingParticipants(true);
+    try {
+      const family = familiesList.find(f => f.id === selectedConversation.familyId);
+      if (!family) throw new Error("Family not found");
+      
+      const membersToAdd = family.members.filter(m => selectedMembersToAdd.includes(m.id));
+      
+      for (const member of membersToAdd) {
+        await addConversationParticipant({
+          conversation_id: selectedConversation.id,
+          family_member_id: member.id,
+          participant_name: member.name,
+          role: 'member',
+        });
+      }
+      
+      // Update local participants list in conversation
+      const newParticipants = [
+        ...selectedConversation.participants,
+        ...membersToAdd.map(m => m.name)
+      ];
+      
+      setSelectedConversation({
+        ...selectedConversation,
+        participants: newParticipants,
+      });
+      
+      setConversationsList(prev =>
+        prev.map(c =>
+          c.id === selectedConversation.id
+            ? { ...c, participants: newParticipants }
+            : c
+        )
+      );
+      
+      toast.success(`Added ${membersToAdd.length} participant${membersToAdd.length > 1 ? 's' : ''}`);
+      setIsAddParticipantsOpen(false);
+    } catch (error) {
+      console.error("Error adding participants:", error);
+      toast.error("Failed to add participants");
+    } finally {
+      setAddingParticipants(false);
+    }
+  };
+
   const handleOpenNewConversation = () => {
     setNewConvStep("family");
     setSelectedFamilyForConv(null);
@@ -786,14 +870,28 @@ export default function MessagesPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem 
                               className="gap-2 cursor-pointer"
-                              onClick={() => toast.info("Add participants feature coming soon")}
+                              onClick={handleOpenAddParticipants}
                             >
                               <UserPlus className="h-4 w-4" />
                               Add Participants
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="gap-2 cursor-pointer"
-                              onClick={() => toast.info("Pin conversation feature coming soon")}
+                              onClick={async () => {
+                                if (!selectedConversation) return;
+                                const newPinned = !selectedConversation.pinned;
+                                const { success, error } = await togglePinConversation(selectedConversation.id, newPinned);
+                                if (success) {
+                                  setSelectedConversation({ ...selectedConversation, pinned: newPinned });
+                                  setConversationsList(prev => 
+                                    prev.map(c => c.id === selectedConversation.id ? { ...c, pinned: newPinned } : c)
+                                      .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+                                  );
+                                  toast.success(newPinned ? "Conversation pinned" : "Conversation unpinned");
+                                } else {
+                                  toast.error("Failed to update conversation");
+                                }
+                              }}
                             >
                               <Pin className="h-4 w-4" />
                               {selectedConversation?.pinned ? "Unpin Conversation" : "Pin Conversation"}
@@ -801,7 +899,7 @@ export default function MessagesPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               className="gap-2 cursor-pointer"
-                              onClick={() => toast.info("Conversation info feature coming soon")}
+                              onClick={() => setIsConversationInfoOpen(true)}
                             >
                               <Info className="h-4 w-4" />
                               Conversation Info
@@ -1075,6 +1173,170 @@ export default function MessagesPage() {
                 onClick={handleStartConversation}
               >
                 Start Conversation
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Conversation Info Dialog */}
+      <Dialog open={isConversationInfoOpen} onOpenChange={setIsConversationInfoOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Conversation Info</DialogTitle>
+          </DialogHeader>
+          {selectedConversation && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="text-lg">
+                    {selectedConversation.title?.substring(0, 2).toUpperCase() || "CV"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-lg">{selectedConversation.title}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedConversation.familyName}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-sm text-muted-foreground">Family</span>
+                  <span className="text-sm font-medium">{selectedConversation.familyName}</span>
+                </div>
+                
+                <div className="py-2 border-b">
+                  <span className="text-sm text-muted-foreground">Participants</span>
+                  <div className="mt-2 space-y-2">
+                    {selectedConversation.participants.length > 0 ? (
+                      selectedConversation.participants.map((participant, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="text-xs">
+                              {participant.split(" ").map(n => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{participant}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No participants</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-sm text-muted-foreground">Messages</span>
+                  <span className="text-sm font-medium">{messagesList.length}</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="text-sm text-muted-foreground">Pinned</span>
+                  <Badge variant={selectedConversation.pinned ? "default" : "secondary"}>
+                    {selectedConversation.pinned ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Unread</span>
+                  <Badge variant={selectedConversation.unread > 0 ? "destructive" : "secondary"}>
+                    {selectedConversation.unread}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConversationInfoOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Participants Dialog */}
+      <Dialog open={isAddParticipantsOpen} onOpenChange={setIsAddParticipantsOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Participants</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {availableMembersForAdd.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
+                  All family members are already in this conversation
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Select family members to add to this conversation:
+                </p>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {availableMembersForAdd.map((member) => (
+                    <div
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMembersToAdd(prev =>
+                          prev.includes(member.id)
+                            ? prev.filter(id => id !== member.id)
+                            : [...prev, member.id]
+                        );
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedMembersToAdd.includes(member.id)
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback>{member.avatar || member.name.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="font-medium">{member.name}</div>
+                        <div className="text-xs text-muted-foreground">{member.role}</div>
+                      </div>
+                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedMembersToAdd.includes(member.id)
+                          ? "bg-primary border-primary"
+                          : "border-muted-foreground"
+                      }`}>
+                        {selectedMembersToAdd.includes(member.id) && (
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {selectedMembersToAdd.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedMembersToAdd.length} member{selectedMembersToAdd.length > 1 ? 's' : ''} selected
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddParticipantsOpen(false)}>
+              Cancel
+            </Button>
+            {availableMembersForAdd.length > 0 && (
+              <Button 
+                onClick={handleAddSelectedParticipants}
+                disabled={selectedMembersToAdd.length === 0 || addingParticipants}
+              >
+                {addingParticipants ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Selected
+                  </>
+                )}
               </Button>
             )}
           </DialogFooter>
