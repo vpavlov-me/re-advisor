@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { 
   ChevronLeft, 
   Save, 
   Eye, 
   CheckCircle2, 
-  AlertCircle,
-  ChevronRight,
   MoreVertical,
   FileText,
   Layout,
   Type,
   ListOrdered,
-  Settings
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,28 +36,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
 
 // Predefined Sections
 const SECTIONS = [
-  { id: "vision", title: "1. Family Vision & Mission", description: "Purpose and long-term aspirations" },
-  { id: "values", title: "2. Family Values", description: "Core principles and beliefs" },
-  { id: "governance", title: "3. Governance Structure", description: "Leadership roles and organization" },
-  { id: "decision", title: "4. Decision-Making Process", description: "How decisions are made and approved" },
-  { id: "conflict", title: "5. Conflict Resolution", description: "Process for handling disagreements" },
-  { id: "succession", title: "6. Succession Planning", description: "Leadership transition guidelines" },
-  { id: "education", title: "7. Education & Development", description: "Family member growth and learning" },
-  { id: "philanthropy", title: "8. Philanthropy Guidelines", description: "Charitable giving framework" },
-  { id: "assets", title: "9. Asset Management Principles", description: "Wealth stewardship guidelines" },
-  { id: "communication", title: "10. Communication Standards", description: "How family communicates" },
-  { id: "meetings", title: "11. Meeting Protocols", description: "Meeting structure and processes" },
-  { id: "amendment", title: "12. Amendment Process", description: "How constitution can be changed" },
+  { id: "vision", number: 1, title: "1. Family Vision & Mission", description: "Purpose and long-term aspirations" },
+  { id: "values", number: 2, title: "2. Family Values", description: "Core principles and beliefs" },
+  { id: "governance", number: 3, title: "3. Governance Structure", description: "Leadership roles and organization" },
+  { id: "decision", number: 4, title: "4. Decision-Making Process", description: "How decisions are made and approved" },
+  { id: "conflict", number: 5, title: "5. Conflict Resolution", description: "Process for handling disagreements" },
+  { id: "succession", number: 6, title: "6. Succession Planning", description: "Leadership transition guidelines" },
+  { id: "education", number: 7, title: "7. Education & Development", description: "Family member growth and learning" },
+  { id: "philanthropy", number: 8, title: "8. Philanthropy Guidelines", description: "Charitable giving framework" },
+  { id: "assets", number: 9, title: "9. Asset Management Principles", description: "Wealth stewardship guidelines" },
+  { id: "communication", number: 10, title: "10. Communication Standards", description: "How family communicates" },
+  { id: "meetings", number: 11, title: "11. Meeting Protocols", description: "Meeting structure and processes" },
+  { id: "amendment", number: 12, title: "12. Amendment Process", description: "How constitution can be changed" },
 ];
 
 export default function CreateConstitutionTemplatePage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState(SECTIONS[0].id);
   const [templateData, setTemplateData] = useState({
     title: "New Constitution Template",
@@ -66,6 +66,7 @@ export default function CreateConstitutionTemplatePage() {
   });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTitleDialogOpen, setIsTitleDialogOpen] = useState(false);
 
   const handleSectionChange = (id: string, content: string) => {
     setTemplateData(prev => ({
@@ -83,28 +84,67 @@ export default function CreateConstitutionTemplatePage() {
   };
 
   const handleSave = async (asDraft = true) => {
+    if (!templateData.title.trim()) {
+      toast.error("Please enter a title for the template");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('ConstitutionTemplate')
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to create a template");
+        return;
+      }
+
+      // Create the constitution template
+      const { data: templateResult, error: templateError } = await supabase
+        .from('constitution_templates')
         .insert([{
+          advisor_id: user.id,
           title: templateData.title,
           description: templateData.description,
-          sections: templateData.sections,
-          // isDraft is not in schema, ignoring for now or could be added to schema
-        }]);
+          is_published: !asDraft
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (templateError) throw templateError;
 
-      // Success handling
-      alert(asDraft ? "Draft saved successfully!" : "Template published successfully!");
-      // Optionally redirect or update UI state
+      // Create sections
+      if (templateResult) {
+        const sectionsToInsert = SECTIONS.map((section) => ({
+          template_id: templateResult.id,
+          section_number: section.number,
+          title: section.title,
+          content: templateData.sections[section.id] || "",
+          is_required: true
+        }));
+
+        const { error: sectionsError } = await supabase
+          .from('constitution_sections')
+          .insert(sectionsToInsert);
+
+        if (sectionsError) {
+          console.error("Error saving sections:", sectionsError);
+          // Don't fail the whole operation, template is created
+        }
+      }
+
+      toast.success(asDraft ? "Draft saved successfully!" : "Template published successfully!");
+      router.push("/knowledge");
     } catch (error) {
       console.error("Error saving template:", error);
-      alert("Failed to save template. Please try again.");
+      toast.error("Failed to save template. Please try again.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleClearSection = () => {
+    handleSectionChange(activeSection, "");
+    toast.success("Section cleared");
   };
 
   return (
@@ -118,12 +158,15 @@ export default function CreateConstitutionTemplatePage() {
                 <ChevronLeft className="h-5 w-5" />
               </Link>
             </Button>
-            <div>
+            <div 
+              className="cursor-pointer hover:bg-muted/50 p-2 rounded-md -m-2"
+              onClick={() => setIsTitleDialogOpen(true)}
+            >
               <div className="flex items-center gap-2">
                 <h1 className="font-semibold text-lg">{templateData.title}</h1>
                 <Badge variant="outline">Draft</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">Last saved just now</p>
+              <p className="text-xs text-muted-foreground">Click to edit title</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -135,10 +178,11 @@ export default function CreateConstitutionTemplatePage() {
               Preview
             </Button>
             <Button variant="outline" onClick={() => handleSave(true)} disabled={isSaving}>
+              {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Save Draft
             </Button>
             <Button onClick={() => handleSave(false)} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               Publish
             </Button>
           </div>
@@ -215,7 +259,7 @@ export default function CreateConstitutionTemplatePage() {
                       <Layout className="h-4 w-4 mr-2" />
                       Load Example Content
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem className="text-destructive" onClick={handleClearSection}>
                       Clear Section
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -223,7 +267,7 @@ export default function CreateConstitutionTemplatePage() {
               </div>
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
-              {/* Toolbar (Mock) */}
+              {/* Toolbar */}
               <div className="flex items-center gap-1 p-2 border-b bg-muted/20">
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Type className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 font-bold">B</Button>
@@ -273,6 +317,42 @@ export default function CreateConstitutionTemplatePage() {
         </div>
       </div>
 
+      {/* Title Edit Dialog */}
+      <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Template Details</DialogTitle>
+            <DialogDescription>
+              Update the title and description of your constitution template.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input 
+                id="title"
+                value={templateData.title}
+                onChange={(e) => setTemplateData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="e.g., Standard Family Constitution"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description"
+                value={templateData.description}
+                onChange={(e) => setTemplateData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description of this template..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsTitleDialogOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
@@ -285,8 +365,10 @@ export default function CreateConstitutionTemplatePage() {
           <ScrollArea className="flex-1 border rounded-md p-8 mt-4">
             <div className="max-w-2xl mx-auto space-y-8">
               <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold mb-4">Family Constitution</h1>
-                <p className="text-xl text-muted-foreground">Draft Template</p>
+                <h1 className="text-4xl font-bold mb-4">{templateData.title}</h1>
+                {templateData.description && (
+                  <p className="text-xl text-muted-foreground">{templateData.description}</p>
+                )}
               </div>
               
               {SECTIONS.map((section) => {

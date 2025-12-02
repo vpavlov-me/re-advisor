@@ -183,6 +183,12 @@ function KnowledgeCenterContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  
+  // Folder states
+  const [folders, setFolders] = useState<string[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
 
   const fetchData = useCallback(async (advisorId: string) => {
     try {
@@ -200,6 +206,12 @@ function KnowledgeCenterContent() {
       // Fetch constitution templates
       const { data: templatesData } = await supabase
         .from('constitution_templates')
+        .select('*')
+        .eq('advisor_id', advisorId);
+
+      // Fetch learning paths
+      const { data: learningPathsData } = await supabase
+        .from('learning_paths')
         .select('*')
         .eq('advisor_id', advisorId);
 
@@ -242,7 +254,25 @@ function KnowledgeCenterContent() {
         allResources = [...allResources, ...templates];
       }
 
+      if (learningPathsData) {
+        const paths = learningPathsData.map((p: any) => ({
+          id: `lp-${p.id}`,
+          title: p.title,
+          type: "learning-path" as ResourceType,
+          category: p.difficulty === 'advanced' ? 'Advanced' : p.difficulty === 'intermediate' ? 'Intermediate' : 'Beginner',
+          updatedAt: p.updated_at ? new Date(p.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: p.description || "Learning Path"
+        }));
+        allResources = [...allResources, ...paths];
+      }
+
       setResources(allResources);
+      
+      // Extract unique folders/categories from resources
+      const uniqueFolders = [...new Set(allResources.map(r => r.category).filter(Boolean))];
+      setFolders(uniqueFolders);
     } catch (error) {
       console.error("Error fetching resources:", error);
       toast.error("Failed to load resources");
@@ -545,8 +575,23 @@ function KnowledgeCenterContent() {
     const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           r.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = selectedType === "all" || r.type === selectedType;
-    return matchesSearch && matchesType;
+    const matchesFolder = !selectedFolder || r.category === selectedFolder;
+    return matchesSearch && matchesType && matchesFolder;
   });
+  
+  // Handle folder creation
+  const handleCreateFolder = () => {
+    if (newFolderName.trim()) {
+      if (!folders.includes(newFolderName.trim())) {
+        setFolders([...folders, newFolderName.trim()]);
+        toast.success(`Folder "${newFolderName}" created`);
+      } else {
+        toast.error("Folder already exists");
+      }
+      setNewFolderName("");
+      setIsFolderDialogOpen(false);
+    }
+  };
 
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -832,37 +877,41 @@ function KnowledgeCenterContent() {
               <Button 
                 variant="outline" 
                 className="h-auto py-4 flex flex-col gap-2 border-dashed"
-                onClick={() => {
-                  const folderName = prompt("Enter folder name:");
-                  if (folderName && folderName.trim()) {
-                    toast.success(`Folder "${folderName}" created`);
-                  }
-                }}
+                onClick={() => setIsFolderDialogOpen(true)}
               >
                 <Plus className="h-6 w-6 text-muted-foreground" />
                 <span className="text-xs">New Folder</span>
               </Button>
-              {["Governance", "Financial", "Education", "Legal"].map(folder => (
+              {selectedFolder && (
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-4 flex flex-col gap-2"
+                  onClick={() => setSelectedFolder(null)}
+                >
+                  <X className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs">Clear Filter</span>
+                </Button>
+              )}
+              {folders.map(folder => (
                 <Button 
                   key={folder} 
-                  variant="secondary" 
+                  variant={selectedFolder === folder ? "default" : "secondary"} 
                   className="h-auto py-4 flex flex-col gap-2 hover:bg-secondary/80"
                   onClick={() => {
-                    setSearchQuery("");
-                    setSelectedType("all");
-                    // Filter resources by category matching folder name
-                    const filtered = resources.filter(r => 
-                      r.category.toLowerCase().includes(folder.toLowerCase())
-                    );
-                    if (filtered.length > 0) {
-                      toast.info(`Showing ${filtered.length} resources in "${folder}"`);
+                    if (selectedFolder === folder) {
+                      setSelectedFolder(null);
                     } else {
-                      toast.info(`No resources in "${folder}" folder`);
+                      setSelectedFolder(folder);
+                      setSearchQuery("");
+                      setSelectedType("all");
                     }
                   }}
                 >
-                  <Folder className="h-6 w-6 text-blue-500 fill-blue-500/20" />
+                  <Folder className={`h-6 w-6 ${selectedFolder === folder ? "text-primary-foreground" : "text-blue-500 fill-blue-500/20"}`} />
                   <span className="text-xs font-medium">{folder}</span>
+                  <span className="text-[10px] opacity-70">
+                    {resources.filter(r => r.category === folder).length} items
+                  </span>
                 </Button>
               ))}
             </div>
@@ -1000,36 +1049,50 @@ function KnowledgeCenterContent() {
                 <h3 className="text-lg font-medium">Constitution Templates</h3>
                 <p className="text-sm text-muted-foreground">Standardized 12-section templates for family governance.</p>
               </div>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Template
-              </Button>
+              <Link href="/knowledge/constitution/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Template
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resources.filter(r => r.type === "constitution-template").map((template) => (
-                <Card key={template.id} className="group hover:shadow-md transition-shadow border-primary/20">
+              {resources.filter(r => r.type === "constitution-template").length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-medium mb-2">No constitution templates yet</h3>
+                  <p className="text-muted-foreground mb-4">Create your first template to get started</p>
+                  <Link href="/knowledge/constitution/create">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Template
+                    </Button>
+                  </Link>
+                </div>
+              ) : resources.filter(r => r.type === "constitution-template").map((template) => (
+                <Card key={template.id} className="group hover:shadow-md transition-shadow border-primary/20 cursor-pointer" onClick={() => openResourceDetail(template.id)}>
                   <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <Star className="h-5 w-5 text-primary fill-primary/20" />
                     </div>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="-mr-2">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(template.id, true); }}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Template
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(template); }}>
                           <Copy className="h-4 w-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem className="text-red-600" onClick={(e) => { e.stopPropagation(); confirmDeleteResource(template); }}>
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -1045,21 +1108,23 @@ function KnowledgeCenterContent() {
                       <CheckSquare className="h-4 w-4" />
                       <span>12 Sections Defined</span>
                     </div>
-                    <Button variant="outline" className="w-full">Use this Template</Button>
+                    <Button variant="outline" className="w-full" onClick={(e) => e.stopPropagation()}>Use this Template</Button>
                   </CardContent>
                 </Card>
               ))}
               
               {/* Add New Placeholder */}
-              <Button variant="outline" className="h-auto flex flex-col items-center justify-center gap-4 border-dashed p-8 hover:bg-muted/50">
-                <div className="p-4 bg-muted rounded-full">
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div className="text-center">
-                  <span className="font-semibold block">Create Custom Template</span>
-                  <span className="text-sm text-muted-foreground">Start from scratch</span>
-                </div>
-              </Button>
+              <Link href="/knowledge/constitution/create">
+                <Button variant="outline" className="h-auto flex flex-col items-center justify-center gap-4 border-dashed p-8 hover:bg-muted/50 w-full">
+                  <div className="p-4 bg-muted rounded-full">
+                    <Plus className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div className="text-center">
+                    <span className="font-semibold block">Create Custom Template</span>
+                    <span className="text-sm text-muted-foreground">Start from scratch</span>
+                  </div>
+                </Button>
+              </Link>
             </div>
           </TabsContent>
         </Tabs>
@@ -1276,6 +1341,44 @@ function KnowledgeCenterContent() {
               ) : (
                 `Share with ${selectedFamilies.length} ${selectedFamilies.length === 1 ? 'family' : 'families'}`
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Folder Dialog */}
+      <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Create a new folder to organize your resources by category.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="folderName">Folder Name</Label>
+              <Input 
+                id="folderName"
+                placeholder="e.g., Governance, Financial..."
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCreateFolder();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsFolderDialogOpen(false); setNewFolderName(""); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+              <Folder className="h-4 w-4 mr-2" />
+              Create Folder
             </Button>
           </DialogFooter>
         </DialogContent>

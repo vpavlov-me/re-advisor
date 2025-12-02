@@ -87,25 +87,52 @@ export default function CreateLearningPathPage() {
     
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('LearningPath')
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to create a learning path");
+        return;
+      }
+
+      // Create the learning path
+      const { data: pathData, error: pathError } = await supabase
+        .from('learning_paths')
         .insert([{
+          advisor_id: user.id,
           title,
           description,
-          category,
-          modules,
-          // isDraft: asDraft // Assuming schema supports it
-        }]);
+          difficulty: 'beginner',
+          is_published: !asDraft
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (pathError) throw pathError;
+
+      // Create steps for each module
+      if (pathData && modules.length > 0) {
+        const steps = modules.map((module, index) => ({
+          learning_path_id: pathData.id,
+          title: module.title,
+          description: module.description,
+          step_order: index + 1,
+          // Resources are stored as references - could link to knowledge_resources if needed
+        }));
+
+        const { error: stepsError } = await supabase
+          .from('learning_path_steps')
+          .insert(steps);
+
+        if (stepsError) {
+          console.error("Error saving steps:", stepsError);
+        }
+      }
 
       toast.success(asDraft ? "Draft saved successfully!" : "Learning Path published!");
       router.push("/knowledge");
     } catch (error) {
       console.error("Error saving learning path:", error);
-      // Show success anyway for demo purposes
-      toast.success(asDraft ? "Draft saved successfully!" : "Learning Path published!");
-      router.push("/knowledge");
+      toast.error("Failed to save learning path");
     } finally {
       setIsSaving(false);
     }
