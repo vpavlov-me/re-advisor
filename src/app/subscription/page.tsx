@@ -80,13 +80,13 @@ const statusVariants: Record<string, "default" | "success" | "warning" | "destru
   inactive: "default",
 };
 
-// Status labels in Russian
+// Status labels
 const statusLabels: Record<string, string> = {
-  active: "Активна",
-  trialing: "Пробный период",
-  cancelled: "Отменена",
-  past_due: "Просрочена",
-  inactive: "Неактивна",
+  active: "Active",
+  trialing: "Trial",
+  cancelled: "Cancelled",
+  past_due: "Past Due",
+  inactive: "Inactive",
 };
 
 export default function SubscriptionPage() {
@@ -115,11 +115,11 @@ export default function SubscriptionPage() {
     
     if (success === 'true' && plan) {
       const planName = plan === 'premium' ? 'Premium Consultant' : 'Standard Consultant';
-      toast.success(`Успешно подписаны на план ${planName}!`);
+      toast.success(`Successfully subscribed to ${planName}!`);
       window.history.replaceState({}, '', '/subscription');
       loadData();
     } else if (canceled === 'true') {
-      toast.info('Оформление подписки отменено.');
+      toast.info('Checkout was canceled.');
       window.history.replaceState({}, '', '/subscription');
     }
   }, [searchParams]);
@@ -137,7 +137,7 @@ export default function SubscriptionPage() {
       setCommissionInfo(getCommissionInfo());
     } catch (error) {
       console.error("Error loading subscription data:", error);
-      toast.error("Ошибка загрузки данных подписки");
+      toast.error("Failed to load subscription data");
     } finally {
       setIsLoading(false);
     }
@@ -163,7 +163,7 @@ export default function SubscriptionPage() {
       }
     } catch (error) {
       console.error("Error creating checkout:", error);
-      toast.error("Ошибка при оформлении подписки");
+      toast.error("Failed to create checkout session");
     } finally {
       setIsActionLoading(null);
     }
@@ -182,13 +182,13 @@ export default function SubscriptionPage() {
       }
       
       if (success) {
-        toast.success(`План успешно изменён на ${PLANS[upgradeDialog.targetPlan].name}`);
+        toast.success(`Plan successfully changed to ${PLANS[upgradeDialog.targetPlan].name}`);
         setUpgradeDialog({ open: false, targetPlan: null });
         loadData();
       }
     } catch (error) {
       console.error("Error changing plan:", error);
-      toast.error("Ошибка при смене плана");
+      toast.error("Failed to change plan");
     } finally {
       setIsActionLoading(null);
     }
@@ -205,13 +205,13 @@ export default function SubscriptionPage() {
       }
       
       if (success) {
-        toast.success("Подписка будет отменена в конце текущего периода");
+        toast.success("Subscription will be cancelled at end of current period");
         setCancelDialog(false);
         loadData();
       }
     } catch (error) {
       console.error("Error cancelling subscription:", error);
-      toast.error("Ошибка при отмене подписки");
+      toast.error("Failed to cancel subscription");
     } finally {
       setIsActionLoading(null);
     }
@@ -228,13 +228,13 @@ export default function SubscriptionPage() {
       }
       
       if (success) {
-        toast.success("Дополнительный слот портала успешно добавлен!");
+        toast.success("Additional portal slot successfully added!");
         setPortalDialog(false);
         loadData();
       }
     } catch (error) {
       console.error("Error purchasing portal:", error);
-      toast.error("Ошибка при покупке слота");
+      toast.error("Failed to purchase portal slot");
     } finally {
       setIsActionLoading(null);
     }
@@ -242,7 +242,7 @@ export default function SubscriptionPage() {
 
   const currentPlan = subscription ? PLANS[subscription.plan_id] : null;
   const renewalDate = subscription?.current_period_end 
-    ? new Date(subscription.current_period_end).toLocaleDateString('ru-RU', { 
+    ? new Date(subscription.current_period_end).toLocaleDateString('en-US', { 
         day: 'numeric', 
         month: 'long', 
         year: 'numeric' 
@@ -278,8 +278,8 @@ export default function SubscriptionPage() {
       <div className="container py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Подписка</h1>
-            <p className="text-muted-foreground mt-1">Управление планом подписки и лимитами</p>
+            <h1 className="text-2xl font-semibold text-foreground">Subscription</h1>
+            <p className="text-muted-foreground mt-1">Manage your subscription plan and limits</p>
           </div>
           <Button variant="ghost" size="sm" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -319,11 +319,11 @@ export default function SubscriptionPage() {
               <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
                 <Percent className="h-4 w-4 text-green-600" />
                 <AlertTitle className="text-green-800 dark:text-green-200">
-                  Промо период: 0% комиссии
+                  Promotional Period: 0% Commission
                 </AlertTitle>
                 <AlertDescription className="text-green-700 dark:text-green-300">
-                  До конца промо периода осталось {promotionalDaysRemaining} дней. 
-                  После этого комиссия составит 10% с консультаций.
+                  {promotionalDaysRemaining} days remaining in promotional period. 
+                  After this, commission will be 10% on consultations.
                 </AlertDescription>
               </Alert>
             )}
@@ -333,11 +333,11 @@ export default function SubscriptionPage() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">Текущий план</CardTitle>
+                    <CardTitle className="text-base">Current Plan</CardTitle>
                     <CardDescription>
                       {subscription 
-                        ? `Вы используете план ${currentPlan?.name}` 
-                        : 'У вас нет активной подписки'}
+                        ? `You are on the ${currentPlan?.name} plan` 
+                        : 'You don\'t have an active subscription'}
                     </CardDescription>
                   </div>
                   {subscription && (
@@ -386,7 +386,7 @@ export default function SubscriptionPage() {
                         variant="outline" 
                         onClick={() => setCancelDialog(true)}
                       >
-                        Отменить подписку
+                        Cancel Subscription
                       </Button>
                     </div>
                   </div>
@@ -395,9 +395,9 @@ export default function SubscriptionPage() {
                     <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-4">
                       <CreditCard className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium mb-2">Нет активной подписки</h3>
+                    <h3 className="text-lg font-medium mb-2">No Active Subscription</h3>
                     <p className="text-muted-foreground mb-4">
-                      Выберите план ниже, чтобы начать работу с платформой
+                      Choose a plan below to start working with the platform
                     </p>
                   </div>
                 )}
@@ -415,7 +415,7 @@ export default function SubscriptionPage() {
                         Family Portals
                       </CardTitle>
                       <CardDescription>
-                        Управление созданными семейными порталами
+                        Manage your created family portals
                       </CardDescription>
                     </div>
                   </div>
@@ -426,11 +426,11 @@ export default function SubscriptionPage() {
                       <div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-bold">{portalUsage.used}</span>
-                          <span className="text-muted-foreground">/ {portalUsage.total} порталов</span>
+                          <span className="text-muted-foreground">/ {portalUsage.total} portals</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {portalUsage.included} включено в план
-                          {portalUsage.additional > 0 && ` + ${portalUsage.additional} дополнительных`}
+                          {portalUsage.included} included in plan
+                          {portalUsage.additional > 0 && ` + ${portalUsage.additional} additional`}
                         </p>
                       </div>
                       <Button 
@@ -438,7 +438,7 @@ export default function SubscriptionPage() {
                         disabled={!portalUsage.canCreateMore && portalUsage.used >= portalUsage.total}
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        Добавить слот
+                        Add Slot
                       </Button>
                     </div>
                     
@@ -451,7 +451,7 @@ export default function SubscriptionPage() {
                       <Alert variant="default">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Достигнут лимит порталов. Добавьте дополнительный слот за ${PORTAL_LIMITS.additionalPortalPrice}/месяц.
+                          Portal limit reached. Add an additional slot for ${PORTAL_LIMITS.additionalPortalPrice}/month.
                         </AlertDescription>
                       </Alert>
                     )}
@@ -463,8 +463,8 @@ export default function SubscriptionPage() {
             {/* Plan Comparison */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Сравнение планов</CardTitle>
-                <CardDescription>Выберите план, соответствующий вашим потребностям</CardDescription>
+                <CardTitle className="text-base">Compare Plans</CardTitle>
+                <CardDescription>Choose the plan that fits your needs</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -487,12 +487,12 @@ export default function SubscriptionPage() {
                         {isPremium && (
                           <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500">
                             <Crown className="h-3 w-3 mr-1" />
-                            Рекомендуем
+                            Recommended
                           </Badge>
                         )}
                         {isCurrent && (
                           <Badge variant="outline" className="absolute -top-3 right-4">
-                            Текущий план
+                            Current Plan
                           </Badge>
                         )}
                         
@@ -520,7 +520,7 @@ export default function SubscriptionPage() {
                           <div>
                             <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                               <Check className="h-4 w-4 text-green-500" />
-                              Включено
+                              Included
                             </h4>
                             <ul className="space-y-2">
                               {plan.features.map((feature, index) => (
@@ -536,7 +536,7 @@ export default function SubscriptionPage() {
                             <div>
                               <h4 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
                                 <X className="h-4 w-4" />
-                                Ограничения
+                                Limitations
                               </h4>
                               <ul className="space-y-2">
                                 {plan.limitations.map((limitation, index) => (
@@ -563,15 +563,15 @@ export default function SubscriptionPage() {
                           }}
                         >
                           {isCurrent ? (
-                            "Текущий план"
+                            "Current Plan"
                           ) : isActionLoading === planId ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Обработка...
+                              Processing...
                             </>
                           ) : subscription ? (
                             subscription.plan_id === 'premium' && planId === 'standard' ? (
-                              "Перейти на Standard"
+                              "Switch to Standard"
                             ) : (
                               <>
                                 <TrendingUp className="mr-2 h-4 w-4" />
@@ -579,7 +579,7 @@ export default function SubscriptionPage() {
                               </>
                             )
                           ) : (
-                            "Выбрать план"
+                            "Select Plan"
                           )}
                         </Button>
                       </div>
@@ -594,7 +594,7 @@ export default function SubscriptionPage() {
               <CardHeader className="pb-4">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Percent className="h-5 w-5" />
-                  Комиссия платформы
+                  Platform Commission
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -602,20 +602,20 @@ export default function SubscriptionPage() {
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Текущая комиссия</span>
+                      <span className="text-sm font-medium">Current Commission</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-bold text-green-600">
                         {commissionInfo?.currentRate || 0}%
                       </span>
                       {commissionInfo?.isPromotional && (
-                        <Badge variant="secondary">Промо</Badge>
+                        <Badge variant="secondary">Promo</Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
                       {commissionInfo?.isPromotional 
-                        ? "Действует промо период с нулевой комиссией"
-                        : "Стандартная комиссия с консультаций"
+                        ? "Promotional period with zero commission"
+                        : "Standard commission on consultations"
                       }
                     </p>
                   </div>
@@ -623,15 +623,15 @@ export default function SubscriptionPage() {
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">После промо периода</span>
+                      <span className="text-sm font-medium">After Promotional Period</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-bold">10%</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
                       {commissionInfo?.isPromotional
-                        ? `Через ${promotionalDaysRemaining} дней`
-                        : "Текущая ставка"
+                        ? `In ${promotionalDaysRemaining} days`
+                        : "Current rate"
                       }
                     </p>
                   </div>
@@ -648,13 +648,13 @@ export default function SubscriptionPage() {
                       <CreditCard className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium">История платежей</h3>
-                      <p className="text-sm text-muted-foreground">Просмотр всех транзакций и счетов</p>
+                      <h3 className="font-medium">Billing History</h3>
+                      <p className="text-sm text-muted-foreground">View all transactions and invoices</p>
                     </div>
                   </div>
                   <Link href="/payments">
                     <Button variant="ghost">
-                      Перейти
+                      View
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
@@ -672,8 +672,8 @@ export default function SubscriptionPage() {
             <DialogTitle>
               {upgradeDialog.targetPlan && subscription && (
                 PLANS[upgradeDialog.targetPlan].price > PLANS[subscription.plan_id].price
-                  ? "Upgrade на Premium"
-                  : "Даунгрейд на Standard"
+                  ? "Upgrade to Premium"
+                  : "Downgrade to Standard"
               )}
             </DialogTitle>
             <DialogDescription>
@@ -687,27 +687,27 @@ export default function SubscriptionPage() {
             <div className="py-4">
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Текущий план:</span>
+                  <span className="text-muted-foreground">Current plan:</span>
                   <span className="font-medium">{PLANS[subscription.plan_id].name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Новый план:</span>
+                  <span className="text-muted-foreground">New plan:</span>
                   <span className="font-medium">{PLANS[upgradeDialog.targetPlan].name}</span>
                 </div>
                 <Separator />
                 {PLANS[upgradeDialog.targetPlan].price > PLANS[subscription.plan_id].price && (
                   <>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Кредит за оставшиеся дни:</span>
+                      <span className="text-muted-foreground">Credit for remaining days:</span>
                       <span>-${getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).proratedCredit.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Стоимость нового плана:</span>
+                      <span className="text-muted-foreground">New plan cost:</span>
                       <span>${getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).newCharge.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-medium">
-                      <span>К оплате сейчас:</span>
+                      <span>Due now:</span>
                       <span className="text-primary">
                         ${Math.max(0, getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).netAmount).toFixed(2)}
                       </span>
@@ -720,8 +720,8 @@ export default function SubscriptionPage() {
                 <Alert className="mt-4" variant="default">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    При даунгрейде вы потеряете возможность создавать новые Family Portals. 
-                    Существующие порталы останутся активными.
+                    When downgrading, you will lose the ability to create new Family Portals. 
+                    Existing portals will remain active.
                   </AlertDescription>
                 </Alert>
               )}
@@ -730,7 +730,7 @@ export default function SubscriptionPage() {
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setUpgradeDialog({ open: false, targetPlan: null })}>
-              Отмена
+              Cancel
             </Button>
             <Button 
               onClick={handleChangePlan}
@@ -739,10 +739,10 @@ export default function SubscriptionPage() {
               {isActionLoading === 'change' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Обработка...
+                  Processing...
                 </>
               ) : (
-                "Подтвердить"
+                "Confirm"
               )}
             </Button>
           </DialogFooter>
@@ -753,24 +753,24 @@ export default function SubscriptionPage() {
       <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Отменить подписку?</DialogTitle>
+            <DialogTitle>Cancel Subscription?</DialogTitle>
             <DialogDescription>
-              Подписка будет отменена в конце текущего расчётного периода ({renewalDate}).
-              До этого момента вы сохраните доступ ко всем функциям.
+              Your subscription will be cancelled at the end of the current billing period ({renewalDate}).
+              You will retain access to all features until then.
             </DialogDescription>
           </DialogHeader>
           
           <Alert variant="destructive" className="my-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Внимание</AlertTitle>
+            <AlertTitle>Warning</AlertTitle>
             <AlertDescription>
-              После отмены вы потеряете доступ к маркетплейсу семей и возможность принимать консультации.
+              After cancellation, you will lose access to the family marketplace and the ability to accept consultations.
             </AlertDescription>
           </Alert>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialog(false)}>
-              Оставить подписку
+              Keep Subscription
             </Button>
             <Button 
               variant="destructive"
@@ -780,10 +780,10 @@ export default function SubscriptionPage() {
               {isActionLoading === 'cancel' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Отмена...
+                  Cancelling...
                 </>
               ) : (
-                "Отменить подписку"
+                "Cancel Subscription"
               )}
             </Button>
           </DialogFooter>
@@ -794,34 +794,34 @@ export default function SubscriptionPage() {
       <Dialog open={portalDialog} onOpenChange={setPortalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Добавить слот Family Portal</DialogTitle>
+            <DialogTitle>Add Family Portal Slot</DialogTitle>
             <DialogDescription>
-              Приобретите дополнительный слот для создания нового Family Portal.
+              Purchase an additional slot to create a new Family Portal.
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
             <div className="p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">Дополнительный слот портала</span>
-                <span className="text-xl font-bold">${PORTAL_LIMITS.additionalPortalPrice}/мес</span>
+                <span className="font-medium">Additional Portal Slot</span>
+                <span className="text-xl font-bold">${PORTAL_LIMITS.additionalPortalPrice}/mo</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Стоимость будет добавлена к ежемесячному счёту. Вы можете создать ещё один Family Portal.
+                Cost will be added to your monthly bill. You can create one more Family Portal.
               </p>
             </div>
             
             <Alert className="mt-4">
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Слот добавляется к вашей подписке и будет доступен немедленно.
+                The slot will be added to your subscription and available immediately.
               </AlertDescription>
             </Alert>
           </div>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setPortalDialog(false)}>
-              Отмена
+              Cancel
             </Button>
             <Button 
               onClick={handlePurchasePortal}
@@ -830,12 +830,12 @@ export default function SubscriptionPage() {
               {isActionLoading === 'portal' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Обработка...
+                  Processing...
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  Добавить за ${PORTAL_LIMITS.additionalPortalPrice}/мес
+                  Add for ${PORTAL_LIMITS.additionalPortalPrice}/mo
                 </>
               )}
             </Button>

@@ -45,18 +45,18 @@ export const PLANS = {
     name: 'Standard Consultant',
     price: 149,
     priceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_PRICE_ID || 'price_standard_mock',
-    description: 'Для консультантов, работающих с существующими семьями',
+    description: 'For consultants working with existing families',
     features: [
-      'Доступ к маркетплейсу семей',
-      'Работа с неограниченным количеством семей (их приглашения)',
-      'Профиль в каталоге консультантов',
-      'Базовая аналитика',
-      'Email поддержка',
-      `${COMMISSION_RATES.promotional}% комиссии (промо период)`,
+      'Access to family marketplace',
+      'Work with unlimited families (their invitations)',
+      'Profile in consultant directory',
+      'Basic analytics',
+      'Email support',
+      `${COMMISSION_RATES.promotional}% commission (promo period)`,
     ],
     limitations: [
-      'Нельзя создавать Family Portals',
-      'Только роль External Consultant в семьях',
+      'Cannot create Family Portals',
+      'Only External Consultant role in families',
     ],
     limits: {
       familyPortals: 0,
@@ -68,15 +68,15 @@ export const PLANS = {
     name: 'Premium Consultant',
     price: 599,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID || 'price_premium_mock',
-    description: 'Для консультантов, создающих собственные Family Portals',
+    description: 'For consultants creating their own Family Portals',
     features: [
-      'Всё из Standard плана',
-      `Создание до ${PORTAL_LIMITS.premium} Family Portals (включено)`,
-      'Роль External Consultant + Administrator в новых семьях',
-      'Приоритетная поддержка',
-      'Расширенная аналитика',
-      'Возможность приглашать других консультантов в портал',
-      `Дополнительные порталы: +$${PORTAL_LIMITS.additionalPortalPrice}/месяц`,
+      'Everything in Standard plan',
+      `Create up to ${PORTAL_LIMITS.premium} Family Portals (included)`,
+      'External Consultant + Administrator role in new families',
+      'Priority support',
+      'Advanced analytics',
+      'Ability to invite other consultants to portal',
+      `Additional portals: +$${PORTAL_LIMITS.additionalPortalPrice}/month`,
     ],
     limitations: [],
     limits: {
@@ -908,7 +908,7 @@ export async function canCreatePortal(): Promise<{
   if (!subscription) {
     return {
       canCreate: false,
-      reason: 'Необходима активная подписка для создания Family Portal',
+      reason: 'An active subscription is required to create a Family Portal',
       upgradeRequired: true,
     };
   }
@@ -918,7 +918,7 @@ export async function canCreatePortal(): Promise<{
   if (!plan.limits.canCreatePortals) {
     return {
       canCreate: false,
-      reason: 'План Standard не позволяет создавать Family Portals. Перейдите на Premium.',
+      reason: 'Standard plan does not allow creating Family Portals. Upgrade to Premium.',
       upgradeRequired: true,
     };
   }
@@ -928,7 +928,7 @@ export async function canCreatePortal(): Promise<{
   if (subscription.portals_used >= total) {
     return {
       canCreate: false,
-      reason: `Достигнут лимит порталов (${subscription.portals_used}/${total}). Добавьте дополнительный слот.`,
+      reason: `Portal limit reached (${subscription.portals_used}/${total}). Add an additional slot.`,
       upgradeRequired: false,
     };
   }
@@ -1060,7 +1060,7 @@ export function getUpgradePreview(
     newCharge,
     netAmount,
     description: isUpgrade
-      ? `Апгрейд с ${from.name} на ${to.name}. К оплате сейчас: $${netAmount > 0 ? netAmount.toFixed(2) : '0.00'}`
-      : `Даунгрейд с ${from.name} на ${to.name}. Изменения вступят в силу в конце текущего периода.`,
+      ? `Upgrade from ${from.name} to ${to.name}. Due now: $${netAmount > 0 ? netAmount.toFixed(2) : '0.00'}`
+      : `Downgrade from ${from.name} to ${to.name}. Changes will take effect at the end of the current period.`,
   };
 }
