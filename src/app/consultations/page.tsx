@@ -248,6 +248,7 @@ function ConsultationCard({
 export default function ConsultationsPage() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [families, setFamilies] = useState<{id: number, name: string}[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -284,16 +285,23 @@ export default function ConsultationsPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
       try {
-        // Fetch Families for the dropdown
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+        }
+
+        // Fetch Families for the dropdown (advisor's families)
         const { data: familiesData } = await supabase
           .from('families')
-          .select('id, name');
+          .select('id, name')
+          .eq('advisor_id', user?.id);
         
         if (familiesData) {
           setFamilies(familiesData);
         }
 
-        // Fetch Consultations
+        // Fetch Consultations for this advisor
         const { data: consultationsData, error } = await supabase
           .from('consultations')
           .select(`
@@ -303,6 +311,7 @@ export default function ConsultationsPage() {
               member:family_members(name, role)
             )
           `)
+          .eq('advisor_id', user?.id)
           .order('date', { ascending: true });
 
         if (error) {
@@ -410,12 +419,18 @@ export default function ConsultationsPage() {
   };
 
   const handleSchedule = async (data: ScheduleFormData) => {
+    if (!userId) {
+      toast.error("You must be logged in to schedule consultations");
+      return;
+    }
+
     setIsSubmitting(true);
     
     const selectedFamily = families.find(f => f.id.toString() === data.family);
     const familyName = selectedFamily ? selectedFamily.name : "Unknown Family";
 
     const newConsultationObj = {
+      advisor_id: userId,
       title: data.topic,
       family_id: parseInt(data.family),
       type: data.type,
@@ -438,18 +453,23 @@ export default function ConsultationsPage() {
         .insert([newConsultationObj])
         .select();
 
-      if (insertedData) {
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw error;
+      }
+
+      if (insertedData && insertedData[0]) {
         const newConsultation: Consultation = {
           id: insertedData[0].id,
           title: insertedData[0].title,
           family: familyName,
-          type: insertedData[0].type,
+          type: insertedData[0].type || "Video Call",
           date: new Date(insertedData[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
           time: insertedData[0].time,
-          duration: insertedData[0].duration,
-          status: insertedData[0].status,
-          paymentStatus: insertedData[0].payment_status,
-          price: insertedData[0].price,
+          duration: insertedData[0].duration || "1 hour",
+          status: insertedData[0].status || "scheduled",
+          paymentStatus: insertedData[0].payment_status || "awaiting",
+          price: insertedData[0].price || "$500",
           members: [],
           moreMembers: 0,
           meetingLink: insertedData[0].meeting_link,
@@ -461,33 +481,11 @@ export default function ConsultationsPage() {
         setConsultations([newConsultation, ...consultations]);
         toast.success('Consultation scheduled successfully');
       } else {
-        // Fallback for demo
-        const newId = Math.max(...consultations.map(c => c.id), 0) + 1;
-        const fallbackConsultation: Consultation = {
-          id: newId,
-          title: data.topic,
-          family: familyName,
-          type: data.type,
-          date: new Date(data.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          time: data.time,
-          duration: data.duration || "1 hour",
-          status: "scheduled",
-          paymentStatus: "awaiting",
-          price: "$500",
-          members: [],
-          moreMembers: 0,
-          meetingLink: data.type === "Video Call" ? "https://zoom.us/j/..." : undefined,
-          location: data.type === "In-Person" ? "TBD" : undefined,
-          agenda: [],
-          notes: "",
-          documents: []
-        };
-        setConsultations([fallbackConsultation, ...consultations]);
-        toast.success('Consultation scheduled successfully');
+        toast.error('Failed to create consultation - no data returned');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating consultation:", error);
-      toast.error('Failed to schedule consultation');
+      toast.error(error.message || 'Failed to schedule consultation');
     } finally {
       setIsSubmitting(false);
       setIsScheduleOpen(false);
@@ -514,9 +512,7 @@ export default function ConsultationsPage() {
       toast.success('Consultation deleted successfully');
     } catch (error) {
       console.error("Error deleting consultation:", error);
-      // Fallback for demo
-      setConsultations(prev => prev.filter(c => c.id !== deletingId));
-      toast.success('Consultation deleted successfully');
+      toast.error('Failed to delete consultation');
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
