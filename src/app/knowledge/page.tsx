@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
@@ -31,7 +31,13 @@ import {
   Users,
   Eye,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  X,
+  Clock,
+  ExternalLink,
+  Save,
+  EyeOff,
+  ArrowLeft
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +72,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // Resource Types
 type ResourceType = 
@@ -92,6 +106,26 @@ interface Resource {
   folder?: string;
 }
 
+// Extended resource with full details for the detail view
+interface ResourceDetail extends Resource {
+  content?: string;
+  file_url?: string;
+  external_url?: string;
+  is_published: boolean;
+  created_at: string;
+  advisor_id: string;
+}
+
+interface ResourceShare {
+  id: number;
+  family_id: number;
+  shared_at: string;
+  family: {
+    id: number;
+    name: string;
+  };
+}
+
 interface Family {
   id: number;
   name: string;
@@ -113,8 +147,9 @@ const getIconForType = (type: ResourceType) => {
   }
 };
 
-export default function KnowledgeCenterPage() {
+function KnowledgeCenterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [resources, setResources] = useState<Resource[]>([]);
   const [families, setFamilies] = useState<Family[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -125,6 +160,23 @@ export default function KnowledgeCenterPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [selectedFamilies, setSelectedFamilies] = useState<number[]>([]);
+  
+  // Resource Detail Sheet states
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [detailResource, setDetailResource] = useState<ResourceDetail | null>(null);
+  const [detailShares, setDetailShares] = useState<ResourceShare[]>([]);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    content: "",
+    category: "",
+    type: "document" as ResourceType,
+    external_url: "",
+    is_featured: false,
+    is_published: true
+  });
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
@@ -211,6 +263,239 @@ export default function KnowledgeCenterPage() {
     };
     getUser();
   }, [fetchData]);
+
+  // Open resource detail from URL params
+  useEffect(() => {
+    const resourceId = searchParams.get('resource');
+    const editMode = searchParams.get('edit') === 'true';
+    if (resourceId && !isLoading) {
+      openResourceDetail(resourceId, editMode);
+    }
+  }, [searchParams, isLoading]);
+
+  // Function to open resource detail sheet
+  const openResourceDetail = async (resourceId: string, editMode = false) => {
+    setIsLoadingDetail(true);
+    setIsDetailSheetOpen(true);
+    setIsEditing(editMode);
+
+    try {
+      if (resourceId.startsWith('ct-')) {
+        // Constitution template
+        const templateId = parseInt(resourceId.replace('ct-', ''));
+        const { data: templateData, error } = await supabase
+          .from('constitution_templates')
+          .select('*')
+          .eq('id', templateId)
+          .single();
+
+        if (error) throw error;
+
+        if (templateData) {
+          const resource: ResourceDetail = {
+            id: resourceId,
+            title: templateData.title,
+            type: "constitution-template",
+            category: "Governance",
+            description: templateData.description || "",
+            content: templateData.content || "",
+            isFeatured: false,
+            is_published: true,
+            created_at: templateData.created_at,
+            updatedAt: templateData.updated_at ? new Date(templateData.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            sharedWith: 0,
+            advisor_id: templateData.advisor_id
+          };
+          setDetailResource(resource);
+          setEditForm({
+            title: resource.title,
+            description: resource.description,
+            content: resource.content || "",
+            category: resource.category,
+            type: resource.type,
+            external_url: "",
+            is_featured: resource.isFeatured,
+            is_published: resource.is_published
+          });
+        }
+      } else {
+        // Regular resource
+        const { data: resourceData, error } = await supabase
+          .from('knowledge_resources')
+          .select('*')
+          .eq('id', parseInt(resourceId))
+          .single();
+
+        if (error) throw error;
+
+        if (resourceData) {
+          const resource: ResourceDetail = {
+            id: resourceData.id.toString(),
+            title: resourceData.title,
+            type: resourceData.type as ResourceType,
+            category: resourceData.category || "General",
+            description: resourceData.description || "",
+            content: resourceData.content || "",
+            file_url: resourceData.file_url,
+            external_url: resourceData.external_url,
+            isFeatured: resourceData.is_featured || false,
+            is_published: resourceData.is_published ?? true,
+            created_at: resourceData.created_at,
+            updatedAt: resourceData.updated_at ? new Date(resourceData.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            sharedWith: 0,
+            advisor_id: resourceData.advisor_id
+          };
+          setDetailResource(resource);
+          setEditForm({
+            title: resource.title,
+            description: resource.description,
+            content: resource.content || "",
+            category: resource.category,
+            type: resource.type,
+            external_url: resource.external_url || "",
+            is_featured: resource.isFeatured,
+            is_published: resource.is_published
+          });
+
+          // Fetch shares
+          const { data: sharesData } = await supabase
+            .from('resource_shares')
+            .select(`
+              id,
+              family_id,
+              created_at,
+              families (id, name)
+            `)
+            .eq('resource_id', parseInt(resourceId));
+
+          if (sharesData) {
+            setDetailShares(sharesData.map((s: any) => ({
+              id: s.id,
+              family_id: s.family_id,
+              shared_at: s.created_at,
+              family: s.families
+            })));
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching resource:", error);
+      toast.error("Resource not found");
+      setIsDetailSheetOpen(false);
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
+  const closeDetailSheet = () => {
+    setIsDetailSheetOpen(false);
+    setDetailResource(null);
+    setDetailShares([]);
+    setIsEditing(false);
+    // Remove URL params
+    router.replace('/knowledge', { scroll: false });
+  };
+
+  const handleSaveDetail = async () => {
+    if (!detailResource || !userId) return;
+
+    setIsSaving(true);
+    try {
+      if (detailResource.id.startsWith('ct-')) {
+        const templateId = parseInt(detailResource.id.replace('ct-', ''));
+        const { error } = await supabase
+          .from('constitution_templates')
+          .update({
+            title: editForm.title,
+            description: editForm.description,
+            content: editForm.content,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', templateId);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('knowledge_resources')
+          .update({
+            title: editForm.title,
+            description: editForm.description,
+            content: editForm.content,
+            category: editForm.category,
+            type: editForm.type,
+            external_url: editForm.external_url || null,
+            is_featured: editForm.is_featured,
+            is_published: editForm.is_published,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', parseInt(detailResource.id));
+
+        if (error) throw error;
+      }
+
+      // Update local state
+      const updatedResource = {
+        ...detailResource,
+        ...editForm,
+        updatedAt: new Date().toISOString().split('T')[0],
+        isFeatured: editForm.is_featured
+      };
+      setDetailResource(updatedResource);
+      
+      // Update resources list
+      setResources(resources.map(r => 
+        r.id === detailResource.id 
+          ? { ...r, title: editForm.title, description: editForm.description, category: editForm.category, type: editForm.type, isFeatured: editForm.is_featured }
+          : r
+      ));
+      
+      setIsEditing(false);
+      toast.success("Resource updated successfully");
+    } catch (error) {
+      console.error("Error saving resource:", error);
+      toast.error("Failed to save resource");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleDetailFeatured = async () => {
+    if (!detailResource || detailResource.id.startsWith('ct-')) return;
+
+    try {
+      const { error } = await supabase
+        .from('knowledge_resources')
+        .update({ is_featured: !detailResource.isFeatured })
+        .eq('id', parseInt(detailResource.id));
+
+      if (error) throw error;
+
+      const updated = { ...detailResource, isFeatured: !detailResource.isFeatured };
+      setDetailResource(updated);
+      setResources(resources.map(r => r.id === detailResource.id ? { ...r, isFeatured: updated.isFeatured } : r));
+      toast.success(detailResource.isFeatured ? "Removed from featured" : "Added to featured");
+    } catch (error) {
+      console.error("Error toggling featured:", error);
+      toast.error("Failed to update");
+    }
+  };
+
+  const handleRemoveDetailShare = async (shareId: number) => {
+    try {
+      const { error } = await supabase
+        .from('resource_shares')
+        .delete()
+        .eq('id', shareId);
+
+      if (error) throw error;
+
+      setDetailShares(detailShares.filter(s => s.id !== shareId));
+      toast.success("Share removed");
+    } catch (error) {
+      console.error("Error removing share:", error);
+      toast.error("Failed to remove share");
+    }
+  };
   
   // Form state
   const [newResourceType, setNewResourceType] = useState<string>("");
@@ -607,7 +892,7 @@ export default function KnowledgeCenterPage() {
                 {filteredResources.map((resource) => {
                   const Icon = getIconForType(resource.type);
                   return (
-                    <Card key={resource.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/knowledge/${resource.id}`)}>
+                    <Card key={resource.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => openResourceDetail(resource.id)}>
                       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                         <div className="flex items-center gap-2">
                           <div className="p-2 bg-primary/10 rounded-lg">
@@ -625,7 +910,7 @@ export default function KnowledgeCenterPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/knowledge/${resource.id}`); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id); }}>
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
@@ -637,7 +922,7 @@ export default function KnowledgeCenterPage() {
                               <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
                               {resource.isFeatured ? "Unfeature" : "Feature"}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/knowledge/${resource.id}?edit=true`); }}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id, true); }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
@@ -1034,6 +1319,364 @@ export default function KnowledgeCenterPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Resource Detail Sheet */}
+      <Sheet open={isDetailSheetOpen} onOpenChange={(open) => { if (!open) closeDetailSheet(); }}>
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          {isLoadingDetail ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : detailResource ? (
+            <div className="space-y-6">
+              <SheetHeader className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-primary/10 rounded-xl">
+                      {(() => {
+                        const Icon = getIconForType(detailResource.type);
+                        return <Icon className="h-8 w-8 text-primary" />;
+                      })()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <SheetTitle className="text-xl">{detailResource.title}</SheetTitle>
+                        {detailResource.isFeatured && (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                            <Star className="h-3 w-3 mr-1 fill-current" /> Featured
+                          </Badge>
+                        )}
+                        {!detailResource.is_published && (
+                          <Badge variant="secondary">
+                            <EyeOff className="h-3 w-3 mr-1" /> Draft
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <Badge variant="outline" className="capitalize">
+                          {detailResource.type.replace("-", " ")}
+                        </Badge>
+                        <span className="flex items-center gap-1">
+                          <Folder className="h-3.5 w-3.5" />
+                          {detailResource.category}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {detailResource.updatedAt}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {!isEditing ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => { setSelectedResource(detailResource); setIsShareDialogOpen(true); }}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={toggleDetailFeatured}>
+                        <Star className={`h-4 w-4 mr-2 ${detailResource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                        {detailResource.isFeatured ? "Unfeature" : "Feature"}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => { setSelectedResource(detailResource); setIsDeleteDialogOpen(true); }}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleSaveDetail} disabled={isSaving}>
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </SheetHeader>
+
+              <Separator />
+
+              {isEditing ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={editForm.type}
+                        onValueChange={(v) => setEditForm({ ...editForm, type: v as ResourceType })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="document">Document</SelectItem>
+                          <SelectItem value="article">Article</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                          <SelectItem value="podcast">Podcast</SelectItem>
+                          <SelectItem value="template">Template</SelectItem>
+                          <SelectItem value="guide">Guide</SelectItem>
+                          <SelectItem value="link">External Link</SelectItem>
+                          <SelectItem value="checklist">Checklist</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Category</Label>
+                      <Select
+                        value={editForm.category}
+                        onValueChange={(v) => setEditForm({ ...editForm, category: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+
+                  {editForm.type === "link" && (
+                    <div className="space-y-2">
+                      <Label>External URL</Label>
+                      <Input
+                        type="url"
+                        placeholder="https://..."
+                        value={editForm.external_url}
+                        onChange={(e) => setEditForm({ ...editForm, external_url: e.target.value })}
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Content</Label>
+                    <Textarea
+                      value={editForm.content}
+                      onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                      rows={12}
+                      placeholder="Enter the main content of your resource..."
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-featured"
+                        checked={editForm.is_featured}
+                        onCheckedChange={(checked) => setEditForm({ ...editForm, is_featured: !!checked })}
+                      />
+                      <label htmlFor="edit-featured" className="text-sm font-medium">
+                        Featured resource
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-published"
+                        checked={editForm.is_published}
+                        onCheckedChange={(checked) => setEditForm({ ...editForm, is_published: !!checked })}
+                      />
+                      <label htmlFor="edit-published" className="text-sm font-medium">
+                        Published
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+                    <p className="text-foreground">
+                      {detailResource.description || "No description provided."}
+                    </p>
+                  </div>
+
+                  {/* External URL */}
+                  {detailResource.external_url && (
+                    <div className="p-4 bg-muted/50 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <ExternalLink className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm font-medium">External Resource</p>
+                          <a
+                            href={detailResource.external_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                          >
+                            {detailResource.external_url}
+                          </a>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={detailResource.external_url} target="_blank" rel="noopener noreferrer">
+                          Open Link
+                          <ExternalLink className="h-4 w-4 ml-2" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* File */}
+                  {detailResource.file_url && (
+                    <div className="p-4 bg-muted/50 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm font-medium">Attached File</p>
+                          <p className="text-sm text-muted-foreground">Document</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Content */}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Content</h3>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      {detailResource.content ? (
+                        <div className="whitespace-pre-wrap">{detailResource.content}</div>
+                      ) : (
+                        <p className="text-muted-foreground italic">No content added yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Sharing info */}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Shared With</h3>
+                    {detailShares.length === 0 ? (
+                      <div className="text-center py-6 text-muted-foreground border rounded-lg">
+                        <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Not shared with any families yet</p>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => { setSelectedResource(detailResource); setIsShareDialogOpen(true); }}
+                        >
+                          Share this resource
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {detailShares.map((share) => (
+                          <div key={share.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="text-xs">
+                                  {share.family.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{share.family.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Shared {new Date(share.shared_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleRemoveDetailShare(share.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details */}
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <h3 className="text-sm font-medium">Details</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Created</span>
+                        <p>{detailResource.created_at ? new Date(detailResource.created_at).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Last updated</span>
+                        <p>{detailResource.updatedAt}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Status</span>
+                        <p>
+                          <Badge variant={detailResource.is_published ? "default" : "secondary"}>
+                            {detailResource.is_published ? "Published" : "Draft"}
+                          </Badge>
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Featured</span>
+                        <p>{detailResource.isFeatured ? "Yes" : "No"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+export default function KnowledgeCenterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <KnowledgeCenterContent />
+    </Suspense>
   );
 }
