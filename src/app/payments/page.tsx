@@ -293,14 +293,16 @@ export default function PaymentsPage() {
           const pendingBalance = txs
             .filter((t: any) => t.type === 'income' && t.status === 'completed')
             .reduce((sum: number, t: any) => {
-              const amt = parseFloat(t.amount.replace(/[^0-9.-]+/g, '')) || 0;
+              const amtStr = t.amount?.toString() || '0';
+              const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
               return sum + amt;
             }, 0);
           // Subtract payouts
           const payoutsTotal = txs
             .filter((t: any) => t.type === 'payout' && t.status === 'completed')
             .reduce((sum: number, t: any) => {
-              const amt = parseFloat(t.amount.replace(/[^0-9.-]+/g, '')) || 0;
+              const amtStr = t.amount?.toString() || '0';
+              const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
               return sum + amt;
             }, 0);
           setBalance(Math.max(0, pendingBalance - payoutsTotal));
