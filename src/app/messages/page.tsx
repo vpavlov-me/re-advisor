@@ -10,12 +10,8 @@ import {
   Search,
   Filter,
   MoreVertical,
-  Star,
   Paperclip,
   Send,
-  Smile,
-  Phone,
-  Video,
   Info,
   Pin,
   CheckCheck,
@@ -183,21 +179,8 @@ export default function MessagesPage() {
     scrollToBottom();
   }, [messagesList, scrollToBottom]);
 
-  // Simulate typing indicator from other users
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly simulate other users typing
-      if (Math.random() > 0.9 && selectedConversation) {
-        const typingUser = selectedConversation.participants?.[0] || "Someone";
-        setTypingUsers([typingUser]);
-        setTimeout(() => setTypingUsers([]), 3000);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [selectedConversation]);
-
   // Handle typing indicator for current user
+  // Note: Real-time typing indicators from other users will be implemented in a future update
   const handleTyping = useCallback(() => {
     if (!isTyping) {
       setIsTyping(true);
@@ -787,27 +770,47 @@ export default function MessagesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
-                          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="hidden sm:flex">
-                          <UserPlus className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="hidden sm:flex">
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="hidden sm:flex">
-                          <Video className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="hidden sm:flex">
-                          <Star className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Info className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
+                                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Refresh messages</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="gap-2 cursor-pointer"
+                              onClick={() => toast.info("Add participants feature coming soon")}
+                            >
+                              <UserPlus className="h-4 w-4" />
+                              Add Participants
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="gap-2 cursor-pointer"
+                              onClick={() => toast.info("Pin conversation feature coming soon")}
+                            >
+                              <Pin className="h-4 w-4" />
+                              {selectedConversation?.pinned ? "Unpin Conversation" : "Pin Conversation"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="gap-2 cursor-pointer"
+                              onClick={() => toast.info("Conversation info feature coming soon")}
+                            >
+                              <Info className="h-4 w-4" />
+                              Conversation Info
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
@@ -919,13 +922,19 @@ export default function MessagesPage() {
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" disabled>
+                              <Paperclip className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Attachments coming soon</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <div className="flex-1 relative">
                         <Input 
                           placeholder="Type your message..." 
-                          className="pr-10"
                           value={newMessage}
                           onChange={(e) => {
                             setNewMessage(e.target.value);
@@ -934,9 +943,6 @@ export default function MessagesPage() {
                           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
                           disabled={sending}
                         />
-                        <Button variant="ghost" size="icon" className="absolute right-0 top-0">
-                          <Smile className="h-4 w-4" />
-                        </Button>
                       </div>
                       <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
                         {sending ? (
