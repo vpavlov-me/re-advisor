@@ -426,7 +426,7 @@ export default function SettingsPage() {
                     <CardTitle className="text-base">Two-Factor Authentication</CardTitle>
                     <CardDescription>Add an extra layer of security to your account</CardDescription>
                   </div>
-                  <Badge variant={is2FAEnabled ? "secondary" : "outline"} className={is2FAEnabled ? "bg-green-100 text-green-700" : ""}>
+                  <Badge variant={is2FAEnabled ? "success" : "outline"}>
                     {is2FAEnabled ? "Enabled" : "Disabled"}
                   </Badge>
                 </div>
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {is2FAEnabled && <Badge variant="secondary" className="bg-green-100 text-green-700">Active</Badge>}
+                      {is2FAEnabled && <Badge variant="success">Active</Badge>}
                       <Button 
                         variant={is2FAEnabled ? "outline" : "default"} 
                         size="sm"

@@ -684,10 +684,10 @@ export default function HomePage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-medium text-foreground">{consultation.title}</h3>
-                          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                          <Badge variant="success">
                             Paid
                           </Badge>
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          <Badge variant="info">
                             Scheduled
                           </Badge>
                         </div>

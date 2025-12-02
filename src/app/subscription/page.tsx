@@ -342,7 +342,7 @@ export default function SubscriptionPage() {
                     <CardTitle className="text-base">Current Plan</CardTitle>
                     <CardDescription>You are currently on the {activePlan.name} plan</CardDescription>
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">Active</Badge>
+                  <Badge variant="success">Active</Badge>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -533,7 +533,7 @@ export default function SubscriptionPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-medium text-foreground">{item.amount}</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">Paid</Badge>
+                        <Badge variant="success">Paid</Badge>
                       </div>
                     </div>
                   ))}

@@ -455,7 +455,7 @@ export default function ProfilePage() {
                   </div>
                   <h2 className="text-xl font-semibold text-foreground">{profile.first_name} {profile.last_name}</h2>
                   <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>
-                  <Badge variant="secondary" className="mt-2 bg-green-100 text-green-700">
+                  <Badge variant="success" className="mt-2">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Verified Advisor
                   </Badge>
@@ -811,7 +811,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {credential.status === "verified" ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700">
+                          <Badge variant="success">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Verified
                           </Badge>

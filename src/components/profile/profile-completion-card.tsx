@@ -224,7 +224,7 @@ export function ProfileCompletionBadge({
 
   if (completion.percentage >= 100) {
     return (
-      <Badge variant="secondary" className="bg-green-100 text-green-700">
+      <Badge variant="success">
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Profile Complete
       </Badge>

@@ -1151,7 +1151,7 @@ export default function PaymentsPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                              <Badge variant="success">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Verified
                               </Badge>
@@ -1229,7 +1229,7 @@ export default function PaymentsPage() {
                               From {payout.consultations} consultations · Arriving {payout.estimatedDate}
                             </p>
                           </div>
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                          <Badge variant="warning">
                             Pending
                           </Badge>
                         </div>
@@ -1326,7 +1326,7 @@ export default function PaymentsPage() {
                                 {tx.amount}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="secondary" className={tx.status === 'completed' ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                                <Badge variant={tx.status === 'completed' ? "success" : "warning"}>
                                   {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                                 </Badge>
                               </TableCell>

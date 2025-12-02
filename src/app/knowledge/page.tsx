@@ -1342,7 +1342,7 @@ function KnowledgeCenterContent() {
                       <div className="flex items-center gap-2 mb-1">
                         <SheetTitle className="text-xl">{detailResource.title}</SheetTitle>
                         {detailResource.isFeatured && (
-                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                          <Badge variant="warning">
                             <Star className="h-3 w-3 mr-1 fill-current" /> Featured
                           </Badge>
                         )}

@@ -113,7 +113,7 @@ export function KycStatusCard({
               Identity Verification
             </CardTitle>
             {status === 'verified' && (
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+              <Badge variant="success">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 Verified
               </Badge>
@@ -328,7 +328,7 @@ export function KycStatusBadge({ status }: { status: KycStatus }) {
   switch (status) {
     case 'verified':
       return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+        <Badge variant="success">
           <CheckCircle2 className="h-3 w-3 mr-1" />
           Verified
         </Badge>
