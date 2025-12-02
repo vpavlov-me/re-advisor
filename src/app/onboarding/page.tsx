@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/lib/hooks";
 import { supabase } from "@/lib/supabaseClient";
 import { ONBOARDING_STEPS, syncOnboardingProgress } from "@/lib/onboarding";
@@ -841,8 +842,8 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <input type="checkbox" id="confirm" className="mt-1" />
-                      <label htmlFor="confirm" className="text-sm text-muted-foreground">
+                      <Checkbox id="confirm" className="mt-0.5" />
+                      <label htmlFor="confirm" className="text-sm text-muted-foreground cursor-pointer">
                         I confirm that all information provided is accurate and I agree to the 
                         <Link href="/terms" className="text-primary hover:underline mx-1">Terms of Service</Link>
                         and

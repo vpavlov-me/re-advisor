@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 
@@ -835,11 +836,9 @@ export default function ConsultationsPage() {
                     <div className="space-y-2">
                       {["Video Call", "In-Person"].map(type => (
                         <label key={type} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="rounded border-gray-300 text-primary focus:ring-primary" 
+                          <Checkbox 
                             checked={selectedTypes.includes(type)}
-                            onChange={() => toggleType(type)}
+                            onCheckedChange={() => toggleType(type)}
                           />
                           {type}
                         </label>
@@ -851,11 +850,9 @@ export default function ConsultationsPage() {
                     <div className="space-y-2">
                       {["paid", "awaiting", "overdue"].map(status => (
                         <label key={status} className="flex items-center gap-2 text-sm cursor-pointer capitalize">
-                          <input 
-                            type="checkbox" 
-                            className="rounded border-gray-300 text-primary focus:ring-primary" 
+                          <Checkbox 
                             checked={selectedPaymentStatus.includes(status)}
-                            onChange={() => togglePaymentStatus(status)}
+                            onCheckedChange={() => togglePaymentStatus(status)}
                           />
                           {status}
                         </label>
