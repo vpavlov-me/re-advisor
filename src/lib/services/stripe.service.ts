@@ -18,69 +18,82 @@ import { supabase, isSupabaseConfigured } from '../supabaseClient';
 export const STRIPE_MODE = process.env.NEXT_PUBLIC_STRIPE_MODE || 'mock';
 export const IS_MOCK_MODE = STRIPE_MODE === 'mock';
 
-// Subscription Plans
+// ============================================
+// SUBSCRIPTION PLANS (Epic-028)
+// ============================================
+
+// Platform launch date for promotional period calculation
+export const PLATFORM_LAUNCH_DATE = new Date('2025-01-01');
+
+// Commission rates
+export const COMMISSION_RATES = {
+  promotional: 0, // 0% during promotional period
+  standard: 10, // 10% after promotional period ends
+};
+
+// Family Portal limits
+export const PORTAL_LIMITS = {
+  standard: 0, // Standard cannot create portals
+  premium: 3, // Premium includes 3 portals
+  additionalPortalPrice: 49, // $49/month for each additional portal
+};
+
+// Subscription Plans - согласно Epic-028
 export const PLANS = {
-  starter: {
-    id: 'starter',
-    name: 'Starter',
-    price: 49,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 'price_starter_mock',
+  standard: {
+    id: 'standard',
+    name: 'Standard Consultant',
+    price: 149,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_STANDARD_PRICE_ID || 'price_standard_mock',
+    description: 'Для консультантов, работающих с существующими семьями',
     features: [
-      'Up to 5 family clients',
-      '10 consultations/month',
-      'Basic messaging',
-      '5GB storage',
-      'Email support',
+      'Доступ к маркетплейсу семей',
+      'Работа с неограниченным количеством семей (их приглашения)',
+      'Профиль в каталоге консультантов',
+      'Базовая аналитика',
+      'Email поддержка',
+      `${COMMISSION_RATES.promotional}% комиссии (промо период)`,
+    ],
+    limitations: [
+      'Нельзя создавать Family Portals',
+      'Только роль External Consultant в семьях',
     ],
     limits: {
-      families: 5,
-      consultations: 10,
-      storage: 5, // GB
+      familyPortals: 0,
+      canCreatePortals: false,
     },
   },
-  professional: {
-    id: 'professional',
-    name: 'Professional',
-    price: 99,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional_mock',
+  premium: {
+    id: 'premium',
+    name: 'Premium Consultant',
+    price: 599,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID || 'price_premium_mock',
+    description: 'Для консультантов, создающих собственные Family Portals',
     features: [
-      'Up to 15 family clients',
-      '20 consultations/month',
-      'Priority messaging',
-      '10GB storage',
-      'Priority support',
-      'Analytics dashboard',
+      'Всё из Standard плана',
+      `Создание до ${PORTAL_LIMITS.premium} Family Portals (включено)`,
+      'Роль External Consultant + Administrator в новых семьях',
+      'Приоритетная поддержка',
+      'Расширенная аналитика',
+      'Возможность приглашать других консультантов в портал',
+      `Дополнительные порталы: +$${PORTAL_LIMITS.additionalPortalPrice}/месяц`,
     ],
+    limitations: [],
     limits: {
-      families: 15,
-      consultations: 20,
-      storage: 10,
-    },
-  },
-  enterprise: {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 249,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_mock',
-    features: [
-      'Unlimited family clients',
-      'Unlimited consultations',
-      'Priority messaging',
-      '50GB storage',
-      'Dedicated support',
-      'Advanced analytics',
-      'Custom branding',
-      'API access',
-    ],
-    limits: {
-      families: -1, // unlimited
-      consultations: -1,
-      storage: 50,
+      familyPortals: PORTAL_LIMITS.premium,
+      canCreatePortals: true,
     },
   },
 } as const;
 
 export type PlanId = keyof typeof PLANS;
+
+// Legacy plan mapping for migration
+export const LEGACY_PLAN_MAPPING: Record<string, PlanId> = {
+  starter: 'standard',
+  professional: 'standard',
+  enterprise: 'premium',
+};
 
 // ============================================
 // TYPES
@@ -116,6 +129,24 @@ export interface Subscription {
   current_period_end: string;
   cancel_at_period_end: boolean;
   trial_end?: string;
+  // Family Portal usage (Epic-028)
+  portals_used: number;
+  portals_included: number;
+  additional_portals: number;
+}
+
+export interface PortalUsage {
+  used: number;
+  included: number;
+  additional: number;
+  total: number;
+  canCreateMore: boolean;
+}
+
+export interface CommissionInfo {
+  currentRate: number;
+  isPromotional: boolean;
+  promotionalEndsAt?: string;
 }
 
 export interface PaymentMethod {
@@ -155,6 +186,8 @@ function generateMockSubscription(planId: PlanId, status: SubscriptionStatus = '
   const periodEnd = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + 1);
   
+  const plan = PLANS[planId];
+  
   return {
     id: `sub_mock_${Date.now()}`,
     plan_id: planId,
@@ -162,6 +195,9 @@ function generateMockSubscription(planId: PlanId, status: SubscriptionStatus = '
     current_period_start: now.toISOString(),
     current_period_end: periodEnd.toISOString(),
     cancel_at_period_end: false,
+    portals_used: planId === 'premium' ? 1 : 0, // Mock: 1 portal used for premium
+    portals_included: plan.limits.familyPortals,
+    additional_portals: 0,
   };
 }
 
@@ -310,14 +346,25 @@ export async function getSubscription(): Promise<{
       return { subscription: null, error: null };
     }
 
+    // Map legacy plan IDs to new ones
+    let planId = data.plan_id as PlanId;
+    if (!(planId in PLANS) && planId in LEGACY_PLAN_MAPPING) {
+      planId = LEGACY_PLAN_MAPPING[planId];
+    }
+    
+    const plan = PLANS[planId] || PLANS.standard;
+
     return {
       subscription: {
         id: data.stripe_subscription_id || data.id.toString(),
-        plan_id: data.plan_id as PlanId,
+        plan_id: planId,
         status: data.status as SubscriptionStatus,
         current_period_start: data.current_period_start,
         current_period_end: data.current_period_end,
         cancel_at_period_end: false,
+        portals_used: data.portals_used || 0,
+        portals_included: plan.limits.familyPortals,
+        additional_portals: data.additional_portals || 0,
       },
       error: null,
     };
@@ -785,4 +832,235 @@ export async function removePaymentMethod(methodId: string): Promise<{
     console.error('Remove payment method error:', err);
     return { success: false, error: 'Failed to remove payment method' };
   }
+}
+
+// ============================================
+// EPIC-028: PORTAL & COMMISSION MANAGEMENT
+// ============================================
+
+/**
+ * Get portal usage for current subscription
+ */
+export async function getPortalUsage(): Promise<{
+  usage: PortalUsage | null;
+  error: string | null;
+}> {
+  await delay(200);
+
+  if (!isSupabaseConfigured()) {
+    return { usage: null, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { subscription, error } = await getSubscription();
+    
+    if (error || !subscription) {
+      return { usage: null, error: error || 'No subscription found' };
+    }
+
+    const plan = PLANS[subscription.plan_id];
+    const total = subscription.portals_included + subscription.additional_portals;
+
+    return {
+      usage: {
+        used: subscription.portals_used,
+        included: subscription.portals_included,
+        additional: subscription.additional_portals,
+        total,
+        canCreateMore: plan.limits.canCreatePortals && subscription.portals_used < total,
+      },
+      error: null,
+    };
+  } catch (err) {
+    console.error('Get portal usage error:', err);
+    return { usage: null, error: 'Failed to get portal usage' };
+  }
+}
+
+/**
+ * Get current commission info
+ */
+export function getCommissionInfo(): CommissionInfo {
+  const now = new Date();
+  // Promotional period: 12 months from platform launch
+  const promotionalEndDate = new Date(PLATFORM_LAUNCH_DATE);
+  promotionalEndDate.setFullYear(promotionalEndDate.getFullYear() + 1);
+  
+  const isPromotional = now < promotionalEndDate;
+
+  return {
+    currentRate: isPromotional ? COMMISSION_RATES.promotional : COMMISSION_RATES.standard,
+    isPromotional,
+    promotionalEndsAt: isPromotional ? promotionalEndDate.toISOString() : undefined,
+  };
+}
+
+/**
+ * Check if user can create a new Family Portal
+ */
+export async function canCreatePortal(): Promise<{
+  canCreate: boolean;
+  reason?: string;
+  upgradeRequired?: boolean;
+}> {
+  const { subscription } = await getSubscription();
+  
+  if (!subscription) {
+    return {
+      canCreate: false,
+      reason: 'Необходима активная подписка для создания Family Portal',
+      upgradeRequired: true,
+    };
+  }
+
+  const plan = PLANS[subscription.plan_id];
+  
+  if (!plan.limits.canCreatePortals) {
+    return {
+      canCreate: false,
+      reason: 'План Standard не позволяет создавать Family Portals. Перейдите на Premium.',
+      upgradeRequired: true,
+    };
+  }
+
+  const total = subscription.portals_included + subscription.additional_portals;
+  
+  if (subscription.portals_used >= total) {
+    return {
+      canCreate: false,
+      reason: `Достигнут лимит порталов (${subscription.portals_used}/${total}). Добавьте дополнительный слот.`,
+      upgradeRequired: false,
+    };
+  }
+
+  return { canCreate: true };
+}
+
+/**
+ * Purchase additional portal slot
+ */
+export async function purchaseAdditionalPortal(): Promise<{
+  success: boolean;
+  error: string | null;
+}> {
+  await delay(800);
+
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    const { subscription } = await getSubscription();
+    if (!subscription || subscription.plan_id !== 'premium') {
+      return { success: false, error: 'Premium subscription required' };
+    }
+
+    // In mock mode, just increment the additional_portals counter
+    if (IS_MOCK_MODE) {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          additional_portals: (subscription.additional_portals || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('advisor_id', user.id);
+
+      if (error) throw error;
+
+      return { success: true, error: null };
+    }
+
+    // Live mode would create a Stripe subscription item
+    return { success: false, error: 'Live Stripe integration not implemented' };
+  } catch (err) {
+    console.error('Purchase additional portal error:', err);
+    return { success: false, error: 'Failed to purchase additional portal' };
+  }
+}
+
+/**
+ * Increment portal usage (called when creating a new Family Portal)
+ */
+export async function incrementPortalUsage(): Promise<{
+  success: boolean;
+  error: string | null;
+}> {
+  await delay(200);
+
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    const { canCreate, reason, upgradeRequired } = await canCreatePortal();
+    if (!canCreate) {
+      return { success: false, error: reason || (upgradeRequired ? 'Upgrade required' : 'Cannot create portal') };
+    }
+
+    const { subscription } = await getSubscription();
+    if (!subscription) {
+      return { success: false, error: 'No subscription found' };
+    }
+
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        portals_used: subscription.portals_used + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('advisor_id', user.id);
+
+    if (error) throw error;
+
+    return { success: true, error: null };
+  } catch (err) {
+    console.error('Increment portal usage error:', err);
+    return { success: false, error: 'Failed to increment portal usage' };
+  }
+}
+
+/**
+ * Get upgrade/downgrade preview
+ */
+export function getUpgradePreview(
+  fromPlan: PlanId,
+  toPlan: PlanId,
+  daysRemaining: number
+): {
+  proratedCredit: number;
+  newCharge: number;
+  netAmount: number;
+  description: string;
+} {
+  const from = PLANS[fromPlan];
+  const to = PLANS[toPlan];
+  
+  const daysInMonth = 30;
+  const dailyRateFrom = from.price / daysInMonth;
+  const dailyRateTo = to.price / daysInMonth;
+  
+  const proratedCredit = Math.round(dailyRateFrom * daysRemaining * 100) / 100;
+  const newCharge = Math.round(dailyRateTo * daysRemaining * 100) / 100;
+  const netAmount = Math.round((newCharge - proratedCredit) * 100) / 100;
+
+  const isUpgrade = to.price > from.price;
+  
+  return {
+    proratedCredit,
+    newCharge,
+    netAmount,
+    description: isUpgrade
+      ? `Апгрейд с ${from.name} на ${to.name}. К оплате сейчас: $${netAmount > 0 ? netAmount.toFixed(2) : '0.00'}`
+      : `Даунгрейд с ${from.name} на ${to.name}. Изменения вступят в силу в конце текущего периода.`,
+  };
 }

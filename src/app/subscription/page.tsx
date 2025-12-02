@@ -11,11 +11,9 @@ import {
   Check,
   X,
   Crown,
-  Zap,
+  Star,
   Users,
   Calendar,
-  MessageSquare,
-  BarChart3,
   Shield,
   Globe,
   Monitor,
@@ -23,103 +21,47 @@ import {
   ArrowRight,
   Loader2,
   RefreshCw,
-  ExternalLink
+  Building2,
+  Percent,
+  Clock,
+  Plus,
+  TrendingUp,
+  Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/lib/supabaseClient";
-
-// Current plan
-const currentPlan = {
-  name: "Professional",
-  price: "$99",
-  period: "month",
-  renewalDate: "December 1, 2025",
-  status: "active" as const,
-};
-
-// Usage stats
-const usageStats = [
-  { label: "Family Clients", used: 6, limit: 15, icon: Users },
-  { label: "Active Consultations", used: 2, limit: 20, icon: Calendar },
-  { label: "Messages", used: 450, limit: 1000, icon: MessageSquare },
-  { label: "Storage Used", used: 2.4, limit: 10, unit: "GB", icon: BarChart3 },
-];
-
-// Available plans - with Stripe price IDs
-const plans = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "$49",
-    period: "month",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || "price_starter",
-    description: "Perfect for new advisors getting started",
-    features: [
-      { text: "Up to 5 family clients", included: true },
-      { text: "10 consultations/month", included: true },
-      { text: "Basic messaging", included: true },
-      { text: "5GB storage", included: true },
-      { text: "Email support", included: true },
-      { text: "Analytics dashboard", included: false },
-      { text: "Custom branding", included: false },
-      { text: "API access", included: false },
-    ],
-    current: false,
-    popular: false,
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    price: "$99",
-    period: "month",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PROFESSIONAL_PRICE_ID || "price_professional",
-    description: "For established advisors growing their practice",
-    features: [
-      { text: "Up to 15 family clients", included: true },
-      { text: "20 consultations/month", included: true },
-      { text: "Advanced messaging", included: true },
-      { text: "10GB storage", included: true },
-      { text: "Priority support", included: true },
-      { text: "Analytics dashboard", included: true },
-      { text: "Custom branding", included: false },
-      { text: "API access", included: false },
-    ],
-    current: true,
-    popular: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "$249",
-    period: "month",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || "price_enterprise",
-    description: "For large practices and advisory firms",
-    features: [
-      { text: "Unlimited family clients", included: true },
-      { text: "Unlimited consultations", included: true },
-      { text: "Advanced messaging + video", included: true },
-      { text: "50GB storage", included: true },
-      { text: "24/7 dedicated support", included: true },
-      { text: "Advanced analytics", included: true },
-      { text: "Custom branding", included: true },
-      { text: "API access", included: true },
-    ],
-    current: false,
-    popular: false,
-  },
-];
-
-// Billing history
-const billingHistory = [
-  { date: "Nov 1, 2025", description: "Professional Plan - Monthly", amount: "$99.00", status: "paid" as const },
-  { date: "Oct 1, 2025", description: "Professional Plan - Monthly", amount: "$99.00", status: "paid" as const },
-  { date: "Sep 1, 2025", description: "Professional Plan - Monthly", amount: "$99.00", status: "paid" as const },
-  { date: "Aug 1, 2025", description: "Professional Plan - Monthly", amount: "$99.00", status: "paid" as const },
-];
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { 
+  PLANS, 
+  PORTAL_LIMITS,
+  getSubscription, 
+  getCommissionInfo,
+  getPortalUsage,
+  createCheckoutSession,
+  changePlan,
+  cancelSubscription,
+  purchaseAdditionalPortal,
+  getUpgradePreview,
+  type PlanId,
+  type Subscription,
+  type PortalUsage,
+  type CommissionInfo
+} from "@/lib/services/stripe.service";
 
 // Sidebar navigation
 const settingsNav = [
@@ -129,17 +71,41 @@ const settingsNav = [
   { label: "Subscription", href: "/subscription", icon: Monitor, active: true },
 ];
 
+// Status badge variants
+const statusVariants: Record<string, "default" | "success" | "warning" | "destructive"> = {
+  active: "success",
+  trialing: "default",
+  cancelled: "destructive",
+  past_due: "warning",
+  inactive: "default",
+};
+
+// Status labels in Russian
+const statusLabels: Record<string, string> = {
+  active: "Активна",
+  trialing: "Пробный период",
+  cancelled: "Отменена",
+  past_due: "Просрочена",
+  inactive: "Неактивна",
+};
+
 export default function SubscriptionPage() {
   const searchParams = useSearchParams();
-  const [activePlanId, setActivePlanId] = useState("professional");
-  const [isCancelOpen, setIsCancelOpen] = useState(false);
-  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
-  const [usageData, setUsageData] = useState(usageStats);
-  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  
+  // State
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [portalUsage, setPortalUsage] = useState<PortalUsage | null>(null);
+  const [commissionInfo, setCommissionInfo] = useState<CommissionInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
+  
+  // Dialogs
+  const [upgradeDialog, setUpgradeDialog] = useState<{ open: boolean; targetPlan: PlanId | null }>({ 
+    open: false, 
+    targetPlan: null 
+  });
+  const [cancelDialog, setCancelDialog] = useState(false);
+  const [portalDialog, setPortalDialog] = useState(false);
 
   // Handle Stripe redirect
   useEffect(() => {
@@ -148,140 +114,150 @@ export default function SubscriptionPage() {
     const plan = searchParams.get('plan');
     
     if (success === 'true' && plan) {
-      toast.success(`Successfully subscribed to ${plans.find(p => p.id === plan)?.name} plan!`);
-      setActivePlanId(plan);
-      // Clean URL
+      const planName = plan === 'premium' ? 'Premium Consultant' : 'Standard Consultant';
+      toast.success(`Успешно подписаны на план ${planName}!`);
       window.history.replaceState({}, '', '/subscription');
+      loadData();
     } else if (canceled === 'true') {
-      toast.info('Checkout was canceled.');
+      toast.info('Оформление подписки отменено.');
       window.history.replaceState({}, '', '/subscription');
     }
   }, [searchParams]);
 
-  const activePlan = plans.find(p => p.id === activePlanId) || plans[1];
-  const selectedPlan = selectedPlanId ? plans.find(p => p.id === selectedPlanId) : null;
-
-  const fetchUsageData = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch user's Stripe customer ID and current plan
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('stripe_customer_id, subscription_plan')
-        .eq('id', user.id)
-        .single();
+      const [subResult, portalResult] = await Promise.all([
+        getSubscription(),
+        getPortalUsage(),
+      ]);
       
-      if (profile?.stripe_customer_id) {
-        setStripeCustomerId(profile.stripe_customer_id);
-      }
-      if (profile?.subscription_plan) {
-        setActivePlanId(profile.subscription_plan);
-      }
-
-      // Fetch actual usage data from Supabase
-      const [familiesCount, consultationsCount, messagesCount] = await Promise.all([
-        supabase.from('families').select('id', { count: 'exact' }).eq('advisor_id', user.id),
-        supabase.from('consultations').select('id', { count: 'exact' }).eq('advisor_id', user.id).eq('status', 'scheduled'),
-        supabase.from('messages').select('id', { count: 'exact' }).eq('sender_id', user.id)
-      ]);
-
-      setUsageData([
-        { label: "Family Clients", used: familiesCount.count || 0, limit: 15, icon: Users },
-        { label: "Active Consultations", used: consultationsCount.count || 0, limit: 20, icon: Calendar },
-        { label: "Messages", used: messagesCount.count || 0, limit: 1000, icon: MessageSquare },
-        { label: "Storage Used", used: 2.4, limit: 10, unit: "GB", icon: BarChart3 },
-      ]);
+      setSubscription(subResult.subscription);
+      setPortalUsage(portalResult.usage);
+      setCommissionInfo(getCommissionInfo());
     } catch (error) {
-      console.error("Error fetching usage data:", error);
+      console.error("Error loading subscription data:", error);
+      toast.error("Ошибка загрузки данных подписки");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUsageData();
-  }, [fetchUsageData]);
+    loadData();
+  }, [loadData]);
 
-  const handleUpgrade = async (planId: string) => {
-    setIsUpgrading(planId);
+  // Handlers
+  const handleSubscribe = async (planId: PlanId) => {
+    setIsActionLoading(planId);
     try {
-      const plan = plans.find(p => p.id === planId);
-      if (!plan) throw new Error("Plan not found");
-
-      // Call Stripe Checkout API
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: plan.priceId,
-          successUrl: `${window.location.origin}/subscription?success=true&plan=${planId}`,
-          cancelUrl: `${window.location.origin}/subscription?canceled=true`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      const { session, error } = await createCheckoutSession(planId);
+      
+      if (error) {
+        toast.error(error);
+        return;
       }
-
-      if (data.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+      
+      if (session?.url) {
+        window.location.href = session.url;
       }
     } catch (error) {
-      console.error("Error initiating checkout:", error);
-      toast.error("Failed to start checkout. Please try again.");
+      console.error("Error creating checkout:", error);
+      toast.error("Ошибка при оформлении подписки");
     } finally {
-      setIsUpgrading(null);
+      setIsActionLoading(null);
     }
   };
 
-  const handleManageBilling = async () => {
-    setIsCancelling(true);
+  const handleChangePlan = async () => {
+    if (!upgradeDialog.targetPlan) return;
+    
+    setIsActionLoading('change');
     try {
-      // Call Stripe Portal API
-      const response = await fetch('/api/stripe/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          returnUrl: `${window.location.origin}/subscription`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      const { success, error } = await changePlan(upgradeDialog.targetPlan);
+      
+      if (error) {
+        toast.error(error);
+        return;
       }
-
-      if (data.url) {
-        // Redirect to Stripe Customer Portal
-        window.location.href = data.url;
+      
+      if (success) {
+        toast.success(`План успешно изменён на ${PLANS[upgradeDialog.targetPlan].name}`);
+        setUpgradeDialog({ open: false, targetPlan: null });
+        loadData();
       }
     } catch (error) {
-      console.error("Error opening billing portal:", error);
-      toast.error("Failed to open billing portal. Please try again.");
+      console.error("Error changing plan:", error);
+      toast.error("Ошибка при смене плана");
     } finally {
-      setIsCancelling(false);
+      setIsActionLoading(null);
     }
   };
 
-  const handleCancelPlan = async () => {
-    // Cancellation is now handled via Stripe Customer Portal
-    handleManageBilling();
+  const handleCancelSubscription = async () => {
+    setIsActionLoading('cancel');
+    try {
+      const { success, error } = await cancelSubscription();
+      
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      
+      if (success) {
+        toast.success("Подписка будет отменена в конце текущего периода");
+        setCancelDialog(false);
+        loadData();
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      toast.error("Ошибка при отмене подписки");
+    } finally {
+      setIsActionLoading(null);
+    }
   };
 
-  const openUpgradeDialog = (planId: string) => {
-    setSelectedPlanId(planId);
-    setIsUpgradeOpen(true);
+  const handlePurchasePortal = async () => {
+    setIsActionLoading('portal');
+    try {
+      const { success, error } = await purchaseAdditionalPortal();
+      
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      
+      if (success) {
+        toast.success("Дополнительный слот портала успешно добавлен!");
+        setPortalDialog(false);
+        loadData();
+      }
+    } catch (error) {
+      console.error("Error purchasing portal:", error);
+      toast.error("Ошибка при покупке слота");
+    } finally {
+      setIsActionLoading(null);
+    }
   };
+
+  const currentPlan = subscription ? PLANS[subscription.plan_id] : null;
+  const renewalDate = subscription?.current_period_end 
+    ? new Date(subscription.current_period_end).toLocaleDateString('ru-RU', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      })
+    : null;
+
+  // Calculate days remaining for proration
+  const daysRemaining = subscription?.current_period_end
+    ? Math.max(0, Math.ceil((new Date(subscription.current_period_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  // Calculate promotional period end
+  const promotionalDaysRemaining = commissionInfo?.promotionalEndsAt
+    ? Math.max(0, Math.ceil((new Date(commissionInfo.promotionalEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -302,9 +278,12 @@ export default function SubscriptionPage() {
       <div className="container py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Subscription</h1>
-            <p className="text-muted-foreground mt-1">Manage your subscription plan and billing</p>
+            <h1 className="text-2xl font-semibold text-foreground">Подписка</h1>
+            <p className="text-muted-foreground mt-1">Управление планом подписки и лимитами</p>
           </div>
+          <Button variant="ghost" size="sm" onClick={loadData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -334,177 +313,274 @@ export default function SubscriptionPage() {
 
           {/* Main Content */}
           <div className="col-span-3 space-y-6">
+            
+            {/* Promotional Banner */}
+            {commissionInfo?.isPromotional && (
+              <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+                <Percent className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800 dark:text-green-200">
+                  Промо период: 0% комиссии
+                </AlertTitle>
+                <AlertDescription className="text-green-700 dark:text-green-300">
+                  До конца промо периода осталось {promotionalDaysRemaining} дней. 
+                  После этого комиссия составит 10% с консультаций.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Current Plan */}
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">Current Plan</CardTitle>
-                    <CardDescription>You are currently on the {activePlan.name} plan</CardDescription>
+                    <CardTitle className="text-base">Текущий план</CardTitle>
+                    <CardDescription>
+                      {subscription 
+                        ? `Вы используете план ${currentPlan?.name}` 
+                        : 'У вас нет активной подписки'}
+                    </CardDescription>
                   </div>
-                  <Badge variant="success">Active</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-                      <Crown className="h-7 w-7 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-foreground">{activePlan.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {activePlan.price}/{activePlan.period} · Renews on {currentPlan.renewalDate}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleManageBilling}
-                      disabled={isCancelling}
-                    >
-                      {isCancelling ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Manage Billing
-                        </>
-                      )}
-                    </Button>
-                    <Button onClick={() => openUpgradeDialog("enterprise")}>Upgrade Plan</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Usage */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">Usage This Month</CardTitle>
-                    <CardDescription>Track your resource usage against your plan limits</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={fetchUsageData} disabled={isLoading}>
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 gap-4">
-                  {isLoading ? (
-                    // Loading skeleton
-                    <>
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="p-4 border border-border rounded-lg animate-pulse">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="h-8 w-8 rounded-lg bg-muted"></div>
-                            <div className="h-4 w-24 bg-muted rounded"></div>
-                          </div>
-                          <div className="h-8 w-16 bg-muted rounded mb-2"></div>
-                          <div className="h-1.5 w-full bg-muted rounded"></div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    usageData.map((stat) => {
-                      const percentage = (stat.used / stat.limit) * 100;
-                      return (
-                        <div key={stat.label} className="p-4 border border-border rounded-lg">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <stat.icon className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="font-medium text-foreground text-sm">{stat.label}</span>
-                          </div>
-                          <div className="flex items-baseline gap-1 mb-2">
-                            <span className="text-2xl font-semibold text-foreground">{stat.used}</span>
-                            <span className="text-sm text-muted-foreground">
-                              / {stat.limit} {stat.unit || ""}
-                            </span>
-                          </div>
-                          <Progress value={percentage} className="h-1.5" />
-                          {percentage > 80 && (
-                            <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" />
-                              Approaching limit
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })
+                  {subscription && (
+                    <Badge variant={statusVariants[subscription.status]}>
+                      {statusLabels[subscription.status]}
+                    </Badge>
                   )}
                 </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {isLoading ? (
+                  <div className="p-4 bg-muted/50 rounded-lg animate-pulse">
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-xl bg-muted"></div>
+                      <div className="space-y-2">
+                        <div className="h-6 w-32 bg-muted rounded"></div>
+                        <div className="h-4 w-48 bg-muted rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : subscription && currentPlan ? (
+                  <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
+                        {subscription.plan_id === 'premium' ? (
+                          <Crown className="h-7 w-7 text-primary-foreground" />
+                        ) : (
+                          <Star className="h-7 w-7 text-primary-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-foreground">{currentPlan.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          ${currentPlan.price}/месяц · Продление {renewalDate}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {subscription.plan_id === 'standard' && (
+                        <Button onClick={() => setUpgradeDialog({ open: true, targetPlan: 'premium' })}>
+                          <TrendingUp className="mr-2 h-4 w-4" />
+                          Upgrade to Premium
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setCancelDialog(true)}
+                      >
+                        Отменить подписку
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-4">
+                      <CreditCard className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">Нет активной подписки</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Выберите план ниже, чтобы начать работу с платформой
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Available Plans */}
+            {/* Portal Usage (Premium only) */}
+            {subscription?.plan_id === 'premium' && portalUsage && (
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        Family Portals
+                      </CardTitle>
+                      <CardDescription>
+                        Управление созданными семейными порталами
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl font-bold">{portalUsage.used}</span>
+                          <span className="text-muted-foreground">/ {portalUsage.total} порталов</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {portalUsage.included} включено в план
+                          {portalUsage.additional > 0 && ` + ${portalUsage.additional} дополнительных`}
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => setPortalDialog(true)}
+                        disabled={!portalUsage.canCreateMore && portalUsage.used >= portalUsage.total}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Добавить слот
+                      </Button>
+                    </div>
+                    
+                    <Progress 
+                      value={(portalUsage.used / portalUsage.total) * 100} 
+                      className="h-2"
+                    />
+                    
+                    {portalUsage.used >= portalUsage.total && (
+                      <Alert variant="default">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Достигнут лимит порталов. Добавьте дополнительный слот за ${PORTAL_LIMITS.additionalPortalPrice}/месяц.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Plan Comparison */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Available Plans</CardTitle>
-                <CardDescription>Compare plans and choose the best one for your needs</CardDescription>
+                <CardTitle className="text-base">Сравнение планов</CardTitle>
+                <CardDescription>Выберите план, соответствующий вашим потребностям</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {plans.map((plan) => {
-                    const isCurrent = plan.id === activePlanId;
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {(Object.keys(PLANS) as PlanId[]).map((planId) => {
+                    const plan = PLANS[planId];
+                    const isCurrent = subscription?.plan_id === planId;
+                    const isPremium = planId === 'premium';
+                    
                     return (
                       <div 
-                        key={plan.id} 
-                        className={`relative p-4 border rounded-lg ${
+                        key={planId} 
+                        className={`relative p-6 border rounded-xl transition-all ${
                           isCurrent 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border"
+                            ? "border-primary bg-primary/5 shadow-md" 
+                            : isPremium
+                            ? "border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30"
+                            : "border-border hover:border-muted-foreground/30"
                         }`}
                       >
-                        {plan.popular && (
-                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                            Most Popular
+                        {isPremium && (
+                          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500">
+                            <Crown className="h-3 w-3 mr-1" />
+                            Рекомендуем
                           </Badge>
                         )}
-                        <div className="text-center mb-4 pt-2">
-                          <h3 className="font-semibold text-foreground">{plan.name}</h3>
-                          <div className="flex items-baseline justify-center gap-1 mt-2">
-                            <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                            <span className="text-muted-foreground">/{plan.period}</span>
+                        {isCurrent && (
+                          <Badge variant="outline" className="absolute -top-3 right-4">
+                            Текущий план
+                          </Badge>
+                        )}
+                        
+                        <div className="text-center mb-6 pt-2">
+                          <div className={`h-12 w-12 rounded-xl mx-auto flex items-center justify-center mb-3 ${
+                            isPremium ? 'bg-amber-100 dark:bg-amber-900' : 'bg-primary/10'
+                          }`}>
+                            {isPremium ? (
+                              <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                            ) : (
+                              <Star className="h-6 w-6 text-primary" />
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
+                          <h3 className="font-semibold text-lg text-foreground">{plan.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
+                          <div className="flex items-baseline justify-center gap-1 mt-4">
+                            <span className="text-4xl font-bold text-foreground">${plan.price}</span>
+                            <span className="text-muted-foreground">/месяц</span>
+                          </div>
                         </div>
                         
                         <Separator className="my-4" />
                         
-                        <ul className="space-y-2">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm">
-                              {feature.included ? (
-                                <Check className="h-4 w-4 text-green-500 shrink-0" />
-                              ) : (
-                                <X className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                              )}
-                              <span className={feature.included ? "text-foreground" : "text-muted-foreground"}>
-                                {feature.text}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                              <Check className="h-4 w-4 text-green-500" />
+                              Включено
+                            </h4>
+                            <ul className="space-y-2">
+                              {plan.features.map((feature, index) => (
+                                <li key={index} className="flex items-start gap-2 text-sm">
+                                  <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                  <span className="text-foreground">{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          {plan.limitations.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
+                                <X className="h-4 w-4" />
+                                Ограничения
+                              </h4>
+                              <ul className="space-y-2">
+                                {plan.limitations.map((limitation, index) => (
+                                  <li key={index} className="flex items-start gap-2 text-sm">
+                                    <X className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                                    <span className="text-muted-foreground">{limitation}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                         
                         <Button 
-                          className="w-full mt-4" 
-                          variant={isCurrent ? "outline" : "default"}
-                          disabled={isCurrent || isUpgrading === plan.id}
-                          onClick={() => handleUpgrade(plan.id)}
+                          className="w-full mt-6" 
+                          variant={isCurrent ? "outline" : isPremium ? "default" : "secondary"}
+                          disabled={isCurrent || isActionLoading === planId}
+                          onClick={() => {
+                            if (subscription) {
+                              setUpgradeDialog({ open: true, targetPlan: planId });
+                            } else {
+                              handleSubscribe(planId);
+                            }
+                          }}
                         >
-                          {isCurrent ? "Current Plan" : isUpgrading === plan.id ? (
+                          {isCurrent ? (
+                            "Текущий план"
+                          ) : isActionLoading === planId ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Upgrading...
+                              Обработка...
                             </>
-                          ) : "Upgrade"}
+                          ) : subscription ? (
+                            subscription.plan_id === 'premium' && planId === 'standard' ? (
+                              "Перейти на Standard"
+                            ) : (
+                              <>
+                                <TrendingUp className="mr-2 h-4 w-4" />
+                                Upgrade to Premium
+                              </>
+                            )
+                          ) : (
+                            "Выбрать план"
+                          )}
                         </Button>
                       </div>
                     );
@@ -513,36 +589,259 @@ export default function SubscriptionPage() {
               </CardContent>
             </Card>
 
-            {/* Billing History */}
+            {/* Commission Info */}
             <Card>
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Billing History</CardTitle>
-                  <Link href="/payments" className="text-sm text-primary hover:underline flex items-center gap-1">
-                    View All <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Percent className="h-5 w-5" />
+                  Комиссия платформы
+                </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="divide-y divide-border">
-                  {billingHistory.map((item, index) => (
-                    <div key={index} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground text-sm">{item.description}</p>
-                        <p className="text-xs text-muted-foreground">{item.date}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium text-foreground">{item.amount}</span>
-                        <Badge variant="success">Paid</Badge>
-                      </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Текущая комиссия</span>
                     </div>
-                  ))}
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-green-600">
+                        {commissionInfo?.currentRate || 0}%
+                      </span>
+                      {commissionInfo?.isPromotional && (
+                        <Badge variant="secondary">Промо</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {commissionInfo?.isPromotional 
+                        ? "Действует промо период с нулевой комиссией"
+                        : "Стандартная комиссия с консультаций"
+                      }
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">После промо периода</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold">10%</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {commissionInfo?.isPromotional
+                        ? `Через ${promotionalDaysRemaining} дней`
+                        : "Текущая ставка"
+                      }
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Billing History Link */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">История платежей</h3>
+                      <p className="text-sm text-muted-foreground">Просмотр всех транзакций и счетов</p>
+                    </div>
+                  </div>
+                  <Link href="/payments">
+                    <Button variant="ghost">
+                      Перейти
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Upgrade/Downgrade Dialog */}
+      <Dialog open={upgradeDialog.open} onOpenChange={(open) => setUpgradeDialog({ open, targetPlan: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {upgradeDialog.targetPlan && subscription && (
+                PLANS[upgradeDialog.targetPlan].price > PLANS[subscription.plan_id].price
+                  ? "Upgrade на Premium"
+                  : "Даунгрейд на Standard"
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {upgradeDialog.targetPlan && subscription && (
+                getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).description
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {upgradeDialog.targetPlan && subscription && (
+            <div className="py-4">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Текущий план:</span>
+                  <span className="font-medium">{PLANS[subscription.plan_id].name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Новый план:</span>
+                  <span className="font-medium">{PLANS[upgradeDialog.targetPlan].name}</span>
+                </div>
+                <Separator />
+                {PLANS[upgradeDialog.targetPlan].price > PLANS[subscription.plan_id].price && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Кредит за оставшиеся дни:</span>
+                      <span>-${getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).proratedCredit.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Стоимость нового плана:</span>
+                      <span>${getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).newCharge.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-medium">
+                      <span>К оплате сейчас:</span>
+                      <span className="text-primary">
+                        ${Math.max(0, getUpgradePreview(subscription.plan_id, upgradeDialog.targetPlan, daysRemaining).netAmount).toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {upgradeDialog.targetPlan === 'standard' && subscription.plan_id === 'premium' && (
+                <Alert className="mt-4" variant="default">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    При даунгрейде вы потеряете возможность создавать новые Family Portals. 
+                    Существующие порталы останутся активными.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUpgradeDialog({ open: false, targetPlan: null })}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleChangePlan}
+              disabled={isActionLoading === 'change'}
+            >
+              {isActionLoading === 'change' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Обработка...
+                </>
+              ) : (
+                "Подтвердить"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Subscription Dialog */}
+      <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Отменить подписку?</DialogTitle>
+            <DialogDescription>
+              Подписка будет отменена в конце текущего расчётного периода ({renewalDate}).
+              До этого момента вы сохраните доступ ко всем функциям.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Alert variant="destructive" className="my-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Внимание</AlertTitle>
+            <AlertDescription>
+              После отмены вы потеряете доступ к маркетплейсу семей и возможность принимать консультации.
+            </AlertDescription>
+          </Alert>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelDialog(false)}>
+              Оставить подписку
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={isActionLoading === 'cancel'}
+            >
+              {isActionLoading === 'cancel' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Отмена...
+                </>
+              ) : (
+                "Отменить подписку"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Purchase Portal Dialog */}
+      <Dialog open={portalDialog} onOpenChange={setPortalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Добавить слот Family Portal</DialogTitle>
+            <DialogDescription>
+              Приобретите дополнительный слот для создания нового Family Portal.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium">Дополнительный слот портала</span>
+                <span className="text-xl font-bold">${PORTAL_LIMITS.additionalPortalPrice}/мес</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Стоимость будет добавлена к ежемесячному счёту. Вы можете создать ещё один Family Portal.
+              </p>
+            </div>
+            
+            <Alert className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Слот добавляется к вашей подписке и будет доступен немедленно.
+              </AlertDescription>
+            </Alert>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPortalDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handlePurchasePortal}
+              disabled={isActionLoading === 'portal'}
+            >
+              {isActionLoading === 'portal' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Обработка...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Добавить за ${PORTAL_LIMITS.additionalPortalPrice}/мес
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
