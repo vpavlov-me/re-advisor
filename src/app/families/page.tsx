@@ -540,12 +540,20 @@ export default function FamiliesPage() {
     
     setSaving(true);
     try {
+      // Get current user for advisor_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to invite families');
+        return;
+      }
+
       const familyName = inviteForm.familyName || `${inviteForm.contactName}'s Family`;
       
       // Create family in Supabase
       const { data: familyData, error: familyError } = await supabase
         .from('families')
         .insert([{
+          advisor_id: user.id,
           name: familyName,
           role: inviteForm.role,
           status: 'pending',
