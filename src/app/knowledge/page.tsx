@@ -480,21 +480,26 @@ function KnowledgeCenterContent() {
           });
 
           // Fetch shares
-          const { data: sharesData } = await supabase
+          const { data: sharesData, error: sharesError } = await supabase
             .from('resource_shares')
             .select(`
               id,
               family_id,
-              created_at,
+              shared_at,
               families (id, name)
             `)
             .eq('resource_id', parseInt(resourceId));
 
+          if (sharesError) {
+            console.error("Error fetching shares:", sharesError);
+          }
+
           if (sharesData) {
+            console.log("Shares data:", sharesData);
             setDetailShares(sharesData.map((s: any) => ({
               id: s.id,
               family_id: s.family_id,
-              shared_at: s.created_at,
+              shared_at: s.shared_at,
               family: s.families
             })));
           }
