@@ -140,6 +140,22 @@ interface ResourceShare {
   };
 }
 
+interface ConstitutionSection {
+  id: number;
+  section_number: number;
+  title: string;
+  content: string | null;
+  is_required: boolean;
+}
+
+interface LearningPathModule {
+  id: string;
+  title: string;
+  description?: string;
+  resources?: string[];
+  duration_minutes?: number;
+}
+
 interface Family {
   id: number;
   name: string;
@@ -179,6 +195,8 @@ function KnowledgeCenterContent() {
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [detailResource, setDetailResource] = useState<ResourceDetail | null>(null);
   const [detailShares, setDetailShares] = useState<ResourceShare[]>([]);
+  const [detailSections, setDetailSections] = useState<ConstitutionSection[]>([]);
+  const [detailModules, setDetailModules] = useState<LearningPathModule[]>([]);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -326,6 +344,8 @@ function KnowledgeCenterContent() {
     setIsLoadingDetail(true);
     setIsDetailSheetOpen(true);
     setIsEditing(editMode);
+    setDetailSections([]);
+    setDetailModules([]);
 
     try {
       if (resourceId.startsWith('ct-')) {
@@ -340,6 +360,17 @@ function KnowledgeCenterContent() {
         if (error) throw error;
 
         if (templateData) {
+          // Fetch sections for this template
+          const { data: sectionsData } = await supabase
+            .from('constitution_sections')
+            .select('*')
+            .eq('template_id', templateId)
+            .order('section_number', { ascending: true });
+
+          if (sectionsData) {
+            setDetailSections(sectionsData);
+          }
+
           const resource: ResourceDetail = {
             id: resourceId,
             title: templateData.title,
@@ -348,7 +379,7 @@ function KnowledgeCenterContent() {
             description: templateData.description || "",
             content: templateData.content || "",
             isFeatured: false,
-            is_published: true,
+            is_published: templateData.is_published ?? true,
             created_at: templateData.created_at,
             updatedAt: templateData.updated_at ? new Date(templateData.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             sharedWith: 0,
@@ -378,13 +409,18 @@ function KnowledgeCenterContent() {
         if (error) throw error;
 
         if (pathData) {
+          // Parse modules from JSON
+          if (pathData.modules && Array.isArray(pathData.modules)) {
+            setDetailModules(pathData.modules as LearningPathModule[]);
+          }
+
           const resource: ResourceDetail = {
             id: resourceId,
             title: pathData.title,
             type: "learning-path",
             category: pathData.difficulty === 'advanced' ? 'Advanced' : pathData.difficulty === 'intermediate' ? 'Intermediate' : 'Beginner',
             description: pathData.description || "",
-            content: pathData.modules ? JSON.stringify(pathData.modules, null, 2) : "",
+            content: "",
             isFeatured: false,
             is_published: pathData.is_published ?? true,
             created_at: pathData.created_at,
@@ -477,6 +513,8 @@ function KnowledgeCenterContent() {
     setIsDetailSheetOpen(false);
     setDetailResource(null);
     setDetailShares([]);
+    setDetailSections([]);
+    setDetailModules([]);
     setIsEditing(false);
     // Remove URL params
     router.replace('/knowledge', { scroll: false });
@@ -2408,6 +2446,119 @@ function KnowledgeCenterContent() {
                     </p>
                   </div>
 
+                  {/* Constitution Sections */}
+                  {detailResource.type === "constitution-template" && detailSections.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Sections ({detailSections.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {detailSections.map((section) => (
+                          <div key={section.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                                  {section.section_number}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-medium">{section.title}</h4>
+                                    {section.is_required && (
+                                      <Badge variant="outline" className="text-xs">Required</Badge>
+                                    )}
+                                  </div>
+                                  {section.content ? (
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {section.content}
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground/60 italic">
+                                      No content defined
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Constitution Template - No sections message */}
+                  {detailResource.type === "constitution-template" && detailSections.length === 0 && (
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <Star className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                      <p className="text-sm text-muted-foreground mb-3">
+                        No sections defined yet. Edit this template to add sections.
+                      </p>
+                      <Link href={`/knowledge/constitution/${detailResource.id.replace('ct-', '')}/edit`}>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Template
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Learning Path Modules */}
+                  {detailResource.type === "learning-path" && detailModules.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                        Modules ({detailModules.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {detailModules.map((module, index) => (
+                          <div key={module.id || index} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                            <div className="flex items-start gap-3">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">
+                                {index + 1}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-medium mb-1">{module.title}</h4>
+                                {module.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {module.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  {module.duration_minutes && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {module.duration_minutes} min
+                                    </span>
+                                  )}
+                                  {module.resources && module.resources.length > 0 && (
+                                    <span className="flex items-center gap-1">
+                                      <FileText className="h-3 w-3" />
+                                      {module.resources.length} resources
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Learning Path - No modules message */}
+                  {detailResource.type === "learning-path" && detailModules.length === 0 && (
+                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                      <GraduationCap className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                      <p className="text-sm text-muted-foreground mb-3">
+                        No modules defined yet. Edit this learning path to add modules.
+                      </p>
+                      <Link href={`/knowledge/learning-path/${detailResource.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Learning Path
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+
                   {/* External URL */}
                   {detailResource.external_url && (
                     <div className="p-4 bg-muted/50 rounded-lg flex items-center justify-between">
@@ -2451,21 +2602,24 @@ function KnowledgeCenterContent() {
                     </div>
                   )}
 
-                  {/* Content */}
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Content</h3>
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      {detailResource.content ? (
-                        <div className="whitespace-pre-wrap">{detailResource.content}</div>
-                      ) : (
-                        <p className="text-muted-foreground italic">No content added yet.</p>
-                      )}
+                  {/* Content - only show for regular resources */}
+                  {detailResource.type !== "constitution-template" && detailResource.type !== "learning-path" && (
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Content</h3>
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        {detailResource.content ? (
+                          <div className="whitespace-pre-wrap">{detailResource.content}</div>
+                        ) : (
+                          <p className="text-muted-foreground italic">No content added yet.</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <Separator />
 
-                  {/* Sharing info */}
+                  {/* Sharing info - only for shareable types */}
+                  {detailResource.type !== "constitution-template" && detailResource.type !== "learning-path" && (
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Shared With</h3>
                     {detailShares.length === 0 ? (
@@ -2511,6 +2665,7 @@ function KnowledgeCenterContent() {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* Details */}
                   <div className="border rounded-lg p-4 space-y-3">
