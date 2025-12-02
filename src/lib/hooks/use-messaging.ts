@@ -64,6 +64,8 @@ export function useMessaging(userId: string | null): UseMessagingResult {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const typingChannelRef = useRef<RealtimeChannel | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Format time for display
   const formatTime = useCallback((dateString: string) => {
@@ -303,11 +305,45 @@ export function useMessaging(userId: string | null): UseMessagingResult {
     }
   }, []);
 
-  // Set typing indicator
+  // Set typing indicator - broadcasts to other users via Supabase Realtime
   const setTyping = useCallback((isTyping: boolean) => {
-    // In a real implementation, this would broadcast via Supabase Realtime
-    console.log('Typing:', isTyping);
-  }, []);
+    if (!selectedConversation || !userId) return;
+    
+    // Clear any existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    // Broadcast typing status
+    const channel = supabase.channel(`typing-${selectedConversation.id}`);
+    channel.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: {
+        userId,
+        userName: 'You', // In real app, get from profile
+        isTyping,
+        conversationId: selectedConversation.id,
+      },
+    });
+
+    // Auto-clear typing after 3 seconds of inactivity
+    if (isTyping) {
+      typingTimeoutRef.current = setTimeout(() => {
+        channel.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: {
+            userId,
+            userName: 'You',
+            isTyping: false,
+            conversationId: selectedConversation.id,
+          },
+        });
+      }, 3000);
+    }
+  }, [selectedConversation, userId]);
 
   // Refresh all data
   const refresh = useCallback(async () => {
@@ -376,8 +412,47 @@ export function useMessaging(userId: string | null): UseMessagingResult {
 
     channelRef.current = channel;
 
+    // Set up typing indicator subscription
+    if (typingChannelRef.current) {
+      supabase.removeChannel(typingChannelRef.current);
+    }
+
+    const typingChannel = supabase
+      .channel(`typing-${selectedConversation.id}`)
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const { userId: typingUserId, userName, isTyping } = payload.payload as {
+          userId: string;
+          userName: string;
+          isTyping: boolean;
+          conversationId: number;
+        };
+
+        // Ignore our own typing events
+        if (typingUserId === userId) return;
+
+        setTypingUsers(prev => {
+          if (isTyping) {
+            // Add user if not already in list
+            if (!prev.includes(userName)) {
+              return [...prev, userName];
+            }
+            return prev;
+          } else {
+            // Remove user from list
+            return prev.filter(u => u !== userName);
+          }
+        });
+      })
+      .subscribe();
+
+    typingChannelRef.current = typingChannel;
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(typingChannel);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, [selectedConversation?.id, userId]);
 

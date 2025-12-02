@@ -163,11 +163,9 @@ export default function MessagesPage() {
     }
   }, [messaging.messages]);
   
-  // Sync typing users from hook
+  // Sync typing users from hook (real-time via Supabase Broadcast)
   useEffect(() => {
-    if (messaging.typingUsers.length > 0) {
-      setTypingUsers(messaging.typingUsers);
-    }
+    setTypingUsers(messaging.typingUsers);
   }, [messaging.typingUsers]);
   
   // Scroll to bottom when messages change
@@ -179,8 +177,7 @@ export default function MessagesPage() {
     scrollToBottom();
   }, [messagesList, scrollToBottom]);
 
-  // Handle typing indicator for current user
-  // Note: Real-time typing indicators from other users will be implemented in a future update
+  // Handle typing indicator for current user - broadcasts via Supabase Realtime
   const handleTyping = useCallback(() => {
     if (!isTyping) {
       setIsTyping(true);
