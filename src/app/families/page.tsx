@@ -33,7 +33,9 @@ import {
   ListTodo,
   ChevronDown,
   ChevronLeft,
-  Trash2
+  Trash2,
+  Loader2,
+  Clock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
@@ -168,6 +177,10 @@ export default function FamiliesPage() {
   const [saving, setSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [, setIsRefreshing] = useState(false);
+  // Family Workspace Sheet state
+  const [isWorkspaceSheetOpen, setIsWorkspaceSheetOpen] = useState(false);
+  const [workspaceFamily, setWorkspaceFamily] = useState<Family | null>(null);
+  const [isLoadingFamily, setIsLoadingFamily] = useState(false);
 
   // React Hook Form for Member
   const {
@@ -258,6 +271,13 @@ export default function FamiliesPage() {
     };
     init();
   }, [fetchFamilies]);
+
+  // Open Family Workspace Sheet
+  const openWorkspaceSheet = (family: Family) => {
+    setWorkspaceFamily(family);
+    setWorkspaceTab("overview");
+    setIsWorkspaceSheetOpen(true);
+  };
 
   // Invite Form State
   const [inviteForm, setInviteForm] = useState({
@@ -792,7 +812,7 @@ export default function FamiliesPage() {
                   <TableRow 
                     key={family.id} 
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => router.push(`/families/${family.id}`)}
+                    onClick={() => openWorkspaceSheet(family)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -835,7 +855,7 @@ export default function FamiliesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push(`/families/${family.id}`)}>
+                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => openWorkspaceSheet(family)}>
                             <Eye className="h-4 w-4" />
                             Open Workspace
                           </DropdownMenuItem>
@@ -1630,6 +1650,278 @@ export default function FamiliesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Family Workspace Sheet */}
+      <Sheet open={isWorkspaceSheetOpen} onOpenChange={setIsWorkspaceSheetOpen}>
+        <SheetContent className="w-full sm:max-w-[800px] overflow-y-auto">
+          {workspaceFamily && (
+            <>
+              <SheetHeader className="pb-4 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <SheetTitle className="text-xl">{workspaceFamily.name}</SheetTitle>
+                    <SheetDescription className="flex items-center gap-2 mt-1">
+                      <span>{workspaceFamily.industry}</span>
+                      <span>•</span>
+                      <span>{workspaceFamily.location}</span>
+                    </SheetDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getRoleBadge(workspaceFamily.role)}
+                    {getStatusBadge(workspaceFamily.status)}
+                  </div>
+                </div>
+              </SheetHeader>
+
+              {/* Navigation Tabs */}
+              <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="mt-6">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="services">Services</TabsTrigger>
+                  <TabsTrigger value="consultations">Consultations</TabsTrigger>
+                </TabsList>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="space-y-6 mt-6">
+                  {/* Description */}
+                  {workspaceFamily.description && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium">About</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">{workspaceFamily.description}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Contact Info */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{workspaceFamily.email || "No email"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{workspaceFamily.phone || "No phone"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>{workspaceFamily.location || "Unknown location"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>Client since {workspaceFamily.since}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Family Structure */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Family Members</CardTitle>
+                        <span className="text-xs text-muted-foreground">{workspaceFamily.membersList.length} member{workspaceFamily.membersList.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {workspaceFamily.membersList.length > 0 ? (
+                          workspaceFamily.membersList.map((member, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="text-sm font-medium">{member.name}</p>
+                                  <p className="text-xs text-muted-foreground">{member.role}</p>
+                                </div>
+                              </div>
+                              <span className="text-xs text-muted-foreground">{member.email}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No members added yet</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <ListTodo className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-2xl font-bold">{workspaceFamily.tasks.filter(t => !t.completed).length}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Open Tasks</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-2xl font-bold">{workspaceFamily.services.length}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Active Services</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Video className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-2xl font-bold">{workspaceFamily.meetings.upcoming}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Upcoming Meetings</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                {/* Tasks Tab */}
+                <TabsContent value="tasks" className="mt-6">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                        <Button size="sm" variant="outline" onClick={() => {
+                          setSelectedFamily(workspaceFamily);
+                          setIsAddTaskDialogOpen(true);
+                        }}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Task
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {workspaceFamily.tasks.length > 0 ? (
+                          workspaceFamily.tasks.map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-2 w-2 rounded-full ${
+                                  task.priority === 'high' ? 'bg-red-500' :
+                                  task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                }`} />
+                                <div>
+                                  <p className={`text-sm ${task.completed ? 'line-through text-muted-foreground' : 'font-medium'}`}>
+                                    {task.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">Due: {task.dueDate}</p>
+                                </div>
+                              </div>
+                              {task.completed ? (
+                                <Badge variant="success">Completed</Badge>
+                              ) : (
+                                <Badge variant="outline">{task.priority}</Badge>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">No tasks yet</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Services Tab */}
+                <TabsContent value="services" className="mt-6">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Services</CardTitle>
+                        <Button size="sm" variant="outline" onClick={() => {
+                          setSelectedFamily(workspaceFamily);
+                          setIsProposeServiceDialogOpen(true);
+                        }}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Propose Service
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {workspaceFamily.services.length > 0 ? (
+                          workspaceFamily.services.map((service, idx) => (
+                            <div key={idx} className="p-4 border border-border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium text-sm">{service.name}</h4>
+                                <Badge variant={service.status === 'Active' ? 'success' : 'secondary'}>
+                                  {service.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                                <span>{service.price}</span>
+                                <span>Started: {service.startDate}</span>
+                              </div>
+                              <Progress value={service.progress} className="h-2" />
+                              <p className="text-xs text-muted-foreground mt-1">{service.progress}% complete</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">No services yet</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Consultations Tab */}
+                <TabsContent value="consultations" className="mt-6">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium">Consultations</CardTitle>
+                        <Button size="sm" variant="outline">
+                          <Plus className="h-4 w-4 mr-1" />
+                          Schedule
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {workspaceFamily.consultations.length > 0 ? (
+                          workspaceFamily.consultations.map((consultation, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <Video className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{consultation.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {consultation.date} at {consultation.time}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge variant={
+                                consultation.status === 'completed' ? 'success' :
+                                consultation.status === 'cancelled' ? 'destructive' : 'info'
+                              }>
+                                {consultation.status}
+                              </Badge>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">No consultations yet</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

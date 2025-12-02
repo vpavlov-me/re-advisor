@@ -62,6 +62,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 
 // Zod Validation Schemas
 const scheduleSchema = z.object({
@@ -255,6 +256,8 @@ export default function ConsultationsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState<Date | undefined>(undefined);
+  const [scheduleTime, setScheduleTime] = useState<string | undefined>(undefined);
   const [metrics, setMetrics] = useState({
     total: 0,
     upcoming: 0,
@@ -489,6 +492,8 @@ export default function ConsultationsPage() {
       setIsSubmitting(false);
       setIsScheduleOpen(false);
       reset();
+      setScheduleDate(undefined);
+      setScheduleTime(undefined);
       setActiveTab("all");
     }
   };
@@ -1094,7 +1099,11 @@ export default function ConsultationsPage() {
       {/* Schedule Consultation Dialog */}
       <Dialog open={isScheduleOpen} onOpenChange={(open) => {
         setIsScheduleOpen(open);
-        if (!open) reset();
+        if (!open) {
+          reset();
+          setScheduleDate(undefined);
+          setScheduleTime(undefined);
+        }
       }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -1148,23 +1157,34 @@ export default function ConsultationsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input 
-                    id="date" 
-                    type="date" 
-                    min={new Date().toISOString().split('T')[0]}
-                    {...register("date")}
+                  <Label>Date</Label>
+                  <DatePicker
+                    date={scheduleDate}
+                    onDateChange={(date) => {
+                      setScheduleDate(date);
+                      if (date) {
+                        setValue("date", date.toISOString().split('T')[0]);
+                      } else {
+                        setValue("date", "");
+                      }
+                    }}
+                    placeholder="Select date"
+                    minDate={new Date()}
                   />
                   {errors.date && (
                     <p className="text-sm text-red-500">{errors.date.message}</p>
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="time">Time</Label>
-                  <Input 
-                    id="time" 
-                    type="time" 
-                    {...register("time")}
+                  <Label>Time</Label>
+                  <TimePicker
+                    time={scheduleTime}
+                    onTimeChange={(time) => {
+                      setScheduleTime(time);
+                      setValue("time", time || "");
+                    }}
+                    placeholder="Select time"
+                    step={15}
                   />
                   {errors.time && (
                     <p className="text-sm text-red-500">{errors.time.message}</p>
@@ -1187,6 +1207,8 @@ export default function ConsultationsPage() {
               <Button type="button" variant="outline" onClick={() => {
                 setIsScheduleOpen(false);
                 reset();
+                setScheduleDate(undefined);
+                setScheduleTime(undefined);
               }}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
