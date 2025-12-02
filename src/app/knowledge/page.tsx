@@ -366,6 +366,44 @@ function KnowledgeCenterContent() {
             is_published: resource.is_published
           });
         }
+      } else if (resourceId.startsWith('lp-')) {
+        // Learning path
+        const pathId = parseInt(resourceId.replace('lp-', ''));
+        const { data: pathData, error } = await supabase
+          .from('learning_paths')
+          .select('*')
+          .eq('id', pathId)
+          .single();
+
+        if (error) throw error;
+
+        if (pathData) {
+          const resource: ResourceDetail = {
+            id: resourceId,
+            title: pathData.title,
+            type: "learning-path",
+            category: pathData.difficulty === 'advanced' ? 'Advanced' : pathData.difficulty === 'intermediate' ? 'Intermediate' : 'Beginner',
+            description: pathData.description || "",
+            content: pathData.modules ? JSON.stringify(pathData.modules, null, 2) : "",
+            isFeatured: false,
+            is_published: pathData.is_published ?? true,
+            created_at: pathData.created_at,
+            updatedAt: pathData.updated_at ? new Date(pathData.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            sharedWith: 0,
+            advisor_id: pathData.advisor_id
+          };
+          setDetailResource(resource);
+          setEditForm({
+            title: resource.title,
+            description: resource.description,
+            content: resource.content || "",
+            category: resource.category,
+            type: resource.type,
+            external_url: "",
+            is_featured: resource.isFeatured,
+            is_published: resource.is_published
+          });
+        }
       } else {
         // Regular resource
         const { data: resourceData, error } = await supabase
@@ -460,6 +498,19 @@ function KnowledgeCenterContent() {
             updated_at: new Date().toISOString()
           })
           .eq('id', templateId);
+
+        if (error) throw error;
+      } else if (detailResource.id.startsWith('lp-')) {
+        const pathId = parseInt(detailResource.id.replace('lp-', ''));
+        const { error } = await supabase
+          .from('learning_paths')
+          .update({
+            title: editForm.title,
+            description: editForm.description,
+            is_published: editForm.is_published,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', pathId);
 
         if (error) throw error;
       } else {
@@ -954,6 +1005,14 @@ function KnowledgeCenterContent() {
           .from('constitution_templates')
           .delete()
           .eq('id', templateId);
+        if (error) throw error;
+      } else if (selectedResource.id.startsWith('lp-')) {
+        // Handle learning paths
+        const pathId = parseInt(selectedResource.id.replace('lp-', ''));
+        const { error } = await supabase
+          .from('learning_paths')
+          .delete()
+          .eq('id', pathId);
         if (error) throw error;
       } else {
         const { error } = await supabase
