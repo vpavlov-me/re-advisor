@@ -15,7 +15,6 @@ export {
   cancelSubscription,
   changePlan,
   startStripeOnboarding,
-  completeStripeOnboarding,
   getStripeAccountStatus,
   getBalance,
   getTransactions,
