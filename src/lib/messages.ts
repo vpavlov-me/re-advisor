@@ -27,6 +27,10 @@ export interface Message {
   read: boolean;
   is_own: boolean;
   created_at: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  attachment_size?: number;
 }
 
 export interface ConversationParticipant {
@@ -42,6 +46,10 @@ export interface ConversationParticipant {
 export interface CreateMessageInput {
   conversation_id: number;
   content: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  attachment_size?: number;
 }
 
 // ============ CONVERSATIONS ============
@@ -296,7 +304,7 @@ export async function sendMessage(input: CreateMessageInput): Promise<{
     ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
     : 'You';
 
-  // Insert message
+  // Insert message with optional attachment
   const { data: message, error: msgError } = await supabase
     .from('messages')
     .insert({
@@ -306,6 +314,10 @@ export async function sendMessage(input: CreateMessageInput): Promise<{
       content: input.content,
       read: true,
       is_own: true,
+      attachment_url: input.attachment_url,
+      attachment_name: input.attachment_name,
+      attachment_type: input.attachment_type,
+      attachment_size: input.attachment_size,
     })
     .select()
     .single();
@@ -315,10 +327,14 @@ export async function sendMessage(input: CreateMessageInput): Promise<{
   }
 
   // Update conversation's last message
+  const lastMessageText = input.attachment_name 
+    ? `📎 ${input.attachment_name}` 
+    : input.content;
+    
   await supabase
     .from('conversations')
     .update({
-      last_message: input.content,
+      last_message: lastMessageText,
       last_message_time: new Date().toISOString(),
     })
     .eq('id', input.conversation_id);

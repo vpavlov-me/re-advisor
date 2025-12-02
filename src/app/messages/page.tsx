@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useMessaging } from "@/lib/hooks/use-messaging";
 import { togglePinConversation, addConversationParticipant, getConversationParticipants } from "@/lib/messages";
 import type { ConversationParticipant } from "@/lib/messages";
+import { uploadAttachment, formatFileSize } from "@/lib/storage";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -14,6 +15,10 @@ import {
   MoreVertical,
   Paperclip,
   Send,
+  X,
+  FileText,
+  Image as ImageIcon,
+  File as FileIcon,
   Info,
   Pin,
   CheckCheck,
@@ -64,6 +69,13 @@ import {
 // Message status type
 type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
 
+interface MessageAttachment {
+  url: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 interface Message {
   id: number;
   sender: string;
@@ -71,6 +83,7 @@ interface Message {
   time: string;
   isOwn: boolean;
   status?: MessageStatus;
+  attachment?: MessageAttachment;
 }
 
 interface FamilyMember {
@@ -128,6 +141,11 @@ export default function MessagesPage() {
   const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<number[]>([]);
   const [existingParticipants, setExistingParticipants] = useState<ConversationParticipant[]>([]);
   const [addingParticipants, setAddingParticipants] = useState(false);
+  
+  // Attachment state
+  const [pendingAttachment, setPendingAttachment] = useState<File | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Typing indicator state
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -404,7 +422,13 @@ export default function MessagesPage() {
           content: m.content,
           time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isOwn: m.is_own || false,
-          status: m.status || 'delivered'
+          status: m.status || 'delivered',
+          attachment: m.attachment_url ? {
+            url: m.attachment_url,
+            name: m.attachment_name || 'Attachment',
+            type: m.attachment_type || 'application/octet-stream',
+            size: m.attachment_size || 0,
+          } : undefined,
         }));
         setMessagesList(mappedMessages);
       } else {
@@ -431,29 +455,67 @@ export default function MessagesPage() {
   });
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !userId) return;
+    if ((!newMessage.trim() && !pendingAttachment) || !selectedConversation || !userId) return;
 
     setSending(true);
     const tempId = Date.now();
+    
+    let attachmentData: MessageAttachment | undefined;
+    
+    // Upload attachment if present
+    if (pendingAttachment) {
+      setUploadingAttachment(true);
+      const { url, error } = await uploadAttachment(selectedConversation.id, pendingAttachment);
+      setUploadingAttachment(false);
+      
+      if (error || !url) {
+        toast.error(error || "Failed to upload attachment");
+        setSending(false);
+        return;
+      }
+      
+      attachmentData = {
+        url,
+        name: pendingAttachment.name,
+        type: pendingAttachment.type,
+        size: pendingAttachment.size,
+      };
+    }
+    
     const newMsg: Message = {
       id: tempId,
       sender: "You",
-      content: newMessage,
+      content: newMessage || (attachmentData ? `📎 ${attachmentData.name}` : ''),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isOwn: true,
       status: 'sending',
+      attachment: attachmentData,
     };
 
     // Optimistic update
     setMessagesList(prev => [...prev, newMsg]);
     const messageContent = newMessage;
     setNewMessage("");
+    setPendingAttachment(null);
 
     try {
-      // Use hook's sendMessage method
-      const result = await messaging.sendMessage(messageContent);
+      // Send message with attachment data to Supabase
+      const { error: sendError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedConversation.id,
+          sender_id: userId,
+          sender_name: 'You',
+          content: messageContent || (attachmentData ? '' : ''),
+          read: true,
+          is_own: true,
+          attachment_url: attachmentData?.url,
+          attachment_name: attachmentData?.name,
+          attachment_type: attachmentData?.type,
+          attachment_size: attachmentData?.size,
+        });
       
-      if (result.success) {
+      if (!sendError) {
         // Update message with status
         setMessagesList(prev => prev.map(m => 
           m.id === tempId 
@@ -471,11 +533,21 @@ export default function MessagesPage() {
         }, 1000);
 
         // Update conversation's last message locally
+        const lastMessageText = attachmentData ? `📎 ${attachmentData.name}` : messageContent;
         setConversationsList(prev => prev.map(c => 
           c.id === selectedConversation.id 
-            ? { ...c, lastMessage: messageContent, lastMessageTime: "Just now" }
+            ? { ...c, lastMessage: lastMessageText, lastMessageTime: "Just now" }
             : c
         ));
+        
+        // Update conversation in DB
+        await supabase
+          .from('conversations')
+          .update({
+            last_message: lastMessageText,
+            last_message_time: new Date().toISOString(),
+          })
+          .eq('id', selectedConversation.id);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -487,14 +559,29 @@ export default function MessagesPage() {
       ));
       
       // Fallback - still show the message locally
+      const lastMessageText = attachmentData ? `📎 ${attachmentData.name}` : messageContent;
       setConversationsList(prev => prev.map(c => 
         c.id === selectedConversation.id 
-          ? { ...c, lastMessage: messageContent, lastMessageTime: "Just now" }
+          ? { ...c, lastMessage: lastMessageText, lastMessageTime: "Just now" }
           : c
       ));
     } finally {
       setSending(false);
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Max 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 10MB.");
+      return;
+    }
+    
+    setPendingAttachment(file);
+    toast.success(`File "${file.name}" ready to send`);
   };
 
   const handleOpenAddParticipants = async () => {
@@ -949,7 +1036,34 @@ export default function MessagesPage() {
                                       : "bg-muted"
                                   } ${message.status === 'sending' ? 'opacity-70' : ''}`}
                                 >
-                                  <p className="text-sm">{message.content}</p>
+                                  {/* Attachment */}
+                                  {message.attachment && (
+                                    <a 
+                                      href={message.attachment.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className={`flex items-center gap-2 mb-2 p-2 rounded-lg transition-colors ${
+                                        message.isOwn 
+                                          ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" 
+                                          : "bg-background hover:bg-background/80"
+                                      }`}
+                                    >
+                                      {message.attachment.type.startsWith('image/') ? (
+                                        <ImageIcon className="h-5 w-5 shrink-0" />
+                                      ) : message.attachment.type.includes('pdf') ? (
+                                        <FileText className="h-5 w-5 shrink-0" />
+                                      ) : (
+                                        <FileIcon className="h-5 w-5 shrink-0" />
+                                      )}
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium truncate">{message.attachment.name}</p>
+                                        <p className={`text-xs ${message.isOwn ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                          {formatFileSize(message.attachment.size)}
+                                        </p>
+                                      </div>
+                                    </a>
+                                  )}
+                                  {message.content && <p className="text-sm">{message.content}</p>}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <span className="text-xs text-muted-foreground">{message.time}</span>
@@ -1016,31 +1130,79 @@ export default function MessagesPage() {
                         {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
                       </div>
                     )}
+                    
+                    {/* Pending Attachment Preview */}
+                    {pendingAttachment && (
+                      <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
+                        {pendingAttachment.type.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-primary" />
+                        ) : pendingAttachment.type.includes('pdf') ? (
+                          <FileText className="h-5 w-5 text-red-500" />
+                        ) : (
+                          <FileIcon className="h-5 w-5 text-muted-foreground" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{pendingAttachment.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(pendingAttachment.size)}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => setPendingAttachment(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-2">
+                      {/* Hidden file input */}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileSelect}
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                      />
+                      
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" disabled>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={sending || uploadingAttachment}
+                            >
                               <Paperclip className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Attachments coming soon</TooltipContent>
+                          <TooltipContent>Attach file (max 10MB)</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       <div className="flex-1 relative">
                         <Input 
-                          placeholder="Type your message..." 
+                          placeholder={pendingAttachment ? "Add a message (optional)..." : "Type your message..."} 
                           value={newMessage}
                           onChange={(e) => {
                             setNewMessage(e.target.value);
                             handleTyping();
                           }}
                           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                          disabled={sending}
+                          disabled={sending || uploadingAttachment}
                         />
                       </div>
-                      <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
-                        {sending ? (
+                      <Button 
+                        onClick={handleSendMessage} 
+                        disabled={sending || uploadingAttachment || (!newMessage.trim() && !pendingAttachment)}
+                      >
+                        {uploadingAttachment ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Uploading
+                          </>
+                        ) : sending ? (
                           <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             Sending
