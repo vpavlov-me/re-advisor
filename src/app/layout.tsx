@@ -63,6 +63,39 @@ export default function RootLayout({
           </AuthProvider>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
+        {/* SPA Redirect Handler for GitHub Pages */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Check for SPA redirect stored in sessionStorage
+                var redirect = sessionStorage.getItem('spa-redirect');
+                if (redirect) {
+                  sessionStorage.removeItem('spa-redirect');
+                  // Remove the repo prefix if present
+                  var repoPrefix = '/re-advisor';
+                  if (redirect.startsWith(repoPrefix)) {
+                    redirect = redirect.slice(repoPrefix.length);
+                  }
+                  // Navigate to the original path
+                  if (redirect && redirect !== '/' && redirect !== window.location.pathname) {
+                    window.history.replaceState(null, '', '${basePath}' + redirect);
+                  }
+                }
+                
+                // Also check URL params for redirect path (fallback method)
+                var params = new URLSearchParams(window.location.search);
+                var pathFromParams = params.get('p');
+                if (pathFromParams) {
+                  params.delete('p');
+                  var newSearch = params.toString();
+                  var newPath = pathFromParams + (newSearch ? '?' + newSearch : '');
+                  window.history.replaceState(null, '', '${basePath}' + newPath);
+                }
+              })();
+            `,
+          }}
+        />
         {/* Service Worker Registration */}
         <script
           dangerouslySetInnerHTML={{

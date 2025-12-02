@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>RE:Advisor</title>
+  <script type="text/javascript">
+    // Single Page Apps for GitHub Pages
+    // MIT License
+    // https://github.com/rafgraph/spa-github-pages
+    // This script handles SPA routing on GitHub Pages by:
+    // 1. Capturing the path from the 404 page
+    // 2. Storing it in sessionStorage
+    // 3. Redirecting to the base URL
+    // 4. The main app then reads the stored path and navigates there
+    
+    var pathSegmentsToKeep = 1; // Keep /re-advisor prefix
+    
+    var l = window.location;
+    var repoName = '/re-advisor';
+    
+    // Build the redirect URL
+    var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      repoName + '/?p=' +
+      encodeURIComponent(l.pathname.slice(repoName.length + 1) + l.search + l.hash);
+    
+    // Store the original path and redirect
+    sessionStorage.setItem('spa-redirect', l.pathname + l.search + l.hash);
+    window.location.replace(redirectUrl);
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
