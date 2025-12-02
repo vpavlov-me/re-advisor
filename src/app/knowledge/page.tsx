@@ -538,28 +538,112 @@ function KnowledgeCenterContent() {
     title: "",
     description: "",
     type: "document" as ResourceType,
-    category: "Governance"
+    category: "Governance",
+    content: "",
+    external_url: "",
+    duration_minutes: "",
+    points_value: "5",
+    difficulty: "beginner" as "beginner" | "intermediate" | "advanced",
+    is_public: false,
+    tags: [] as string[]
   });
+  const [tagInput, setTagInput] = useState("");
 
   // Upload State
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const simulateUpload = () => {
+  // Get supported file formats based on type
+  const getSupportedFormats = (type: ResourceType): { extensions: string[]; mimeTypes: string[] } => {
+    switch (type) {
+      case "document":
+      case "article":
+        return { extensions: [".pdf"], mimeTypes: ["application/pdf"] };
+      case "template":
+      case "checklist":
+        return { extensions: [".pdf", ".docx"], mimeTypes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] };
+      case "video":
+        return { extensions: [".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"], mimeTypes: ["video/mp4", "video/x-msvideo", "video/quicktime", "video/x-ms-wmv", "video/x-flv", "video/webm"] };
+      case "podcast":
+        return { extensions: [".mp3", ".wav", ".aac"], mimeTypes: ["audio/mpeg", "audio/wav", "audio/aac"] };
+      case "guide":
+        return { extensions: [".pdf", ".docx"], mimeTypes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] };
+      default:
+        return { extensions: [".pdf"], mimeTypes: ["application/pdf"] };
+    }
+  };
+
+  // Check if type requires file upload
+  const requiresFileUpload = (type: ResourceType): boolean => {
+    return ["document", "template", "checklist", "podcast"].includes(type);
+  };
+
+  // Check if type can use external URL
+  const canUseExternalUrl = (type: ResourceType): boolean => {
+    return ["video", "link", "article"].includes(type);
+  };
+
+  // Check if type uses rich text content
+  const usesRichTextContent = (type: ResourceType): boolean => {
+    return ["article", "guide"].includes(type);
+  };
+
+  // Check if duration is required
+  const durationRequired = (type: ResourceType): boolean => {
+    return ["article", "video", "podcast"].includes(type);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formats = getSupportedFormats(newResource.type);
+    
+    // Validate file type
+    if (!formats.mimeTypes.includes(file.type)) {
+      toast.error(`Invalid file format. Accepted formats: ${formats.extensions.join(", ")}`);
+      return;
+    }
+
+    // Validate file size (100MB max)
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File size exceeds limit of 100MB. Please reduce file size.");
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
+    
+    // Simulate upload progress
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsUploading(false);
-          setUploadedFileName("document-v1.pdf"); // Mock file name
+          setUploadedFile(file);
+          setUploadedFileName(file.name);
           return 100;
         }
         return prev + 10;
       });
     }, 200);
+  };
+
+  const handleAddTag = () => {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && newResource.tags.length < 10 && !newResource.tags.includes(tag)) {
+      setNewResource({ ...newResource, tags: [...newResource.tags, tag] });
+      setTagInput("");
+    } else if (newResource.tags.length >= 10) {
+      toast.error("Maximum 10 tags allowed");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setNewResource({ ...newResource, tags: newResource.tags.filter(t => t !== tagToRemove) });
   };
 
   const handleAddCategory = () => {
@@ -603,21 +687,78 @@ function KnowledgeCenterContent() {
 
     if (newResourceType === "constitution-template") {
       router.push("/knowledge/constitution/create");
+      setIsCreateDialogOpen(false);
       return;
+    }
+
+    if (newResourceType === "learning-path") {
+      router.push("/knowledge/learning-path/create");
+      setIsCreateDialogOpen(false);
+      return;
+    }
+
+    // Validation
+    if (!newResource.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
+    if (!newResource.description.trim()) {
+      toast.error("Description is required");
+      return;
+    }
+
+    if (durationRequired(newResource.type) && !newResource.duration_minutes) {
+      toast.error("Duration is required for this resource type");
+      return;
+    }
+
+    // Validate content source (file OR URL OR text content)
+    const hasFile = uploadedFile !== null;
+    const hasUrl = newResource.external_url.trim() !== "";
+    const hasContent = newResource.content.trim() !== "";
+    
+    if (requiresFileUpload(newResource.type) && !hasFile && !hasUrl) {
+      toast.error("Please upload a file or provide an external URL");
+      return;
+    }
+
+    if (canUseExternalUrl(newResource.type) && hasUrl && !hasFile) {
+      // Validate URL format
+      try {
+        new URL(newResource.external_url);
+        if (!newResource.external_url.startsWith("http://") && !newResource.external_url.startsWith("https://")) {
+          toast.error("Please enter a valid URL starting with http:// or https://");
+          return;
+        }
+      } catch {
+        toast.error("Please enter a valid URL starting with http:// or https://");
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
+      // TODO: Upload file to storage and get URL
+      let fileUrl = null;
+      if (uploadedFile) {
+        // In real implementation, upload to Supabase storage here
+        fileUrl = `uploads/${userId}/${Date.now()}-${uploadedFile.name}`;
+      }
+
       const { data, error } = await supabase
         .from('knowledge_resources')
         .insert([{
           advisor_id: userId,
-          title: newResource.title || "New Resource",
-          description: newResource.description || "",
+          title: newResource.title,
+          description: newResource.description,
           type: newResource.type,
           category: newResource.category,
+          content: newResource.content || null,
+          file_url: fileUrl,
+          external_url: newResource.external_url || null,
           is_featured: false,
-          is_published: true
+          is_published: newResource.is_public
         }])
         .select();
 
@@ -647,36 +788,55 @@ function KnowledgeCenterContent() {
         title: "",
         description: "",
         type: "document",
-        category: "Governance"
+        category: "Governance",
+        content: "",
+        external_url: "",
+        duration_minutes: "",
+        points_value: "5",
+        difficulty: "beginner",
+        is_public: false,
+        tags: []
       });
       setUploadedFileName(null);
+      setUploadedFile(null);
+      setTagInput("");
     }
   };
 
   const handleShareResource = async () => {
     if (!selectedResource || !userId || selectedFamilies.length === 0) return;
     
+    // Check if resource can be shared (constitution templates and learning paths have different sharing)
+    if (selectedResource.id.startsWith('ct-')) {
+      toast.error("Constitution templates cannot be shared directly. Use the template with a family instead.");
+      setIsShareDialogOpen(false);
+      setSelectedFamilies([]);
+      return;
+    }
+
+    if (selectedResource.id.startsWith('lp-')) {
+      toast.error("Learning paths cannot be shared directly yet. This feature is coming soon.");
+      setIsShareDialogOpen(false);
+      setSelectedFamilies([]);
+      return;
+    }
+
     setIsSharing(true);
     try {
-      // Get numeric ID from string (remove 'ct-' prefix if constitution template)
-      const resourceId = selectedResource.id.startsWith('ct-') 
-        ? null 
-        : parseInt(selectedResource.id);
+      const resourceId = parseInt(selectedResource.id);
 
-      if (resourceId) {
-        // Insert share records for each selected family
-        const shares = selectedFamilies.map(familyId => ({
-          resource_id: resourceId,
-          family_id: familyId,
-          shared_by: userId
-        }));
+      // Insert share records for each selected family
+      const shares = selectedFamilies.map(familyId => ({
+        resource_id: resourceId,
+        family_id: familyId,
+        shared_by: userId
+      }));
 
-        const { error } = await supabase
-          .from('resource_shares')
-          .upsert(shares, { onConflict: 'resource_id,family_id' });
+      const { error } = await supabase
+        .from('resource_shares')
+        .upsert(shares, { onConflict: 'resource_id,family_id' });
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // Update local state
       setResources(resources.map(r => 
@@ -963,14 +1123,18 @@ function KnowledgeCenterContent() {
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
-                              <Share2 className="h-4 w-4 mr-2" />
-                              Share with Family
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
-                              <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-                              {resource.isFeatured ? "Unfeature" : "Feature"}
-                            </DropdownMenuItem>
+                            {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); setIsShareDialogOpen(true); }}>
+                                <Share2 className="h-4 w-4 mr-2" />
+                                Share with Family
+                              </DropdownMenuItem>
+                            )}
+                            {!resource.id.startsWith('ct-') && !resource.id.startsWith('lp-') && (
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeatured(resource.id); }}>
+                                <Star className={`h-4 w-4 mr-2 ${resource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                                {resource.isFeatured ? "Unfeature" : "Feature"}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openResourceDetail(resource.id, true); }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
@@ -1131,153 +1295,421 @@ function KnowledgeCenterContent() {
       </div>
 
       {/* Create Resource Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) {
+          // Reset form when closing
+          setNewResource({
+            title: "",
+            description: "",
+            type: "document",
+            category: "Governance",
+            content: "",
+            external_url: "",
+            duration_minutes: "",
+            points_value: "5",
+            difficulty: "beginner",
+            is_public: false,
+            tags: []
+          });
+          setUploadedFileName(null);
+          setUploadedFile(null);
+          setTagInput("");
+          setNewResourceType("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Resource</DialogTitle>
             <DialogDescription>
               Add a new educational resource to your library.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreateResource} className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Resource Type</Label>
-                <Select 
-                  value={newResource.type} 
-                  onValueChange={(v) => {
-                    setNewResourceType(v);
-                    setNewResource({...newResource, type: v as ResourceType});
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="document">Document</SelectItem>
-                    <SelectItem value="article">Article</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="guide">Guide</SelectItem>
-                    <SelectItem value="template">Template</SelectItem>
-                    <SelectItem value="constitution-template">Constitution Template</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="category">Category</Label>
-                  {!isAddingCategory && (
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-auto p-0 text-xs text-primary"
-                      onClick={() => setIsAddingCategory(true)}
-                    >
-                      + Add New
-                    </Button>
-                  )}
-                </div>
-                {isAddingCategory ? (
-                  <div className="flex gap-2">
-                    <Input 
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      placeholder="New category name"
-                      className="h-10"
-                    />
-                    <Button type="button" size="sm" onClick={handleAddCategory}>Add</Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingCategory(false)}>Cancel</Button>
-                  </div>
-                ) : (
+          <form onSubmit={handleCreateResource} className="space-y-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column - Basic Information */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-sm text-muted-foreground">Basic Information</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="type">Resource Type *</Label>
                   <Select 
-                    value={newResource.category}
-                    onValueChange={(v) => setNewResource({...newResource, category: v})}
+                    value={newResource.type} 
+                    onValueChange={(v) => {
+                      setNewResourceType(v);
+                      setNewResource({...newResource, type: v as ResourceType});
+                      // Clear file if type changes
+                      if (uploadedFile) {
+                        setUploadedFile(null);
+                        setUploadedFileName(null);
+                        toast.info("Uploaded file cleared due to type change");
+                      }
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
+                      <SelectItem value="document">
+                        <span className="flex items-center gap-2"><FileText className="h-4 w-4" /> Document</span>
+                      </SelectItem>
+                      <SelectItem value="article">
+                        <span className="flex items-center gap-2"><LayoutTemplate className="h-4 w-4" /> Article</span>
+                      </SelectItem>
+                      <SelectItem value="video">
+                        <span className="flex items-center gap-2"><Video className="h-4 w-4" /> Video Tutorial</span>
+                      </SelectItem>
+                      <SelectItem value="podcast">
+                        <span className="flex items-center gap-2"><Mic className="h-4 w-4" /> Podcast</span>
+                      </SelectItem>
+                      <SelectItem value="guide">
+                        <span className="flex items-center gap-2"><BookOpen className="h-4 w-4" /> Guide</span>
+                      </SelectItem>
+                      <SelectItem value="template">
+                        <span className="flex items-center gap-2"><File className="h-4 w-4" /> Template</span>
+                      </SelectItem>
+                      <SelectItem value="checklist">
+                        <span className="flex items-center gap-2"><CheckSquare className="h-4 w-4" /> Checklist</span>
+                      </SelectItem>
+                      <SelectItem value="link">
+                        <span className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> External Link</span>
+                      </SelectItem>
+                      <SelectItem value="learning-path">
+                        <span className="flex items-center gap-2"><GraduationCap className="h-4 w-4" /> Learning Path</span>
+                      </SelectItem>
+                      <SelectItem value="constitution-template">
+                        <span className="flex items-center gap-2"><Star className="h-4 w-4" /> Constitution Template</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input 
+                    id="title" 
+                    placeholder="e.g., Family Constitution Guide" 
+                    value={newResource.title}
+                    onChange={(e) => setNewResource({...newResource, title: e.target.value})}
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground">{newResource.title.length}/200</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Brief description of the resource..." 
+                    value={newResource.description}
+                    onChange={(e) => setNewResource({...newResource, description: e.target.value})}
+                    maxLength={1000}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">{newResource.description.length}/1000</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="category">Category *</Label>
+                    {!isAddingCategory && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-auto p-0 text-xs text-primary"
+                        onClick={() => setIsAddingCategory(true)}
+                      >
+                        + Add New
+                      </Button>
+                    )}
+                  </div>
+                  {isAddingCategory ? (
+                    <div className="flex gap-2">
+                      <Input 
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        placeholder="New category name"
+                        className="h-10"
+                      />
+                      <Button type="button" size="sm" onClick={handleAddCategory}>Add</Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingCategory(false)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <Select 
+                      value={newResource.category}
+                      onValueChange={(v) => setNewResource({...newResource, category: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (up to 10)</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      placeholder="Add a tag..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                    <Button type="button" variant="outline" onClick={handleAddTag} disabled={newResource.tags.length >= 10}>
+                      Add
+                    </Button>
+                  </div>
+                  {newResource.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {newResource.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="gap-1">
+                          {tag}
+                          <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Difficulty Level *</Label>
+                  <Select 
+                    value={newResource.difficulty}
+                    onValueChange={(v) => setNewResource({...newResource, difficulty: v as "beginner" | "intermediate" | "advanced"})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="success" className="text-xs">Beginner</Badge>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="intermediate">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="warning" className="text-xs">Intermediate</Badge>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="advanced">
+                        <span className="flex items-center gap-2">
+                          <Badge variant="destructive" className="text-xs">Advanced</Badge>
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Right Column - Settings & Content */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-sm text-muted-foreground">Settings</h3>
+
+                <div className="space-y-2">
+                  <Label>Author</Label>
+                  <Input value="You (Auto-assigned)" disabled className="bg-muted" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (minutes) {durationRequired(newResource.type) && "*"}</Label>
+                    <Input 
+                      id="duration"
+                      type="number"
+                      min="1"
+                      max="999"
+                      placeholder="e.g., 30"
+                      value={newResource.duration_minutes}
+                      onChange={(e) => setNewResource({...newResource, duration_minutes: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="points">Points Value *</Label>
+                    <Input 
+                      id="points"
+                      type="number"
+                      min="1"
+                      max="100"
+                      placeholder="5"
+                      value={newResource.points_value}
+                      onChange={(e) => setNewResource({...newResource, points_value: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="is_public"
+                    checked={newResource.is_public}
+                    onCheckedChange={(checked) => setNewResource({...newResource, is_public: !!checked})}
+                  />
+                  <label htmlFor="is_public" className="text-sm font-medium leading-none cursor-pointer">
+                    Public Resource
+                  </label>
+                  <span className="text-xs text-muted-foreground">(visible in marketplace)</span>
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Content Section - Changes based on type */}
+                <h3 className="font-medium text-sm text-muted-foreground">Content</h3>
+
+                {/* File Upload for file-based types */}
+                {(requiresFileUpload(newResource.type) || newResource.type === "video" || newResource.type === "guide") && (
+                  <div className="space-y-2">
+                    <Label>Upload File</Label>
+                    {uploadedFileName ? (
+                      <div className="border rounded-lg p-4 flex items-center justify-between bg-muted/20">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-8 w-8 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium">{uploadedFileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {uploadedFile ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : ""} • Uploaded
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setUploadedFileName(null);
+                            setUploadedFile(null);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : isUploading ? (
+                      <div className="border rounded-lg p-8 space-y-3">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span>Uploading...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary transition-all duration-200 ease-out"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 cursor-pointer transition-colors block">
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept={getSupportedFormats(newResource.type).extensions.join(",")}
+                          onChange={handleFileUpload}
+                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <Download className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Click to upload file</span>
+                          <span className="text-xs text-muted-foreground">
+                            Max 100MB • Formats: {getSupportedFormats(newResource.type).extensions.join(", ")}
+                          </span>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {/* External URL for videos/links */}
+                {canUseExternalUrl(newResource.type) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="external_url">
+                      External URL {newResource.type === "link" && "*"}
+                    </Label>
+                    <div className="flex gap-2">
+                      <LinkIcon className="h-4 w-4 mt-3 text-muted-foreground" />
+                      <Input 
+                        id="external_url"
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={newResource.external_url}
+                        onChange={(e) => setNewResource({...newResource, external_url: e.target.value})}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {newResource.type === "video" && "YouTube, Vimeo, or other video URL"}
+                      {newResource.type === "link" && "Website URL"}
+                      {newResource.type === "article" && "Or provide an external article URL"}
+                    </p>
+                  </div>
+                )}
+
+                {/* Rich text content for articles/guides */}
+                {usesRichTextContent(newResource.type) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content</Label>
+                    <Textarea 
+                      id="content"
+                      placeholder="Write your content here... (supports basic formatting)"
+                      value={newResource.content}
+                      onChange={(e) => setNewResource({...newResource, content: e.target.value})}
+                      rows={8}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter the main content of your {newResource.type}
+                    </p>
+                  </div>
+                )}
+
+                {/* Special message for constitution and learning path */}
+                {(newResource.type === "constitution-template" || newResource.type === "learning-path") && (
+                  <div className="border rounded-lg p-4 bg-primary/5 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      {newResource.type === "constitution-template" ? (
+                        <>
+                          <Star className="h-8 w-8 text-primary" />
+                          <p className="text-sm font-medium">Constitution Template Editor</p>
+                          <p className="text-xs text-muted-foreground">
+                            A specialized 12-section editor will open for creating your constitution template.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <GraduationCap className="h-8 w-8 text-primary" />
+                          <p className="text-sm font-medium">Learning Path Builder</p>
+                          <p className="text-xs text-muted-foreground">
+                            A specialized builder will open for creating your learning path with modules.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input 
-                id="title" 
-                placeholder="e.g., Family Constitution Guide" 
-                value={newResource.title}
-                onChange={(e) => setNewResource({...newResource, title: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Brief description of the resource..." 
-                value={newResource.description}
-                onChange={(e) => setNewResource({...newResource, description: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="file">Content / File</Label>
-              {uploadedFileName ? (
-                <div className="border rounded-lg p-4 flex items-center justify-between bg-muted/20">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">{uploadedFileName}</p>
-                      <p className="text-xs text-muted-foreground">2.4 MB • Uploaded just now</p>
-                    </div>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setUploadedFileName(null)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : isUploading ? (
-                <div className="border rounded-lg p-8 space-y-3">
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span>Uploading...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary transition-all duration-200 ease-out"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div 
-                  onClick={simulateUpload}
-                  className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 cursor-pointer transition-colors"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Download className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Click to simulate file upload</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSaving}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={isUploading || isSaving}>
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Creating...
                   </>
+                ) : (newResource.type === "constitution-template" || newResource.type === "learning-path") ? (
+                  <>Continue to Editor</>
                 ) : (
                   "Create Resource"
                 )}
@@ -1476,14 +1908,18 @@ function KnowledgeCenterContent() {
                 <div className="flex items-center gap-2 flex-wrap">
                   {!isEditing ? (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => { setSelectedResource(detailResource); setIsShareDialogOpen(true); }}>
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={toggleDetailFeatured}>
-                        <Star className={`h-4 w-4 mr-2 ${detailResource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-                        {detailResource.isFeatured ? "Unfeature" : "Feature"}
-                      </Button>
+                      {!detailResource.id.startsWith('ct-') && !detailResource.id.startsWith('lp-') && (
+                        <Button variant="outline" size="sm" onClick={() => { setSelectedResource(detailResource); setIsShareDialogOpen(true); }}>
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Share
+                        </Button>
+                      )}
+                      {!detailResource.id.startsWith('ct-') && !detailResource.id.startsWith('lp-') && (
+                        <Button variant="outline" size="sm" onClick={toggleDetailFeatured}>
+                          <Star className={`h-4 w-4 mr-2 ${detailResource.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                          {detailResource.isFeatured ? "Unfeature" : "Feature"}
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
