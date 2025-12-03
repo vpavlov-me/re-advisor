@@ -12,7 +12,6 @@ import {
   X,
   Crown,
   Star,
-  Users,
   Calendar,
   Shield,
   Globe,

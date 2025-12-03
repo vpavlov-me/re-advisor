@@ -1555,7 +1555,7 @@ function KnowledgeCenterContent() {
                         <Plus className="h-4 w-4 mr-2" />
                         Add Resource
                       </Button>
-                    )}}
+                    )}
                   </div>
                 ) : viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

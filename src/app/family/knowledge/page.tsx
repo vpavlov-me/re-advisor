@@ -138,8 +138,6 @@ export default function FamilyKnowledgeCenterPage() {
   
   // State
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [familyId, setFamilyId] = useState<number | null>(null);
   const [familyName, setFamilyName] = useState<string>("");
   
   const [sharedResources, setSharedResources] = useState<SharedResource[]>([]);
@@ -157,7 +155,6 @@ export default function FamilyKnowledgeCenterPage() {
         router.push("/auth/login");
         return;
       }
-      setUserId(user.id);
 
       // Get user's family membership
       const { data: memberData, error: memberError } = await supabase
@@ -180,7 +177,7 @@ export default function FamilyKnowledgeCenterPage() {
       }
 
       const family = memberData.families as unknown as { id: number; name: string };
-      setFamilyId(family.id);
+      const currentFamilyId = family.id;
       setFamilyName(family.name);
 
       // Fetch shared resources for this family
@@ -205,7 +202,7 @@ export default function FamilyKnowledgeCenterPage() {
             last_name
           )
         `)
-        .eq('family_id', family.id)
+        .eq('family_id', currentFamilyId)
         .order('shared_at', { ascending: false });
 
       if (sharesError) throw sharesError;
@@ -252,7 +249,7 @@ export default function FamilyKnowledgeCenterPage() {
             advisor_name: s.profiles 
               ? `${s.profiles.first_name || ''} ${s.profiles.last_name || ''}`.trim() || 'Advisor'
               : 'Advisor',
-            family_id: family.id,
+            family_id: currentFamilyId,
             family_name: family.name,
             is_starred: false,
             view_count: 0
@@ -265,7 +262,7 @@ export default function FamilyKnowledgeCenterPage() {
       const { data: constitutionsData, error: constitutionsError } = await supabase
         .from('family_constitutions')
         .select('*')
-        .eq('family_id', family.id)
+        .eq('family_id', currentFamilyId)
         .order('updated_at', { ascending: false });
 
       if (!constitutionsError && constitutionsData) {
@@ -289,7 +286,7 @@ export default function FamilyKnowledgeCenterPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, router]);
+  }, [router]);
 
   useEffect(() => {
     fetchData();
