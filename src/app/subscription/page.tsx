@@ -107,23 +107,6 @@ export default function SubscriptionPage() {
   const [cancelDialog, setCancelDialog] = useState(false);
   const [portalDialog, setPortalDialog] = useState(false);
 
-  // Handle Stripe redirect
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
-    const plan = searchParams.get('plan');
-    
-    if (success === 'true' && plan) {
-      const planName = plan === 'premium' ? 'Premium Consultant' : 'Standard Consultant';
-      toast.success(`Successfully subscribed to ${planName}!`);
-      window.history.replaceState({}, '', '/subscription');
-      loadData();
-    } else if (canceled === 'true') {
-      toast.info('Checkout was canceled.');
-      window.history.replaceState({}, '', '/subscription');
-    }
-  }, [searchParams]);
-
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -143,11 +126,41 @@ export default function SubscriptionPage() {
     }
   }, []);
 
+  // Handle Stripe redirect - retry loading because webhook may take time
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    const plan = searchParams.get('plan');
+    
+    if (success === 'true' && plan) {
+      const planName = plan === 'premium' ? 'Premium Consultant' : 'Standard Consultant';
+      toast.success(`Successfully subscribed to ${planName}!`);
+      window.history.replaceState({}, '', '/subscription');
+      
+      // Retry loading data with delays to wait for webhook processing
+      const retryLoad = async (attempts: number) => {
+        for (let i = 0; i < attempts; i++) {
+          await new Promise(resolve => setTimeout(resolve, i === 0 ? 500 : 2000));
+          await loadData();
+          // Check if subscription was loaded
+          const { subscription } = await getSubscription();
+          if (subscription?.plan_id === plan) {
+            break;
+          }
+        }
+      };
+      retryLoad(5);
+    } else if (canceled === 'true') {
+      toast.info('Checkout was canceled.');
+      window.history.replaceState({}, '', '/subscription');
+    }
+  }, [searchParams, loadData]);
+
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Handlers
+  // Handlers  // Handlers
   const handleSubscribe = async (planId: PlanId) => {
     setIsActionLoading(planId);
     try {
@@ -371,7 +384,7 @@ export default function SubscriptionPage() {
                       <div>
                         <h3 className="text-xl font-semibold text-foreground">{currentPlan.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          ${currentPlan.price}/месяц · Продление {renewalDate}
+                          ${currentPlan.price}/month · Renews {renewalDate}
                         </p>
                       </div>
                     </div>
@@ -510,7 +523,7 @@ export default function SubscriptionPage() {
                           <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
                           <div className="flex items-baseline justify-center gap-1 mt-4">
                             <span className="text-4xl font-bold text-foreground">${plan.price}</span>
-                            <span className="text-muted-foreground">/месяц</span>
+                            <span className="text-muted-foreground">/month</span>
                           </div>
                         </div>
                         
