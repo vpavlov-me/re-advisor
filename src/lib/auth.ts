@@ -14,19 +14,11 @@ export interface SignUpData {
   lastName: string;
   phone?: string;
   company?: string;
-  // Family setup fields (step 3 of registration)
-  familyName?: string;
-  familyRole?: 'head' | 'council' | 'member';
-  familyDescription?: string;
-  selectedPlan?: 'basic' | 'pro';
 }
 
 // Sign up with email and password
 export async function signUp(data: SignUpData): Promise<AuthResult> {
-  const { 
-    email, password, firstName, lastName, phone, company,
-    familyName, familyRole, familyDescription, selectedPlan 
-  } = data;
+  const { email, password, firstName, lastName, phone, company } = data;
   
   const { data: authData, error } = await supabase.auth.signUp({
     email,
@@ -35,57 +27,15 @@ export async function signUp(data: SignUpData): Promise<AuthResult> {
       data: {
         first_name: firstName,
         last_name: lastName,
-        phone,
-        company,
+        phone: phone || '',
+        company: company || '',
       },
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
 
-  if (!error && authData.user) {
-    // Create/update profile record (trigger already creates basic profile)
-    await supabase.from('profiles').upsert({
-      id: authData.user.id,
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      company,
-      is_first_login: true,
-      onboarding_progress: 0,
-      profile_status: 'draft',
-      subscription_plan: selectedPlan || 'free',
-    });
-
-    // Create family if provided
-    if (familyName) {
-      const { data: familyData } = await supabase
-        .from('families')
-        .insert({
-          name: familyName,
-          description: familyDescription,
-          created_by: authData.user.id,
-        })
-        .select('id')
-        .single();
-
-      if (familyData) {
-        // Add user as family member with specified role
-        await supabase.from('family_members').insert({
-          family_id: familyData.id,
-          name: `${firstName} ${lastName}`,
-          email,
-          role: familyRole || 'head',
-          user_id: authData.user.id,
-        });
-
-        // Update profile with family_id
-        await supabase.from('profiles').update({
-          family_id: familyData.id,
-        }).eq('id', authData.user.id);
-      }
-    }
-  }
+  // Note: Profile is created automatically by database trigger (handle_new_user)
+  // The trigger will use raw_user_meta_data to populate first_name, last_name, etc.
 
   return {
     user: authData?.user ?? null,

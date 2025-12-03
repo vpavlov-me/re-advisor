@@ -31,6 +31,8 @@ const PUBLIC_ROUTES = [
   '/auth/verify-email',
   '/auth/reset-password',
   '/api/',
+  '/invite/',
+  '/family-invitations/',
 ]
 
 export async function middleware(request: NextRequest) {
