@@ -31,40 +31,46 @@ jest.mock('stripe', () => {
 
 describe('Stripe Service', () => {
   describe('PLANS configuration', () => {
-    it('should have starter plan', () => {
+    it('should have standard plan', () => {
+      expect(PLANS.standard).toBeDefined();
+      expect(PLANS.standard.id).toBe('standard');
+      expect(PLANS.standard.name).toBe('Standard Consultant');
+      expect(PLANS.standard.price).toBe(49);
+      expect(PLANS.standard.limits.families).toBe(-1); // unlimited
+      expect(PLANS.standard.limits.consultations).toBe(-1); // unlimited
+      expect(PLANS.standard.limits.storage).toBe(5);
+      expect(PLANS.standard.limits.familyPortals).toBe(0);
+    });
+
+    it('should have premium plan', () => {
+      expect(PLANS.premium).toBeDefined();
+      expect(PLANS.premium.id).toBe('premium');
+      expect(PLANS.premium.name).toBe('Premium Consultant');
+      expect(PLANS.premium.price).toBe(99);
+      expect(PLANS.premium.limits.families).toBe(-1); // unlimited
+      expect(PLANS.premium.limits.consultations).toBe(-1); // unlimited
+      expect(PLANS.premium.limits.storage).toBe(10);
+      expect(PLANS.premium.limits.familyPortals).toBe(3);
+    });
+
+    it('should have legacy plan aliases for backwards compatibility', () => {
+      // starter -> standard
       expect(PLANS.starter).toBeDefined();
-      expect(PLANS.starter.id).toBe('starter');
-      expect(PLANS.starter.name).toBe('Starter');
-      expect(PLANS.starter.price).toBe(49);
-      expect(PLANS.starter.limits.families).toBe(5);
-      expect(PLANS.starter.limits.consultations).toBe(10);
-      expect(PLANS.starter.limits.storage).toBe(5);
-    });
-
-    it('should have professional plan', () => {
+      expect(PLANS.starter.name).toBe('Standard Consultant');
+      
+      // professional -> premium
       expect(PLANS.professional).toBeDefined();
-      expect(PLANS.professional.id).toBe('professional');
-      expect(PLANS.professional.name).toBe('Professional');
-      expect(PLANS.professional.price).toBe(99);
-      expect(PLANS.professional.limits.families).toBe(15);
-      expect(PLANS.professional.limits.consultations).toBe(20);
-      expect(PLANS.professional.limits.storage).toBe(10);
-    });
-
-    it('should have enterprise plan', () => {
+      expect(PLANS.professional.name).toBe('Premium Consultant');
+      
+      // enterprise -> premium
       expect(PLANS.enterprise).toBeDefined();
-      expect(PLANS.enterprise.id).toBe('enterprise');
-      expect(PLANS.enterprise.name).toBe('Enterprise');
-      expect(PLANS.enterprise.price).toBe(249);
-      expect(PLANS.enterprise.limits.families).toBe(-1); // unlimited
-      expect(PLANS.enterprise.limits.consultations).toBe(-1); // unlimited
-      expect(PLANS.enterprise.limits.storage).toBe(50);
+      expect(PLANS.enterprise.name).toBe('Premium Consultant');
     });
 
     it('should have all required plan features', () => {
-      const allPlans = [PLANS.starter, PLANS.professional, PLANS.enterprise];
+      const mainPlans = [PLANS.standard, PLANS.premium];
       
-      allPlans.forEach(plan => {
+      mainPlans.forEach(plan => {
         expect(plan.id).toBeDefined();
         expect(plan.name).toBeDefined();
         expect(plan.price).toBeGreaterThanOrEqual(0);
@@ -74,18 +80,17 @@ describe('Stripe Service', () => {
         expect(typeof plan.limits.families).toBe('number');
         expect(typeof plan.limits.consultations).toBe('number');
         expect(typeof plan.limits.storage).toBe('number');
+        expect(typeof plan.limits.familyPortals).toBe('number');
       });
     });
 
     it('should have increasing prices across plans', () => {
-      expect(PLANS.starter.price).toBeLessThan(PLANS.professional.price);
-      expect(PLANS.professional.price).toBeLessThan(PLANS.enterprise.price);
+      expect(PLANS.standard.price).toBeLessThan(PLANS.premium.price);
     });
 
-    it('should have increasing limits across plans (except unlimited)', () => {
-      expect(PLANS.starter.limits.families).toBeLessThan(PLANS.professional.limits.families);
-      expect(PLANS.starter.limits.consultations).toBeLessThan(PLANS.professional.limits.consultations);
-      expect(PLANS.starter.limits.storage).toBeLessThan(PLANS.professional.limits.storage);
+    it('should have more features in premium plan', () => {
+      expect(PLANS.standard.limits.storage).toBeLessThan(PLANS.premium.limits.storage);
+      expect(PLANS.standard.limits.familyPortals).toBeLessThan(PLANS.premium.limits.familyPortals);
     });
   });
 });

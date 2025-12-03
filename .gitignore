@@ -39,3 +39,6 @@ next-env.d.ts
 supabase/.temp/
 .env.local
 .env.stripe
+
+# epics documentation (external)
+docs/epics/

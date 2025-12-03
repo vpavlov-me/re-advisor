@@ -75,16 +75,15 @@ const passwordSchema = z.object({
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-// Sidebar navigation
+// Sidebar navigation - Account settings only
 const settingsNav = [
-  { label: "Account & Security", href: "/settings", icon: Shield, active: true },
+  { label: "Account & Security", href: "/settings", icon: Shield },
   { label: "Team & Permissions", href: "/settings/team", icon: Users },
-  { label: "Notifications", href: "/notifications", icon: Globe },
-  { label: "Payment Methods", href: "/payments", icon: Key },
-  { label: "Subscription", href: "/subscription", icon: Monitor },
+  { label: "Login History", href: "/settings/history", icon: History },
 ];
 
 export default function SettingsPage() {
+  const pathname = "/settings"; // Current page
   const [userEmail, setUserEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
@@ -276,9 +275,7 @@ export default function SettingsPage() {
             <Home className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Home</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <Link href="/profile" className="text-muted-foreground hover:text-foreground">Profile</Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Settings</span>
+            <span className="text-foreground font-medium">Account Settings</span>
           </div>
         </div>
       </div>
@@ -302,7 +299,7 @@ export default function SettingsPage() {
                       key={item.href}
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                        item.active 
+                        pathname === item.href 
                           ? "bg-primary/10 text-primary font-medium" 
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}

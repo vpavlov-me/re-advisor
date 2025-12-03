@@ -20,7 +20,9 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronLeft,
-  Trash2
+  Trash2,
+  FileText,
+  Crown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -289,13 +291,44 @@ export default function FamiliesPage() {
               <Home className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Home</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">Family Clients</span>
+              <span className="text-foreground font-medium">Families & Services</span>
             </div>
             <Button onClick={() => setIsInviteDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Invite Family
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Sub Navigation */}
+      <div className="bg-card border-b border-border">
+        <div className="container">
+          <nav className="flex items-center gap-1 -mb-px">
+            <Button
+              variant="ghost"
+              className="relative h-12 px-4 rounded-none border-b-2 border-primary text-primary hover:text-primary"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Family Clients
+            </Button>
+            <Button
+              variant="ghost"
+              className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              onClick={() => router.push('/services')}
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              My Services
+            </Button>
+            <Button
+              variant="ghost"
+              className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              onClick={() => router.push('/services/requests')}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Service Requests
+            </Button>
+          </nav>
         </div>
       </div>
 

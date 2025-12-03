@@ -148,12 +148,11 @@ const pendingPayouts = [
   { id: 1, amount: "$2,762.00", estimatedDate: "Dec 1, 2025", consultations: 3 },
 ];
 
-// Sidebar navigation
-const settingsNav = [
-  { label: "Account & Security", href: "/settings", icon: Shield },
-  { label: "Notifications", href: "/notifications", icon: Globe },
-  { label: "Payment Methods", href: "/payments", icon: CreditCard, active: true },
+// Sidebar navigation - Payments section only
+const paymentsNav = [
+  { label: "Payment Methods", href: "/payments", icon: CreditCard },
   { label: "Subscription", href: "/subscription", icon: Monitor },
+  { label: "Invoices", href: "/payments/invoices", icon: DollarSign },
 ];
 
 export default function PaymentsPage() {
@@ -758,9 +757,7 @@ export default function PaymentsPage() {
             <Home className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Home</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <Link href="/profile" className="text-muted-foreground hover:text-foreground">Profile</Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Payments</span>
+            <span className="text-foreground font-medium">Payments & Billing</span>
           </div>
         </div>
       </div>
@@ -779,12 +776,12 @@ export default function PaymentsPage() {
             <Card>
               <CardContent className="p-2">
                 <nav className="space-y-1">
-                  {settingsNav.map((item) => (
+                  {paymentsNav.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                        item.active 
+                        item.href === "/payments" 
                           ? "bg-primary/10 text-primary font-medium" 
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}

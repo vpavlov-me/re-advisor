@@ -20,7 +20,9 @@ import {
   Settings,
   Check,
   ChevronDown,
-  Loader2
+  Loader2,
+  FileText,
+  Crown
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -447,7 +449,7 @@ export default function ServicesPage() {
               <Home className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Home</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">My Services</span>
+              <span className="text-foreground font-medium">Families & Services</span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
@@ -460,6 +462,34 @@ export default function ServicesPage() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Sub Navigation */}
+      <div className="bg-card border-b border-border">
+        <div className="container">
+          <nav className="flex items-center gap-1 -mb-px">
+            <a
+              href="/families"
+              className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Family Clients
+            </a>
+            <span
+              className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-primary text-primary font-medium"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              My Services
+            </span>
+            <a
+              href="/services/requests"
+              className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Service Requests
+            </a>
+          </nav>
         </div>
       </div>
 

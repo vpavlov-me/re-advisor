@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2 } from "lucide-react";
+import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -127,21 +127,22 @@ export function AppHeader() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/services" className="flex items-center cursor-pointer">
-                  <Crown className="mr-2 h-4 w-4" />
-                  My Services
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
                 <Link href="/settings" className="flex items-center cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  Account Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/payments" className="flex items-center cursor-pointer">
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Payments
+                  Payments & Billing
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/subscription" className="flex items-center cursor-pointer">
+                  <Crown className="mr-2 h-4 w-4" />
+                  Subscription
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
