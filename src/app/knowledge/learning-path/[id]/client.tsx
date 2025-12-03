@@ -336,7 +336,8 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
               <div className="space-y-4">
                 {steps.map((step, index) => {
                   const isCompleted = completedSteps.has(step.id);
-                  const linkedResource = step.knowledge_resources;
+                  // knowledge_resources is an array from Supabase join, get first item
+                  const linkedResource = step.knowledge_resources?.[0] || null;
                   
                   return (
                     <Card key={step.id} className={isCompleted ? "border-primary/50 bg-primary/5" : ""}>
