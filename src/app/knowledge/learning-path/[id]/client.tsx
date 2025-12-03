@@ -39,13 +39,13 @@ interface LearningStep {
   step_order: number;
   estimated_duration_minutes: number | null;
   resource_id?: number | null;
-  // Joined resource data if available
+  // Joined resource data if available (Supabase returns as array)
   knowledge_resources?: {
     id: number;
     title: string;
     type: string;
     external_url: string | null;
-  } | null;
+  }[] | null;
 }
 
 interface LearningPath {
