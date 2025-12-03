@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import {
@@ -751,20 +752,20 @@ export default function ServiceRequestsPage() {
       <div className="bg-card border-b border-border">
         <div className="container">
           <nav className="flex items-center gap-1 -mb-px">
-            <a
+            <Link
               href="/families"
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
             >
               <Users className="h-4 w-4 mr-2" />
               Family Clients
-            </a>
-            <a
+            </Link>
+            <Link
               href="/services"
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
             >
               <Crown className="h-4 w-4 mr-2" />
               My Services
-            </a>
+            </Link>
             <span
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-primary text-primary font-medium"
             >

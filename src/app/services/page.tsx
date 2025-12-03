@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -469,26 +470,26 @@ export default function ServicesPage() {
       <div className="bg-card border-b border-border">
         <div className="container">
           <nav className="flex items-center gap-1 -mb-px">
-            <a
+            <Link
               href="/families"
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
             >
               <Users className="h-4 w-4 mr-2" />
               Family Clients
-            </a>
+            </Link>
             <span
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-primary text-primary font-medium"
             >
               <Crown className="h-4 w-4 mr-2" />
               My Services
             </span>
-            <a
+            <Link
               href="/services/requests"
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
             >
               <FileText className="h-4 w-4 mr-2" />
               Service Requests
-            </a>
+            </Link>
           </nav>
         </div>
       </div>
