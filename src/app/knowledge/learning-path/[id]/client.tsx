@@ -15,8 +15,7 @@ import {
   Loader2,
   AlertCircle,
   ExternalLink,
-  CheckCircle2,
-  Circle
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,7 +38,7 @@ interface LearningStep {
   content: string | null;
   step_order: number;
   estimated_duration_minutes: number | null;
-  resource_id: number | null;
+  resource_id?: number | null;
   // Joined resource data if available
   knowledge_resources?: {
     id: number;
