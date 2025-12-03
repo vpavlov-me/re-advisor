@@ -53,8 +53,12 @@ export default function LoginPage() {
           setError(error.message);
         }
       } else {
-        // Use window.location for hard redirect to ensure cookies are sent with request
-        window.location.href = redirectTo;
+        // Wait a moment for cookies to be set, then redirect
+        // Use router.refresh() to ensure Next.js picks up the new auth state
+        router.refresh();
+        // Small delay to ensure cookies are synced
+        await new Promise(resolve => setTimeout(resolve, 100));
+        router.push(redirectTo);
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
