@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/providers/protected-route";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { Toaster } from "@/components/ui/toaster";
 import { PushNotificationPrompt } from "@/components/notifications/push-notification-prompt";
+import { HashHandler } from "@/components/auth/hash-handler";
 
 export const metadata: Metadata = {
   title: "RE:Advisor | Dashboard",
@@ -52,6 +53,7 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
+          <HashHandler />
           <AuthProvider>
             <ProtectedRoute>
               <LayoutWrapper>{children}</LayoutWrapper>
