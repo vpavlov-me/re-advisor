@@ -29,7 +29,8 @@ import {
   X,
   Timer,
   Package,
-  Crown
+  Crown,
+  ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -989,227 +990,290 @@ export default function ServiceRequestsPage() {
 
       {/* Detail Sheet */}
       <Sheet open={isDetailSheetOpen} onOpenChange={setIsDetailSheetOpen}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto p-0">
           {selectedRequest && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  {selectedRequest.request_number}
-                  <Badge
-                    variant="secondary"
-                    className={statusConfig[selectedRequest.status].color}
-                  >
-                    {statusConfig[selectedRequest.status].label}
-                  </Badge>
-                </SheetTitle>
-                <SheetDescription>
-                  Booked on {formatDate(selectedRequest.booked_at)}
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="space-y-6 py-6">
-                {/* Family Info */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Family</h4>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {selectedRequest.family_name
-                          .split(" ")
-                          .slice(1, 3)
-                          .map((w) => w[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{selectedRequest.family_name}</p>
-                      {selectedRequest.family_email && (
-                        <p className="text-sm text-muted-foreground">
-                          {selectedRequest.family_email}
-                        </p>
-                      )}
+            <div className="flex flex-col h-full">
+              {/* Header - Fixed */}
+              <div className="sticky top-0 z-10 bg-background border-b px-6 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-lg font-semibold">{selectedRequest.request_number}</h2>
+                      <Badge
+                        variant="secondary"
+                        className={statusConfig[selectedRequest.status].color}
+                      >
+                        {statusConfig[selectedRequest.status].label}
+                      </Badge>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      Booked on {formatDate(selectedRequest.booked_at)}
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                {/* Response Deadline */}
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                {/* Response Deadline Alert */}
                 {selectedRequest.status === "pending_consultant" && (
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                    <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-                      <Timer className="h-5 w-5" />
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center flex-shrink-0">
+                        <Timer className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                      </div>
                       <div>
-                        <p className="font-medium">Response Required</p>
-                        <p className="text-sm">
-                          {getTimeRemaining(selectedRequest.consultant_response_deadline).text}
+                        <p className="font-medium text-yellow-800 dark:text-yellow-200">Response Required</p>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
+                          {getTimeRemaining(selectedRequest.consultant_response_deadline).text} remaining to respond
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Services */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-muted-foreground">Services</h4>
-                  {selectedRequest.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
-                    >
+                {/* Family Card */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Family</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                          {selectedRequest.family_name
+                            .split(" ")
+                            .slice(1, 3)
+                            .map((w) => w[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{item.service_name}</p>
-                          {!item.is_original && (
-                            <Badge variant="outline" className="text-xs">
-                              Added by consultant
-                            </Badge>
-                          )}
-                        </div>
-                        {item.service_description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {item.service_description}
+                        <p className="font-medium">{selectedRequest.family_name}</p>
+                        {selectedRequest.family_email && (
+                          <p className="text-sm text-muted-foreground">
+                            {selectedRequest.family_email}
                           </p>
                         )}
                       </div>
-                      <p className="font-semibold">{formatCurrency(item.price_at_booking)}</p>
                     </div>
-                  ))}
-                  <div className="flex justify-between pt-2 border-t">
-                    <p className="font-medium">Total</p>
-                    <p className="font-semibold text-lg">
-                      {formatCurrency(selectedRequest.total_amount)}
-                    </p>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
-                {/* Family Notes */}
-                {selectedRequest.family_notes && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Family Notes</h4>
-                    <p className="text-sm p-3 bg-muted/50 rounded-lg">
-                      {selectedRequest.family_notes}
-                    </p>
-                  </div>
+                {/* Services Card */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Services</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-3">
+                    {selectedRequest.items.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className={`flex items-start justify-between gap-4 ${
+                          index !== selectedRequest.items.length - 1 ? "pb-3 border-b" : ""
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium">{item.service_name}</p>
+                            {!item.is_original && (
+                              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                Added by consultant
+                              </Badge>
+                            )}
+                          </div>
+                          {item.service_description && (
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {item.service_description}
+                            </p>
+                          )}
+                        </div>
+                        <p className="font-semibold text-right whitespace-nowrap">
+                          {formatCurrency(item.price_at_booking)}
+                        </p>
+                      </div>
+                    ))}
+                    {/* Total */}
+                    <div className="flex justify-between items-center pt-3 border-t-2">
+                      <p className="font-semibold">Total</p>
+                      <p className="font-bold text-xl text-primary">
+                        {formatCurrency(selectedRequest.total_amount)}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Notes Section */}
+                {(selectedRequest.family_notes || selectedRequest.consultant_comment) && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Notes & Comments</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-4">
+                      {selectedRequest.family_notes && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                            Family Notes
+                          </p>
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-sm text-foreground leading-relaxed">
+                              {selectedRequest.family_notes}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedRequest.consultant_comment && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                            Your Comment
+                          </p>
+                          <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                            <p className="text-sm text-foreground leading-relaxed">
+                              {selectedRequest.consultant_comment}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Consultant Comment */}
-                {selectedRequest.consultant_comment && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Your Comment</h4>
-                    <p className="text-sm p-3 bg-muted/50 rounded-lg">
-                      {selectedRequest.consultant_comment}
-                    </p>
-                  </div>
-                )}
-
-                {/* Timeline */}
+                {/* Timeline Card */}
                 {selectedRequest.estimated_timeline && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">
-                      Estimated Timeline
-                    </h4>
-                    <p className="text-sm">{selectedRequest.estimated_timeline}</p>
-                  </div>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Estimated Timeline</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <p className="font-medium">{selectedRequest.estimated_timeline}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Deliverables */}
+                {/* Deliverables Card */}
                 {(selectedRequest.status === "in_progress" ||
                   selectedRequest.status === "delivered" ||
                   selectedRequest.status === "completed_paid") && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-muted-foreground">Deliverables</h4>
-                      {selectedRequest.status === "in_progress" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setIsDeliverableDialogOpen(true)}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add Deliverable
-                        </Button>
-                      )}
-                    </div>
-                    {selectedRequest.deliverables.length === 0 ? (
-                      <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-                        No deliverables added yet
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {selectedRequest.deliverables.map((d) => (
-                          <a
-                            key={d.id}
-                            href={d.external_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Deliverables</CardTitle>
+                        {selectedRequest.status === "in_progress" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsDeliverableDialogOpen(true)}
                           >
-                            <FileText className="h-5 w-5 text-primary mt-0.5" />
-                            <div>
-                              <p className="font-medium hover:underline">{d.title}</p>
-                              {d.description && (
-                                <p className="text-sm text-muted-foreground">{d.description}</p>
-                              )}
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Added {formatDate(d.uploaded_at)}
-                              </p>
-                            </div>
-                          </a>
-                        ))}
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Deliverable
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {selectedRequest.deliverables.length === 0 ? (
+                        <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                          <FileText className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                          <p className="text-sm text-muted-foreground">No deliverables added yet</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedRequest.deliverables.map((d) => (
+                            <a
+                              key={d.id}
+                              href={d.external_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 hover:border-primary/30 transition-colors group"
+                            >
+                              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <FileText className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium group-hover:text-primary transition-colors">{d.title}</p>
+                                {d.description && (
+                                  <p className="text-sm text-muted-foreground line-clamp-1">{d.description}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Added {formatDate(d.uploaded_at)}
+                                </p>
+                              </div>
+                              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Decline Reason */}
+                {/* Decline Reason Alert */}
                 {selectedRequest.decline_reason && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Decline Reason</h4>
-                    <p className="text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-400">
-                      {selectedRequest.decline_reason}
-                    </p>
+                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center flex-shrink-0">
+                        <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-red-800 dark:text-red-200">Decline Reason</p>
+                        <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">
+                          {selectedRequest.decline_reason}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <SheetFooter className="gap-2">
-                {selectedRequest.status === "pending_consultant" && (
-                  <>
+              {/* Footer Actions - Fixed */}
+              <div className="sticky bottom-0 bg-background border-t px-6 py-4">
+                <div className="flex gap-3">
+                  {selectedRequest.status === "pending_consultant" && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsDeclineDialogOpen(true)}
+                        className="flex-1"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Decline
+                      </Button>
+                      <Button
+                        onClick={() => setIsAcceptDialogOpen(true)}
+                        className="flex-1"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Accept Request
+                      </Button>
+                    </>
+                  )}
+                  {selectedRequest.status === "in_progress" && (
                     <Button
-                      variant="outline"
-                      onClick={() => setIsDeclineDialogOpen(true)}
+                      onClick={() => handleMarkComplete(selectedRequest)}
+                      disabled={isSubmitting}
                       className="flex-1"
                     >
-                      <X className="h-4 w-4 mr-2" />
-                      Decline
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Package className="h-4 w-4 mr-2" />
+                      )}
+                      Mark as Delivered
                     </Button>
-                    <Button
-                      onClick={() => setIsAcceptDialogOpen(true)}
-                      className="flex-1"
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Accept Request
-                    </Button>
-                  </>
-                )}
-                {selectedRequest.status === "in_progress" && (
-                  <Button
-                    onClick={() => handleMarkComplete(selectedRequest)}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Package className="h-4 w-4 mr-2" />
-                    )}
-                    Mark as Delivered
-                  </Button>
-                )}
-                <SheetClose asChild>
-                  <Button variant="outline">Close</Button>
-                </SheetClose>
-              </SheetFooter>
-            </>
+                  )}
+                  {(selectedRequest.status !== "pending_consultant" && selectedRequest.status !== "in_progress") && (
+                    <SheetClose asChild>
+                      <Button variant="outline" className="flex-1">Close</Button>
+                    </SheetClose>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
         </SheetContent>
       </Sheet>
