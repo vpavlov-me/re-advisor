@@ -38,7 +38,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/lib/hooks";
 import { supabase } from "@/lib/supabaseClient";
 import { ONBOARDING_STEPS, syncOnboardingProgress } from "@/lib/onboarding";
-import { assetPath } from "@/lib/utils";
 
 // Governance Modules for expertise selection
 const GOVERNANCE_MODULES = [
@@ -446,7 +445,7 @@ export default function OnboardingPage() {
                   <div className="space-y-6">
                     <div className="flex items-center gap-6">
                       <Avatar className="h-24 w-24">
-                        <AvatarImage src={profile?.avatar_url || assetPath("/placeholder-user.jpg")} />
+                        <AvatarImage src={profile?.avatar_url || "/placeholder-user.jpg"} />
                         <AvatarFallback className="text-lg">
                           {formData.first_name?.[0]}{formData.last_name?.[0]}
                         </AvatarFallback>

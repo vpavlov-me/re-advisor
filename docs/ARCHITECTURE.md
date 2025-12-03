@@ -1,38 +1,38 @@
 # Architecture Decisions
 
-## Deployment: GitHub Pages (Static Export)
+## Deployment: Vercel
 
-This project is deployed as a **static site to GitHub Pages**. This fundamental constraint influences all architectural decisions.
+This project is deployed to **Vercel**, taking full advantage of Next.js features.
 
 ### What This Means
 
-1. **Static Export Only**
-   - Next.js config uses `output: 'export'` in production
-   - All pages are pre-rendered at build time
-   - No Node.js server at runtime
+1. **Full Next.js Support**
+   - Server-Side Rendering (SSR) available
+   - API Routes work seamlessly
+   - Dynamic routes with no workarounds needed
+   - Middleware runs at the edge
 
-2. **No Server-Side Features Available**
-   - ❌ API Routes (`/api/*`) - **NOT AVAILABLE** at runtime
-   - ❌ Server Actions - **NOT AVAILABLE**
-   - ❌ Server-Side Rendering (SSR) - **NOT AVAILABLE**
-   - ❌ Incremental Static Regeneration (ISR) - **NOT AVAILABLE**
-   - ⚠️ Middleware - runs at build time only
+2. **Available Features**
+   - ✅ API Routes (`/api/*`)
+   - ✅ Server Actions
+   - ✅ Server-Side Rendering (SSR)
+   - ✅ Incremental Static Regeneration (ISR)
+   - ✅ Edge Middleware
+   - ✅ Image Optimization
 
-3. **Client-Side Architecture**
-   - ✅ All data fetching via Supabase client SDK
-   - ✅ Authentication via Supabase Auth (client-side)
+3. **Hybrid Architecture**
+   - ✅ Data fetching via Supabase client SDK
+   - ✅ Authentication via Supabase Auth + Middleware
    - ✅ Real-time updates via Supabase Realtime
    - ✅ File uploads via Supabase Storage
-   - ✅ Static pages with client-side hydration
+   - ✅ Server-side and client-side rendering
 
 ### Service Architecture
 
-Since API routes don't work on GitHub Pages, we use **client-side services**:
-
 ```
 src/lib/services/
-├── stripe.service.ts   # Payments (mock + Supabase Edge Functions)
-├── email.service.ts    # Emails (mock + Supabase Edge Functions)
+├── stripe.service.ts   # Payments (mock + real Stripe)
+├── email.service.ts    # Emails (mock + Resend/Supabase Edge Functions)
 ├── avatar.service.ts   # Avatar uploads (Supabase Storage)
 └── index.ts            # Exports
 ```
@@ -43,75 +43,43 @@ All services support mock mode for development:
 
 ```env
 NEXT_PUBLIC_STRIPE_MODE=mock    # 'mock' or 'live'
-NEXT_PUBLIC_EMAIL_MODE=mock     # 'mock' or 'live'
+NEXT_PUBLIC_EMAIL_MODE=mock     # 'mock' or 'edge-function'
 ```
-
-#### Production Mode
-
-For real Stripe/Email functionality:
-1. Deploy Supabase Edge Functions
-2. Set `NEXT_PUBLIC_STRIPE_MODE=live`
-3. Set `NEXT_PUBLIC_EMAIL_MODE=live`
 
 ### Authentication Flow
 
 ```
 User visits /dashboard
     ↓
-Page loads (static HTML)
+Middleware checks auth
     ↓
-AuthProvider initializes
-    ↓
-Check session in localStorage/cookies
-    ↓
-If no session → client-side redirect to /auth/login
-If session → render dashboard content
-```
-
-### Asset Handling
-
-GitHub Pages hosts at a subdirectory (e.g., `username.github.io/repo-name/`):
-
-```typescript
-// Use assetPath() helper for all static assets
-import { assetPath } from '@/lib/utils';
-
-// ✅ Correct
-<Image src={assetPath('/logo.svg')} />
-
-// ❌ Wrong - won't work on GitHub Pages
-<Image src="/logo.svg" />
+If no session → redirect to /auth/login
+If session → render dashboard
 ```
 
 ### Data Fetching Pattern
 
-All data operations go through Supabase client directly:
+All data operations go through Supabase client:
 
 ```typescript
-// ✅ Correct - Client-side data fetching
 import { supabase } from '@/lib/supabaseClient';
 
 const { data, error } = await supabase
   .from('profiles')
   .select('*')
   .eq('id', userId);
-
-// ❌ Wrong - API routes don't work on GitHub Pages
-const res = await fetch('/api/profiles');
 ```
 
 ### Environment Variables
 
-Only `NEXT_PUBLIC_*` variables are available at runtime:
-
 ```env
-# ✅ Available at runtime (client-side)
+# Public (available at runtime - client-side)
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 NEXT_PUBLIC_STRIPE_MODE=mock
 NEXT_PUBLIC_EMAIL_MODE=mock
 
-# ❌ NOT available at runtime (server-only)
+# Server-only (available in API routes/server components)
 SUPABASE_SERVICE_KEY=...
 STRIPE_SECRET_KEY=...
 RESEND_API_KEY=...
@@ -132,12 +100,9 @@ RESEND_API_KEY=...
 │                                                          │
 │  Live Mode:                                              │
 │  ┌──────────┐    ┌───────────────┐    ┌──────────────┐  │
-│  │  Client  │───▶│ stripe.service│───▶│   Supabase   │  │
-│  │          │    └───────────────┘    │ Edge Function│  │
-│  │          │                         │      │       │  │
-│  │          │                         │      ▼       │  │
-│  │          │◀────────────────────────│   Stripe     │  │
-│  └──────────┘                         └──────────────┘  │
+│  │  Client  │───▶│ API Route     │───▶│   Stripe     │  │
+│  │          │◀───│  /api/stripe  │◀───│   API        │  │
+│  └──────────┘    └───────────────┘    └──────────────┘  │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -148,41 +113,31 @@ RESEND_API_KEY=...
 # Development
 npm run dev
 
-# Build for GitHub Pages
+# Build
 npm run build
 
-# Test locally (simulates GitHub Pages)
-npx serve out
-
-# Deploy (via GitHub Actions)
-git push origin main
+# Deploy (via Vercel CLI or git push)
+vercel --prod
+# or
+git push origin main  # with Vercel GitHub integration
 ```
 
-### Limitations
+### Features Available
 
-| Feature | Works? | Alternative |
-|---------|--------|-------------|
-| API Routes | ❌ | Supabase Edge Functions |
-| Server Actions | ❌ | Client-side with Supabase |
-| Middleware redirects | ⚠️ | Client-side ProtectedRoute |
-| Dynamic routes | ⚠️ | Must use `generateStaticParams` |
-| Image optimization | ⚠️ | `unoptimized: true` or external |
-| Environment secrets | ❌ | Only `NEXT_PUBLIC_*` vars |
-| Server-side Stripe | ❌ | Mock or Edge Functions |
-| Server-side Email | ❌ | Mock or Edge Functions |
-
-### When to Consider Vercel/Railway
-
-If you need:
-- Real-time Stripe webhooks (consider Supabase Edge Functions)
-- Server-side rendered pages for SEO
-- API routes for complex integrations
-- Edge middleware with dynamic routing
-- Server-side secrets handling
+| Feature | Works? | Notes |
+|---------|--------|-------|
+| API Routes | ✅ | Fully supported |
+| Server Actions | ✅ | Fully supported |
+| Middleware | ✅ | Edge runtime |
+| Dynamic routes | ✅ | No workarounds needed |
+| Image optimization | ✅ | Built-in Vercel optimization |
+| Environment secrets | ✅ | Server-side available |
+| Server-side Stripe | ✅ | Via API routes |
+| Server-side Email | ✅ | Via API routes |
 
 ### Supabase Edge Functions
 
-For production payments and emails, deploy Edge Functions:
+For complex background tasks, you can also use Edge Functions:
 
 ```bash
 # Deploy email function

@@ -127,19 +127,8 @@ jobs:
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
-        if: ${{ vars.DEPLOY_TO_VERCEL == 'true' }}
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-        continue-on-error: true
-
-      # Alternative: Deploy to GitHub Pages (for static export)
-      - name: Deploy to GitHub Pages
-        if: ${{ vars.DEPLOY_TO_GITHUB_PAGES == 'true' }}
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-        continue-on-error: true

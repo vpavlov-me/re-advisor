@@ -1,10 +1,5 @@
 import AcceptInvitePage from "./client";
 
-// Required for static export - generate placeholder paths
-export async function generateStaticParams() {
-  return [{ code: 'placeholder' }];
-}
-
 export default function Page() {
   return <AcceptInvitePage />;
 }

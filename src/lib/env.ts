@@ -36,7 +36,6 @@ export interface EnvConfig {
     name: string;
     isProduction: boolean;
     isDevelopment: boolean;
-    isGitHubPages: boolean;
   };
 }
 
@@ -73,7 +72,6 @@ const STRIPE_MODE = (process.env.NEXT_PUBLIC_STRIPE_MODE || 'mock') as 'mock' | 
 const EMAIL_MODE = (process.env.NEXT_PUBLIC_EMAIL_MODE || 'mock') as 'mock' | 'edge-function';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const GITHUB_PAGES = process.env.NEXT_PUBLIC_GITHUB_PAGES === 'true';
 
 // Validation
 const isSupabaseConfigured = 
@@ -109,7 +107,6 @@ export const env: EnvConfig = {
     name: 'RE:Advisor',
     isProduction: NODE_ENV === 'production',
     isDevelopment: NODE_ENV === 'development',
-    isGitHubPages: GITHUB_PAGES,
   },
 };
 
@@ -147,7 +144,6 @@ export function logConfig(): void {
     console.log('Stripe:', env.stripe.isMock ? '🧪 Mock mode' : '💳 Live mode');
     console.log('Email:', env.email.isMock ? '🧪 Mock mode' : '📧 Edge Function');
     console.log('Environment:', env.app.isProduction ? '🚀 Production' : '🛠️ Development');
-    console.log('GitHub Pages:', env.app.isGitHubPages ? 'Yes' : 'No');
     console.groupEnd();
   }
 }

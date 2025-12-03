@@ -31,7 +31,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Demo mode when Supabase is not configured
   const isDemoMode = !isSupabaseConfigured();
 
-  // Client-side auth check (fallback for static export where middleware doesn't run)
+  // Client-side auth check
   useEffect(() => {
     // Skip redirect in demo mode
     if (isDemoMode) return;

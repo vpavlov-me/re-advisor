@@ -249,19 +249,6 @@ export function sendLocalNotification(title: string, options?: NotificationOptio
 }
 
 /**
- * Get base path for production on GitHub Pages
- */
-function getBasePath(): string {
-  if (typeof window !== 'undefined') {
-    // Check if we're on GitHub Pages
-    if (window.location.hostname.includes('github.io')) {
-      return '/re-advisor';
-    }
-  }
-  return '';
-}
-
-/**
  * Register service worker and set up push
  */
 export async function initializePushNotifications(userId?: string): Promise<void> {
@@ -271,11 +258,8 @@ export async function initializePushNotifications(userId?: string): Promise<void
   }
 
   try {
-    const basePath = getBasePath();
-    // Register service worker with correct path
-    const registration = await navigator.serviceWorker.register(`${basePath}/sw.js`, {
-      scope: `${basePath}/`,
-    });
+    // Register service worker
+    const registration = await navigator.serviceWorker.register('/sw.js');
 
     console.log('ServiceWorker registered:', registration.scope);
 
