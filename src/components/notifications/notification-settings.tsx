@@ -2,17 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { 
-  Bell, 
   BellOff, 
   Mail, 
   Smartphone,
   Moon,
   Clock,
   Loader2,
-  CheckCircle,
   AlertTriangle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,12 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
+import { usePushNotifications } from "@/lib/hooks/use-push-notifications";
 import {
-  isPushSupported,
-  getNotificationPermission,
-  isPushSubscribed,
-  enablePushNotifications,
-  disablePushNotifications,
   getNotificationPreferences,
   updateNotificationPreferences,
   type NotificationPreferences,
@@ -53,11 +46,17 @@ const timeOptions = Array.from({ length: 24 }, (_, i) => {
 
 export function NotificationSettings() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { 
+    isSupported: pushSupported, 
+    isSubscribed: pushSubscribed, 
+    permission: pushPermission,
+    loading: pushLoading,
+    enable: enablePush,
+    disable: disablePush,
+  } = usePushNotifications();
+  
+  const [prefsLoading, setPrefsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [pushSupported, setPushSupported] = useState(false);
-  const [pushSubscribed, setPushSubscribed] = useState(false);
-  const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [preferences, setPreferences] = useState<Partial<NotificationPreferences>>({
     push_enabled: true,
     push_messages: true,
@@ -76,59 +75,45 @@ export function NotificationSettings() {
     timezone: 'UTC',
   });
 
-  // Load preferences and push status
+  // Load preferences from database
   useEffect(() => {
-    async function loadData() {
+    async function loadPreferences() {
       if (!user) return;
 
-      setLoading(true);
+      setPrefsLoading(true);
       
-      // Check push support
-      const supported = isPushSupported();
-      setPushSupported(supported);
-      setPushPermission(getNotificationPermission());
-
-      if (supported) {
-        const subscribed = await isPushSubscribed();
-        setPushSubscribed(subscribed);
-      }
-
-      // Load preferences from database
       const { data } = await getNotificationPreferences(user.id);
       if (data) {
         setPreferences(data);
       }
 
-      setLoading(false);
+      setPrefsLoading(false);
     }
 
-    loadData();
+    loadPreferences();
   }, [user]);
 
-  // Handle push toggle
+  // Handle push toggle using the shared hook
   const handlePushToggle = async (enabled: boolean) => {
     if (!user) return;
 
     setSaving(true);
     
     if (enabled) {
-      const result = await enablePushNotifications(user.id);
-      if (result.success) {
-        setPushSubscribed(true);
-        setPushPermission('granted');
+      const success = await enablePush();
+      if (success) {
         setPreferences(prev => ({ ...prev, push_enabled: true }));
         toast.success('Push notifications enabled!');
       } else {
-        toast.error(result.error || 'Failed to enable push notifications');
+        toast.error('Failed to enable push notifications');
       }
     } else {
-      const result = await disablePushNotifications(user.id);
-      if (result.success) {
-        setPushSubscribed(false);
+      const success = await disablePush();
+      if (success) {
         setPreferences(prev => ({ ...prev, push_enabled: false }));
         toast.success('Push notifications disabled');
       } else {
-        toast.error(result.error || 'Failed to disable push notifications');
+        toast.error('Failed to disable push notifications');
       }
     }
 
@@ -153,7 +138,7 @@ export function NotificationSettings() {
     }
   };
 
-  if (loading) {
+  if (pushLoading || prefsLoading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">

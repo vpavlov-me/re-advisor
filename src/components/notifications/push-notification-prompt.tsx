@@ -10,19 +10,34 @@ export function PushNotificationPrompt() {
   const { isSupported, isSubscribed, permission, enable, loading } = usePushNotifications();
   const [dismissed, setDismissed] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
+  // Check if user has dismissed the prompt before (on mount only)
   useEffect(() => {
-    // Check if user has dismissed the prompt before
     const wasDismissed = localStorage.getItem('push-prompt-dismissed');
     if (wasDismissed) {
       setDismissed(true);
+    }
+    setInitialCheckDone(true);
+  }, []);
+
+  // Handle visibility based on subscription status
+  useEffect(() => {
+    if (!initialCheckDone) return;
+    
+    // Hide immediately if subscribed or permission granted/denied
+    if (isSubscribed || permission === 'granted' || permission === 'denied') {
+      setVisible(false);
       return;
     }
+
+    // Don't show if already dismissed
+    if (dismissed) return;
 
     // Show prompt after a delay if:
     // 1. Push is supported
     // 2. User is not subscribed
-    // 3. Permission is 'default' (not yet asked) - don't show if 'granted' or 'denied'
+    // 3. Permission is 'default' (not yet asked)
     // 4. User hasn't dismissed the prompt
     const timer = setTimeout(() => {
       if (isSupported && !isSubscribed && permission === 'default' && !dismissed) {
@@ -31,13 +46,11 @@ export function PushNotificationPrompt() {
     }, 3000); // Show after 3 seconds
 
     return () => clearTimeout(timer);
-  }, [isSupported, isSubscribed, permission, dismissed]);
+  }, [isSupported, isSubscribed, permission, dismissed, initialCheckDone]);
 
   const handleEnable = async () => {
-    const success = await enable();
-    if (success) {
-      setVisible(false);
-    }
+    await enable();
+    // Visibility will be automatically updated by the useEffect when isSubscribed/permission changes
   };
 
   const handleDismiss = () => {
