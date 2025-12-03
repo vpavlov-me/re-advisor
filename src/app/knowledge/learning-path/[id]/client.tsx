@@ -13,7 +13,10 @@ import {
   Clock, 
   Users,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  CheckCircle2,
+  Circle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,24 +30,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 
-// Types for learning path data
-interface LearningResource {
-  id: number;
-  module_id: number;
-  title: string;
-  type: string;
-  duration: string | null;
-  content_url: string | null;
-  order_index: number;
-}
-
-interface LearningModule {
+// Types for learning path data (using learning_path_steps)
+interface LearningStep {
   id: number;
   learning_path_id: number;
   title: string;
   description: string | null;
-  order_index: number;
-  learning_resources: LearningResource[];
+  content: string | null;
+  step_order: number;
+  estimated_duration_minutes: number | null;
+  resource_id: number | null;
+  // Joined resource data if available
+  knowledge_resources?: {
+    id: number;
+    title: string;
+    type: string;
+    external_url: string | null;
+  } | null;
 }
 
 interface LearningPath {
@@ -53,8 +55,10 @@ interface LearningPath {
   title: string;
   description: string | null;
   category: string | null;
+  difficulty: string | null;
+  estimated_duration_minutes: number | null;
   updated_at: string;
-  learning_modules: LearningModule[];
+  steps: LearningStep[];
 }
 
 // Helper to format date
@@ -71,25 +75,14 @@ function formatUpdatedAt(dateString: string): string {
   return `${Math.floor(diffDays / 30)} months ago`;
 }
 
-// Helper to calculate total duration from modules
-// Pre-compiled regex patterns for parsing duration strings
-const HOUR_REGEX = /(\d+)\s*h/;
-const MIN_REGEX = /(\d+)\s*m/;
-
-function calculateTotalDuration(modules: LearningModule[]): string {
+// Helper to calculate total duration from steps
+function calculateTotalDuration(steps: LearningStep[]): string {
   let totalMinutes = 0;
   
-  modules.forEach(module => {
-    module.learning_resources.forEach(resource => {
-      if (resource.duration) {
-        // Parse duration strings like "15 min", "1h 30m", "2h"
-        const hourMatch = resource.duration.match(HOUR_REGEX);
-        const minMatch = resource.duration.match(MIN_REGEX);
-        
-        if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
-        if (minMatch) totalMinutes += parseInt(minMatch[1]);
-      }
-    });
+  steps.forEach(step => {
+    if (step.estimated_duration_minutes) {
+      totalMinutes += step.estimated_duration_minutes;
+    }
   });
   
   if (totalMinutes === 0) return "N/A";
@@ -99,11 +92,21 @@ function calculateTotalDuration(modules: LearningModule[]): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
+// Helper to format duration
+function formatDuration(minutes: number | null): string {
+  if (!minutes) return "";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+}
+
 export default function LearningPathDetailClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [pathData, setPathData] = useState<LearningPath | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchLearningPath = async () => {
@@ -119,7 +122,7 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
       }
       
       try {
-        // Fetch learning path with modules and resources using joins
+        // Fetch learning path with steps (using learning_path_steps)
         const { data, error: fetchError } = await supabase
           .from('learning_paths')
           .select(`
@@ -128,21 +131,22 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
             title,
             description,
             category,
+            difficulty,
+            estimated_duration_minutes,
             updated_at,
-            learning_modules (
+            steps:learning_path_steps (
               id,
               learning_path_id,
               title,
               description,
-              order_index,
-              learning_resources (
+              content,
+              step_order,
+              estimated_duration_minutes,
+              knowledge_resources (
                 id,
-                module_id,
                 title,
                 type,
-                duration,
-                content_url,
-                order_index
+                external_url
               )
             )
           `)
@@ -152,16 +156,11 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
         if (fetchError) throw fetchError;
 
         if (data) {
-          // Sort modules and resources by order_index
-          const sortedData = {
+          // Sort steps by step_order
+          const sortedData: LearningPath = {
             ...data,
-            learning_modules: (data.learning_modules || [])
-              .sort((a: LearningModule, b: LearningModule) => a.order_index - b.order_index)
-              .map((module: LearningModule) => ({
-                ...module,
-                learning_resources: (module.learning_resources || [])
-                  .sort((a: LearningResource, b: LearningResource) => a.order_index - b.order_index)
-              }))
+            steps: ((data.steps || []) as LearningStep[])
+              .sort((a: LearningStep, b: LearningStep) => a.step_order - b.step_order)
           };
           setPathData(sortedData);
         }
@@ -177,6 +176,18 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
       fetchLearningPath();
     }
   }, [id]);
+
+  const toggleStepCompletion = (stepId: number) => {
+    setCompletedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(stepId)) {
+        newSet.delete(stepId);
+      } else {
+        newSet.add(stepId);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -207,8 +218,10 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
     );
   }
 
-  const modules = pathData.learning_modules || [];
-  const totalDuration = calculateTotalDuration(modules);
+  const steps = pathData.steps || [];
+  const totalDuration = calculateTotalDuration(steps);
+  const completedCount = completedSteps.size;
+  const progress = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -263,8 +276,8 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium">Modules</div>
-                    <div className="text-2xl font-bold">{modules.length}</div>
+                    <div className="text-sm font-medium">Steps</div>
+                    <div className="text-2xl font-bold">{steps.length}</div>
                   </div>
                 </div>
                 <Separator />
@@ -277,6 +290,26 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
                     <div className="text-2xl font-bold">{totalDuration}</div>
                   </div>
                 </div>
+                {steps.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium">Progress</span>
+                        <span className="text-muted-foreground">{progress}%</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {completedCount} of {steps.length} steps completed
+                      </p>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -287,64 +320,90 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
       <div className="container py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-6">
-            <h2 className="text-xl font-semibold">Program Curriculum</h2>
-            {modules.length === 0 ? (
+            <h2 className="text-xl font-semibold">Learning Steps</h2>
+            {steps.length === 0 ? (
               <Card>
                 <CardContent className="py-12">
                   <div className="text-center text-muted-foreground">
                     <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No modules added yet.</p>
+                    <p>No steps added yet.</p>
                     <Link href={`/knowledge/learning-path/${id}/edit`}>
-                      <Button variant="link" className="mt-2">Add Modules</Button>
+                      <Button variant="link" className="mt-2">Add Steps</Button>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-4">
-                {modules.map((module, index) => (
-                  <Card key={module.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-muted text-sm font-medium">
-                            {index + 1}
+                {steps.map((step, index) => {
+                  const isCompleted = completedSteps.has(step.id);
+                  const linkedResource = step.knowledge_resources;
+                  
+                  return (
+                    <Card key={step.id} className={isCompleted ? "border-primary/50 bg-primary/5" : ""}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => toggleStepCompletion(step.id)}
+                              className="flex items-center justify-center h-8 w-8 rounded-full border-2 transition-colors hover:border-primary"
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2 className="h-5 w-5 text-primary" />
+                              ) : (
+                                <span className="text-sm font-medium text-muted-foreground">{index + 1}</span>
+                              )}
+                            </button>
+                            <CardTitle className={`text-lg ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                              {step.title}
+                            </CardTitle>
                           </div>
-                          <CardTitle className="text-lg">{module.title}</CardTitle>
+                          {step.estimated_duration_minutes && (
+                            <Badge variant="outline">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {formatDuration(step.estimated_duration_minutes)}
+                            </Badge>
+                          )}
                         </div>
-                      </div>
-                      {module.description && (
-                        <CardDescription className="ml-11 mt-1">
-                          {module.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent className="ml-11 pt-0 pb-6">
-                      {module.learning_resources.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No resources in this module.</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {module.learning_resources.map((resource) => (
-                            <div key={resource.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-background rounded-md border">
-                                  {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-sm">{resource.title}</div>
-                                  <div className="text-xs text-muted-foreground capitalize">
-                                    {resource.type}{resource.duration ? ` • ${resource.duration}` : ''}
-                                  </div>
+                        {step.description && (
+                          <CardDescription className="ml-11 mt-1">
+                            {step.description}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent className="ml-11 pt-0 pb-6">
+                        {step.content && (
+                          <div className="prose prose-sm dark:prose-invert mb-4">
+                            <p className="text-sm text-muted-foreground">{step.content}</p>
+                          </div>
+                        )}
+                        {linkedResource && (
+                          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-background rounded-md border">
+                                {linkedResource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">{linkedResource.title}</div>
+                                <div className="text-xs text-muted-foreground capitalize">
+                                  {linkedResource.type}
                                 </div>
                               </div>
-                              <Button variant="ghost" size="sm">View</Button>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                            {linkedResource.external_url && (
+                              <Button variant="ghost" size="sm" asChild>
+                                <a href={linkedResource.external_url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4 mr-1" />
+                                  Open
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>

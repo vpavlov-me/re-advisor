@@ -45,7 +45,11 @@ import {
   Tag,
   SlidersHorizontal,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  RotateCcw,
+  FolderPlus,
+  MoveRight,
+  Archive
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,7 +115,18 @@ interface Resource {
   sharedWith: number;
   isFeatured: boolean;
   description: string;
-  folder?: string;
+  folder_id?: number | null;
+  folder_name?: string | null;
+  deleted_at?: string | null;
+  content?: string;
+  external_url?: string;
+}
+
+interface ResourceFolder {
+  id: number;
+  name: string;
+  advisor_id: string;
+  created_at: string;
 }
 
 // Extended resource with full details for the detail view
@@ -179,6 +194,7 @@ function KnowledgeCenterContent() {
   const [userId, setUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -192,10 +208,22 @@ function KnowledgeCenterContent() {
   const [isSharing, setIsSharing] = useState(false);
   
   // Folder states
-  const [folders, setFolders] = useState<string[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [folders, setFolders] = useState<ResourceFolder[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [isMoveToFolderOpen, setIsMoveToFolderOpen] = useState(false);
+  
+  // Sharing status filter
+  const [sharingFilter, setSharingFilter] = useState<"all" | "shared" | "not-shared">("all");
+  
+  // Deleted resources (soft delete)
+  const [deletedResources, setDeletedResources] = useState<Resource[]>([]);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  
+  // User profile for notifications
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string } | null>(null);
   
   // View mode state
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -203,16 +231,98 @@ function KnowledgeCenterContent() {
 
   const fetchData = useCallback(async (advisorId: string) => {
     try {
-      // Fetch resources
-      const { data: resourcesData, error: resourcesError } = await supabase
-        .from('knowledge_resources')
-        .select(`
-          *,
-          shares:resource_shares(count)
-        `)
-        .eq('advisor_id', advisorId);
+      // Fetch user profile for notifications
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', advisorId)
+        .single();
+      
+      if (profileData) {
+        setUserProfile(profileData);
+      }
+
+      // Fetch folders (may not exist if migration not applied)
+      try {
+        const { data: foldersData } = await supabase
+          .from('resource_folders')
+          .select('*')
+          .eq('advisor_id', advisorId)
+          .order('name');
+        
+        if (foldersData) {
+          setFolders(foldersData);
+        }
+      } catch (e) {
+        console.log("resource_folders table not found - migration may not be applied");
+        setFolders([]);
+      }
+
+      // Fetch active resources - try with deleted_at filter first, fallback without
+      let resourcesData: any[] | null = null;
+      let resourcesError: any = null;
+      
+      try {
+        const result = await supabase
+          .from('knowledge_resources')
+          .select('*, shares:resource_shares(count)')
+          .eq('advisor_id', advisorId)
+          .is('deleted_at', null);
+        
+        resourcesData = result.data;
+        resourcesError = result.error;
+      } catch (e) {
+        // Fallback: fetch without deleted_at filter (column may not exist)
+        const result = await supabase
+          .from('knowledge_resources')
+          .select('*, shares:resource_shares(count)')
+          .eq('advisor_id', advisorId);
+        
+        resourcesData = result.data;
+        resourcesError = result.error;
+      }
+      
+      // If still error with deleted_at, try without it
+      if (resourcesError && resourcesError.message?.includes('deleted_at')) {
+        const result = await supabase
+          .from('knowledge_resources')
+          .select('*, shares:resource_shares(count)')
+          .eq('advisor_id', advisorId);
+        
+        resourcesData = result.data;
+        resourcesError = result.error;
+      }
       
       if (resourcesError) throw resourcesError;
+
+      // Fetch deleted resources (soft deleted) - only if column exists
+      try {
+        const { data: deletedData } = await supabase
+          .from('knowledge_resources')
+          .select('*')
+          .eq('advisor_id', advisorId)
+          .not('deleted_at', 'is', null);
+        
+        if (deletedData) {
+          const deleted = deletedData.map((r: any) => ({
+            id: r.id.toString(),
+            title: r.title,
+            type: r.type as ResourceType,
+            category: r.category || "General",
+            updatedAt: r.updated_at ? new Date(r.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            sharedWith: 0,
+            isFeatured: r.is_featured || false,
+            description: r.description || "",
+            deleted_at: r.deleted_at,
+            content: r.content,
+            external_url: r.external_url
+          }));
+          setDeletedResources(deleted);
+        }
+      } catch (e) {
+        console.log("deleted_at column not found - migration may not be applied");
+        setDeletedResources([]);
+      }
       
       // Fetch constitution templates
       const { data: templatesData } = await supabase
@@ -247,7 +357,11 @@ function KnowledgeCenterContent() {
           updatedAt: r.updated_at ? new Date(r.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           sharedWith: r.shares?.[0]?.count || 0,
           isFeatured: r.is_featured || false,
-          description: r.description || ""
+          description: r.description || "",
+          folder_id: r.folder_id,
+          folder_name: r.folder?.name || null,
+          content: r.content,
+          external_url: r.external_url
         }));
       }
 
@@ -280,10 +394,6 @@ function KnowledgeCenterContent() {
       }
 
       setResources(allResources);
-      
-      // Extract unique folders/categories from resources
-      const uniqueFolders = [...new Set(allResources.map(r => r.category).filter(Boolean))];
-      setFolders(uniqueFolders);
     } catch (error) {
       console.error("Error fetching resources:", error);
       toast.error("Failed to load resources");
@@ -325,109 +435,19 @@ function KnowledgeCenterContent() {
     category: "Governance",
     content: "",
     external_url: "",
-    duration_minutes: "",
-    points_value: "5",
-    difficulty: "beginner" as "beginner" | "intermediate" | "advanced",
-    is_public: false,
-    tags: [] as string[]
+    is_published: true,
+    is_featured: false,
+    thumbnail_url: ""
   });
-  const [tagInput, setTagInput] = useState("");
 
-  // Upload State
-  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  // Get supported file formats based on type
-  const getSupportedFormats = (type: ResourceType): { extensions: string[]; mimeTypes: string[] } => {
-    switch (type) {
-      case "document":
-      case "article":
-        return { extensions: [".pdf"], mimeTypes: ["application/pdf"] };
-      case "template":
-      case "checklist":
-        return { extensions: [".pdf", ".docx"], mimeTypes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] };
-      case "video":
-        return { extensions: [".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"], mimeTypes: ["video/mp4", "video/x-msvideo", "video/quicktime", "video/x-ms-wmv", "video/x-flv", "video/webm"] };
-      case "podcast":
-        return { extensions: [".mp3", ".wav", ".aac"], mimeTypes: ["audio/mpeg", "audio/wav", "audio/aac"] };
-      case "guide":
-        return { extensions: [".pdf", ".docx"], mimeTypes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] };
-      default:
-        return { extensions: [".pdf"], mimeTypes: ["application/pdf"] };
-    }
-  };
-
-  // Check if type requires file upload
-  const requiresFileUpload = (type: ResourceType): boolean => {
-    return ["document", "template", "checklist", "podcast"].includes(type);
-  };
-
-  // Check if type can use external URL
-  const canUseExternalUrl = (type: ResourceType): boolean => {
-    return ["video", "link", "article"].includes(type);
+  // Check if type requires URL (not file upload)
+  const requiresUrl = (type: ResourceType): boolean => {
+    return ["document", "template", "checklist", "podcast", "video", "link"].includes(type);
   };
 
   // Check if type uses rich text content
   const usesRichTextContent = (type: ResourceType): boolean => {
     return ["article", "guide"].includes(type);
-  };
-
-  // Check if duration is required
-  const durationRequired = (type: ResourceType): boolean => {
-    return ["article", "video", "podcast"].includes(type);
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formats = getSupportedFormats(newResource.type);
-    
-    // Validate file type
-    if (!formats.mimeTypes.includes(file.type)) {
-      toast.error(`Invalid file format. Accepted formats: ${formats.extensions.join(", ")}`);
-      return;
-    }
-
-    // Validate file size (100MB max)
-    const maxSize = 100 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error("File size exceeds limit of 100MB. Please reduce file size.");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          setUploadedFile(file);
-          setUploadedFileName(file.name);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-  };
-
-  const handleAddTag = () => {
-    const tag = tagInput.trim().toLowerCase();
-    if (tag && newResource.tags.length < 10 && !newResource.tags.includes(tag)) {
-      setNewResource({ ...newResource, tags: [...newResource.tags, tag] });
-      setTagInput("");
-    } else if (newResource.tags.length >= 10) {
-      toast.error("Maximum 10 tags allowed");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setNewResource({ ...newResource, tags: newResource.tags.filter(t => t !== tagToRemove) });
   };
 
   const handleAddCategory = () => {
@@ -438,26 +458,152 @@ function KnowledgeCenterContent() {
     }
   };
 
-  // Filter logic
+  // Filter logic with sharing status support
   const filteredResources = resources.filter(r => {
     const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           r.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = selectedType === "all" || r.type === selectedType;
-    const matchesFolder = !selectedFolder || r.category === selectedFolder;
-    return matchesSearch && matchesType && matchesFolder;
+    const matchesFolder = !selectedFolderId || r.folder_id === selectedFolderId;
+    const matchesSharingStatus = sharingFilter === "all" || 
+                                  (sharingFilter === "shared" && r.sharedWith > 0) ||
+                                  (sharingFilter === "not-shared" && r.sharedWith === 0);
+    const matchesCategory = !selectedCategory || r.category === selectedCategory;
+    return matchesSearch && matchesType && matchesFolder && matchesSharingStatus && matchesCategory;
   });
   
-  // Handle folder creation
-  const handleCreateFolder = () => {
-    if (newFolderName.trim()) {
-      if (!folders.includes(newFolderName.trim())) {
-        setFolders([...folders, newFolderName.trim()]);
-        toast.success(`Folder "${newFolderName}" created`);
-      } else {
-        toast.error("Folder already exists");
+  // Helper to get folder name by ID
+  const getSelectedFolderName = () => {
+    if (!selectedFolderId) return null;
+    const folder = folders.find(f => f.id === selectedFolderId);
+    return folder?.name || null;
+  };
+  
+  // Handle folder creation (real DB)
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim() || !userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('resource_folders')
+        .insert([{ advisor_id: userId, name: newFolderName.trim() }])
+        .select()
+        .single();
+      
+      if (error) {
+        if (error.code === '23505') {
+          toast.error("Folder with this name already exists");
+        } else {
+          throw error;
+        }
+        return;
       }
+      
+      if (data) {
+        setFolders([...folders, data]);
+        toast.success(`Folder "${newFolderName}" created`);
+      }
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast.error("Failed to create folder");
+    } finally {
       setNewFolderName("");
       setIsFolderDialogOpen(false);
+    }
+  };
+
+  // Handle moving resource to folder
+  const handleMoveToFolder = async (resourceId: string, folderId: number | null) => {
+    if (resourceId.startsWith('ct-') || resourceId.startsWith('lp-')) {
+      toast.error("Constitution templates and learning paths cannot be moved to folders");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('knowledge_resources')
+        .update({ folder_id: folderId })
+        .eq('id', parseInt(resourceId));
+      
+      if (error) throw error;
+      
+      setResources(resources.map(r => 
+        r.id === resourceId 
+          ? { ...r, folder_id: folderId, folder_name: folders.find(f => f.id === folderId)?.name || null }
+          : r
+      ));
+      toast.success(folderId ? "Resource moved to folder" : "Resource removed from folder");
+    } catch (error) {
+      console.error("Error moving resource:", error);
+      toast.error("Failed to move resource");
+    }
+    setIsMoveToFolderOpen(false);
+  };
+
+  // Handle folder deletion
+  const handleDeleteFolder = async (folderId: number) => {
+    try {
+      const { error } = await supabase
+        .from('resource_folders')
+        .delete()
+        .eq('id', folderId);
+      
+      if (error) throw error;
+      
+      setFolders(folders.filter(f => f.id !== folderId));
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null);
+      }
+      // Resources in this folder will have folder_id set to null by DB cascade
+      setResources(resources.map(r => 
+        r.folder_id === folderId ? { ...r, folder_id: null, folder_name: null } : r
+      ));
+      toast.success("Folder deleted");
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      toast.error("Failed to delete folder");
+    }
+  };
+
+  // Handle restoring soft-deleted resource
+  const handleRestoreResource = async (resourceId: string) => {
+    setIsRestoring(true);
+    try {
+      const { error } = await supabase
+        .from('knowledge_resources')
+        .update({ deleted_at: null })
+        .eq('id', parseInt(resourceId));
+      
+      if (error) throw error;
+      
+      const restoredResource = deletedResources.find(r => r.id === resourceId);
+      if (restoredResource) {
+        setDeletedResources(deletedResources.filter(r => r.id !== resourceId));
+        setResources([{ ...restoredResource, deleted_at: null }, ...resources]);
+      }
+      toast.success("Resource restored successfully");
+    } catch (error) {
+      console.error("Error restoring resource:", error);
+      toast.error("Failed to restore resource");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  // Permanent delete (for deleted resources section)
+  const handlePermanentDelete = async (resourceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('knowledge_resources')
+        .delete()
+        .eq('id', parseInt(resourceId));
+      
+      if (error) throw error;
+      
+      setDeletedResources(deletedResources.filter(r => r.id !== resourceId));
+      toast.success("Resource permanently deleted");
+    } catch (error) {
+      console.error("Error permanently deleting resource:", error);
+      toast.error("Failed to delete resource");
     }
   };
 
@@ -492,23 +638,17 @@ function KnowledgeCenterContent() {
       return;
     }
 
-    if (durationRequired(newResource.type) && !newResource.duration_minutes) {
-      toast.error("Duration is required for this resource type");
-      return;
-    }
-
-    // Validate content source (file OR URL OR text content)
-    const hasFile = uploadedFile !== null;
+    // Validate content source (URL OR text content)
     const hasUrl = newResource.external_url.trim() !== "";
     const hasContent = newResource.content.trim() !== "";
     
-    if (requiresFileUpload(newResource.type) && !hasFile && !hasUrl) {
-      toast.error("Please upload a file or provide an external URL");
+    if (requiresUrl(newResource.type) && !hasUrl) {
+      toast.error("Please provide a URL to the resource");
       return;
     }
 
-    if (canUseExternalUrl(newResource.type) && hasUrl && !hasFile) {
-      // Validate URL format
+    // Validate URL format if provided
+    if (hasUrl) {
       try {
         new URL(newResource.external_url);
         if (!newResource.external_url.startsWith("http://") && !newResource.external_url.startsWith("https://")) {
@@ -523,13 +663,6 @@ function KnowledgeCenterContent() {
 
     setIsSaving(true);
     try {
-      // TODO: Upload file to storage and get URL
-      let fileUrl = null;
-      if (uploadedFile) {
-        // In real implementation, upload to Supabase storage here
-        fileUrl = `uploads/${userId}/${Date.now()}-${uploadedFile.name}`;
-      }
-
       const { data, error } = await supabase
         .from('knowledge_resources')
         .insert([{
@@ -539,10 +672,11 @@ function KnowledgeCenterContent() {
           type: newResource.type,
           category: newResource.category,
           content: newResource.content || null,
-          file_url: fileUrl,
+          file_url: null, // No file upload - using external_url instead
           external_url: newResource.external_url || null,
-          is_featured: false,
-          is_published: newResource.is_public
+          thumbnail_url: newResource.thumbnail_url || null,
+          is_featured: newResource.is_featured,
+          is_published: newResource.is_published
         }])
         .select();
 
@@ -575,26 +709,20 @@ function KnowledgeCenterContent() {
         category: "Governance",
         content: "",
         external_url: "",
-        duration_minutes: "",
-        points_value: "5",
-        difficulty: "beginner",
-        is_public: false,
-        tags: []
+        is_published: true,
+        is_featured: false,
+        thumbnail_url: ""
       });
-      setUploadedFileName(null);
-      setUploadedFile(null);
-      setTagInput("");
     }
   };
 
   const handleShareResource = async () => {
     if (!selectedResource || !userId || selectedFamilies.length === 0) return;
     
-    // Check if resource can be shared (constitution templates and learning paths have different sharing)
+    // Constitution templates CAN be shared now (BR-KC-008)
     if (selectedResource.id.startsWith('ct-')) {
-      toast.error("Constitution templates cannot be shared directly. Use the template with a family instead.");
-      setIsShareDialogOpen(false);
-      setSelectedFamilies([]);
+      // Handle constitution template sharing separately
+      await handleShareConstitutionTemplate();
       return;
     }
 
@@ -608,21 +736,80 @@ function KnowledgeCenterContent() {
     setIsSharing(true);
     try {
       const resourceId = parseInt(selectedResource.id);
+      const advisorName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}`.trim() : "Your advisor";
 
-      // Insert share records for each selected family
+      // Get resource details for snapshot
+      const { data: resourceData } = await supabase
+        .from('knowledge_resources')
+        .select('*')
+        .eq('id', resourceId)
+        .single();
+
+      // Create snapshot of resource
+      const resourceSnapshot = resourceData ? {
+        id: resourceData.id,
+        title: resourceData.title,
+        description: resourceData.description,
+        type: resourceData.type,
+        category: resourceData.category,
+        content: resourceData.content,
+        external_url: resourceData.external_url,
+        is_featured: resourceData.is_featured,
+        created_at: resourceData.created_at,
+        snapshot_created_at: new Date().toISOString()
+      } : null;
+
+      // Get current max version for each family
+      const { data: existingShares } = await supabase
+        .from('resource_shares')
+        .select('family_id, version')
+        .eq('resource_id', resourceId)
+        .in('family_id', selectedFamilies);
+
+      const versionMap = new Map<number, number>();
+      existingShares?.forEach(share => {
+        const currentMax = versionMap.get(share.family_id) || 0;
+        versionMap.set(share.family_id, Math.max(currentMax, share.version || 1));
+      });
+
+      // Insert NEW share records (versioning - no upsert)
       const shares = selectedFamilies.map(familyId => ({
         resource_id: resourceId,
         family_id: familyId,
-        shared_by: userId
+        shared_by: userId,
+        advisor_id: userId,
+        version: (versionMap.get(familyId) || 0) + 1,
+        resource_snapshot: resourceSnapshot,
+        created_at: new Date().toISOString()
       }));
 
-      const { error } = await supabase
+      const { error: shareError } = await supabase
         .from('resource_shares')
-        .upsert(shares, { onConflict: 'resource_id,family_id' });
+        .insert(shares);
 
-      if (error) throw error;
+      if (shareError) throw shareError;
 
-      // Update local state
+      // Create notifications for each family's council members (BR-KC-014)
+      for (const familyId of selectedFamilies) {
+        // Get family members who should receive notifications
+        const { data: familyMembers } = await supabase
+          .from('family_members')
+          .select('id, email')
+          .eq('family_id', familyId);
+        
+        // For now, create a notification record (family members would see this)
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: userId, // This should be family member's user_id when family auth is implemented
+            type: 'resource',
+            title: `New resource shared: ${selectedResource.title}`,
+            description: `${advisorName} shared "${selectedResource.title}" with your family.`,
+            read: false
+          }]);
+      }
+
+      // Update local share count
       setResources(resources.map(r => 
         r.id === selectedResource.id 
           ? { ...r, sharedWith: r.sharedWith + selectedFamilies.length } 
@@ -632,6 +819,70 @@ function KnowledgeCenterContent() {
     } catch (error) {
       console.error("Error sharing resource:", error);
       toast.error("Failed to share resource");
+    } finally {
+      setIsSharing(false);
+      setIsShareDialogOpen(false);
+      setSelectedFamilies([]);
+    }
+  };
+
+  // Handle Constitution Template sharing (BR-KC-008, BR-KC-009)
+  const handleShareConstitutionTemplate = async () => {
+    if (!selectedResource || !userId || selectedFamilies.length === 0) return;
+    
+    setIsSharing(true);
+    try {
+      const templateId = parseInt(selectedResource.id.replace('ct-', ''));
+      const advisorName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}`.trim() : "Your advisor";
+
+      // Get constitution template with sections
+      const { data: templateData } = await supabase
+        .from('constitution_templates')
+        .select('*, sections:constitution_sections(*)')
+        .eq('id', templateId)
+        .single();
+
+      if (!templateData) {
+        toast.error("Constitution template not found");
+        return;
+      }
+
+      // Create family constitutions from template for each family
+      for (const familyId of selectedFamilies) {
+        // Create family constitution based on template
+        const { data: familyConstitution, error: constError } = await supabase
+          .from('family_constitutions')
+          .insert([{
+            family_id: familyId,
+            advisor_id: userId,
+            template_id: templateId,
+            title: templateData.title,
+            status: 'draft'
+          }])
+          .select()
+          .single();
+
+        if (constError) {
+          console.error("Error creating family constitution:", constError);
+          continue;
+        }
+
+        // Create notification
+        await supabase
+          .from('notifications')
+          .insert([{
+            user_id: userId,
+            type: 'resource',
+            title: `Constitution template shared: ${templateData.title}`,
+            description: `${advisorName} shared a constitution template with your family.`,
+            read: false
+          }]);
+      }
+
+      toast.success(`Constitution template shared with ${selectedFamilies.length} families!`);
+    } catch (error) {
+      console.error("Error sharing constitution template:", error);
+      toast.error("Failed to share constitution template");
     } finally {
       setIsSharing(false);
       setIsShareDialogOpen(false);
@@ -664,20 +915,171 @@ function KnowledgeCenterContent() {
     }
   };
 
+  // Improved duplicate function (BR-KC-004) - copies all fields
   const handleDuplicate = async (resource: Resource) => {
     if (!userId) return;
 
+    // Handle constitution template duplication
+    if (resource.id.startsWith('ct-')) {
+      try {
+        const templateId = parseInt(resource.id.replace('ct-', ''));
+        
+        // Get original template with sections
+        const { data: originalTemplate } = await supabase
+          .from('constitution_templates')
+          .select('*, sections:constitution_sections(*)')
+          .eq('id', templateId)
+          .single();
+        
+        if (!originalTemplate) {
+          toast.error("Template not found");
+          return;
+        }
+
+        // Create duplicate template
+        const { data: newTemplate, error: templateError } = await supabase
+          .from('constitution_templates')
+          .insert([{
+            advisor_id: userId,
+            title: `${originalTemplate.title} (Copy)`,
+            description: originalTemplate.description,
+            is_published: false,
+            sections_content: originalTemplate.sections_content
+          }])
+          .select()
+          .single();
+
+        if (templateError) throw templateError;
+
+        // Copy sections
+        if (newTemplate && originalTemplate.sections?.length > 0) {
+          const newSections = originalTemplate.sections.map((s: any) => ({
+            template_id: newTemplate.id,
+            section_number: s.section_number,
+            title: s.title,
+            content: s.content,
+            is_required: s.is_required
+          }));
+
+          await supabase
+            .from('constitution_sections')
+            .insert(newSections);
+        }
+
+        // Add to local state
+        const duplicatedTemplate: Resource = {
+          id: `ct-${newTemplate.id}`,
+          title: newTemplate.title,
+          type: "constitution-template",
+          category: "Governance",
+          updatedAt: new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: newTemplate.description || "Constitution Template"
+        };
+        setResources([duplicatedTemplate, ...resources]);
+        toast.success("Constitution template duplicated!");
+        return;
+      } catch (error) {
+        console.error("Error duplicating template:", error);
+        toast.error("Failed to duplicate template");
+        return;
+      }
+    }
+
+    // Handle learning path duplication
+    if (resource.id.startsWith('lp-')) {
+      try {
+        const pathId = parseInt(resource.id.replace('lp-', ''));
+        
+        const { data: originalPath } = await supabase
+          .from('learning_paths')
+          .select('*, steps:learning_path_steps(*)')
+          .eq('id', pathId)
+          .single();
+        
+        if (!originalPath) {
+          toast.error("Learning path not found");
+          return;
+        }
+
+        const { data: newPath, error: pathError } = await supabase
+          .from('learning_paths')
+          .insert([{
+            advisor_id: userId,
+            title: `${originalPath.title} (Copy)`,
+            description: originalPath.description,
+            difficulty: originalPath.difficulty,
+            is_published: false
+          }])
+          .select()
+          .single();
+
+        if (pathError) throw pathError;
+
+        // Copy steps
+        if (newPath && originalPath.steps?.length > 0) {
+          const newSteps = originalPath.steps.map((s: any) => ({
+            learning_path_id: newPath.id,
+            title: s.title,
+            description: s.description,
+            content: s.content,
+            step_order: s.step_order,
+            resource_id: s.resource_id
+          }));
+
+          await supabase
+            .from('learning_path_steps')
+            .insert(newSteps);
+        }
+
+        const duplicatedPath: Resource = {
+          id: `lp-${newPath.id}`,
+          title: newPath.title,
+          type: "learning-path",
+          category: originalPath.difficulty === 'advanced' ? 'Advanced' : originalPath.difficulty === 'intermediate' ? 'Intermediate' : 'Beginner',
+          updatedAt: new Date().toISOString().split('T')[0],
+          sharedWith: 0,
+          isFeatured: false,
+          description: newPath.description || "Learning Path"
+        };
+        setResources([duplicatedPath, ...resources]);
+        toast.success("Learning path duplicated!");
+        return;
+      } catch (error) {
+        console.error("Error duplicating learning path:", error);
+        toast.error("Failed to duplicate learning path");
+        return;
+      }
+    }
+
+    // Regular resource duplication - copy ALL fields
     try {
+      // First get the full resource data
+      const { data: originalData } = await supabase
+        .from('knowledge_resources')
+        .select('*')
+        .eq('id', parseInt(resource.id))
+        .single();
+
+      if (!originalData) {
+        toast.error("Resource not found");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('knowledge_resources')
         .insert([{
           advisor_id: userId,
-          title: `${resource.title} (Copy)`,
-          description: resource.description,
-          type: resource.type,
-          category: resource.category,
+          title: `${originalData.title} (Copy)`,
+          description: originalData.description,
+          type: originalData.type,
+          category: originalData.category,
+          content: originalData.content,
+          external_url: originalData.external_url,
           is_featured: false,
-          is_published: true
+          is_published: false,
+          folder_id: originalData.folder_id
         }])
         .select();
 
@@ -708,12 +1110,13 @@ function KnowledgeCenterContent() {
     setIsDeleteDialogOpen(true);
   };
 
+  // Soft delete for resources (BR-KC-006)
   const handleDeleteResource = async () => {
     if (!selectedResource) return;
     
     setIsDeleting(true);
     try {
-      // Handle constitution templates differently
+      // Handle constitution templates - hard delete (they don't have soft delete)
       if (selectedResource.id.startsWith('ct-')) {
         const templateId = parseInt(selectedResource.id.replace('ct-', ''));
         const { error } = await supabase
@@ -721,24 +1124,34 @@ function KnowledgeCenterContent() {
           .delete()
           .eq('id', templateId);
         if (error) throw error;
+        setResources(resources.filter(r => r.id !== selectedResource.id));
+        toast.success("Constitution template deleted");
       } else if (selectedResource.id.startsWith('lp-')) {
-        // Handle learning paths
+        // Handle learning paths - hard delete
         const pathId = parseInt(selectedResource.id.replace('lp-', ''));
         const { error } = await supabase
           .from('learning_paths')
           .delete()
           .eq('id', pathId);
         if (error) throw error;
+        setResources(resources.filter(r => r.id !== selectedResource.id));
+        toast.success("Learning path deleted");
       } else {
+        // SOFT DELETE for regular resources
         const { error } = await supabase
           .from('knowledge_resources')
-          .delete()
+          .update({ deleted_at: new Date().toISOString() })
           .eq('id', parseInt(selectedResource.id));
         if (error) throw error;
+        
+        // Move to deleted resources
+        const deletedResource = resources.find(r => r.id === selectedResource.id);
+        if (deletedResource) {
+          setDeletedResources([{ ...deletedResource, deleted_at: new Date().toISOString() }, ...deletedResources]);
+        }
+        setResources(resources.filter(r => r.id !== selectedResource.id));
+        toast.success("Resource moved to trash. You can restore it within 6 months.");
       }
-      
-      setResources(resources.filter(r => r.id !== selectedResource.id));
-      toast.success("Resource deleted successfully!");
     } catch (error) {
       console.error("Error deleting resource:", error);
       toast.error("Failed to delete resource");
@@ -792,6 +1205,10 @@ function KnowledgeCenterContent() {
             <TabsTrigger value="library">My Library</TabsTrigger>
             <TabsTrigger value="shared">Shared Resources</TabsTrigger>
             <TabsTrigger value="constitution">Constitution Templates</TabsTrigger>
+            <TabsTrigger value="deleted" className="text-muted-foreground">
+              <Archive className="h-4 w-4 mr-2" />
+              Deleted ({deletedResources.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="library" className="space-y-0">
@@ -800,23 +1217,24 @@ function KnowledgeCenterContent() {
               {showSidebar && (
                 <div className="w-64 shrink-0 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Categories</h3>
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Folders</h3>
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="h-6 w-6"
                       onClick={() => setIsFolderDialogOpen(true)}
+                      title="Create new folder"
                     >
-                      <Plus className="h-4 w-4" />
+                      <FolderPlus className="h-4 w-4" />
                     </Button>
                   </div>
                   
                   <div className="space-y-1">
                     {/* All Resources */}
                     <button
-                      onClick={() => setSelectedFolder(null)}
+                      onClick={() => setSelectedFolderId(null)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                        selectedFolder === null 
+                        selectedFolderId === null 
                           ? "bg-primary text-primary-foreground" 
                           : "hover:bg-muted text-foreground"
                       }`}
@@ -825,38 +1243,81 @@ function KnowledgeCenterContent() {
                         <Folder className="h-4 w-4" />
                         <span>All Resources</span>
                       </div>
-                      <Badge variant={selectedFolder === null ? "secondary" : "outline"} className="text-xs">
+                      <Badge variant={selectedFolderId === null ? "secondary" : "outline"} className="text-xs">
                         {resources.length}
                       </Badge>
                     </button>
                     
-                    {/* Category folders */}
+                    {/* User folders from database */}
                     {folders.map(folder => {
-                      const count = resources.filter(r => r.category === folder).length;
+                      const count = resources.filter(r => r.folder_id === folder.id).length;
                       return (
-                        <button
-                          key={folder}
-                          onClick={() => setSelectedFolder(selectedFolder === folder ? null : folder)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                            selectedFolder === folder 
-                              ? "bg-primary text-primary-foreground" 
-                              : "hover:bg-muted text-foreground"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {selectedFolder === folder ? (
-                              <FolderOpen className="h-4 w-4" />
-                            ) : (
-                              <Folder className="h-4 w-4" />
-                            )}
-                            <span className="truncate">{folder}</span>
-                          </div>
-                          <Badge variant={selectedFolder === folder ? "secondary" : "outline"} className="text-xs">
-                            {count}
-                          </Badge>
-                        </button>
+                        <div key={folder.id} className="group flex items-center">
+                          <button
+                            onClick={() => setSelectedFolderId(selectedFolderId === folder.id ? null : folder.id)}
+                            className={`flex-1 flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                              selectedFolderId === folder.id 
+                                ? "bg-primary text-primary-foreground" 
+                                : "hover:bg-muted text-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              {selectedFolderId === folder.id ? (
+                                <FolderOpen className="h-4 w-4" />
+                              ) : (
+                                <Folder className="h-4 w-4" />
+                              )}
+                              <span className="truncate">{folder.name}</span>
+                            </div>
+                            <Badge variant={selectedFolderId === folder.id ? "secondary" : "outline"} className="text-xs">
+                              {count}
+                            </Badge>
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleDeleteFolder(folder.id)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Folder
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       );
                     })}
+                  </div>
+
+                  <Separator />
+                  
+                  {/* Categories Filter (legacy) */}
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Categories</h3>
+                    <div className="space-y-1">
+                      {categories.map(category => {
+                        const count = resources.filter(r => r.category === category).length;
+                        return (
+                          <button
+                            key={category}
+                            onClick={() => setSelectedCategory(selectedCategory === category ? "" : category)}
+                            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm transition-colors ${
+                              selectedCategory === category 
+                                ? "bg-muted font-medium" 
+                                : "hover:bg-muted/50 text-muted-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Tag className="h-3.5 w-3.5" />
+                              <span className="truncate">{category}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <Separator />
@@ -978,18 +1439,32 @@ function KnowledgeCenterContent() {
                 </div>
 
                 {/* Active Filters */}
-                {(selectedFolder || selectedType !== "all" || searchQuery) && (
+                {(selectedFolderId || selectedCategory || selectedType !== "all" || searchQuery || sharingFilter !== "all") && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-muted-foreground">Filters:</span>
-                    {selectedFolder && (
+                    {selectedFolderId && (
                       <Badge variant="secondary" className="gap-1 pr-1">
                         <Folder className="h-3 w-3" />
-                        {selectedFolder}
+                        {getSelectedFolderName()}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-4 w-4 ml-1 hover:bg-transparent"
-                          onClick={() => setSelectedFolder(null)}
+                          onClick={() => setSelectedFolderId(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {selectedCategory && (
+                      <Badge variant="secondary" className="gap-1 pr-1">
+                        <Tag className="h-3 w-3" />
+                        {selectedCategory}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 ml-1 hover:bg-transparent"
+                          onClick={() => setSelectedCategory("")}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -997,13 +1472,27 @@ function KnowledgeCenterContent() {
                     )}
                     {selectedType !== "all" && (
                       <Badge variant="secondary" className="gap-1 pr-1 capitalize">
-                        <Tag className="h-3 w-3" />
+                        <FileText className="h-3 w-3" />
                         {selectedType}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-4 w-4 ml-1 hover:bg-transparent"
                           onClick={() => setSelectedType("all")}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    )}
+                    {sharingFilter !== "all" && (
+                      <Badge variant="secondary" className="gap-1 pr-1">
+                        <Share2 className="h-3 w-3" />
+                        {sharingFilter === "shared" ? "Shared" : "Not Shared"}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 ml-1 hover:bg-transparent"
+                          onClick={() => setSharingFilter("all")}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -1028,8 +1517,10 @@ function KnowledgeCenterContent() {
                       size="sm"
                       className="text-xs h-6"
                       onClick={() => {
-                        setSelectedFolder(null);
+                        setSelectedFolderId(null);
+                        setSelectedCategory("");
                         setSelectedType("all");
+                        setSharingFilter("all");
                         setSearchQuery("");
                       }}
                     >
@@ -1042,7 +1533,7 @@ function KnowledgeCenterContent() {
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
                     {filteredResources.length} {filteredResources.length === 1 ? "resource" : "resources"}
-                    {selectedFolder && ` in ${selectedFolder}`}
+                    {getSelectedFolderName() && ` in ${getSelectedFolderName()}`}
                   </p>
                 </div>
 
@@ -1057,14 +1548,14 @@ function KnowledgeCenterContent() {
                     <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
                     <h3 className="text-lg font-medium mb-2">No resources found</h3>
                     <p className="text-muted-foreground mb-4">
-                      {searchQuery ? "Try a different search term" : selectedFolder ? `No resources in "${selectedFolder}"` : "Add your first resource to get started"}
+                      {searchQuery ? "Try a different search term" : getSelectedFolderName() ? `No resources in "${getSelectedFolderName()}"` : "Add your first resource to get started"}
                     </p>
                     {!searchQuery && (
                       <Button onClick={() => setIsCreateDialogOpen(true)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Resource
                       </Button>
-                    )}
+                    )}}
                   </div>
                 ) : viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -1346,6 +1837,78 @@ function KnowledgeCenterContent() {
               </Link>
             </div>
           </TabsContent>
+
+          {/* Deleted Resources Tab */}
+          <TabsContent value="deleted" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium">Deleted Resources</h3>
+                <p className="text-sm text-muted-foreground">Resources that have been soft-deleted. Restore or permanently delete them.</p>
+              </div>
+            </div>
+
+            {deletedResources.length === 0 ? (
+              <div className="text-center py-12">
+                <Archive className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-medium mb-2">No deleted resources</h3>
+                <p className="text-muted-foreground">Deleted resources will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {deletedResources.map((resource) => (
+                  <Card key={resource.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <div className="p-2 bg-muted rounded-lg">
+                            {resource.type === "document" && <FileText className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "article" && <LayoutTemplate className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "video" && <Video className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "podcast" && <Mic className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "guide" && <BookOpen className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "template" && <File className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "checklist" && <CheckSquare className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "link" && <LinkIcon className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "learning-path" && <GraduationCap className="h-5 w-5 text-muted-foreground" />}
+                            {resource.type === "constitution-template" && <Star className="h-5 w-5 text-muted-foreground" />}
+                          </div>
+                          <div className="overflow-hidden">
+                            <h4 className="font-medium truncate">{resource.title}</h4>
+                            <p className="text-sm text-muted-foreground truncate">{resource.description}</p>
+                            {resource.deleted_at && (
+                              <p className="text-xs text-red-500 mt-1">
+                                Deleted on {new Date(resource.deleted_at).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleRestoreResource(resource.id)}
+                            disabled={isRestoring}
+                          >
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                            Restore
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handlePermanentDelete(resource.id)}
+                            disabled={isRestoring}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Forever
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -1361,15 +1924,10 @@ function KnowledgeCenterContent() {
             category: "Governance",
             content: "",
             external_url: "",
-            duration_minutes: "",
-            points_value: "5",
-            difficulty: "beginner",
-            is_public: false,
-            tags: []
+            is_published: true,
+            is_featured: false,
+            thumbnail_url: ""
           });
-          setUploadedFileName(null);
-          setUploadedFile(null);
-          setTagInput("");
           setNewResourceType("");
         }
       }}>
@@ -1393,12 +1951,6 @@ function KnowledgeCenterContent() {
                     onValueChange={(v) => {
                       setNewResourceType(v);
                       setNewResource({...newResource, type: v as ResourceType});
-                      // Clear file if type changes
-                      if (uploadedFile) {
-                        setUploadedFile(null);
-                        setUploadedFileName(null);
-                        toast.info("Uploaded file cleared due to type change");
-                      }
                     }}
                   >
                     <SelectTrigger>
@@ -1507,67 +2059,6 @@ function KnowledgeCenterContent() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Tags (up to 10)</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      id="tags"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="Add a tag..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
-                    />
-                    <Button type="button" variant="outline" onClick={handleAddTag} disabled={newResource.tags.length >= 10}>
-                      Add
-                    </Button>
-                  </div>
-                  {newResource.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {newResource.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="gap-1">
-                          {tag}
-                          <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Difficulty Level *</Label>
-                  <Select 
-                    value={newResource.difficulty}
-                    onValueChange={(v) => setNewResource({...newResource, difficulty: v as "beginner" | "intermediate" | "advanced"})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="success" className="text-xs">Beginner</Badge>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="intermediate">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="warning" className="text-xs">Intermediate</Badge>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="advanced">
-                        <span className="flex items-center gap-2">
-                          <Badge variant="destructive" className="text-xs">Advanced</Badge>
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               {/* Right Column - Settings & Content */}
@@ -1579,43 +2070,40 @@ function KnowledgeCenterContent() {
                   <Input value="You (Auto-assigned)" disabled className="bg-muted" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (minutes) {durationRequired(newResource.type) && "*"}</Label>
-                    <Input 
-                      id="duration"
-                      type="number"
-                      min="1"
-                      max="999"
-                      placeholder="e.g., 30"
-                      value={newResource.duration_minutes}
-                      onChange={(e) => setNewResource({...newResource, duration_minutes: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="points">Points Value *</Label>
-                    <Input 
-                      id="points"
-                      type="number"
-                      min="1"
-                      max="100"
-                      placeholder="5"
-                      value={newResource.points_value}
-                      onChange={(e) => setNewResource({...newResource, points_value: e.target.value})}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="thumbnail_url">Thumbnail URL</Label>
+                  <Input 
+                    id="thumbnail_url"
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    value={newResource.thumbnail_url}
+                    onChange={(e) => setNewResource({...newResource, thumbnail_url: e.target.value})}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional image to display with the resource</p>
                 </div>
 
                 <div className="flex items-center space-x-2 pt-2">
                   <Checkbox
-                    id="is_public"
-                    checked={newResource.is_public}
-                    onCheckedChange={(checked) => setNewResource({...newResource, is_public: !!checked})}
+                    id="is_published"
+                    checked={newResource.is_published}
+                    onCheckedChange={(checked) => setNewResource({...newResource, is_published: !!checked})}
                   />
-                  <label htmlFor="is_public" className="text-sm font-medium leading-none cursor-pointer">
-                    Public Resource
+                  <label htmlFor="is_published" className="text-sm font-medium leading-none cursor-pointer">
+                    Published
                   </label>
-                  <span className="text-xs text-muted-foreground">(visible in marketplace)</span>
+                  <span className="text-xs text-muted-foreground">(visible to families when shared)</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is_featured"
+                    checked={newResource.is_featured}
+                    onCheckedChange={(checked) => setNewResource({...newResource, is_featured: !!checked})}
+                  />
+                  <label htmlFor="is_featured" className="text-sm font-medium leading-none cursor-pointer">
+                    Featured
+                  </label>
+                  <span className="text-xs text-muted-foreground">(highlight this resource)</span>
                 </div>
 
                 <Separator className="my-4" />
@@ -1623,87 +2111,36 @@ function KnowledgeCenterContent() {
                 {/* Content Section - Changes based on type */}
                 <h3 className="font-medium text-sm text-muted-foreground">Content</h3>
 
-                {/* File Upload for file-based types */}
-                {(requiresFileUpload(newResource.type) || newResource.type === "video" || newResource.type === "guide") && (
+                {/* Resource URL field */}
+                {requiresUrl(newResource.type) && (
                   <div className="space-y-2">
-                    <Label>Upload File</Label>
-                    {uploadedFileName ? (
-                      <div className="border rounded-lg p-4 flex items-center justify-between bg-muted/20">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-8 w-8 text-primary" />
-                          <div>
-                            <p className="text-sm font-medium">{uploadedFileName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {uploadedFile ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : ""} • Uploaded
-                            </p>
-                          </div>
-                        </div>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            setUploadedFileName(null);
-                            setUploadedFile(null);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : isUploading ? (
-                      <div className="border rounded-lg p-8 space-y-3">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Uploading...</span>
-                          <span>{uploadProgress}%</span>
-                        </div>
-                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary transition-all duration-200 ease-out"
-                            style={{ width: `${uploadProgress}%` }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <label className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 cursor-pointer transition-colors block">
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept={getSupportedFormats(newResource.type).extensions.join(",")}
-                          onChange={handleFileUpload}
-                        />
-                        <div className="flex flex-col items-center gap-2">
-                          <Download className="h-8 w-8 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">Click to upload file</span>
-                          <span className="text-xs text-muted-foreground">
-                            Max 100MB • Formats: {getSupportedFormats(newResource.type).extensions.join(", ")}
-                          </span>
-                        </div>
-                      </label>
-                    )}
-                  </div>
-                )}
-
-                {/* External URL for videos/links */}
-                {canUseExternalUrl(newResource.type) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="external_url">
-                      External URL {newResource.type === "link" && "*"}
+                    <Label htmlFor="file_url">
+                      Resource URL *
                     </Label>
                     <div className="flex gap-2">
-                      <LinkIcon className="h-4 w-4 mt-3 text-muted-foreground" />
+                      <LinkIcon className="h-4 w-4 mt-3 text-muted-foreground shrink-0" />
                       <Input 
-                        id="external_url"
+                        id="file_url"
                         type="url"
-                        placeholder="https://www.youtube.com/watch?v=..."
+                        placeholder={
+                          newResource.type === "document" ? "https://example.com/document.pdf" :
+                          newResource.type === "template" ? "https://example.com/template.docx" :
+                          newResource.type === "checklist" ? "https://example.com/checklist.pdf" :
+                          newResource.type === "podcast" ? "https://example.com/podcast.mp3" :
+                          newResource.type === "video" ? "https://youtube.com/watch?v=..." :
+                          "https://example.com/file"
+                        }
                         value={newResource.external_url}
                         onChange={(e) => setNewResource({...newResource, external_url: e.target.value})}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
+                      {newResource.type === "document" && "Link to PDF, DOCX, or other document file"}
+                      {newResource.type === "template" && "Link to template file (PDF, DOCX, XLSX)"}
+                      {newResource.type === "checklist" && "Link to checklist document"}
+                      {newResource.type === "podcast" && "Link to MP3 or podcast URL"}
                       {newResource.type === "video" && "YouTube, Vimeo, or other video URL"}
                       {newResource.type === "link" && "Website URL"}
-                      {newResource.type === "article" && "Or provide an external article URL"}
                     </p>
                   </div>
                 )}
@@ -1757,7 +2194,7 @@ function KnowledgeCenterContent() {
               <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isUploading || isSaving}>
+              <Button type="submit" disabled={isSaving}>
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -40,20 +40,20 @@ import {
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
 
-// Predefined Sections
+// Predefined Sections (BR-KC-007: Constitution Template Structure)
 const SECTIONS = [
-  { id: "vision", number: 1, title: "1. Family Vision & Mission", description: "Purpose and long-term aspirations" },
-  { id: "values", number: 2, title: "2. Family Values", description: "Core principles and beliefs" },
-  { id: "governance", number: 3, title: "3. Governance Structure", description: "Leadership roles and organization" },
-  { id: "decision", number: 4, title: "4. Decision-Making Process", description: "How decisions are made and approved" },
-  { id: "conflict", number: 5, title: "5. Conflict Resolution", description: "Process for handling disagreements" },
-  { id: "succession", number: 6, title: "6. Succession Planning", description: "Leadership transition guidelines" },
-  { id: "education", number: 7, title: "7. Education & Development", description: "Family member growth and learning" },
-  { id: "philanthropy", number: 8, title: "8. Philanthropy Guidelines", description: "Charitable giving framework" },
-  { id: "assets", number: 9, title: "9. Asset Management Principles", description: "Wealth stewardship guidelines" },
-  { id: "communication", number: 10, title: "10. Communication Standards", description: "How family communicates" },
-  { id: "meetings", number: 11, title: "11. Meeting Protocols", description: "Meeting structure and processes" },
-  { id: "amendment", number: 12, title: "12. Amendment Process", description: "How constitution can be changed" },
+  { id: "ways-to-create", number: 1, title: "1. Ways to Create Your Constitution", description: "Methods and approaches for creating your family constitution" },
+  { id: "preamble", number: 2, title: "2. Preamble", description: "Introduction and purpose statement of the constitution" },
+  { id: "values-mission", number: 3, title: "3. Values and Mission", description: "Core family values and mission statement" },
+  { id: "governance", number: 4, title: "4. Governance Structure", description: "Family governance framework and leadership roles" },
+  { id: "wealth-management", number: 5, title: "5. Wealth Management", description: "Principles for managing and preserving family wealth" },
+  { id: "education", number: 6, title: "6. Education and Development", description: "Family member education and personal development" },
+  { id: "decision-making", number: 7, title: "7. Decision Making Process", description: "How family decisions are made and approved" },
+  { id: "succession", number: 8, title: "8. Succession Planning", description: "Leadership transition and succession guidelines" },
+  { id: "philanthropy", number: 9, title: "9. Philanthropy", description: "Charitable giving and social responsibility" },
+  { id: "conflict-resolution", number: 10, title: "10. Conflict Resolution", description: "Process for handling disagreements and disputes" },
+  { id: "voting-rules", number: 11, title: "11. Voting Rules and Procedures", description: "Voting mechanisms and procedures for family decisions" },
+  { id: "amendment", number: 12, title: "12. Constitution Amendment Process", description: "How the constitution can be modified or amended" },
 ];
 
 export default function CreateConstitutionTemplatePage() {
