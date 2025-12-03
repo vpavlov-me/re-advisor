@@ -43,7 +43,7 @@ export async function signUp(data: SignUpData): Promise<AuthResult> {
   });
 
   if (!error && authData.user) {
-    // Create profile record
+    // Create/update profile record (trigger already creates basic profile)
     await supabase.from('profiles').upsert({
       id: authData.user.id,
       first_name: firstName,
@@ -54,7 +54,7 @@ export async function signUp(data: SignUpData): Promise<AuthResult> {
       is_first_login: true,
       onboarding_progress: 0,
       profile_status: 'draft',
-      subscription_plan: selectedPlan || 'basic',
+      subscription_plan: selectedPlan || 'free',
     });
 
     // Create family if provided

@@ -17,12 +17,36 @@ interface Profile {
   email: string | null;
   phone: string | null;
   company: string | null;
+  title: string | null;
+  location: string | null;
+  timezone: string | null;
+  website: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  joined_date: string | null;
+  completion_percentage: number;
+  updated_at: string | null;
+  // Onboarding fields
   is_first_login: boolean;
   onboarding_progress: number;
+  onboarding_step: number;
+  onboarding_completed: boolean;
+  onboarding_skipped: boolean;
+  onboarding_completed_at: string | null;
   profile_status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'revision_required';
+  // Stripe fields
   stripe_account_id: string | null;
   stripe_account_status: 'not_started' | 'initiated' | 'pending' | 'active' | 'failed' | null;
+  // KYC fields
   kyc_status: 'not_started' | 'pending' | 'verified' | 'failed' | null;
+  kyc_submitted_at: string | null;
+  kyc_verified_at: string | null;
+  // Subscription fields
+  subscription_plan: 'free' | 'starter' | 'professional' | 'enterprise';
+  subscription_status: 'inactive' | 'active' | 'cancelled' | 'past_due';
+  subscription_expires_at: string | null;
 }
 
 interface AuthContextType {
