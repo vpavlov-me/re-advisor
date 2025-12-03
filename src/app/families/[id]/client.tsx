@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
+import { FamilyDetailSkeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -514,11 +515,7 @@ export default function FamilyDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <FamilyDetailSkeleton />;
   }
 
   if (!family) {
@@ -540,83 +537,98 @@ export default function FamilyDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="bg-card border-b border-border">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        {/* Breadcrumb */}
+        <div className="bg-card/50 border-b border-border/50">
+          <div className="container py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Home</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              <Link href="/families" className="text-muted-foreground hover:text-foreground transition-colors">
+                Family Clients
+              </Link>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              <span className="text-foreground font-medium truncate max-w-[200px]">{family.name}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Header Actions */}
         <div className="container py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Home className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Home</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <Link href="/families" className="text-muted-foreground hover:text-foreground">
-              Family Clients
-            </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">{family.name}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="shrink-0">
+                <Link href="/families">
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarFallback className="text-sm">
+                  {family.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold truncate">{family.name}</h1>
+                <div className="flex items-center gap-2">
+                  {getRoleBadge(family.role)}
+                  {getStatusBadge(family.status)}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                <Link href={`/messages?family=${family.id}`}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Message
+                </Link>
+              </Button>
+              <Button size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
+                <Calendar className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Schedule</span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild className="sm:hidden">
+                    <Link href={`/messages?family=${family.id}`}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Message
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsInvoiceDialogOpen(true)}>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Create Invoice
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove Family
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div className="flex items-start gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/families">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="text-lg">
-                {family.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold">{family.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                {getRoleBadge(family.role)}
-                {getStatusBadge(family.status)}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">{family.description}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/messages?family=${family.id}`}>
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Message
-              </Link>
-            </Button>
-            <Button size="sm" onClick={() => setIsScheduleDialogOpen(true)}>
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule Meeting
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsInvoiceDialogOpen(true)}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Create Invoice
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove Family
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      <div className="container py-6">
+        {/* Family Description - moved outside header */}
+        {family.description && (
+          <p className="text-sm text-muted-foreground mb-6">{family.description}</p>
+        )}
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

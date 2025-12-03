@@ -41,6 +41,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResourceDetailSkeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -145,6 +146,9 @@ export default function ResourceDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isUnsavedDialogOpen, setIsUnsavedDialogOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -161,6 +165,60 @@ export default function ResourceDetailPage() {
     is_featured: false,
     is_published: true
   });
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (isEditing && resource) {
+      const hasChanges = 
+        editForm.title !== resource.title ||
+        editForm.description !== resource.description ||
+        editForm.content !== (resource.content || "") ||
+        editForm.category !== resource.category ||
+        editForm.type !== resource.type ||
+        editForm.external_url !== (resource.external_url || "") ||
+        editForm.is_featured !== resource.is_featured ||
+        editForm.is_published !== resource.is_published;
+      setHasUnsavedChanges(hasChanges);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [editForm, isEditing, resource]);
+
+  // Warn before page unload with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Handle navigation with unsaved changes
+  const handleNavigation = (href: string) => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(href);
+      setIsUnsavedDialogOpen(true);
+    } else {
+      router.push(href);
+    }
+  };
+
+  const confirmNavigation = () => {
+    setIsUnsavedDialogOpen(false);
+    if (pendingNavigation) {
+      router.push(pendingNavigation);
+    }
+    setPendingNavigation(null);
+  };
+
+  const cancelNavigation = () => {
+    setIsUnsavedDialogOpen(false);
+    setPendingNavigation(null);
+  };
 
   const fetchResource = useCallback(async () => {
     try {
@@ -462,11 +520,7 @@ export default function ResourceDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <ResourceDetailSkeleton />;
   }
 
   if (!resource) {
@@ -487,116 +541,125 @@ export default function ResourceDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="bg-card border-b border-border">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        {/* Breadcrumb */}
+        <div className="bg-card/50 border-b border-border/50">
+          <div className="container py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Home</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              <button 
+                onClick={() => handleNavigation("/knowledge")} 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Knowledge Center
+              </button>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              <span className="text-foreground font-medium truncate max-w-[200px]">
+                {resource.title}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Header Actions */}
         <div className="container py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Home className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Home</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <Link href="/knowledge" className="text-muted-foreground hover:text-foreground">
-              Knowledge Center
-            </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium truncate max-w-[200px]">
-              {resource.title}
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="shrink-0"
+                onClick={() => handleNavigation("/knowledge")}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                  <Icon className="h-6 w-6 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-semibold truncate">{resource.title}</h1>
+                    {resource.is_featured && (
+                      <Badge variant="warning" className="shrink-0">
+                        <Star className="h-3 w-3 mr-1 fill-current" /> Featured
+                      </Badge>
+                    )}
+                    {!resource.is_published && (
+                      <Badge variant="secondary" className="shrink-0">
+                        <EyeOff className="h-3 w-3 mr-1" /> Draft
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <Badge variant="outline" className="capitalize text-xs">
+                      {resource.type.replace("-", " ")}
+                    </Badge>
+                    <span className="hidden sm:flex items-center gap-1">
+                      <Folder className="h-3 w-3" />
+                      {resource.category}
+                    </span>
+                    <span className="hidden md:flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Updated {new Date(resource.updated_at).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {shares.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {!isEditing ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)} className="hidden sm:flex">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleFeatured} className="hidden md:flex">
+                    <Star className={`h-4 w-4 mr-2 ${resource.is_featured ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                    {resource.is_featured ? "Unfeature" : "Feature"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Edit className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hidden sm:flex" onClick={() => setIsDeleteDialogOpen(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container py-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div className="flex items-start gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/knowledge">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Icon className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold">{resource.title}</h1>
-                  {resource.is_featured && (
-                    <Badge variant="warning">
-                      <Star className="h-3 w-3 mr-1 fill-current" /> Featured
-                    </Badge>
-                  )}
-                  {!resource.is_published && (
-                    <Badge variant="secondary">
-                      <EyeOff className="h-3 w-3 mr-1" /> Draft
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <Badge variant="outline" className="capitalize">
-                    {resource.type.replace("-", " ")}
-                  </Badge>
-                  <span className="flex items-center gap-1">
-                    <Folder className="h-3.5 w-3.5" />
-                    {resource.category}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    Updated {new Date(resource.updated_at).toLocaleDateString()}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" />
-                    Shared with {shares.length}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isEditing && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => setIsShareDialogOpen(true)}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleFeatured}>
-                  <Star className={`h-4 w-4 mr-2 ${resource.is_featured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-                  {resource.is_featured ? "Unfeature" : "Feature"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </>
-            )}
-            {isEditing && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving}>
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
+      <div className="container py-6">        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left - Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -983,6 +1046,24 @@ export default function ResourceDetailPage() {
               ) : (
                 "Delete"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unsaved Changes Warning */}
+      <AlertDialog open={isUnsavedDialogOpen} onOpenChange={setIsUnsavedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelNavigation}>Stay</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmNavigation}>
+              Leave Without Saving
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

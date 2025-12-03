@@ -224,6 +224,204 @@ function ListSkeleton({ items = 5 }: { items?: number }) {
   );
 }
 
+// Family Detail Page Skeleton
+function FamilyDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Breadcrumb */}
+      <div className="bg-card border-b border-border">
+        <div className="container py-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+      </div>
+
+      <div className="container py-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-start gap-4">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-72" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-32 rounded-md" />
+            <Skeleton className="h-9 w-9 rounded-md" />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <Skeleton className="h-10 w-80 rounded-md" />
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="border rounded-lg p-6 space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <StatsSkeleton />
+          </div>
+        </div>
+
+        {/* Members Grid */}
+        <div className="mt-6 border rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-9 w-28 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Resource Detail Page Skeleton
+function ResourceDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Breadcrumb */}
+      <div className="bg-card border-b border-border">
+        <div className="container py-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+      </div>
+
+      <div className="container py-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-start gap-4">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-14 w-14 rounded-xl" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-8 w-56" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-16 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="border rounded-lg p-6 space-y-4">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <div className="border rounded-lg p-6 space-y-4">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <div className="border rounded-lg p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-8 w-16 rounded-md" />
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-2">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-7 w-7 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="border rounded-lg p-6 space-y-4">
+              <Skeleton className="h-5 w-16" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              ))}
+            </div>
+            <div className="border rounded-lg p-6 space-y-3">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-9 w-full rounded-md" />
+              <Skeleton className="h-9 w-full rounded-md" />
+              <Skeleton className="h-9 w-full rounded-md" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export { 
   Skeleton, 
   CardSkeleton, 
@@ -239,5 +437,7 @@ export {
   TableSkeleton,
   StatsGridSkeleton,
   DashboardSkeleton,
-  ListSkeleton
+  ListSkeleton,
+  FamilyDetailSkeleton,
+  ResourceDetailSkeleton
 };
