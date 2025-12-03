@@ -125,6 +125,7 @@ export default function HomePage() {
   const [consultations, setConsultations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [userName, setUserName] = useState("Advisor");
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
@@ -153,12 +154,13 @@ export default function HomePage() {
         // Fetch Profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('first_name, last_name')
+          .select('first_name, last_name, avatar_url')
           .eq('id', user.id)
           .single();
         
         if (profile) {
           setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
+          setUserAvatarUrl(profile.avatar_url);
         }
 
         // Fetch Counts
@@ -441,6 +443,7 @@ export default function HomePage() {
               <span className="text-muted-foreground">Welcome Back,</span>
               <div className="flex items-center gap-1.5">
                 <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                  <AvatarImage src={userAvatarUrl || undefined} alt={userName} />
                   <AvatarFallback className="text-xs">{userName.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                 </Avatar>
                 <span className="font-medium text-foreground">{userName}</span>

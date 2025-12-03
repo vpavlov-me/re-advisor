@@ -33,25 +33,28 @@ const navItems = [
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, profile, isAuthenticated, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
 
-  // Get user initials for avatar fallback
+  // Get user initials for avatar fallback - prefer profile data
   const userInitials = React.useMemo(() => {
-    if (!user?.user_metadata) return "U";
-    const firstName = user.user_metadata.first_name || "";
-    const lastName = user.user_metadata.last_name || "";
+    const firstName = profile?.first_name || user?.user_metadata?.first_name || "";
+    const lastName = profile?.last_name || user?.user_metadata?.last_name || "";
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
-  }, [user]);
+  }, [profile, user]);
 
-  // Get user display name
+  // Get user display name - prefer profile data
   const userName = React.useMemo(() => {
-    if (!user?.user_metadata) return "User";
-    const firstName = user.user_metadata.first_name || "";
-    const lastName = user.user_metadata.last_name || "";
-    return `${firstName} ${lastName}`.trim() || user.email?.split("@")[0] || "User";
-  }, [user]);
+    const firstName = profile?.first_name || user?.user_metadata?.first_name || "";
+    const lastName = profile?.last_name || user?.user_metadata?.last_name || "";
+    return `${firstName} ${lastName}`.trim() || user?.email?.split("@")[0] || "User";
+  }, [profile, user]);
+
+  // Get avatar URL - prefer profile data from database
+  const avatarUrl = React.useMemo(() => {
+    return profile?.avatar_url || user?.user_metadata?.avatar_url || null;
+  }, [profile, user]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -108,7 +111,7 @@ export function AppHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="h-9 w-9 cursor-pointer border border-border">
-                <AvatarImage src={user?.user_metadata?.avatar_url || "/avatar.jpg"} alt={userName} />
+                <AvatarImage src={avatarUrl || undefined} alt={userName} />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">{userInitials}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
