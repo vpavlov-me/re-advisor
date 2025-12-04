@@ -46,7 +46,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className="font-sans min-h-screen flex flex-col">
+      <body className="font-sans">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -288,53 +288,57 @@ export default function FamiliesPage() {
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Home className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Home</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">Families & Services</span>
-            </div>
-            <Button onClick={() => setIsInviteDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Invite Family
-            </Button>
+          <div className="flex items-center gap-2 text-sm">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Home</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <span className="text-foreground font-medium">Families & Services</span>
           </div>
         </div>
       </div>
 
-      {/* Sub Navigation */}
-      <div className="bg-card border-b border-border">
-        <div className="container">
-          <nav className="flex items-center gap-1 -mb-px">
-            <Button
-              variant="ghost"
-              className="relative h-12 px-4 rounded-none border-b-2 border-primary text-primary hover:text-primary"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Family Clients
-            </Button>
-            <Button
-              variant="ghost"
-              className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              onClick={() => router.push('/services')}
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              My Services
-            </Button>
-            <Button
-              variant="ghost"
-              className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              onClick={() => router.push('/services/requests')}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Service Requests
-            </Button>
-          </nav>
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Families & Services</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your family clients and service offerings.
+            </p>
+          </div>
+          <Button onClick={() => setIsInviteDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Invite Family
+          </Button>
         </div>
-      </div>
 
-      <div className="container py-6 space-y-6">
+        {/* Sub Navigation */}
+        <nav className="flex items-center gap-1 border-b border-border -mb-4">
+          <Button
+            variant="ghost"
+            className="relative h-12 px-4 rounded-none border-b-2 border-primary text-primary hover:text-primary"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Family Clients
+          </Button>
+          <Button
+            variant="ghost"
+            className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+            onClick={() => router.push('/services')}
+          >
+            <Crown className="h-4 w-4 mr-2" />
+            My Services
+          </Button>
+          <Button
+            variant="ghost"
+            className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+            onClick={() => router.push('/services/requests')}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Service Requests
+          </Button>
+        </nav>
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {getStats(familiesList).map((stat) => (

@@ -738,30 +738,38 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col flex-1 bg-background">
       {/* Breadcrumb Bar */}
-      <div className="bg-card border-b border-border">
+      <div className="bg-card border-b border-border shrink-0">
         <div className="container py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Home className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Home</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">Messages</span>
-            </div>
-            <Button onClick={handleOpenNewConversation}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Conversation
-            </Button>
+          <div className="flex items-center gap-2 text-sm">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Home</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <span className="text-foreground font-medium">Messages</span>
           </div>
         </div>
       </div>
 
-      <div className="container py-6 h-[calc(100vh-130px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+      <div className="container py-6 flex-1 flex flex-col min-h-0">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+            <p className="text-muted-foreground mt-1">
+              Communicate with your family clients securely.
+            </p>
+          </div>
+          <Button onClick={handleOpenNewConversation}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Conversation
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 min-h-0">
           {/* Conversations List */}
           <div className="lg:col-span-4 h-full hidden lg:block">
-            <Card className="h-full flex flex-col overflow-hidden">
+            <Card className="h-full flex flex-col overflow-hidden rounded-r-none border-r-0">
               <CardHeader className="pb-4 shrink-0">
                 <div className="flex items-center justify-between mb-4">
                   <CardTitle className="text-base">Messages</CardTitle>
@@ -813,7 +821,7 @@ export default function MessagesPage() {
                       <span className="ml-2 text-muted-foreground">Loading...</span>
                     </div>
                   ) : (
-                    <div className="space-y-1">
+                    <div className="divide-y divide-border">
                       {filteredConversations.map((conv, index) => (
                       <div key={conv.id}>
                         {index === 0 && conv.pinned && (
@@ -823,14 +831,14 @@ export default function MessagesPage() {
                           </div>
                         )}
                         {index > 0 && !conv.pinned && filteredConversations[index - 1]?.pinned && (
-                          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground mt-2">
+                          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground border-t border-border">
                             All Messages
                           </div>
                         )}
                         <div 
                           onClick={() => setSelectedConversation(conv)}
-                          className={`p-3 rounded-[10px] cursor-pointer transition-colors ${
-                            selectedConversation?.id === conv.id ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
+                          className={`p-3 cursor-pointer transition-colors ${
+                            selectedConversation?.id === conv.id ? "bg-primary/5" : "hover:bg-muted/50"
                           }`}
                         >
                           <div className="flex items-start gap-3">
@@ -881,7 +889,7 @@ export default function MessagesPage() {
 
           {/* Chat Area */}
           <div className="lg:col-span-8 h-full">
-            <Card className="h-full flex flex-col overflow-hidden">
+            <Card className="h-full flex flex-col overflow-hidden lg:rounded-l-none">
               {/* Show empty state when no conversations exist */}
               {!loading && conversationsList.length === 0 && !selectedConversation ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -1554,7 +1562,7 @@ export default function MessagesPage() {
             </div>
           </div>
           <ScrollArea className="h-[calc(100vh-200px)]">
-            <div className="px-4 space-y-1">
+            <div className="px-4">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -1565,17 +1573,18 @@ export default function MessagesPage() {
                   <p className="text-sm text-muted-foreground">No conversations found</p>
                 </div>
               ) : (
-                filteredConversations.map((conv) => (
-                  <div 
-                    key={conv.id}
-                    onClick={() => {
-                      setSelectedConversation(conv);
-                      setIsMobileSidebarOpen(false);
-                    }}
-                    className={`p-3 rounded-[10px] cursor-pointer transition-colors ${
-                      selectedConversation?.id === conv.id ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50"
-                    }`}
-                  >
+                <div className="divide-y divide-border">
+                  {filteredConversations.map((conv) => (
+                    <div 
+                      key={conv.id}
+                      onClick={() => {
+                        setSelectedConversation(conv);
+                        setIsMobileSidebarOpen(false);
+                      }}
+                      className={`p-3 cursor-pointer transition-colors ${
+                        selectedConversation?.id === conv.id ? "bg-primary/5" : "hover:bg-muted/50"
+                      }`}
+                    >
                     <div className="flex items-start gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarFallback>
@@ -1595,7 +1604,8 @@ export default function MessagesPage() {
                       )}
                     </div>
                   </div>
-                ))
+                ))}
+                </div>
               )}
             </div>
           </ScrollArea>

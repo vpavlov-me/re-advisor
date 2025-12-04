@@ -27,43 +27,47 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("border-b bg-background", className)}>
-      <div className="container py-4 space-y-2">
-        {/* Breadcrumbs */}
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">
-              <Home className="h-4 w-4" />
-            </Link>
-            {breadcrumbs.map((item, index) => (
-              <React.Fragment key={index}>
-                <ChevronRight className="h-3.5 w-3.5" />
-                {item.href ? (
-                  <Link
-                    href={item.href}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span className="text-foreground font-medium">{item.label}</span>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-        )}
+    <>
+      {/* Breadcrumb Bar */}
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <div className="bg-card border-b border-border">
+          <div className="container py-3">
+            <nav className="flex items-center gap-2 text-sm">
+              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Home className="h-4 w-4" />
+              </Link>
+              {breadcrumbs.map((item, index) => (
+                <React.Fragment key={index}>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span className="text-foreground font-medium">{item.label}</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
 
-        {/* Title and Actions */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      {/* Header with Title and Actions */}
+      <div className={cn("container py-8", className)}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
             {description && (
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className="text-muted-foreground mt-1">{description}</p>
             )}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       </div>
-    </div>
+    </>
   );
 }

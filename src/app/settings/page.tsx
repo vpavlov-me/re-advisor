@@ -257,11 +257,14 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="container py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Account & Security</h1>
-            <p className="text-muted-foreground mt-1">Manage your account settings and security preferences</p>
+            <h1 className="text-3xl font-bold tracking-tight">Account & Security</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your account settings and security preferences.
+            </p>
           </div>
         </div>
 

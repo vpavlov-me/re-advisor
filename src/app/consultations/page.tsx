@@ -615,30 +615,38 @@ export default function ConsultationsPage() {
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Home className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Home</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">Consultations</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" asChild>
-                <Link href="/consultations/availability">
-                  <CalendarClock className="h-4 w-4 mr-2" />
-                  Availability
-                </Link>
-              </Button>
-              <Button onClick={() => setIsScheduleOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Schedule Consultation
-              </Button>
-            </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Home</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <span className="text-foreground font-medium">Consultations</span>
           </div>
         </div>
       </div>
 
-      <div className="container py-6 space-y-6">
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Consultations</h1>
+            <p className="text-muted-foreground mt-1">
+              Schedule and manage your consultation sessions with family clients.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/consultations/availability">
+                <CalendarClock className="h-4 w-4 mr-2" />
+                Availability
+              </Link>
+            </Button>
+            <Button onClick={() => setIsScheduleOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Schedule Consultation
+            </Button>
+          </div>
+        </div>
+
         {/* Overview Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {getOverviewMetrics(metrics).map((metric) => (

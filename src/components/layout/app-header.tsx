@@ -19,7 +19,6 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { signOut } from "@/lib/auth";
 import { NotificationsDropdown } from "@/components/notifications/notifications-dropdown";
 import { SearchCommand } from "@/components/search/search-command";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Logo } from "@/components/ui/logo";
 
 const navItems = [
@@ -72,37 +71,34 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-10">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <Logo />
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
         </div>
+
+        {/* Desktop Navigation - Centered */}
+        <nav className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === item.href
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
         {/* Right Section */}
         <div className="flex items-center gap-2">
           {/* Search Command */}
           <SearchCommand />
-
-          {/* Theme Toggle */}
-          <ThemeToggle />
 
           {/* Notifications Dropdown */}
           <NotificationsDropdown />

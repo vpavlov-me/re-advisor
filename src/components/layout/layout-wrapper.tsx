@@ -14,6 +14,11 @@ const authRoutes = [
   "/auth/callback",
 ];
 
+// Routes that should not show footer (full-height pages)
+const noFooterRoutes = [
+  "/messages",
+];
+
 interface LayoutWrapperProps {
   children: React.ReactNode;
 }
@@ -23,6 +28,9 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   
   // Check if current route is an auth route
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
+  
+  // Check if current route should hide footer
+  const hideFooter = noFooterRoutes.some(route => pathname.startsWith(route));
 
   // Don't show header/footer on auth pages
   if (isAuthRoute) {
@@ -30,10 +38,10 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <AppHeader />
-      <main className="flex-1">{children}</main>
-      <AppFooter />
-    </>
+      <main className="flex-1 flex flex-col">{children}</main>
+      {!hideFooter && <AppFooter />}
+    </div>
   );
 }

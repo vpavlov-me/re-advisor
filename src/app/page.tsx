@@ -57,11 +57,17 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   BarChart,
   Bar
 } from 'recharts';
+import { 
+  ChartConfig, 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent
+} from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping for dynamic rendering
@@ -760,47 +766,47 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {hasRevenueData ? (
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                        tickFormatter={(value) => `$${value/1000}k`}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                        formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="revenue" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                        fillOpacity={1} 
-                        fill="url(#colorRevenue)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <ChartContainer 
+                  config={{
+                    revenue: {
+                      label: "Revenue",
+                      color: "hsl(var(--chart-1))"
+                    }
+                  }} 
+                  className="h-[200px] w-full"
+                >
+                  <AreaChart data={chartData} accessibilityLayer>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tickMargin={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                      tickFormatter={(value) => `$${value/1000}k`}
+                    />
+                    <ChartTooltip 
+                      content={<ChartTooltipContent formatter={(value) => `$${Number(value).toLocaleString()}`} />}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="var(--color-revenue)" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#colorRevenue)" 
+                    />
+                  </AreaChart>
+                </ChartContainer>
               ) : (
                 <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
                   <DollarSign className="h-12 w-12 mb-3 opacity-30" />
@@ -819,49 +825,41 @@ export default function HomePage() {
                   <CardTitle className="text-base">Weekly Activity</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">Scheduled vs Completed</p>
                 </div>
-                {hasActivityData && (
-                  <div className="flex items-center gap-4 text-xs">
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                      <span className="text-muted-foreground">Scheduled</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">Completed</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </CardHeader>
             <CardContent>
               {hasActivityData ? (
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={activityData} barGap={4}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                      <XAxis 
-                        dataKey="day" 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <Bar dataKey="scheduled" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <ChartContainer 
+                  config={{
+                    scheduled: {
+                      label: "Scheduled",
+                      color: "hsl(var(--chart-1))"
+                    },
+                    completed: {
+                      label: "Completed",
+                      color: "hsl(var(--chart-2))"
+                    }
+                  }} 
+                  className="h-[200px] w-full"
+                >
+                  <BarChart data={activityData} accessibilityLayer barGap={4}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis 
+                      dataKey="day" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tickMargin={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="scheduled" fill="var(--color-scheduled)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="completed" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
               ) : (
                 <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
                   <Calendar className="h-12 w-12 mb-3 opacity-30" />

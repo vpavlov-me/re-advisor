@@ -95,7 +95,7 @@ function EditorToolbar({ editor }: EditorToolbarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-0.5 p-2 border-b bg-muted/20 flex-wrap">
+      <div className="flex items-center gap-0.5 p-2 border-b bg-card flex-wrap">
         {/* Undo/Redo */}
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
@@ -379,7 +379,7 @@ export function RichTextEditor({
       <div className="flex-1 overflow-auto">
         <EditorContent editor={editor} className="h-full" />
       </div>
-      <div className="p-2 border-t bg-muted/10 flex justify-between items-center text-xs text-muted-foreground">
+      <div className="p-2 border-t bg-card flex justify-between items-center text-xs text-muted-foreground">
         <span>{getWordCount()} words</span>
         <span>{getCharacterCount()} characters</span>
       </div>

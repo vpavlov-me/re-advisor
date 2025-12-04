@@ -466,6 +466,11 @@ export default function ServicesPage() {
         </div>
       </div>
 
+      {/* Page Header */}
+      <div className="container py-6">
+        <h1 className="text-3xl font-bold">My Services</h1>
+      </div>
+
       {/* Sub Navigation */}
       <div className="bg-card border-b border-border">
         <div className="container">

@@ -287,11 +287,14 @@ export default function SubscriptionPage() {
         </div>
       </div>
 
-      <div className="container py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Subscription</h1>
-            <p className="text-muted-foreground mt-1">Manage your subscription plan and limits</p>
+            <h1 className="text-3xl font-bold tracking-tight">Subscription</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your subscription plan and usage limits.
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

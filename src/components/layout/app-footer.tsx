@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Logo } from "@/components/ui/logo";
 
 export function AppFooter() {
@@ -119,9 +119,7 @@ export function AppFooter() {
               Sitemap
             </Link>
             <span className="text-border">·</span>
-            <button className="text-muted-foreground/70 hover:text-foreground">
-              <Settings className="h-4 w-4" />
-            </button>
+            <ThemeToggle />
           </div>
         </div>
       </div>
