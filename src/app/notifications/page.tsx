@@ -33,35 +33,39 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { NotificationSettings } from "@/components/notifications/notification-settings";
 
+type NotificationType = "message" | "consultation" | "payment" | "system" | "family" | "alert";
+
 interface Notification {
   id: number;
-  type: "message" | "consultation" | "payment" | "system" | "family";
+  type: NotificationType;
   title: string;
   description: string;
   created_at: string;
   read: boolean;
 }
 
-function getNotificationIcon(type: "message" | "consultation" | "payment" | "system" | "family") {
+function getNotificationIcon(type: NotificationType) {
   const icons = {
     message: MessageSquare,
     consultation: Calendar,
     payment: DollarSign,
     system: Info,
     family: Users,
+    alert: AlertCircle,
   };
-  return icons[type];
+  return icons[type] || Info;
 }
 
-function getNotificationColor(type: "message" | "consultation" | "payment" | "system" | "family") {
-  const colors = {
+function getNotificationColor(type: NotificationType) {
+  const colors: Record<NotificationType, string> = {
     message: "bg-blue-100 text-blue-600",
     consultation: "bg-purple-100 text-purple-600",
     payment: "bg-green-100 text-green-600",
     system: "bg-gray-100 text-gray-600",
+    alert: "bg-yellow-100 text-yellow-600",
     family: "bg-orange-100 text-orange-600",
   };
-  return colors[type];
+  return colors[type] || "bg-gray-100 text-gray-600";
 }
 
 // Group notifications by date

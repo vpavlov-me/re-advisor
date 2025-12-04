@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Types
-type AdvisorRole = "external-consul" | "consultant" | "personal-advisor";
+type AdvisorRole = "external-consul" | "consultant" | "personal-advisor" | "lead-advisor";
 
 type Family = {
   id: number;
@@ -71,12 +71,14 @@ const getStats = (familiesList: Family[]) => [
 ];
 
 function getRoleBadge(role: AdvisorRole) {
-  const variants = {
+  const variants: Record<AdvisorRole, { className: string; label: string }> = {
     "external-consul": { className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", label: "External Consul" },
     "consultant": { className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", label: "Consultant" },
     "personal-advisor": { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Personal Family Advisor" },
+    "lead-advisor": { className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", label: "Lead Advisor" },
   };
-  return <Badge variant="secondary" className={variants[role].className}>{variants[role].label}</Badge>;
+  const variant = variants[role] || variants["consultant"];
+  return <Badge variant="secondary" className={variant.className}>{variant.label}</Badge>;
 }
 
 function getPaymentBadge(payment: "paid" | "pending" | "no-invoices") {
@@ -620,6 +622,7 @@ export default function FamiliesPage() {
                 <option value="external-consul">External Consul</option>
                 <option value="consultant">Consultant</option>
                 <option value="personal-advisor">Personal Family Advisor</option>
+                <option value="lead-advisor">Lead Advisor</option>
               </select>
             </div>
             <div className="space-y-2">
