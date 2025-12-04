@@ -173,6 +173,7 @@ export async function revokeAllOtherSessions(): Promise<{
  */
 export async function getLoginHistory(options?: {
   limit?: number;
+  status?: 'success' | 'failed' | 'blocked';
 }): Promise<{ data: LoginHistoryEntry[] | null; error: Error | null }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -184,6 +185,10 @@ export async function getLoginHistory(options?: {
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
+
+  if (options?.status) {
+    query = query.eq('status', options.status);
+  }
 
   if (options?.limit) {
     query = query.limit(options.limit);

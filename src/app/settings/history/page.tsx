@@ -65,12 +65,13 @@ export default function LoginHistoryPage() {
   const loadLoginHistory = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await getLoginHistory({ 
-        limit,
-        status: statusFilter !== "all" ? statusFilter as "success" | "failed" | "blocked" : undefined
-      });
+      const { data, error } = await getLoginHistory({ limit });
       if (error) throw error;
-      setLoginHistory(data || []);
+      // Filter by status on client side
+      const filtered = statusFilter === "all" 
+        ? data 
+        : data?.filter(entry => entry.status === statusFilter);
+      setLoginHistory(filtered || []);
     } catch (error) {
       console.error("Error loading login history:", error);
       toast.error("Failed to load login history");

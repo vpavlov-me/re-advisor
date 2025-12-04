@@ -13,17 +13,13 @@ import {
   Key,
   Smartphone,
   Monitor,
-  Globe,
   Users,
-  Clock,
   LogOut,
   Eye,
   EyeOff,
   CheckCircle,
   AlertTriangle,
   Trash2,
-  Download,
-  Lock,
   Fingerprint,
   History,
   Loader2,
@@ -48,15 +44,12 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabaseClient";
 import {
   getUserSessions,
-  getLoginHistory,
   upsertCurrentSession,
   revokeSession,
   revokeAllOtherSessions,
   parseUserAgent,
   formatLastActive,
-  formatLoginDate,
   type UserSession,
-  type LoginHistoryEntry,
 } from "@/lib/sessions";
 
 // Password change schema
@@ -89,12 +82,10 @@ export default function SettingsPage() {
   const [is2FAEnabled, setIs2FAEnabled] = useState(true);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [sessions, setSessions] = useState<UserSession[]>([]);
-  const [loginHistoryData, setLoginHistoryData] = useState<LoginHistoryEntry[]>([]);
   
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -170,22 +161,8 @@ export default function SettingsPage() {
       }
     };
     
-    const loadLoginHistory = async () => {
-      setIsLoadingHistory(true);
-      try {
-        const { data, error } = await getLoginHistory({ limit: 10 });
-        if (error) throw error;
-        setLoginHistoryData(data || []);
-      } catch (error) {
-        console.error("Error loading login history:", error);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-    
     getUser();
     loadSessions();
-    loadLoginHistory();
   }, []);
 
   const onPasswordSubmit = async (data: PasswordFormData) => {
@@ -554,61 +531,6 @@ export default function SettingsPage() {
                           )}
                         </Button>
                       )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Login History */}
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">Login History</CardTitle>
-                    <CardDescription>Recent login attempts to your account</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <History className="h-4 w-4 mr-2" />
-                    View All
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="divide-y divide-border">
-                  {isLoadingHistory ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : loginHistoryData.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No login history</p>
-                    </div>
-                  ) : loginHistoryData.map((entry) => (
-                    <div key={entry.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {entry.status === "success" ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : entry.status === "blocked" ? (
-                          <AlertTriangle className="h-5 w-5 text-red-500" />
-                        ) : (
-                          <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                        )}
-                        <div>
-                          <p className="text-sm text-foreground">{entry.device_name || 'Unknown Device'} · {entry.browser || ''}</p>
-                          <p className="text-xs text-muted-foreground">{entry.location || 'Unknown Location'}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">{formatLoginDate(entry.created_at)}</p>
-                        {entry.status === "blocked" && (
-                          <Badge variant="destructive" className="text-xs">Blocked</Badge>
-                        )}
-                        {entry.status === "failed" && (
-                          <Badge variant="outline" className="text-xs text-yellow-600">Failed</Badge>
-                        )}
-                      </div>
                     </div>
                   ))}
                 </div>
