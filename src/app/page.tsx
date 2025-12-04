@@ -31,8 +31,6 @@ import {
   CalendarClock,
   XCircle,
   Eye,
-  TrendingUp,
-  TrendingDown,
   Loader2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,23 +49,6 @@ import {
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
 import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  BarChart,
-  Bar
-} from 'recharts';
-import { 
-  ChartConfig, 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent
-} from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Icon mapping for dynamic rendering
@@ -337,10 +318,6 @@ export default function HomePage() {
   const [userName, setUserName] = useState("Advisor");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [activityData, setActivityData] = useState<any[]>([]);
-  const [hasRevenueData, setHasRevenueData] = useState(false);
-  const [hasActivityData, setHasActivityData] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -462,93 +439,6 @@ export default function HomePage() {
             preview: c.last_message,
             unread: c.unread_count
           })));
-        }
-
-        // Fetch Revenue Chart Data (last 6 months)
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        
-        const { data: monthlyRevenue } = await supabase
-          .from('transactions')
-          .select('amount, created_at')
-          .eq('advisor_id', user.id)
-          .eq('type', 'income')
-          .gte('created_at', sixMonthsAgo.toISOString());
-
-        if (monthlyRevenue && monthlyRevenue.length > 0) {
-          setHasRevenueData(true);
-          // Group by month
-          const revenueByMonth: Record<string, number> = {};
-          const consultsByMonth: Record<string, number> = {};
-          
-          monthlyRevenue.forEach((t: any) => {
-            const date = new Date(t.created_at);
-            const monthKey = date.toLocaleString('en-US', { month: 'short' });
-            const amount = parseFloat(t.amount?.replace(/[^0-9.-]+/g, "") || "0");
-            revenueByMonth[monthKey] = (revenueByMonth[monthKey] || 0) + amount;
-            consultsByMonth[monthKey] = (consultsByMonth[monthKey] || 0) + 1;
-          });
-
-          // Convert to chart format
-          const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
-          const currentMonth = new Date().getMonth();
-          const last6Months = [];
-          for (let i = 5; i >= 0; i--) {
-            const monthIndex = (currentMonth - i + 12) % 12;
-            last6Months.push(months[monthIndex]);
-          }
-
-          const newChartData = last6Months.map(month => ({
-            month,
-            revenue: revenueByMonth[month] || 0,
-            consultations: consultsByMonth[month] || 0
-          }));
-          
-          setChartData(newChartData);
-        } else {
-          setHasRevenueData(false);
-          setChartData([]);
-        }
-
-        // Fetch Activity Chart Data (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const { data: weeklyConsultations } = await supabase
-          .from('consultations')
-          .select('date, status')
-          .eq('advisor_id', user.id)
-          .gte('date', sevenDaysAgo.toISOString().split('T')[0]);
-
-        if (weeklyConsultations && weeklyConsultations.length > 0) {
-          setHasActivityData(true);
-          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const activityByDay: Record<string, { scheduled: number; completed: number }> = {};
-          
-          days.forEach(day => {
-            activityByDay[day] = { scheduled: 0, completed: 0 };
-          });
-
-          weeklyConsultations.forEach((c: any) => {
-            const date = new Date(c.date);
-            const dayName = days[date.getDay()];
-            if (c.status === 'scheduled') {
-              activityByDay[dayName].scheduled++;
-            } else if (c.status === 'completed') {
-              activityByDay[dayName].completed++;
-            }
-          });
-
-          const newActivityData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
-            day,
-            scheduled: activityByDay[day].scheduled,
-            completed: activityByDay[day].completed
-          }));
-
-          setActivityData(newActivityData);
-        } else {
-          setHasActivityData(false);
-          setActivityData([]);
         }
       }
     } catch (error) {
@@ -750,133 +640,6 @@ export default function HomePage() {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Analytics Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Revenue Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">Revenue Overview</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Last 6 months</p>
-                </div>
-                {hasRevenueData && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-green-600">
-                      <TrendingUp className="h-4 w-4" />
-                      <span className="text-sm font-medium">+18%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasRevenueData ? (
-                <ChartContainer 
-                  config={{
-                    revenue: {
-                      label: "Revenue",
-                      color: "hsl(var(--chart-1))"
-                    }
-                  }} 
-                  className="h-[200px] w-full"
-                >
-                  <AreaChart data={chartData} accessibilityLayer>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid vertical={false} />
-                    <XAxis 
-                      dataKey="month" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tickMargin={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                      tickFormatter={(value) => `$${value/1000}k`}
-                    />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent formatter={(value) => `$${Number(value).toLocaleString()}`} />}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="var(--color-revenue)" 
-                      strokeWidth={2}
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              ) : (
-                <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
-                  <DollarSign className="h-12 w-12 mb-3 opacity-30" />
-                  <p className="text-sm font-medium">No revenue data yet</p>
-                  <p className="text-xs mt-1">Complete your first paid consultation to see stats</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Consultation Activity Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">Weekly Activity</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Scheduled vs Completed</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasActivityData ? (
-                <ChartContainer 
-                  config={{
-                    scheduled: {
-                      label: "Scheduled",
-                      color: "hsl(var(--chart-1))"
-                    },
-                    completed: {
-                      label: "Completed",
-                      color: "hsl(var(--chart-2))"
-                    }
-                  }} 
-                  className="h-[200px] w-full"
-                >
-                  <BarChart data={activityData} accessibilityLayer barGap={4}>
-                    <CartesianGrid vertical={false} />
-                    <XAxis 
-                      dataKey="day" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tickMargin={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    <Bar dataKey="scheduled" fill="var(--color-scheduled)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="completed" fill="var(--color-completed)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ChartContainer>
-              ) : (
-                <div className="h-[200px] w-full flex flex-col items-center justify-center text-muted-foreground">
-                  <Calendar className="h-12 w-12 mb-3 opacity-30" />
-                  <p className="text-sm font-medium">No activity this week</p>
-                  <p className="text-xs mt-1">Schedule consultations to see your weekly activity</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Main Content Grid */}
