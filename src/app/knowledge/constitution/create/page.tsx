@@ -12,8 +12,6 @@ import {
   MoreVertical,
   FileText,
   Layout,
-  Type,
-  ListOrdered,
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { supabase } from "@/lib/supabaseClient";
 
 // Predefined Sections (BR-KC-007: Constitution Template Structure)
@@ -79,7 +78,9 @@ export default function CreateConstitutionTemplatePage() {
   };
 
   const calculateProgress = () => {
-    const filledSections = Object.values(templateData.sections).filter(content => content.trim().length > 0).length;
+    const filledSections = Object.values(templateData.sections).filter(
+      content => content.trim().length > 0 && content !== "<p></p>"
+    ).length;
     return Math.round((filledSections / SECTIONS.length) * 100);
   };
 
@@ -201,7 +202,8 @@ export default function CreateConstitutionTemplatePage() {
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-1">
                 {SECTIONS.map((section) => {
-                  const isFilled = templateData.sections[section.id].trim().length > 0;
+                  const content = templateData.sections[section.id];
+                  const isFilled = content.trim().length > 0 && content !== "<p></p>";
                   const isActive = activeSection === section.id;
                   
                   return (
@@ -266,29 +268,16 @@ export default function CreateConstitutionTemplatePage() {
                 </DropdownMenu>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 p-0 flex flex-col">
-              {/* Toolbar */}
-              <div className="flex items-center gap-1 p-2 border-b bg-muted/20">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><Type className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 font-bold">B</Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 italic">I</Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 underline">U</Button>
-                <Separator orientation="vertical" className="h-4 mx-1" />
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><ListOrdered className="h-4 w-4" /></Button>
-              </div>
-              
-              {/* Editor */}
-              <Textarea 
-                className="flex-1 resize-none border-0 focus-visible:ring-0 p-6 text-base leading-relaxed"
+            <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
+              {/* Rich Text Editor */}
+              <RichTextEditor
+                content={templateData.sections[activeSection]}
+                onChange={(content) => handleSectionChange(activeSection, content)}
                 placeholder={`Start writing the ${SECTIONS.find(s => s.id === activeSection)?.title} here...`}
-                value={templateData.sections[activeSection]}
-                onChange={(e) => handleSectionChange(activeSection, e.target.value)}
+                className="flex-1 border-0 rounded-none"
               />
             </CardContent>
-            <div className="p-4 border-t bg-muted/10 flex justify-between items-center">
-              <div className="text-xs text-muted-foreground">
-                {templateData.sections[activeSection].length} characters
-              </div>
+            <div className="p-4 border-t bg-muted/10 flex justify-end items-center">
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -373,19 +362,20 @@ export default function CreateConstitutionTemplatePage() {
               
               {SECTIONS.map((section) => {
                 const content = templateData.sections[section.id];
-                if (!content) return null;
+                if (!content || content === "<p></p>") return null;
                 
                 return (
                   <div key={section.id} className="space-y-4">
                     <h2 className="text-2xl font-semibold border-b pb-2">{section.title}</h2>
-                    <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
-                      {content}
-                    </div>
+                    <div 
+                      className="prose prose-sm max-w-none text-muted-foreground"
+                      dangerouslySetInnerHTML={{ __html: content }}
+                    />
                   </div>
                 );
               })}
               
-              {Object.values(templateData.sections).every(c => !c) && (
+              {Object.values(templateData.sections).every(c => !c || c === "<p></p>") && (
                 <div className="text-center py-12 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
                   <p>No content added yet.</p>
