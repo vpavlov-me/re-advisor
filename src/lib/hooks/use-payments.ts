@@ -78,66 +78,74 @@ export function usePayments(): UsePaymentsResult {
         return;
       }
 
-      // Fetch all data in parallel
-      const [
-        subscriptionResult,
-        accountResult,
-        balanceResult,
-        transactionsResult,
-      ] = await Promise.all([
+      // Fetch all data in parallel with individual error handling
+      const results = await Promise.allSettled([
         getSubscription(),
         getStripeAccountStatus(),
         getBalance(),
         getTransactions(20),
       ]);
 
+      // Process results safely
+      const [
+        subscriptionResult,
+        accountResult,
+        balanceResult,
+        transactionsResult,
+      ] = results;
+
       // Set subscription
-      if (subscriptionResult.error) {
-        console.warn('Subscription error:', subscriptionResult.error);
+      if (subscriptionResult.status === 'fulfilled' && !subscriptionResult.value.error) {
+        setSubscription(subscriptionResult.value.subscription);
       } else {
-        setSubscription(subscriptionResult.subscription);
+        console.warn('Subscription fetch failed:', subscriptionResult);
       }
 
       // Set Stripe account
-      if (accountResult.error) {
-        console.warn('Stripe account error:', accountResult.error);
+      if (accountResult.status === 'fulfilled' && !accountResult.value.error) {
+        setStripeAccount(accountResult.value.account);
       } else {
-        setStripeAccount(accountResult.account);
+        console.warn('Stripe account fetch failed:', accountResult);
       }
 
       // Set balance
-      if (balanceResult.error) {
-        console.warn('Balance error:', balanceResult.error);
-      } else {
+      if (balanceResult.status === 'fulfilled' && !balanceResult.value.error) {
         setBalance({
-          available: balanceResult.available,
-          pending: balanceResult.pending,
+          available: balanceResult.value.available,
+          pending: balanceResult.value.pending,
         });
+      } else {
+        console.warn('Balance fetch failed:', balanceResult);
       }
 
       // Set transactions
-      if (transactionsResult.error) {
-        console.warn('Transactions error:', transactionsResult.error);
+      if (transactionsResult.status === 'fulfilled' && !transactionsResult.value.error) {
+        setTransactions(transactionsResult.value.transactions);
       } else {
-        setTransactions(transactionsResult.transactions);
+        console.warn('Transactions fetch failed:', transactionsResult);
       }
 
-      // Fetch payment methods from Supabase
-      const { data: methods } = await supabase
-        .from('payment_methods')
-        .select('*')
-        .eq('advisor_id', user.id)
-        .order('is_default', { ascending: false });
+      // Fetch payment methods from Supabase with error handling
+      try {
+        const { data: methods, error: methodsError } = await supabase
+          .from('payment_methods')
+          .select('*')
+          .eq('advisor_id', user.id)
+          .order('is_default', { ascending: false });
 
-      if (methods) {
-        setPaymentMethods(methods.map(m => ({
-          id: m.id,
-          type: m.type as 'card' | 'bank',
-          brand: m.brand || undefined,
-          last4: m.last4 || '',
-          expiry: m.expiry || undefined,
-          isDefault: m.is_default || false,
-        })));
+        if (!methodsError && methods) {
+          setPaymentMethods(methods.map(m => ({
+            id: m.id,
+            type: m.type as 'card' | 'bank',
+            brand: m.brand || undefined,
+            last4: m.last4 || '',
+            expiry: m.expiry || undefined,
+            isDefault: m.is_default || false,
+          })));
+        }
+      } catch (pmError) {
+        console.warn('Payment methods fetch failed:', pmError);
+        // Keep empty array, don't crash
       }
 
     } catch (err) {

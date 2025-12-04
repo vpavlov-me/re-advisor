@@ -233,89 +233,102 @@ export default function PaymentsPage() {
           return;
         }
 
-        // Fetch Payment Methods for this advisor
-        const { data: methods, error: methodsError } = await supabase
-          .from('payment_methods')
-          .select('*')
-          .eq('advisor_id', user.id)
-          .order('is_default', { ascending: false });
-        if (methodsError) throw methodsError;
-        
-        if (methods && methods.length > 0) {
-          setPaymentMethods(methods.map((m: any) => ({
-            id: m.id,
-            type: m.type,
-            brand: m.brand,
-            last4: m.last4,
-            expiry: m.expiry,
-            isDefault: m.is_default
-          })));
+        // Fetch Payment Methods for this advisor (safe - don't throw on error)
+        try {
+          const { data: methods, error: methodsError } = await supabase
+            .from('payment_methods')
+            .select('*')
+            .eq('advisor_id', user.id)
+            .order('is_default', { ascending: false });
+          
+          if (!methodsError && methods && methods.length > 0) {
+            setPaymentMethods(methods.map((m: any) => ({
+              id: m.id,
+              type: m.type,
+              brand: m.brand,
+              last4: m.last4,
+              expiry: m.expiry,
+              isDefault: m.is_default
+            })));
+          }
+        } catch (e) {
+          console.warn("Could not fetch payment methods:", e);
         }
 
-        // Fetch Bank Accounts for this advisor
-        const { data: banks, error: banksError } = await supabase
-          .from('bank_accounts')
-          .select('*')
-          .eq('advisor_id', user.id)
-          .order('is_default', { ascending: false });
-        if (banksError) throw banksError;
-        
-        if (banks && banks.length > 0) {
-          setBankAccountsList(banks.map((b: any) => ({
-            id: b.id,
-            bankName: b.bank_name,
-            accountType: b.account_type,
-            last4: b.last4,
-            isDefault: b.is_default
-          })));
+        // Fetch Bank Accounts for this advisor (safe - don't throw on error)
+        try {
+          const { data: banks, error: banksError } = await supabase
+            .from('bank_accounts')
+            .select('*')
+            .eq('advisor_id', user.id)
+            .order('is_default', { ascending: false });
+          
+          if (!banksError && banks && banks.length > 0) {
+            setBankAccountsList(banks.map((b: any) => ({
+              id: b.id,
+              bankName: b.bank_name,
+              accountType: b.account_type,
+              last4: b.last4,
+              isDefault: b.is_default
+            })));
+          }
+        } catch (e) {
+          console.warn("Could not fetch bank accounts:", e);
         }
 
-        // Fetch Transactions for this advisor
-        const { data: txs, error: txsError } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('advisor_id', user.id)
-          .order('date', { ascending: false });
-        if (txsError) throw txsError;
-        
-        if (txs && txs.length > 0) {
-          setTransactions(txs.map((t: any) => ({
-            id: t.id,
-            date: new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            description: t.description,
-            amount: t.amount,
-            status: t.status,
-            type: t.type,
-            invoiceId: t.invoice_id
-          })));
-          // Calculate balance from pending income
-          const pendingBalance = txs
-            .filter((t: any) => t.type === 'income' && t.status === 'completed')
-            .reduce((sum: number, t: any) => {
-              const amtStr = t.amount?.toString() || '0';
-              const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
-              return sum + amt;
-            }, 0);
-          // Subtract payouts
-          const payoutsTotal = txs
-            .filter((t: any) => t.type === 'payout' && t.status === 'completed')
-            .reduce((sum: number, t: any) => {
-              const amtStr = t.amount?.toString() || '0';
-              const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
-              return sum + amt;
-            }, 0);
-          setBalance(Math.max(0, pendingBalance - payoutsTotal));
+        // Fetch Transactions for this advisor (safe - don't throw on error)
+        try {
+          const { data: txs, error: txsError } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('advisor_id', user.id)
+            .order('date', { ascending: false });
+          
+          if (!txsError && txs && txs.length > 0) {
+            setTransactions(txs.map((t: any) => ({
+              id: t.id,
+              date: new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              description: t.description,
+              amount: t.amount,
+              status: t.status,
+              type: t.type,
+              invoiceId: t.invoice_id
+            })));
+            // Calculate balance from pending income
+            const pendingBalance = txs
+              .filter((t: any) => t.type === 'income' && t.status === 'completed')
+              .reduce((sum: number, t: any) => {
+                const amtStr = t.amount?.toString() || '0';
+                const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
+                return sum + amt;
+              }, 0);
+            // Subtract payouts
+            const payoutsTotal = txs
+              .filter((t: any) => t.type === 'payout' && t.status === 'completed')
+              .reduce((sum: number, t: any) => {
+                const amtStr = t.amount?.toString() || '0';
+                const amt = parseFloat(amtStr.replace(/[^0-9.-]+/g, '')) || 0;
+                return sum + amt;
+              }, 0);
+            setBalance(Math.max(0, pendingBalance - payoutsTotal));
+          }
+        } catch (e) {
+          console.warn("Could not fetch transactions:", e);
         }
 
-        // Check Stripe Connect status
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('stripe_customer_id')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile?.stripe_customer_id) {
-          setIsStripeConnected(true);
+        // Check Stripe Connect status (safe)
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('stripe_customer_id')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile?.stripe_customer_id) {
+            setIsStripeConnected(true);
+          }
+        } catch (e) {
+          console.warn("Could not fetch profile:", e);
         }
       } catch (error) {
         console.error("Error fetching payment data:", error);
