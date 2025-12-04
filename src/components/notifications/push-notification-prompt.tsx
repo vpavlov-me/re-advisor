@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/lib/hooks/use-push-notifications";
+import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 export function PushNotificationPrompt() {
   const { isSupported, isSubscribed, permission, enable, loading } = usePushNotifications();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const [visible, setVisible] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -23,7 +25,13 @@ export function PushNotificationPrompt() {
 
   // Handle visibility based on subscription status
   useEffect(() => {
-    if (!initialCheckDone) return;
+    if (!initialCheckDone || authLoading) return;
+    
+    // Don't show if user is not authenticated
+    if (!isAuthenticated) {
+      setVisible(false);
+      return;
+    }
     
     // Hide immediately if subscribed or permission granted/denied
     if (isSubscribed || permission === 'granted' || permission === 'denied') {
@@ -35,18 +43,19 @@ export function PushNotificationPrompt() {
     if (dismissed) return;
 
     // Show prompt after a delay if:
-    // 1. Push is supported
-    // 2. User is not subscribed
-    // 3. Permission is 'default' (not yet asked)
-    // 4. User hasn't dismissed the prompt
+    // 1. User is authenticated
+    // 2. Push is supported
+    // 3. User is not subscribed
+    // 4. Permission is 'default' (not yet asked)
+    // 5. User hasn't dismissed the prompt
     const timer = setTimeout(() => {
-      if (isSupported && !isSubscribed && permission === 'default' && !dismissed) {
+      if (isAuthenticated && isSupported && !isSubscribed && permission === 'default' && !dismissed) {
         setVisible(true);
       }
     }, 3000); // Show after 3 seconds
 
     return () => clearTimeout(timer);
-  }, [isSupported, isSubscribed, permission, dismissed, initialCheckDone]);
+  }, [isAuthenticated, authLoading, isSupported, isSubscribed, permission, dismissed, initialCheckDone]);
 
   const handleEnable = async () => {
     await enable();

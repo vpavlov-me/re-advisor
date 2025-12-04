@@ -39,11 +39,19 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // Initialize on mount
   useEffect(() => {
     async function init() {
+      setLoading(true);
+      
       const supported = isPushSupported();
       setIsSupported(supported);
       setPermission(getNotificationPermission());
 
-      if (supported && user) {
+      // If not supported or no user, stop here
+      if (!supported || !user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
         // Initialize service worker
         await initializePushNotifications(user.id);
 
@@ -56,6 +64,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         if (data) {
           setPreferences(data);
         }
+      } catch (err) {
+        console.error('Failed to initialize push notifications:', err);
       }
 
       setLoading(false);
