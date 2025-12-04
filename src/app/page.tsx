@@ -652,9 +652,9 @@ export default function HomePage() {
 
       <div className="container py-6 space-y-6">
         {/* Welcome Banner */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-wrap items-center gap-2 text-lg sm:text-2xl">
+        <Card className="overflow-hidden relative">
+          <CardContent className="p-6 sm:p-8 relative z-10">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xl sm:text-2xl tracking-tight max-w-[65%] sm:max-w-[70%]">
               <span className="text-muted-foreground">Welcome Back,</span>
               <div className="flex items-center gap-1.5">
                 <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
@@ -665,20 +665,28 @@ export default function HomePage() {
               </div>
               <span className="text-muted-foreground">You Have</span>
               <div className="flex items-center gap-1 text-foreground">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="font-medium">{consultations.length} Meetings</span>
               </div>
               <div className="flex items-center gap-1 text-foreground">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="font-medium">0 tasks today</span>
               </div>
-              <span className="text-muted-foreground hidden sm:inline">and</span>
+              <span className="text-muted-foreground">and</span>
               <div className="flex items-center gap-1 text-foreground">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="font-medium">Monthly revenue is {stats.find(s => s.label === "Monthly revenue")?.value}</span>
               </div>
             </div>
           </CardContent>
+          {/* Decorative Shape Image */}
+          <div className="absolute -right-16 sm:-right-8 -top-32 sm:-top-24 w-[400px] sm:w-[500px] h-[400px] sm:h-[500px] pointer-events-none flex items-center justify-center">
+            <img 
+              src="/images/Shape.png" 
+              alt="" 
+              className="w-[85%] h-[85%] object-contain opacity-90 animate-float"
+            />
+          </div>
         </Card>
 
         {/* Profile Setup Card */}
