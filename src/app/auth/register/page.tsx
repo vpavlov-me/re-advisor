@@ -164,7 +164,6 @@ export default function RegisterPage() {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
-                      name="firstName"
                       type="text"
                       placeholder="John"
                       autoComplete="given-name"
@@ -180,7 +179,6 @@ export default function RegisterPage() {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
-                      name="lastName"
                       type="text"
                       placeholder="Doe"
                       autoComplete="family-name"
@@ -198,7 +196,6 @@ export default function RegisterPage() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    name="email"
                     type="email"
                     placeholder="m@example.com"
                     autoComplete="username email"
@@ -220,7 +217,6 @@ export default function RegisterPage() {
                     <div className="relative">
                       <Input 
                         id="password"
-                        name="password" 
                         type={showPassword ? "text" : "password"} 
                         autoComplete="new-password"
                         className={cn(
@@ -252,7 +248,6 @@ export default function RegisterPage() {
                     <div className="relative">
                       <Input 
                         id="confirmPassword"
-                        name="confirmPassword" 
                         type={showConfirm ? "text" : "password"} 
                         autoComplete="new-password"
                         className={cn(

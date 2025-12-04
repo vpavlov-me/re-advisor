@@ -260,7 +260,6 @@ function ResetPasswordContent() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="new-password"
-                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a new password"
                     autoComplete="new-password"
@@ -297,7 +296,6 @@ function ResetPasswordContent() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="confirm-password"
-                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your new password"
                     autoComplete="new-password"
