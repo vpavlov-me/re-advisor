@@ -2,22 +2,25 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 import { 
   ChevronLeft, 
   Save, 
   Upload, 
   Plus, 
-  GripVertical, 
   Trash2, 
   FileText, 
   Video, 
-  BookOpen, 
-  MoreVertical,
+  BookOpen,
   ArrowUp,
   ArrowDown,
   Search,
   X,
-  Eye
+  Eye,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +32,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -44,73 +55,266 @@ import {
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Mock Resources for Selector
-const availableResources = [
-  { id: "1", title: "Family Constitution Template v2.0", type: "constitution-template" },
-  { id: "2", title: "Succession Planning Guide", type: "guide" },
-  { id: "3", title: "Quarterly Review Checklist", type: "checklist" },
-  { id: "4", title: "Intro to Family Governance", type: "video" },
-  { id: "5", title: "Conflict Resolution Framework", type: "document" },
-  { id: "6", title: "Wealth Stewardship Principles", type: "article" },
-];
-
 type Module = {
   id: string;
+  dbId?: number;
   title: string;
   description: string;
-  resources: string[]; // IDs of resources
+  estimatedDuration: number;
+  resources: ResourceItem[];
 };
 
-// Mock existing data
-const mockPathData = {
-  id: "lp-1",
-  title: "Next-Gen Leadership Program",
-  description: "A comprehensive program designed to prepare the next generation for leadership roles within the family enterprise.",
-  category: "leadership",
-  modules: [
-    { 
-      id: "m1", 
-      title: "Understanding Family Legacy", 
-      description: "Exploring the history and values that built the family enterprise.", 
-      resources: ["4", "6"] 
-    },
-    { 
-      id: "m2", 
-      title: "Financial Literacy Basics", 
-      description: "Core financial concepts every family member should know.", 
-      resources: ["2"] 
-    }
-  ]
+type ResourceItem = {
+  id: string;
+  title: string;
+  type: string;
 };
+
+interface LearningPath {
+  id: number;
+  advisor_id: string;
+  title: string;
+  description: string | null;
+  difficulty: string | null;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function EditLearningPathClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [title, setTitle] = useState(mockPathData.title);
-  const [description, setDescription] = useState(mockPathData.description);
-  const [category, setCategory] = useState(mockPathData.category);
-  const [modules, setModules] = useState<Module[]>(mockPathData.modules);
-  const [activeModuleId, setActiveModuleId] = useState<string>("m1");
+  const router = useRouter();
+  
+  const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [difficulty, setDifficulty] = useState("beginner");
+  const [modules, setModules] = useState<Module[]>([]);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [availableResources, setAvailableResources] = useState<ResourceItem[]>([]);
+  const [resourceSearch, setResourceSearch] = useState("");
 
   const activeModule = modules.find(m => m.id === activeModuleId);
 
-  const addModule = () => {
-    const newId = `m${modules.length + 1}`;
-    setModules([...modules, { id: newId, title: "New Module", description: "", resources: [] }]);
-    setActiveModuleId(newId);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const numericId = parseInt(id, 10);
+        if (isNaN(numericId)) {
+          toast.error("Invalid learning path ID");
+          router.push("/knowledge");
+          return;
+        }
+
+        // Fetch learning path
+        const { data: pathData, error: pathError } = await supabase
+          .from('learning_paths')
+          .select('*')
+          .eq('id', numericId)
+          .single();
+
+        if (pathError) throw pathError;
+
+        if (!pathData) {
+          toast.error("Learning path not found");
+          router.push("/knowledge");
+          return;
+        }
+
+        setLearningPath(pathData);
+        setTitle(pathData.title);
+        setDescription(pathData.description || "");
+        setDifficulty(pathData.difficulty || "beginner");
+
+        // Fetch steps
+        const { data: stepsData, error: stepsError } = await supabase
+          .from('learning_path_steps')
+          .select('*')
+          .eq('learning_path_id', numericId)
+          .order('step_order');
+
+        if (stepsError) {
+          console.error("Error fetching steps:", stepsError);
+        }
+
+        // Convert steps to modules
+        if (stepsData && stepsData.length > 0) {
+          const loadedModules: Module[] = stepsData.map((step, index) => ({
+            id: `m${index + 1}`,
+            dbId: step.id,
+            title: step.title,
+            description: step.description || "",
+            estimatedDuration: step.estimated_duration_minutes || 0,
+            resources: []
+          }));
+          setModules(loadedModules);
+          setActiveModuleId(loadedModules[0].id);
+        } else {
+          const defaultModule: Module = {
+            id: "m1",
+            title: "Introduction",
+            description: "",
+            estimatedDuration: 0,
+            resources: []
+          };
+          setModules([defaultModule]);
+          setActiveModuleId("m1");
+        }
+
+        // Fetch available resources
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: resourcesData } = await supabase
+            .from('knowledge_resources')
+            .select('id, title, type')
+            .eq('advisor_id', user.id)
+            .eq('is_published', true);
+
+          if (resourcesData) {
+            setAvailableResources(resourcesData.map(r => ({
+              id: r.id.toString(),
+              title: r.title,
+              type: r.type
+            })));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching learning path:", error);
+        toast.error("Failed to load learning path");
+        router.push("/knowledge");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, router]);
+
+  const handleSave = async (publish = false) => {
+    if (!learningPath || !title.trim()) {
+      toast.error("Please enter a title for the learning path");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { error: pathError } = await supabase
+        .from('learning_paths')
+        .update({
+          title,
+          description,
+          difficulty,
+          is_published: publish ? true : learningPath.is_published,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', learningPath.id);
+
+      if (pathError) throw pathError;
+
+      await supabase
+        .from('learning_path_steps')
+        .delete()
+        .eq('learning_path_id', learningPath.id);
+
+      if (modules.length > 0) {
+        const steps = modules.map((module, index) => ({
+          learning_path_id: learningPath.id,
+          title: module.title,
+          description: module.description,
+          step_order: index + 1,
+          estimated_duration_minutes: module.estimatedDuration || null
+        }));
+
+        const { error: stepsError } = await supabase
+          .from('learning_path_steps')
+          .insert(steps);
+
+        if (stepsError) {
+          console.error("Error saving steps:", stepsError);
+        }
+      }
+
+      setLearningPath({
+        ...learningPath,
+        title,
+        description,
+        difficulty,
+        is_published: publish ? true : learningPath.is_published,
+        updated_at: new Date().toISOString()
+      });
+
+      toast.success(publish ? "Learning path published!" : "Changes saved!");
+    } catch (error) {
+      console.error("Error saving learning path:", error);
+      toast.error("Failed to save learning path");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const updateModule = (id: string, field: keyof Module, value: any) => {
+  const handleDelete = async () => {
+    if (!learningPath) return;
+
+    setIsDeleting(true);
+    try {
+      await supabase
+        .from('learning_path_steps')
+        .delete()
+        .eq('learning_path_id', learningPath.id);
+
+      const { error } = await supabase
+        .from('learning_paths')
+        .delete()
+        .eq('id', learningPath.id);
+
+      if (error) throw error;
+
+      toast.success("Learning path deleted");
+      router.push("/knowledge");
+    } catch (error) {
+      console.error("Error deleting learning path:", error);
+      toast.error("Failed to delete learning path");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const addModule = () => {
+    const newId = `m${modules.length + 1}-${Date.now()}`;
+    const newModule: Module = {
+      id: newId,
+      title: "New Module",
+      description: "",
+      estimatedDuration: 0,
+      resources: []
+    };
+    setModules([...modules, newModule]);
+    setActiveModuleId(newId);
+    toast.success("New module added");
+  };
+
+  const updateModule = (id: string, field: keyof Module, value: unknown) => {
     setModules(modules.map(m => m.id === id ? { ...m, [field]: value } : m));
   };
 
   const deleteModule = (id: string) => {
-    if (modules.length === 1) return;
+    if (modules.length === 1) {
+      toast.error("Cannot delete the only module");
+      return;
+    }
     const newModules = modules.filter(m => m.id !== id);
     setModules(newModules);
     if (activeModuleId === id) {
       setActiveModuleId(newModules[0].id);
     }
+    toast.success("Module deleted");
   };
 
   const moveModule = (index: number, direction: 'up' | 'down') => {
@@ -123,18 +327,55 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
     setModules(newModules);
   };
 
-  const addResourceToModule = (resourceId: string) => {
+  const addResourceToModule = (resource: ResourceItem) => {
     if (!activeModule) return;
-    if (activeModule.resources.includes(resourceId)) return;
+    if (activeModule.resources.some(r => r.id === resource.id)) {
+      toast.error("Resource already added");
+      return;
+    }
     
-    updateModule(activeModule.id, "resources", [...activeModule.resources, resourceId]);
+    updateModule(activeModule.id, "resources", [...activeModule.resources, resource]);
     setIsResourceDialogOpen(false);
+    toast.success(`"${resource.title}" added`);
   };
 
   const removeResourceFromModule = (resourceId: string) => {
     if (!activeModule) return;
-    updateModule(activeModule.id, "resources", activeModule.resources.filter(id => id !== resourceId));
+    updateModule(activeModule.id, "resources", activeModule.resources.filter(r => r.id !== resourceId));
+    toast.success("Resource removed");
   };
+
+  const filteredResources = availableResources.filter(r => 
+    r.title.toLowerCase().includes(resourceSearch.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading learning path...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!learningPath) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <h2 className="text-lg font-semibold">Learning Path Not Found</h2>
+          <Link href="/knowledge">
+            <Button variant="outline">
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Back to Knowledge Center
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -148,8 +389,15 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
               </Button>
             </Link>
             <div>
-              <h1 className="text-lg font-semibold">Edit Learning Path</h1>
-              <div className="text-xs text-muted-foreground">Last saved 2 minutes ago</div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold">Edit Learning Path</h1>
+                <Badge variant={learningPath.is_published ? "default" : "outline"}>
+                  {learningPath.is_published ? "Published" : "Draft"}
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Last updated {new Date(learningPath.updated_at).toLocaleDateString()}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -159,13 +407,23 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
                 Preview
               </Button>
             </Link>
-            <Button variant="outline">
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
+            <Button variant="outline" onClick={() => handleSave(false)} disabled={isSaving}>
+              {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Save
             </Button>
-            <Button>
-              <Upload className="h-4 w-4 mr-2" />
-              Publish Updates
+            {!learningPath.is_published && (
+              <Button onClick={() => handleSave(true)} disabled={isSaving}>
+                {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                Publish
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -184,16 +442,15 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={category} onValueChange={setCategory}>
+                <Label>Difficulty</Label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="governance">Governance</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="leadership">Leadership</SelectItem>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -211,7 +468,7 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base">Modules</CardTitle>
+              <CardTitle className="text-base">Modules ({modules.length})</CardTitle>
               <Button size="sm" variant="ghost" onClick={addModule}>
                 <Plus className="h-4 w-4" />
               </Button>
@@ -250,7 +507,10 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate">{module.title}</div>
-                      <div className="text-xs text-muted-foreground">{module.resources.length} resources</div>
+                      <div className="text-xs text-muted-foreground">
+                        {module.resources.length} resources
+                        {module.estimatedDuration > 0 && ` • ${module.estimatedDuration}m`}
+                      </div>
                     </div>
                     <Button 
                       variant="ghost" 
@@ -286,12 +546,25 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
                       onChange={(e) => updateModule(activeModule.id, "title", e.target.value)} 
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Estimated Duration (minutes)</Label>
+                      <Input 
+                        type="number"
+                        min="0"
+                        value={activeModule.estimatedDuration || ""} 
+                        onChange={(e) => updateModule(activeModule.id, "estimatedDuration", parseInt(e.target.value) || 0)} 
+                        placeholder="e.g., 30"
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <Label>Module Description</Label>
                     <Textarea 
                       value={activeModule.description} 
                       onChange={(e) => updateModule(activeModule.id, "description", e.target.value)} 
                       placeholder="Describe what this module covers..."
+                      rows={4}
                     />
                   </div>
                 </div>
@@ -309,35 +582,38 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
 
                   {activeModule.resources.length > 0 ? (
                     <div className="space-y-2">
-                      {activeModule.resources.map((resourceId) => {
-                        const resource = availableResources.find(r => r.id === resourceId);
-                        if (!resource) return null;
-                        return (
-                          <div key={resource.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-background rounded-md border">
-                                {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                              </div>
-                              <div>
-                                <div className="font-medium text-sm">{resource.title}</div>
-                                <Badge variant="secondary" className="text-[10px] h-5">{resource.type}</Badge>
-                              </div>
+                      {activeModule.resources.map((resource) => (
+                        <div key={resource.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-background rounded-md border">
+                              {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => removeResourceFromModule(resource.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div>
+                              <div className="font-medium text-sm">{resource.title}</div>
+                              <Badge variant="secondary" className="text-[10px] h-5">{resource.type}</Badge>
+                            </div>
                           </div>
-                        );
-                      })}
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => removeResourceFromModule(resource.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg">
                       <BookOpen className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
                       <p className="text-sm text-muted-foreground">No resources added to this module yet.</p>
+                      <Button 
+                        variant="link" 
+                        className="mt-2"
+                        onClick={() => setIsResourceDialogOpen(true)}
+                      >
+                        Add your first resource
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -363,38 +639,83 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
           <div className="py-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search resources..." className="pl-9" />
+              <Input 
+                placeholder="Search resources..." 
+                className="pl-9"
+                value={resourceSearch}
+                onChange={(e) => setResourceSearch(e.target.value)}
+              />
             </div>
             <ScrollArea className="h-[300px] border rounded-md p-4">
-              <div className="space-y-2">
-                {availableResources.map((resource) => {
-                  const isSelected = activeModule?.resources.includes(resource.id);
-                  return (
-                    <div 
-                      key={resource.id} 
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                        isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => !isSelected && addResourceToModule(resource.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-background rounded-md border">
-                          {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+              {filteredResources.length > 0 ? (
+                <div className="space-y-2">
+                  {filteredResources.map((resource) => {
+                    const isSelected = activeModule?.resources.some(r => r.id === resource.id);
+                    return (
+                      <div 
+                        key={resource.id} 
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                          isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => !isSelected && addResourceToModule(resource)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-background rounded-md border">
+                            {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{resource.title}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{resource.type}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm">{resource.title}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{resource.type}</div>
-                        </div>
+                        {isSelected && <Badge variant="secondary">Added</Badge>}
                       </div>
-                      {isSelected && <Badge variant="secondary">Added</Badge>}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">
+                    {availableResources.length === 0 
+                      ? "No published resources available."
+                      : "No resources match your search."}
+                  </p>
+                </div>
+              )}
             </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Learning Path</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{title}&quot;? This will also delete all modules and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

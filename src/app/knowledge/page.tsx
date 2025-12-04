@@ -417,6 +417,24 @@ function KnowledgeCenterContent() {
 
   // Navigate to resource detail page
   const navigateToResource = (resourceId: string, editMode = false) => {
+    // Handle constitution templates - route to dedicated page
+    if (resourceId.startsWith('ct-')) {
+      const templateId = resourceId.replace('ct-', '');
+      router.push(`/knowledge/constitution/${templateId}`);
+      return;
+    }
+    
+    // Handle learning paths - route to detail or edit page
+    if (resourceId.startsWith('lp-')) {
+      const pathId = resourceId.replace('lp-', '');
+      const url = editMode 
+        ? `/knowledge/learning-path/${pathId}/edit` 
+        : `/knowledge/learning-path/${pathId}`;
+      router.push(url);
+      return;
+    }
+    
+    // Regular resources
     const url = editMode ? `/knowledge/${resourceId}?edit=true` : `/knowledge/${resourceId}`;
     router.push(url);
   };
