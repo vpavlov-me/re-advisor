@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+
 import { Logo } from "@/components/ui/logo";
 
 export function AppFooter() {
@@ -118,8 +118,6 @@ export function AppFooter() {
             <Link href="/sitemap" className="text-sm text-muted-foreground hover:text-foreground">
               Sitemap
             </Link>
-            <span className="text-border">·</span>
-            <ThemeToggle />
           </div>
         </div>
       </div>

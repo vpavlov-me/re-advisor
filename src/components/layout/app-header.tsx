@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2, FileText } from "lucide-react";
+import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2, FileText, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,6 +35,7 @@ export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, isAuthenticated, loading } = useAuth();
+  const { setTheme, theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
 
@@ -144,6 +146,23 @@ export function AppHeader() {
                   <Crown className="mr-2 h-4 w-4" />
                   Subscription
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Theme</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
+                <Sun className="mr-2 h-4 w-4" />
+                Light
+                {theme === "light" && <span className="ml-auto text-primary">✓</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
+                <Moon className="mr-2 h-4 w-4" />
+                Dark
+                {theme === "dark" && <span className="ml-auto text-primary">✓</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer">
+                <Monitor className="mr-2 h-4 w-4" />
+                System
+                {theme === "system" && <span className="ml-auto text-primary">✓</span>}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
