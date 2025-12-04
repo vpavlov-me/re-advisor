@@ -92,6 +92,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // Resource Types
 type ResourceType = 
@@ -1930,8 +1938,8 @@ function KnowledgeCenterContent() {
         </Tabs>
       </div>
 
-      {/* Create Resource Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+      {/* Create Resource Sheet */}
+      <Sheet open={isCreateDialogOpen} onOpenChange={(open) => {
         setIsCreateDialogOpen(open);
         if (!open) {
           // Reset form when closing
@@ -1949,19 +1957,20 @@ function KnowledgeCenterContent() {
           setNewResourceType("");
         }
       }}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Resource</DialogTitle>
-            <DialogDescription>
+        <SheetContent className="w-full sm:max-w-[600px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Create New Resource</SheetTitle>
+            <SheetDescription>
               Add a new educational resource to your library.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           <form onSubmit={handleCreateResource} className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column - Basic Information */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground">Basic Information</h3>
-                
+            {/* Basic Information Card */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base">Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="type">Resource Type *</Label>
                   <Select 
@@ -2033,101 +2042,15 @@ function KnowledgeCenterContent() {
                   />
                   <p className="text-xs text-muted-foreground">{newResource.description.length}/1000</p>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="category">Category *</Label>
-                    {!isAddingCategory && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-auto p-0 text-xs text-primary"
-                        onClick={() => setIsAddingCategory(true)}
-                      >
-                        + Add New
-                      </Button>
-                    )}
-                  </div>
-                  {isAddingCategory ? (
-                    <div className="flex gap-2">
-                      <Input 
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="New category name"
-                        className="h-10"
-                      />
-                      <Button type="button" size="sm" onClick={handleAddCategory}>Add</Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingCategory(false)}>Cancel</Button>
-                    </div>
-                  ) : (
-                    <Select 
-                      value={newResource.category}
-                      onValueChange={(v) => setNewResource({...newResource, category: v})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-
-              </div>
-
-              {/* Right Column - Settings & Content */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground">Settings</h3>
-
-                <div className="space-y-2">
-                  <Label>Author</Label>
-                  <Input value="You (Auto-assigned)" disabled className="bg-muted" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="thumbnail_url">Thumbnail URL</Label>
-                  <Input 
-                    id="thumbnail_url"
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={newResource.thumbnail_url}
-                    onChange={(e) => setNewResource({...newResource, thumbnail_url: e.target.value})}
-                  />
-                  <p className="text-xs text-muted-foreground">Optional image to display with the resource</p>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="is_published"
-                    checked={newResource.is_published}
-                    onCheckedChange={(checked) => setNewResource({...newResource, is_published: !!checked})}
-                  />
-                  <label htmlFor="is_published" className="text-sm font-medium leading-none cursor-pointer">
-                    Published
-                  </label>
-                  <span className="text-xs text-muted-foreground">(visible to families when shared)</span>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_featured"
-                    checked={newResource.is_featured}
-                    onCheckedChange={(checked) => setNewResource({...newResource, is_featured: !!checked})}
-                  />
-                  <label htmlFor="is_featured" className="text-sm font-medium leading-none cursor-pointer">
-                    Featured
-                  </label>
-                  <span className="text-xs text-muted-foreground">(highlight this resource)</span>
-                </div>
-
-                <Separator className="my-4" />
-
-                {/* Content Section - Changes based on type */}
-                <h3 className="font-medium text-sm text-muted-foreground">Content</h3>
+            {/* Content Card */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base">Content</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
 
                 {/* Resource URL field */}
                 {requiresUrl(newResource.type) && (
@@ -2205,10 +2128,10 @@ function KnowledgeCenterContent() {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
+            <SheetFooter className="flex-col sm:flex-row gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSaving}>
                 Cancel
               </Button>
@@ -2224,10 +2147,10 @@ function KnowledgeCenterContent() {
                   "Create Resource"
                 )}
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Share Dialog */}
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>

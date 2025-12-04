@@ -16,7 +16,6 @@ import {
   AlertCircle,
   DollarSign,
   Calendar,
-  Users,
   Eye,
   MessageSquare,
   MoreVertical,
@@ -647,22 +646,20 @@ export default function ServiceRequestsPage() {
             <Home className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Home</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Families & Services</span>
+            <span className="text-foreground font-medium">Services</span>
           </div>
         </div>
+      </div>
+
+      {/* Page Header */}
+      <div className="container py-6">
+        <h1 className="text-3xl font-bold">Services</h1>
       </div>
 
       {/* Sub Navigation */}
       <div className="bg-card border-b border-border">
         <div className="container">
           <nav className="flex items-center gap-1 -mb-px">
-            <Link
-              href="/families"
-              className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Family Clients
-            </Link>
             <Link
               href="/services"
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
@@ -681,16 +678,6 @@ export default function ServiceRequestsPage() {
       </div>
 
       <div className="container py-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Service Requests</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage incoming service requests from families
-            </p>
-          </div>
-        </div>
-
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (

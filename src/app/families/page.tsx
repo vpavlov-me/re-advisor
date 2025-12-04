@@ -20,9 +20,7 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronLeft,
-  Trash2,
-  FileText,
-  Crown
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -292,7 +290,7 @@ export default function FamiliesPage() {
             <Home className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Home</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Families & Services</span>
+            <span className="text-foreground font-medium">Families</span>
           </div>
         </div>
       </div>
@@ -301,9 +299,9 @@ export default function FamiliesPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Families & Services</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Families</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your family clients and service offerings.
+              Manage your family clients.
             </p>
           </div>
           <Button onClick={() => setIsInviteDialogOpen(true)}>
@@ -311,33 +309,6 @@ export default function FamiliesPage() {
             Invite Family
           </Button>
         </div>
-
-        {/* Sub Navigation */}
-        <nav className="flex items-center gap-1 border-b border-border -mb-4">
-          <Button
-            variant="ghost"
-            className="relative h-12 px-4 rounded-none border-b-2 border-primary text-primary hover:text-primary"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Family Clients
-          </Button>
-          <Button
-            variant="ghost"
-            className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-            onClick={() => router.push('/services')}
-          >
-            <Crown className="h-4 w-4 mr-2" />
-            My Services
-          </Button>
-          <Button
-            variant="ghost"
-            className="relative h-12 px-4 rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-            onClick={() => router.push('/services/requests')}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Service Requests
-          </Button>
-        </nav>
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

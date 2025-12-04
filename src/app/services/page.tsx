@@ -450,7 +450,7 @@ export default function ServicesPage() {
               <Home className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Home</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-foreground font-medium">Families & Services</span>
+              <span className="text-foreground font-medium">Services</span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
@@ -468,20 +468,13 @@ export default function ServicesPage() {
 
       {/* Page Header */}
       <div className="container py-6">
-        <h1 className="text-3xl font-bold">My Services</h1>
+        <h1 className="text-3xl font-bold">Services</h1>
       </div>
 
       {/* Sub Navigation */}
       <div className="bg-card border-b border-border">
         <div className="container">
           <nav className="flex items-center gap-1 -mb-px">
-            <Link
-              href="/families"
-              className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Family Clients
-            </Link>
             <span
               className="relative h-12 px-4 inline-flex items-center rounded-none border-b-2 border-primary text-primary font-medium"
             >

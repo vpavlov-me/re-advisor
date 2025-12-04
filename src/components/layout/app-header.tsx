@@ -25,7 +25,8 @@ const navItems = [
   { label: "Dashboard", href: "/" },
   { label: "Messages", href: "/messages" },
   { label: "Consultations", href: "/consultations" },
-  { label: "Families & Services", href: "/families" },
+  { label: "Families", href: "/families" },
+  { label: "Services", href: "/services" },
   { label: "Knowledge Center", href: "/knowledge" },
 ];
 
