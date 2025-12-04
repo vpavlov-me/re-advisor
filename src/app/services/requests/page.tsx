@@ -271,200 +271,103 @@ export default function ServiceRequestsPage() {
         return;
       }
 
-      // For now, use mock data since tables might not exist yet
-      // In production, this would fetch from service_requests table
-      const mockRequests: ServiceRequest[] = [
-        {
-          id: 1,
-          request_number: "SR-20251203-1-001",
-          family_id: 1,
-          family_name: "The Anderson Family",
-          family_email: "anderson@example.com",
-          consultant_id: user.id,
-          original_service_id: 1,
-          original_service_name: "Family Governance Workshop",
-          status: "pending_consultant",
-          family_notes: "We're looking to establish our first family constitution. Would prefer sessions in the afternoon if possible.",
-          consultant_comment: null,
-          decline_reason: null,
-          original_amount: 5000,
-          additional_amount: 0,
-          total_amount: 5000,
-          estimated_timeline: null,
-          booked_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          consultant_response_deadline: new Date(Date.now() + 46 * 60 * 60 * 1000).toISOString(), // 46 hours from now
-          consultant_confirmed_at: null,
-          family_approved_at: null,
-          started_at: null,
-          completed_at: null,
-          paid_at: null,
-          items: [
-            {
-              id: 1,
-              service_request_id: 1,
-              service_id: 1,
-              service_name: "Family Governance Workshop",
-              service_description: "Comprehensive workshop to establish family governance framework",
-              price_at_booking: 5000,
-              is_original: true,
-              added_by: "family",
-            },
-          ],
-          deliverables: [],
-        },
-        {
-          id: 2,
-          request_number: "SR-20251201-2-001",
-          family_id: 2,
-          family_name: "The Williams Family",
-          family_email: "williams@example.com",
-          consultant_id: user.id,
-          original_service_id: 2,
-          original_service_name: "Succession Planning",
-          status: "in_progress",
-          family_notes: "Need help with business succession planning for our manufacturing company.",
-          consultant_comment: "Based on your notes, I recommend adding a mediation session to address any potential family conflicts during the planning process.",
-          decline_reason: null,
-          original_amount: 8000,
-          additional_amount: 2000,
-          total_amount: 10000,
-          estimated_timeline: "4-6 weeks",
-          booked_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_response_deadline: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_confirmed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          family_approved_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          started_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          completed_at: null,
-          paid_at: null,
-          items: [
-            {
-              id: 2,
-              service_request_id: 2,
-              service_id: 2,
-              service_name: "Succession Planning",
-              service_description: "Strategic business succession planning",
-              price_at_booking: 8000,
-              is_original: true,
-              added_by: "family",
-            },
-            {
-              id: 3,
-              service_request_id: 2,
-              service_id: 3,
-              service_name: "Mediation Session",
-              service_description: "Family conflict resolution session",
-              price_at_booking: 2000,
-              is_original: false,
-              added_by: "consultant",
-            },
-          ],
-          deliverables: [],
-        },
-        {
-          id: 3,
-          request_number: "SR-20251128-3-001",
-          family_id: 3,
-          family_name: "The Chen Family",
-          family_email: "chen@example.com",
-          consultant_id: user.id,
-          original_service_id: 3,
-          original_service_name: "Next Generation Education",
-          status: "delivered",
-          family_notes: "We have three children aged 18-25 who need financial literacy education.",
-          consultant_comment: null,
-          decline_reason: null,
-          original_amount: 3500,
-          additional_amount: 0,
-          total_amount: 3500,
-          estimated_timeline: "3 weeks",
-          booked_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_response_deadline: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_confirmed_at: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
-          family_approved_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-          started_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-          completed_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          paid_at: null,
-          items: [
-            {
-              id: 4,
-              service_request_id: 3,
-              service_id: 3,
-              service_name: "Next Generation Education",
-              service_description: "Financial literacy program for heirs",
-              price_at_booking: 3500,
-              is_original: true,
-              added_by: "family",
-            },
-          ],
-          deliverables: [
-            {
-              id: 1,
-              service_request_id: 3,
-              title: "Financial Literacy Curriculum",
-              description: "Complete curriculum for the 3-week program",
-              external_link: "https://docs.google.com/document/d/example1",
-              uploaded_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-              id: 2,
-              service_request_id: 3,
-              title: "Assessment Reports",
-              description: "Individual assessment for each participant",
-              external_link: "https://docs.google.com/document/d/example2",
-              uploaded_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-          ],
-        },
-        {
-          id: 4,
-          request_number: "SR-20251115-4-001",
-          family_id: 4,
-          family_name: "The Martinez Family",
-          family_email: "martinez@example.com",
-          consultant_id: user.id,
-          original_service_id: 1,
-          original_service_name: "Family Governance Workshop",
-          status: "completed_paid",
-          family_notes: null,
-          consultant_comment: null,
-          decline_reason: null,
-          original_amount: 5000,
-          additional_amount: 0,
-          total_amount: 5000,
-          estimated_timeline: "2 weeks",
-          booked_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_response_deadline: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString(),
-          consultant_confirmed_at: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString(),
-          family_approved_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-          started_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-          completed_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          paid_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-          items: [
-            {
-              id: 5,
-              service_request_id: 4,
-              service_id: 1,
-              service_name: "Family Governance Workshop",
-              service_description: "Comprehensive workshop to establish family governance framework",
-              price_at_booking: 5000,
-              is_original: true,
-              added_by: "family",
-            },
-          ],
-          deliverables: [
-            {
-              id: 3,
-              service_request_id: 4,
-              title: "Family Constitution Draft",
-              description: "Complete draft of family constitution",
-              external_link: "https://docs.google.com/document/d/example3",
-              uploaded_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-          ],
-        },
-      ];
+      // Fetch service requests from database
+      const { data: requestsData, error: requestsError } = await supabase
+        .from("service_requests")
+        .select(`
+          *,
+          families:family_id (
+            id,
+            name,
+            email
+          ),
+          services:original_service_id (
+            id,
+            name
+          )
+        `)
+        .eq("consultant_id", user.id)
+        .order("created_at", { ascending: false });
 
-      setRequests(mockRequests);
+      if (requestsError) {
+        console.error("Error fetching service requests:", requestsError);
+        toast.error("Failed to load service requests");
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch items and deliverables for all requests
+      const requestIds = requestsData?.map((r: any) => r.id) || [];
+      
+      let itemsData: any[] = [];
+      let deliverablesData: any[] = [];
+      
+      if (requestIds.length > 0) {
+        const [itemsResult, deliverablesResult] = await Promise.all([
+          supabase
+            .from("service_request_items")
+            .select("*")
+            .in("service_request_id", requestIds),
+          supabase
+            .from("service_deliverables")
+            .select("*")
+            .in("service_request_id", requestIds)
+        ]);
+        
+        itemsData = itemsResult.data || [];
+        deliverablesData = deliverablesResult.data || [];
+      }
+
+      // Transform data to match component types
+      const transformedRequests: ServiceRequest[] = (requestsData || []).map((req: any) => ({
+        id: req.id,
+        request_number: req.request_number || `SR-${req.id}`,
+        family_id: req.family_id,
+        family_name: req.families?.name || "Unknown Family",
+        family_email: req.families?.email || undefined,
+        consultant_id: req.consultant_id,
+        original_service_id: req.original_service_id,
+        original_service_name: req.services?.name || "Service",
+        status: req.status as ServiceRequestStatus,
+        family_notes: req.family_notes,
+        consultant_comment: req.consultant_comment,
+        decline_reason: req.decline_reason,
+        original_amount: Number(req.original_amount) || 0,
+        additional_amount: Number(req.additional_amount) || 0,
+        total_amount: Number(req.total_amount) || 0,
+        estimated_timeline: req.estimated_timeline,
+        booked_at: req.booked_at || req.created_at,
+        consultant_response_deadline: req.consultant_response_deadline,
+        consultant_confirmed_at: req.consultant_confirmed_at,
+        family_approved_at: req.family_approved_at,
+        started_at: req.started_at,
+        completed_at: req.completed_at,
+        paid_at: req.paid_at,
+        items: itemsData
+          .filter((item: any) => item.service_request_id === req.id)
+          .map((item: any) => ({
+            id: item.id,
+            service_request_id: item.service_request_id,
+            service_id: item.service_id,
+            service_name: item.service_name,
+            service_description: item.service_description,
+            price_at_booking: Number(item.price_at_booking) || 0,
+            is_original: item.is_original,
+            added_by: item.added_by as "family" | "consultant",
+          })),
+        deliverables: deliverablesData
+          .filter((d: any) => d.service_request_id === req.id)
+          .map((d: any) => ({
+            id: d.id,
+            service_request_id: d.service_request_id,
+            title: d.title,
+            description: d.description,
+            external_link: d.external_link,
+            uploaded_at: d.uploaded_at,
+          })),
+      }));
+
+      setRequests(transformedRequests);
 
       // Fetch consultant's services for adding to requests
       const { data: servicesData } = await supabase

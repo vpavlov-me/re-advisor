@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -48,15 +48,12 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// Mock Resources for Selector
-const availableResources = [
-  { id: "1", title: "Family Constitution Template v2.0", type: "constitution-template" },
-  { id: "2", title: "Succession Planning Guide", type: "guide" },
-  { id: "3", title: "Quarterly Review Checklist", type: "checklist" },
-  { id: "4", title: "Intro to Family Governance", type: "video" },
-  { id: "5", title: "Conflict Resolution Framework", type: "document" },
-  { id: "6", title: "Wealth Stewardship Principles", type: "article" },
-];
+type KnowledgeResource = {
+  id: string;
+  title: string;
+  type: string;
+  description?: string;
+};
 
 type Module = {
   id: string;
@@ -76,8 +73,59 @@ export default function CreateLearningPathPage() {
   const [activeModuleId, setActiveModuleId] = useState<string>("m1");
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Resources from database
+  const [availableResources, setAvailableResources] = useState<KnowledgeResource[]>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState(true);
+  const [resourceSearchQuery, setResourceSearchQuery] = useState("");
 
   const activeModule = modules.find(m => m.id === activeModuleId);
+
+  // Fetch resources from database
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsLoadingResources(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("knowledge_resources")
+          .select("id, title, type, description")
+          .eq("advisor_id", user.id)
+          .eq("is_published", true)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching resources:", error);
+          toast.error("Failed to load resources");
+        } else {
+          setAvailableResources(
+            (data || []).map((r: any) => ({
+              id: String(r.id),
+              title: r.title,
+              type: r.type || "document",
+              description: r.description,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+      } finally {
+        setIsLoadingResources(false);
+      }
+    };
+
+    fetchResources();
+  }, []);
+
+  // Filter resources based on search query
+  const filteredResources = availableResources.filter(resource =>
+    resource.title.toLowerCase().includes(resourceSearchQuery.toLowerCase()) ||
+    resource.type.toLowerCase().includes(resourceSearchQuery.toLowerCase())
+  );
 
   const handleSave = async (asDraft = true) => {
     if (!title.trim()) {
@@ -420,34 +468,54 @@ export default function CreateLearningPathPage() {
           <div className="py-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search resources..." className="pl-9" />
+              <Input 
+                placeholder="Search resources..." 
+                className="pl-9" 
+                value={resourceSearchQuery}
+                onChange={(e) => setResourceSearchQuery(e.target.value)}
+              />
             </div>
             <ScrollArea className="h-[300px] border rounded-md p-4">
-              <div className="space-y-2">
-                {availableResources.map((resource) => {
-                  const isSelected = activeModule?.resources.includes(resource.id);
-                  return (
-                    <div 
-                      key={resource.id} 
-                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                        isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => !isSelected && addResourceToModule(resource.id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-background rounded-md border">
-                          {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+              {isLoadingResources ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredResources.length === 0 ? (
+                <div className="text-center py-12">
+                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">
+                    {availableResources.length === 0 
+                      ? "No resources found. Create some resources first." 
+                      : "No resources match your search."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredResources.map((resource) => {
+                    const isSelected = activeModule?.resources.includes(resource.id);
+                    return (
+                      <div 
+                        key={resource.id} 
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                          isSelected ? "bg-primary/5 border-primary" : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => !isSelected && addResourceToModule(resource.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-background rounded-md border">
+                            {resource.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{resource.title}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{resource.type}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm">{resource.title}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{resource.type}</div>
-                        </div>
+                        {isSelected && <Badge variant="secondary">Added</Badge>}
                       </div>
-                      {isSelected && <Badge variant="secondary">Added</Badge>}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </ScrollArea>
           </div>
         </DialogContent>

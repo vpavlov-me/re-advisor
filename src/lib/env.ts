@@ -69,7 +69,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 const STRIPE_MODE = (process.env.NEXT_PUBLIC_STRIPE_MODE || 'mock') as 'mock' | 'live';
-const EMAIL_MODE = (process.env.NEXT_PUBLIC_EMAIL_MODE || 'mock') as 'mock' | 'edge-function';
+const EMAIL_MODE = (process.env.NEXT_PUBLIC_EMAIL_MODE || 'edge-function') as 'mock' | 'edge-function';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 

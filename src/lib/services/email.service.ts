@@ -15,7 +15,7 @@ import { supabase, isSupabaseConfigured } from '../supabaseClient';
 // CONFIGURATION
 // ============================================
 
-export const EMAIL_MODE = process.env.NEXT_PUBLIC_EMAIL_MODE || 'mock';
+export const EMAIL_MODE = process.env.NEXT_PUBLIC_EMAIL_MODE || 'edge-function';
 export const IS_MOCK_MODE = EMAIL_MODE === 'mock';
 
 // ============================================

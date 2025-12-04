@@ -494,9 +494,45 @@ export function isConsultationPast(dateString?: string, timeString?: string): bo
 }
 
 /**
- * Generate a meeting link (mock for now)
+ * Generate a unique meeting link using Jitsi Meet
+ * Jitsi Meet is a free, open-source video conferencing solution
+ * No API key required for basic usage
  */
-export function generateMeetingLink(): string {
+export function generateMeetingLink(consultationId?: number | string, familyName?: string): string {
+  // Generate a unique room ID
+  const uniqueId = Math.random().toString(36).substring(2, 11);
+  const timestamp = Date.now().toString(36);
+  
+  // Create a URL-safe room name
+  let roomName = `readvisor-${uniqueId}-${timestamp}`;
+  
+  // Optionally include sanitized family name for better readability
+  if (familyName) {
+    const sanitizedName = familyName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 20);
+    if (sanitizedName) {
+      roomName = `readvisor-${sanitizedName}-${uniqueId}`;
+    }
+  }
+  
+  // Add consultation ID if provided
+  if (consultationId) {
+    roomName = `readvisor-c${consultationId}-${uniqueId}`;
+  }
+  
+  // Use Jitsi Meet's public instance
+  // For production, consider self-hosting or using 8x8.vc (Jitsi's enterprise offering)
+  return `https://meet.jit.si/${roomName}`;
+}
+
+/**
+ * Generate a Google Meet-style meeting link (placeholder for future Google Calendar integration)
+ * Note: Requires Google Calendar API integration for actual Google Meet links
+ */
+export function generateGoogleMeetPlaceholder(): string {
   const id = Math.random().toString(36).substring(2, 11);
-  return `https://meet.example.com/${id}`;
+  // This is a placeholder - real Google Meet links require API integration
+  return `https://meet.jit.si/readvisor-${id}`;
 }
