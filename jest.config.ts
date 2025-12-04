@@ -27,8 +27,8 @@ const customJestConfig: Config = {
     global: {
       branches: 3,
       functions: 3,
-      lines: 4.5,
-      statements: 4.5,
+      lines: 5,
+      statements: 5,
     },
   },
   testMatch: [

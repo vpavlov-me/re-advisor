@@ -114,6 +114,45 @@ describe('Consultations Helper Functions', () => {
       const link2 = generateMeetingLink();
       expect(link1).not.toBe(link2);
     });
+
+    it('should generate Jitsi Meet link', () => {
+      const link = generateMeetingLink();
+      expect(link).toMatch(/^https:\/\/meet\.jit\.si\/readvisor-/);
+    });
+
+    it('should include consultation ID when provided', () => {
+      const link = generateMeetingLink(123);
+      expect(link).toContain('readvisor-c123-');
+    });
+
+    it('should include consultation ID as string', () => {
+      const link = generateMeetingLink('456');
+      expect(link).toContain('readvisor-c456-');
+    });
+
+    it('should sanitize family name when provided', () => {
+      const link = generateMeetingLink(undefined, 'Test Family');
+      expect(link).toMatch(/^https:\/\/meet\.jit\.si\/readvisor-testfamily-/);
+    });
+
+    it('should handle family name with special characters', () => {
+      const link = generateMeetingLink(undefined, 'Family @#$ Name!');
+      expect(link).toMatch(/^https:\/\/meet\.jit\.si\/readvisor-familyname-/);
+    });
+
+    it('should truncate long family names', () => {
+      const longName = 'This Is A Very Long Family Name That Exceeds The Limit';
+      const link = generateMeetingLink(undefined, longName);
+      expect(link).toMatch(/^https:\/\/meet\.jit\.si\/readvisor-/);
+      // Should not contain the full name
+      expect(link).not.toContain('thisisaverylongfamilynamethatexceedsthelimit');
+    });
+
+    it('should prioritize consultation ID over family name', () => {
+      const link = generateMeetingLink(789, 'Family Name');
+      expect(link).toContain('readvisor-c789-');
+      expect(link).not.toContain('familyname');
+    });
   });
 
   describe('Label Maps', () => {
