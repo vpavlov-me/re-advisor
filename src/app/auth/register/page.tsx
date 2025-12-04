@@ -130,7 +130,12 @@ export default function RegisterPage() {
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
       <div className="w-full max-w-md">
         <div className={cn("flex flex-col gap-6")}>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form 
+            onSubmit={handleSubmit(onSubmit)}
+            method="post"
+            action="#"
+            autoComplete="on"
+          >
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center gap-2">
                 <div className="flex flex-col items-center gap-2 font-medium">
@@ -159,6 +164,7 @@ export default function RegisterPage() {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
+                      name="firstName"
                       type="text"
                       placeholder="John"
                       autoComplete="given-name"
@@ -174,6 +180,7 @@ export default function RegisterPage() {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
+                      name="lastName"
                       type="text"
                       placeholder="Doe"
                       autoComplete="family-name"
@@ -191,9 +198,10 @@ export default function RegisterPage() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="m@example.com"
-                    autoComplete="email"
+                    autoComplete="username email"
                     className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
                     {...register("email")}
                     disabled={isSubmitting}
@@ -211,7 +219,8 @@ export default function RegisterPage() {
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
                       <Input 
-                        id="password" 
+                        id="password"
+                        name="password" 
                         type={showPassword ? "text" : "password"} 
                         autoComplete="new-password"
                         className={cn(
@@ -228,6 +237,7 @@ export default function RegisterPage() {
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isSubmitting}
+                        tabIndex={-1}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -241,7 +251,8 @@ export default function RegisterPage() {
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
                     <div className="relative">
                       <Input 
-                        id="confirmPassword" 
+                        id="confirmPassword"
+                        name="confirmPassword" 
                         type={showConfirm ? "text" : "password"} 
                         autoComplete="new-password"
                         className={cn(
@@ -258,6 +269,7 @@ export default function RegisterPage() {
                         className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                         onClick={() => setShowConfirm(!showConfirm)}
                         disabled={isSubmitting}
+                        tabIndex={-1}
                       >
                         {showConfirm ? (
                           <EyeOff className="h-4 w-4 text-muted-foreground" />

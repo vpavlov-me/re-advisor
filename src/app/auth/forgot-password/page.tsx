@@ -115,7 +115,13 @@ export default function ForgotPasswordPage() {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              onSubmit={handleSubmit(onSubmit)} 
+              method="post"
+              action="#"
+              autoComplete="on"
+              className="space-y-4"
+            >
               {/* Error Alert */}
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -125,14 +131,17 @@ export default function ForgotPasswordPage() {
 
               {/* Email */}
               <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
+                <label htmlFor="reset-email" className="text-sm font-medium text-foreground block mb-1.5">
                   Email address
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
+                    id="reset-email"
+                    name="email"
                     type="email" 
-                    placeholder="Enter your email" 
+                    placeholder="Enter your email"
+                    autoComplete="username email"
                     className={`pl-10 ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     {...register("email")}
                     disabled={isSubmitting}

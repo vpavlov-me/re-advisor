@@ -237,7 +237,13 @@ function ResetPasswordContent() {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              onSubmit={handleSubmit(onSubmit)} 
+              method="post"
+              action="#"
+              autoComplete="on"
+              className="space-y-4"
+            >
               {/* Error Alert */}
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -247,14 +253,17 @@ function ResetPasswordContent() {
 
               {/* New Password */}
               <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
+                <label htmlFor="new-password" className="text-sm font-medium text-foreground block mb-1.5">
                   New password
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
+                    id="new-password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a new password" 
+                    placeholder="Create a new password"
+                    autoComplete="new-password"
                     className={`pl-10 pr-10 ${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     {...register("password")}
                     disabled={isSubmitting}
@@ -265,6 +274,7 @@ function ResetPasswordContent() {
                     size="icon" 
                     className="absolute right-0 top-0 h-full px-3"
                     onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -280,14 +290,17 @@ function ResetPasswordContent() {
 
               {/* Confirm Password */}
               <div>
-                <label className="text-sm font-medium text-foreground block mb-1.5">
+                <label htmlFor="confirm-password" className="text-sm font-medium text-foreground block mb-1.5">
                   Confirm password
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
+                    id="confirm-password"
+                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your new password" 
+                    placeholder="Confirm your new password"
+                    autoComplete="new-password"
                     className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                     {...register("confirmPassword")}
                     disabled={isSubmitting}
@@ -298,6 +311,7 @@ function ResetPasswordContent() {
                     size="icon" 
                     className="absolute right-0 top-0 h-full px-3"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    tabIndex={-1}
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
