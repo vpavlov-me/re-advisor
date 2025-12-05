@@ -121,7 +121,7 @@ export default function CreateConstitutionTemplatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-page-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="container py-3 flex items-center justify-between">

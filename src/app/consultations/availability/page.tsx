@@ -208,14 +208,14 @@ export default function AvailabilityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

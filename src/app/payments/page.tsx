@@ -722,7 +722,7 @@ export default function PaymentsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

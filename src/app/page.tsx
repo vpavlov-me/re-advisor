@@ -117,7 +117,7 @@ function OnboardingCard({ step }: { step: { id: number; label: string; icon: Rea
 // Dashboard Loading Skeleton
 function DashboardSkeleton() {
   return (
-    <div className="flex-1 bg-background">
+    <div className="flex-1 bg-page-background">
       {/* Breadcrumb Bar Skeleton */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
@@ -479,7 +479,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex-1 bg-background">
+    <div className="flex-1 bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

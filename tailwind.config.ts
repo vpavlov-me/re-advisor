@@ -24,6 +24,7 @@ const config: Config = {
   			border: 'var(--border)',
   			input: 'var(--input)',
   			ring: 'var(--ring)',
+  			'page-background': 'var(--page-background)',
   			background: 'var(--background)',
   			foreground: 'var(--foreground)',
   			primary: {

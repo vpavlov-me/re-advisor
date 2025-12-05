@@ -137,7 +137,7 @@ function ResetPasswordContent() {
 
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">Verifying your reset link...</p>
@@ -148,7 +148,7 @@ function ResetPasswordContent() {
 
   if (tokenError) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Logo className="justify-center flex mb-6" />
@@ -187,7 +187,7 @@ function ResetPasswordContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Logo className="justify-center flex mb-6" />
@@ -222,7 +222,7 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
+    <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Logo className="justify-center flex mb-6" />
@@ -384,7 +384,7 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     }>

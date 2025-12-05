@@ -911,7 +911,7 @@ function KnowledgeCenterContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
@@ -2016,7 +2016,7 @@ function KnowledgeCenterContent() {
 export default function KnowledgeCenterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     }>

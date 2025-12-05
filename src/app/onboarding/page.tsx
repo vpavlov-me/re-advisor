@@ -290,14 +290,14 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-page-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card py-4 sticky top-0 z-10">
         <div className="container max-w-5xl mx-auto flex items-center justify-between px-4">

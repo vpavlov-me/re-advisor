@@ -49,7 +49,7 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
+    <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Logo className="justify-center flex mb-6" />
@@ -137,7 +137,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     }>

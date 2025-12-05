@@ -173,7 +173,7 @@ function AuthCallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
+    <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
       <div className="text-center">
         {status === "loading" && (
           <>
@@ -214,7 +214,7 @@ function AuthCallbackContent() {
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <div className="min-h-screen bg-page-background flex items-center justify-center p-8">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">Verifying your account...</p>

@@ -677,7 +677,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-background">
+    <div className="flex flex-col flex-1 bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border shrink-0">
         <div className="container py-3">

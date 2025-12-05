@@ -243,7 +243,7 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading template...</p>
@@ -254,7 +254,7 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
 
   if (!template) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
           <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-lg font-medium mb-2">Template not found</h2>
@@ -267,7 +267,7 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-page-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="container py-3 flex items-center justify-between">
