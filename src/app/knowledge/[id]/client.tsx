@@ -3,7 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getKnowledgeResourceById,
+  getConstitutionTemplate,
+  updateKnowledgeResource,
+  updateConstitutionTemplate,
+  deleteKnowledgeResource,
+  deleteConstitutionTemplate,
+  getResourceSharesWithFamilies,
+  shareResource,
+  removeResourceShare
+} from "@/lib/supabase";
+import { getFamilies } from "@/lib/supabase/families";
 import { toast } from "sonner";
 import {
   Home,
@@ -225,13 +236,7 @@ export default function ResourceDetailPage() {
       // Check if it's a constitution template
       if (resourceId.startsWith('ct-')) {
         const templateId = parseInt(resourceId.replace('ct-', ''));
-        const { data: templateData, error } = await supabase
-          .from('constitution_templates')
-          .select('*')
-          .eq('id', templateId)
-          .single();
-
-        if (error) throw error;
+        const templateData = await getConstitutionTemplate(templateId);
 
         if (templateData) {
           const resource: Resource = {
@@ -260,14 +265,8 @@ export default function ResourceDetailPage() {
           });
         }
       } else {
-        // Regular resource
-        const { data: resourceData, error } = await supabase
-          .from('knowledge_resources')
-          .select('*')
-          .eq('id', parseInt(resourceId))
-          .single();
-
-        if (error) throw error;
+        // Regular resource via abstraction layer
+        const resourceData = await getKnowledgeResourceById(parseInt(resourceId));
 
         if (resourceData) {
           const resource: Resource = {
@@ -297,17 +296,8 @@ export default function ResourceDetailPage() {
             is_published: resource.is_published
           });
 
-          // Fetch shares
-          const { data: sharesData } = await supabase
-            .from('resource_shares')
-            .select(`
-              id,
-              family_id,
-              created_at,
-              families (id, name)
-            `)
-            .eq('resource_id', parseInt(resourceId));
-
+          // Fetch shares via abstraction layer
+          const sharesData = await getResourceSharesWithFamilies(parseInt(resourceId));
           if (sharesData) {
             setShares(sharesData.map((s: any) => ({
               id: s.id,
@@ -327,64 +317,46 @@ export default function ResourceDetailPage() {
     }
   }, [resourceId, router]);
 
-  const fetchFamilies = useCallback(async (advisorId: string) => {
-    const { data } = await supabase
-      .from('families')
-      .select('id, name')
-      .eq('advisor_id', advisorId);
-
-    if (data) {
-      setFamilies(data);
+  const fetchFamilies = useCallback(async () => {
+    try {
+      const data = await getFamilies();
+      if (data) {
+        setFamilies(data.map((f: any) => ({ id: f.id, name: f.name })));
+      }
+    } catch (error) {
+      console.error("Error fetching families:", error);
     }
   }, []);
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        await fetchFamilies(user.id);
-      }
+      await fetchFamilies();
       await fetchResource();
     };
     init();
   }, [fetchResource, fetchFamilies]);
 
   const handleSave = async () => {
-    if (!resource || !userId) return;
+    if (!resource) return;
 
     setIsSaving(true);
     try {
       if (resource.id.startsWith('ct-')) {
         const templateId = parseInt(resource.id.replace('ct-', ''));
-        const { error } = await supabase
-          .from('constitution_templates')
-          .update({
-            title: editForm.title,
-            description: editForm.description,
-            content: editForm.content,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', templateId);
-
-        if (error) throw error;
+        await updateConstitutionTemplate(templateId, {
+          title: editForm.title,
+          description: editForm.description
+        });
       } else {
-        const { error } = await supabase
-          .from('knowledge_resources')
-          .update({
-            title: editForm.title,
-            description: editForm.description,
-            content: editForm.content,
-            category: editForm.category,
-            type: editForm.type,
-            external_url: editForm.external_url || null,
-            is_featured: editForm.is_featured,
-            is_published: editForm.is_published,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', parseInt(resource.id));
-
-        if (error) throw error;
+        await updateKnowledgeResource(parseInt(resource.id), {
+          title: editForm.title,
+          description: editForm.description,
+          content: editForm.content,
+          category: editForm.category,
+          type: editForm.type,
+          external_url: editForm.external_url || undefined,
+          is_featured: editForm.is_featured
+        });
       }
 
       setResource({
@@ -409,19 +381,9 @@ export default function ResourceDetailPage() {
     try {
       if (resource.id.startsWith('ct-')) {
         const templateId = parseInt(resource.id.replace('ct-', ''));
-        const { error } = await supabase
-          .from('constitution_templates')
-          .delete()
-          .eq('id', templateId);
-
-        if (error) throw error;
+        await deleteConstitutionTemplate(templateId);
       } else {
-        const { error } = await supabase
-          .from('knowledge_resources')
-          .delete()
-          .eq('id', parseInt(resource.id));
-
-        if (error) throw error;
+        await deleteKnowledgeResource(parseInt(resource.id));
       }
 
       toast.success("Resource deleted");
@@ -436,33 +398,15 @@ export default function ResourceDetailPage() {
   };
 
   const handleShare = async () => {
-    if (!resource || !userId || selectedFamilies.length === 0 || resource.id.startsWith('ct-')) return;
+    if (!resource || selectedFamilies.length === 0 || resource.id.startsWith('ct-')) return;
 
     setIsSharing(true);
     try {
-      const shares = selectedFamilies.map(familyId => ({
-        resource_id: parseInt(resource.id),
-        family_id: familyId,
-        shared_by: userId
-      }));
-
-      const { error } = await supabase
-        .from('resource_shares')
-        .upsert(shares, { onConflict: 'resource_id,family_id' });
-
-      if (error) throw error;
+      // Share resource via abstraction layer
+      await shareResource(parseInt(resource.id), selectedFamilies);
 
       // Refetch shares
-      const { data: newShares } = await supabase
-        .from('resource_shares')
-        .select(`
-          id,
-          family_id,
-          created_at,
-          families (id, name)
-        `)
-        .eq('resource_id', parseInt(resource.id));
-
+      const newShares = await getResourceSharesWithFamilies(parseInt(resource.id));
       if (newShares) {
         setShares(newShares.map((s: any) => ({
           id: s.id,
@@ -485,13 +429,7 @@ export default function ResourceDetailPage() {
 
   const handleRemoveShare = async (shareId: number) => {
     try {
-      const { error } = await supabase
-        .from('resource_shares')
-        .delete()
-        .eq('id', shareId);
-
-      if (error) throw error;
-
+      await removeResourceShare(shareId);
       setShares(shares.filter(s => s.id !== shareId));
       toast.success("Share removed");
     } catch (error) {
@@ -504,12 +442,9 @@ export default function ResourceDetailPage() {
     if (!resource || resource.id.startsWith('ct-')) return;
 
     try {
-      const { error } = await supabase
-        .from('knowledge_resources')
-        .update({ is_featured: !resource.is_featured })
-        .eq('id', parseInt(resource.id));
-
-      if (error) throw error;
+      await updateKnowledgeResource(parseInt(resource.id), {
+        is_featured: !resource.is_featured
+      });
 
       setResource({ ...resource, is_featured: !resource.is_featured });
       toast.success(resource.is_featured ? "Removed from featured" : "Added to featured");

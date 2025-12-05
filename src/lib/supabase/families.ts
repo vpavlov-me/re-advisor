@@ -7,7 +7,7 @@ export interface Family {
   name: string;
   wealth?: string;
   members_count: number;
-  role: "external-consul" | "consultant" | "personal-advisor";
+  role: "external-consul" | "consultant" | "personal-advisor" | "lead-advisor";
   payment_status: "paid" | "pending" | "no-invoices";
   status: "active" | "pending" | "inactive";
   last_contact?: string;
@@ -32,7 +32,7 @@ export interface FamilyMember {
 
 export interface CreateFamilyInput {
   name: string;
-  role?: "external-consul" | "consultant" | "personal-advisor";
+  role?: "external-consul" | "consultant" | "personal-advisor" | "lead-advisor";
   industry?: string;
   location?: string;
   email?: string;

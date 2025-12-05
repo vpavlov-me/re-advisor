@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  getUserFamilyMembership,
+  getSharedResourcesForFamily,
+  getFamilyConstitutionsForFamily,
+  type SharedResourceWithDetails
+} from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -72,22 +77,8 @@ type ResourceType =
   | "learning-path"
   | "constitution-template";
 
-interface SharedResource {
-  id: string;
-  title: string;
-  description: string;
-  type: ResourceType;
-  category: string;
-  external_url: string | null;
-  content: string | null;
-  shared_at: string;
-  version: number;
-  advisor_name: string;
-  family_id: number;
-  family_name: string;
-  is_starred: boolean;
-  view_count: number;
-}
+// Use imported SharedResourceWithDetails as SharedResource
+type SharedResource = SharedResourceWithDetails;
 
 interface FamilyConstitution {
   id: number;
@@ -101,7 +92,7 @@ interface FamilyConstitution {
 }
 
 // Helper functions
-const getIconForType = (type: ResourceType) => {
+const getIconForType = (type: string) => {
   const icons: Record<ResourceType, typeof FileText> = {
     "document": FileText,
     "article": LayoutTemplate,
@@ -114,10 +105,10 @@ const getIconForType = (type: ResourceType) => {
     "learning-path": GraduationCap,
     "constitution-template": Star,
   };
-  return icons[type] || FileText;
+  return icons[type as ResourceType] || FileText;
 };
 
-const getColorForType = (type: ResourceType) => {
+const getColorForType = (type: string) => {
   const colors: Record<ResourceType, string> = {
     "document": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
     "article": "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
@@ -130,7 +121,7 @@ const getColorForType = (type: ResourceType) => {
     "learning-path": "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
     "constitution-template": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
   };
-  return colors[type] || "bg-gray-100 text-gray-700";
+  return colors[type as ResourceType] || "bg-gray-100 text-gray-700";
 };
 
 export default function FamilyKnowledgeCenterPage() {
@@ -150,122 +141,24 @@ export default function FamilyKnowledgeCenterPage() {
   // Fetch user's family info and shared resources
   const fetchData = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/auth/login");
-        return;
-      }
-
       // Get user's family membership
-      const { data: memberData, error: memberError } = await supabase
-        .from('family_members')
-        .select(`
-          family_id,
-          families:family_id (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id)
-        .single();
-
-      if (memberError || !memberData) {
-        // User is not a family member - check if they might be an advisor
+      const membership = await getUserFamilyMembership();
+      if (!membership) {
         toast.error("You are not a member of any family");
         router.push("/");
         return;
       }
 
-      const family = memberData.families as unknown as { id: number; name: string };
-      const currentFamilyId = family.id;
-      setFamilyName(family.name);
+      const currentFamilyId = membership.family.id;
+      setFamilyName(membership.family.name);
 
       // Fetch shared resources for this family
-      const { data: sharesData, error: sharesError } = await supabase
-        .from('resource_shares')
-        .select(`
-          id,
-          version,
-          resource_snapshot,
-          shared_at,
-          knowledge_resources:resource_id (
-            id,
-            title,
-            description,
-            type,
-            category,
-            external_url,
-            content
-          ),
-          profiles:advisor_id (
-            first_name,
-            last_name
-          )
-        `)
-        .eq('family_id', currentFamilyId)
-        .order('shared_at', { ascending: false });
-
-      if (sharesError) throw sharesError;
-
-      const resources: SharedResource[] = (sharesData || [])
-        .filter((share: unknown) => {
-          const s = share as { knowledge_resources: unknown };
-          return s.knowledge_resources !== null;
-        })
-        .map((share: unknown) => {
-          const s = share as {
-            id: string;
-            version: number;
-            resource_snapshot: unknown;
-            shared_at: string;
-            knowledge_resources: {
-              id: number;
-              title: string;
-              description: string;
-              type: ResourceType;
-              category: string;
-              external_url: string | null;
-              content: string | null;
-            };
-            profiles: {
-              first_name: string | null;
-              last_name: string | null;
-            } | null;
-          };
-          // Use snapshot if available (for version history), otherwise use current resource
-          const snapshot = s.resource_snapshot as { title?: string; description?: string; category?: string } | null;
-          const resource = s.knowledge_resources;
-          
-          return {
-            id: `share-${s.id}`,
-            title: snapshot?.title || resource.title,
-            description: snapshot?.description || resource.description,
-            type: resource.type,
-            category: snapshot?.category || resource.category,
-            external_url: resource.external_url,
-            content: resource.content,
-            shared_at: s.shared_at,
-            version: s.version || 1,
-            advisor_name: s.profiles 
-              ? `${s.profiles.first_name || ''} ${s.profiles.last_name || ''}`.trim() || 'Advisor'
-              : 'Advisor',
-            family_id: currentFamilyId,
-            family_name: family.name,
-            is_starred: false,
-            view_count: 0
-          };
-        });
-
+      const resources = await getSharedResourcesForFamily(currentFamilyId, membership.family.name);
       setSharedResources(resources);
 
       // Fetch family constitutions
-      const { data: constitutionsData, error: constitutionsError } = await supabase
-        .from('family_constitutions')
-        .select('*')
-        .eq('family_id', currentFamilyId)
-        .order('updated_at', { ascending: false });
-
-      if (!constitutionsError && constitutionsData) {
+      const constitutionsData = await getFamilyConstitutionsForFamily(currentFamilyId);
+      if (constitutionsData) {
         setConstitutions(constitutionsData.map((c: {
           id: number;
           family_id: number;
@@ -276,7 +169,7 @@ export default function FamilyKnowledgeCenterPage() {
           updated_at: string;
         }) => ({
           ...c,
-          family_name: family.name
+          family_name: membership.family.name
         })));
       }
 

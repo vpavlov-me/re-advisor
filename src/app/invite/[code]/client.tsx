@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/hooks";
-import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser } from "@/lib/auth";
 import { getInvitationByCode, acceptInvitation, type InvitationWithFamily } from "@/lib/invitations";
 
 export default function AcceptInvitePage() {
@@ -31,7 +31,7 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
       setUser(user);
     };
     checkAuth();

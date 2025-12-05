@@ -585,3 +585,43 @@ export function getCardBrandIcon(brand: string): string {
       return '💳 Card';
   }
 }
+
+// ============ INVOICE CREATION ============
+
+export interface CreateInvoiceInput {
+  family_id: number;
+  amount: number;
+  due_date: string;
+  description?: string;
+}
+
+/**
+ * Create an invoice/transaction for a family
+ */
+export async function createInvoice(input: CreateInvoiceInput): Promise<{
+  data: Transaction | null;
+  error: Error | null;
+}> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { data: null, error: new Error('Not authenticated') };
+  }
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({
+      advisor_id: user.id,
+      family_id: input.family_id,
+      type: 'income',
+      amount: input.amount.toString(),
+      status: 'pending',
+      date: new Date().toISOString(),
+      due_date: input.due_date,
+      description: input.description || 'Service invoice',
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+

@@ -36,7 +36,8 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/lib/hooks";
-import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser } from "@/lib/auth";
+import { getProfile, updateProfile } from "@/lib/supabase/profile";
 import { ONBOARDING_STEPS, syncOnboardingProgress } from "@/lib/onboarding";
 
 // Governance Modules for expertise selection
@@ -139,17 +140,13 @@ export default function OnboardingPage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await getCurrentUser();
         if (!user) {
           router.push('/auth/login');
           return;
         }
 
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        const profileData = await getProfile();
 
         if (profileData) {
           setProfile(profileData);
@@ -187,7 +184,7 @@ export default function OnboardingPage() {
     setSaving(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
       if (!user) return;
 
       // Save current step data to profile
@@ -214,7 +211,7 @@ export default function OnboardingPage() {
       }
 
       if (Object.keys(updateData).length > 0) {
-        await supabase.from('profiles').update(updateData).eq('id', user.id);
+        await updateProfile(updateData);
       }
 
       // Mark step as completed
@@ -227,11 +224,11 @@ export default function OnboardingPage() {
         setCurrentStep(currentStep + 1);
       } else {
         // Final step - submit profile
-        await supabase.from('profiles').update({
+        await updateProfile({
           profile_status: 'pending_review',
           onboarding_progress: 100,
           onboarding_completed_at: new Date().toISOString(),
-        }).eq('id', user.id);
+        });
 
         toast({
           title: "Profile Submitted!",

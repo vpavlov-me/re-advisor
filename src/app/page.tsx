@@ -46,10 +46,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { LucideIcon } from "lucide-react";
 import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getProfile } from "@/lib/supabase/profile";
+import { getFamilies } from "@/lib/supabase/families";
+import { getServices } from "@/lib/services";
+import { getConsultations, getUpcomingConsultations } from "@/lib/supabase/consultations";
+import { getConversations } from "@/lib/supabase/messages";
+import { getTransactions } from "@/lib/supabase/payments";
 
 // Icon mapping for dynamic rendering
 const iconMap: Record<string, LucideIcon> = {
@@ -333,115 +339,85 @@ export default function HomePage() {
     }
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Fetch Profile using abstraction layer
+      const profile = await getProfile();
       
-      if (user) {
+      if (profile) {
+        setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
+        setUserAvatarUrl(profile.avatar_url || null);
+        
         // Sync and fetch onboarding progress
-        const { progress } = await syncOnboardingProgress(user.id);
+        const { progress } = await syncOnboardingProgress(profile.id);
         setOnboardingProgress(progress);
-        
-        // Fetch Profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, avatar_url')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
-          setUserAvatarUrl(profile.avatar_url);
-        }
+      }
 
-        // Fetch Counts
-        const { count: familiesCount } = await supabase
-          .from('families')
-          .select('*', { count: 'exact', head: true })
-          .eq('advisor_id', user.id);
+      // Fetch Counts using abstraction layer
+      const familiesData = await getFamilies();
+      const familiesCount = familiesData?.length || 0;
 
-        const { count: servicesCount } = await supabase
-          .from('services')
-          .select('*', { count: 'exact', head: true })
-          .eq('advisor_id', user.id);
+      const { data: servicesData } = await getServices();
+      const servicesCount = servicesData?.length || 0;
 
-        const { count: consultationsCount } = await supabase
-          .from('consultations')
-          .select('*', { count: 'exact', head: true })
-          .eq('advisor_id', user.id)
-          .eq('status', 'scheduled');
+      const consultationsData = await getConsultations();
+      const consultationsCount = consultationsData?.filter((c: any) => c.status === 'scheduled').length || 0;
 
-        // Fetch Revenue (Transactions)
-        const { data: transactions } = await supabase
-          .from('transactions')
-          .select('amount')
-          .eq('advisor_id', user.id)
-          .eq('type', 'income');
-
-        const revenue = transactions?.reduce((acc, curr) => {
+      // Fetch Revenue (Transactions)
+      try {
+        const transactionsData = await getTransactions();
+        const revenue = transactionsData?.reduce((acc: number, curr: any) => {
           const amount = parseFloat(curr.amount?.replace(/[^0-9.-]+/g, "") || "0");
           return acc + amount;
         }, 0) || 0;
 
         setStats([
-          { label: "Family Clients", value: familiesCount?.toString() || "0", icon: Users, href: "/families" },
-          { label: "Services", value: servicesCount?.toString() || "0", icon: Briefcase, href: "/services" },
-          { label: "Active consultations", value: consultationsCount?.toString() || "0", icon: MessageSquare, href: "/consultations" },
+          { label: "Family Clients", value: familiesCount.toString(), icon: Users, href: "/families" },
+          { label: "Services", value: servicesCount.toString(), icon: Briefcase, href: "/services" },
+          { label: "Active consultations", value: consultationsCount.toString(), icon: MessageSquare, href: "/consultations" },
           { label: "Monthly revenue", value: `$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: DollarSign, href: "/payments" },
         ]);
+      } catch (e) {
+        setStats([
+          { label: "Family Clients", value: familiesCount.toString(), icon: Users, href: "/families" },
+          { label: "Services", value: servicesCount.toString(), icon: Briefcase, href: "/services" },
+          { label: "Active consultations", value: consultationsCount.toString(), icon: MessageSquare, href: "/consultations" },
+          { label: "Monthly revenue", value: "$0.00", icon: DollarSign, href: "/payments" },
+        ]);
+      }
 
-        // Fetch Upcoming Consultations
-        const { data: upcomingConsultations } = await supabase
-          .from('consultations')
-          .select(`
-            id,
-            title,
-            date,
-            time,
-            status,
-            families (name),
-            consultation_members (
-              family_members (name, avatar)
-            )
-          `)
-          .eq('advisor_id', user.id)
-          .eq('status', 'scheduled')
-          .order('date', { ascending: true })
-          .limit(4);
+      // Fetch Upcoming Consultations
+      try {
+        const upcomingConsultations = await getUpcomingConsultations(4);
 
         if (upcomingConsultations) {
           setConsultations(upcomingConsultations.map((c: any) => ({
             id: c.id,
             title: c.title,
-            family: c.families?.name || "Unknown Family",
+            family: c.family?.name || "Unknown Family",
             date: c.date ? new Date(c.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : "TBD",
             time: c.time,
-            members: c.consultation_members?.map((m: any) => m.family_members) || []
+            members: []
           })));
         }
+      } catch (e) {
+        console.log("No upcoming consultations");
+      }
 
-        // Fetch Recent Messages (Conversations)
-        const { data: recentConversations } = await supabase
-          .from('conversations')
-          .select(`
-            id,
-            title,
-            last_message,
-            last_message_time,
-            unread_count,
-            families (name)
-          `)
-          .order('last_message_time', { ascending: false })
-          .limit(3);
+      // Fetch Recent Messages (Conversations)
+      try {
+        const recentConversations = await getConversations();
 
         if (recentConversations) {
-          setMessages(recentConversations.map((c: any) => ({
+          setMessages(recentConversations.slice(0, 3).map((c: any) => ({
             id: c.id,
-            title: c.title || c.families?.name || "Conversation",
-            sender: c.families?.name || "Family Member", // Simplified
+            title: c.title || c.family?.name || "Conversation",
+            sender: c.family?.name || "Family Member",
             date: c.last_message_time ? new Date(c.last_message_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "",
             preview: c.last_message,
             unread: c.unread_count
           })));
         }
+      } catch (e) {
+        console.log("No conversations found");
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);

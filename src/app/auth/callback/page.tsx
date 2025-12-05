@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getCurrentUser, 
+  getSession, 
+  exchangeCodeForSession, 
+  setSession as setAuthSession 
+} from "@/lib/auth";
+import { getProfile, createProfile } from "@/lib/supabase/profile";
 import { Suspense } from "react";
 
 function AuthCallbackContent() {
@@ -47,7 +53,7 @@ function AuthCallbackContent() {
 
         // Handle code-based OAuth flow (PKCE)
         if (code) {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error: exchangeError } = await exchangeCodeForSession(code);
           
           if (exchangeError) {
             setStatus("error");
@@ -67,10 +73,7 @@ function AuthCallbackContent() {
 
         // Handle hash-based token flow (email verification)
         if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+          const { error: sessionError } = await setAuthSession(accessToken, refreshToken);
 
           if (sessionError) {
             setStatus("error");
@@ -82,7 +85,7 @@ function AuthCallbackContent() {
           window.history.replaceState(null, '', window.location.pathname);
 
           // Get the user
-          const { data: { user } } = await supabase.auth.getUser();
+          const user = await getCurrentUser();
 
           if (user) {
             // Check if this is a password recovery
@@ -102,7 +105,7 @@ function AuthCallbackContent() {
         }
 
         // No code or tokens - check if we already have a session
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getSession();
         
         if (session) {
           setStatus("success");
@@ -124,56 +127,46 @@ function AuthCallbackContent() {
 
     // Helper function to handle user redirect based on profile
     const handleUserRedirect = async (userId: string, isSignup = false) => {
-      // Check profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("onboarding_completed, is_first_login")
-        .eq("id", userId)
-        .single();
+      try {
+        // Check profile using abstraction
+        const profile = await getProfile();
 
-      // Profile should exist (created by trigger), but handle edge case
-      if (profileError && profileError.code === 'PGRST116') {
-        // Get user metadata for profile creation
-        const { data: { user } } = await supabase.auth.getUser();
-        const metadata = user?.user_metadata || {};
-        const fullName = metadata.full_name || metadata.name || '';
-        const nameParts = fullName.split(' ');
-        
-        await supabase.from("profiles").insert({
-          id: userId,
-          email: user?.email || null,
-          first_name: metadata.first_name || nameParts[0] || null,
-          last_name: metadata.last_name || nameParts.slice(1).join(' ') || null,
-          phone: metadata.phone || null,
-          company: metadata.company || null,
-          avatar_url: metadata.avatar_url || metadata.picture || null,
-          is_first_login: true,
-          onboarding_progress: 0,
-          onboarding_step: 1,
-          onboarding_completed: false,
-          onboarding_skipped: false,
-          profile_status: "draft",
-        });
-        
-        // New user goes to onboarding
+        // Determine redirect destination
+        const shouldOnboard = !profile?.onboarding_completed || profile?.is_first_login;
+        const destination = shouldOnboard ? "/onboarding" : "/";
+
         setStatus("success");
         setMessage(isSignup ? "Email verified! Redirecting..." : "Signed in successfully! Redirecting...");
+        
         setTimeout(() => {
-          router.push("/onboarding");
+          router.push(destination);
         }, 1500);
-        return;
+      } catch (profileError: any) {
+        // Profile doesn't exist - create it
+        if (profileError?.code === 'PGRST116') {
+          const user = await getCurrentUser();
+          const metadata = user?.user_metadata || {};
+          const fullName = metadata.full_name || metadata.name || '';
+          const nameParts = fullName.split(' ');
+          
+          await createProfile({
+            first_name: metadata.first_name || nameParts[0] || null,
+            last_name: metadata.last_name || nameParts.slice(1).join(' ') || null,
+            phone: metadata.phone || null,
+            company: metadata.company || null,
+            avatar_url: metadata.avatar_url || metadata.picture || null,
+          });
+          
+          // New user goes to onboarding
+          setStatus("success");
+          setMessage(isSignup ? "Email verified! Redirecting..." : "Signed in successfully! Redirecting...");
+          setTimeout(() => {
+            router.push("/onboarding");
+          }, 1500);
+          return;
+        }
+        throw profileError;
       }
-
-      // Determine redirect destination
-      const shouldOnboard = !profile?.onboarding_completed || profile?.is_first_login;
-      const destination = shouldOnboard ? "/onboarding" : "/";
-
-      setStatus("success");
-      setMessage(isSignup ? "Email verified! Redirecting..." : "Signed in successfully! Redirecting...");
-      
-      setTimeout(() => {
-        router.push(destination);
-      }, 1500);
     };
 
     handleCallback();

@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -63,6 +62,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
+import {
+  getConsultations,
+  createConsultation,
+  cancelConsultation,
+  deleteConsultation,
+} from "@/lib/supabase/consultations";
+import { getFamilies } from "@/lib/supabase/families";
 
 // Zod Validation Schemas
 const scheduleSchema = z.object({
@@ -285,40 +291,15 @@ export default function ConsultationsPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserId(user.id);
-        }
-
         // Fetch Families for the dropdown (advisor's families)
-        const { data: familiesData } = await supabase
-          .from('families')
-          .select('id, name')
-          .eq('advisor_id', user?.id);
+        const familiesData = await getFamilies();
         
         if (familiesData) {
-          setFamilies(familiesData);
+          setFamilies(familiesData.map((f: any) => ({ id: f.id, name: f.name })));
         }
 
         // Fetch Consultations for this advisor
-        const { data: consultationsData, error } = await supabase
-          .from('consultations')
-          .select(`
-            *,
-            family:families(name),
-            members:consultation_members(
-              member:family_members(name, role)
-            )
-          `)
-          .eq('advisor_id', user?.id)
-          .order('date', { ascending: true });
-
-        if (error) {
-          console.log("Supabase error:", error.message);
-          setConsultations([]);
-          return;
-        }
+        const consultationsData = await getConsultations();
 
         if (consultationsData) {
           const mappedConsultations: Consultation[] = consultationsData.map((c: any) => ({
@@ -333,9 +314,9 @@ export default function ConsultationsPage() {
             paymentStatus: c.payment_status || "awaiting",
             price: c.price || "$0",
             members: c.members?.map((m: any) => ({
-              name: m.member?.name || "Unknown",
-              initials: (m.member?.name || "U").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
-              role: m.member?.role || "Member"
+              name: m.family_member?.name || "Unknown",
+              initials: (m.family_member?.name || "U").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+              role: m.family_member?.role || "Member"
             })) || [],
             moreMembers: 0,
             meetingLink: c.meeting_link,
@@ -388,12 +369,7 @@ export default function ConsultationsPage() {
 
   const handleCancelConsultation = async (id: number) => {
     try {
-      const { error } = await supabase
-        .from('consultations')
-        .update({ status: 'cancelled' })
-        .eq('id', id);
-
-      if (error) throw error;
+      await cancelConsultation(id);
       
       setConsultations(prev => prev.map(c => 
         c.id === id ? { ...c, status: "cancelled" } : c
@@ -429,54 +405,34 @@ export default function ConsultationsPage() {
     const selectedFamily = families.find(f => f.id.toString() === data.family);
     const familyName = selectedFamily ? selectedFamily.name : "Unknown Family";
 
-    const newConsultationObj = {
-      advisor_id: userId,
-      title: data.topic,
-      family_id: parseInt(data.family),
-      type: data.type,
-      date: data.date,
-      time: data.time,
-      duration: data.duration || "1 hour",
-      status: "scheduled",
-      payment_status: "awaiting",
-      price: "$500",
-      meeting_link: data.type === "Video Call" ? "https://zoom.us/j/..." : null,
-      location: data.type === "In-Person" ? "TBD" : null,
-      agenda: [],
-      notes: "",
-      documents: []
-    };
-
     try {
-      const { data: insertedData, error } = await supabase
-        .from('consultations')
-        .insert([newConsultationObj])
-        .select();
+      const insertedData = await createConsultation({
+        family_id: parseInt(data.family),
+        title: data.topic,
+        date: data.date,
+        time: data.time,
+        meeting_link: data.type === "Video Call" ? "https://zoom.us/j/..." : undefined,
+      });
 
-      if (error) {
-        console.error("Supabase insert error:", error);
-        throw error;
-      }
-
-      if (insertedData && insertedData[0]) {
+      if (insertedData) {
         const newConsultation: Consultation = {
-          id: insertedData[0].id,
-          title: insertedData[0].title,
-          family: familyName,
-          type: insertedData[0].type || "Video Call",
-          date: new Date(insertedData[0].date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          time: insertedData[0].time,
-          duration: insertedData[0].duration || "1 hour",
-          status: insertedData[0].status || "scheduled",
-          paymentStatus: insertedData[0].payment_status || "awaiting",
-          price: insertedData[0].price || "$500",
+          id: insertedData.id,
+          title: insertedData.title,
+          family: insertedData.family?.name || familyName,
+          type: data.type || "Video Call",
+          date: new Date(insertedData.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          time: insertedData.time,
+          duration: data.duration || "1 hour",
+          status: insertedData.status || "scheduled",
+          paymentStatus: "awaiting",
+          price: "$500",
           members: [],
           moreMembers: 0,
-          meetingLink: insertedData[0].meeting_link,
-          location: insertedData[0].location,
-          agenda: insertedData[0].agenda || [],
-          notes: insertedData[0].notes || "",
-          documents: insertedData[0].documents || []
+          meetingLink: insertedData.meeting_link,
+          location: data.type === "In-Person" ? "TBD" : undefined,
+          agenda: [],
+          notes: "",
+          documents: []
         };
         setConsultations([newConsultation, ...consultations]);
         toast.success('Consultation scheduled successfully');
@@ -501,13 +457,7 @@ export default function ConsultationsPage() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('consultations')
-        .delete()
-        .eq('id', deletingId);
-
-      if (error) throw error;
-
+      await deleteConsultation(deletingId);
       setConsultations(prev => prev.filter(c => c.id !== deletingId));
       toast.success('Consultation deleted successfully');
     } catch (error) {

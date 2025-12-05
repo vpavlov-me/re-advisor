@@ -27,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/lib/supabaseClient";
+import { getLearningPath } from "@/lib/supabase";
 
 // Types for learning path data (using learning_path_steps)
 interface LearningStep {
@@ -121,38 +121,8 @@ export default function LearningPathDetailClient({ params }: { params: Promise<{
       }
       
       try {
-        // Fetch learning path with steps (using learning_path_steps)
-        const { data, error: fetchError } = await supabase
-          .from('learning_paths')
-          .select(`
-            id,
-            advisor_id,
-            title,
-            description,
-            category,
-            difficulty,
-            estimated_duration_minutes,
-            updated_at,
-            steps:learning_path_steps (
-              id,
-              learning_path_id,
-              title,
-              description,
-              content,
-              step_order,
-              estimated_duration_minutes,
-              knowledge_resources (
-                id,
-                title,
-                type,
-                external_url
-              )
-            )
-          `)
-          .eq('id', numericId)
-          .single();
-
-        if (fetchError) throw fetchError;
+        // Fetch learning path with steps via abstraction layer
+        const data = await getLearningPath(numericId);
 
         if (data) {
           // Sort steps by step_order
