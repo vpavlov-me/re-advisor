@@ -50,7 +50,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getConstitutionTemplate, 
+  updateConstitutionTemplate, 
+  deleteConstitutionTemplate 
+} from "@/lib/supabase";
 
 // Predefined Sections (BR-KC-007: Constitution Template Structure)
 const SECTIONS = [
@@ -114,38 +118,29 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
           return;
         }
 
-        // Fetch template
-        const { data: templateData, error: templateError } = await supabase
-          .from('constitution_templates')
-          .select('*')
-          .eq('id', numericId)
-          .single();
+        // Fetch template with sections via abstraction layer
+        const templateResult = await getConstitutionTemplate(numericId);
 
-        if (templateError) throw templateError;
-
-        if (!templateData) {
+        if (!templateResult) {
           toast.error("Template not found");
           router.push("/knowledge");
           return;
         }
 
-        setTemplate(templateData);
-
-        // Fetch sections
-        const { data: sectionsData, error: sectionsError } = await supabase
-          .from('constitution_sections')
-          .select('*')
-          .eq('template_id', numericId)
-          .order('section_number');
-
-        if (sectionsError) {
-          console.error("Error fetching sections:", sectionsError);
-        }
+        setTemplate({
+          id: templateResult.id,
+          advisor_id: templateResult.advisor_id,
+          title: templateResult.title,
+          description: templateResult.description || "",
+          is_published: templateResult.is_published,
+          created_at: templateResult.created_at,
+          updated_at: templateResult.updated_at
+        });
 
         // Map sections to our format
         const sectionsMap: Record<string, string> = {};
         SECTIONS.forEach(section => {
-          const dbSection = sectionsData?.find(s => s.section_number === section.number);
+          const dbSection = templateResult.sections?.find((s: any) => s.section_number === section.number);
           sectionsMap[section.id] = dbSection?.content || "";
         });
 
@@ -191,41 +186,18 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
 
     setIsSaving(true);
     try {
-      // Update template
-      const { error: templateError } = await supabase
-        .from('constitution_templates')
-        .update({
-          title: templateData.title,
-          description: templateData.description,
-          is_published: publish ? true : template.is_published,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', template.id);
-
-      if (templateError) throw templateError;
-
-      // Delete existing sections and recreate
-      await supabase
-        .from('constitution_sections')
-        .delete()
-        .eq('template_id', template.id);
-
-      // Create new sections
-      const sectionsToInsert = SECTIONS.map((section) => ({
-        template_id: template.id,
-        section_number: section.number,
-        title: section.title,
-        content: templateData.sections[section.id] || "",
-        is_required: true
-      }));
-
-      const { error: sectionsError } = await supabase
-        .from('constitution_sections')
-        .insert(sectionsToInsert);
-
-      if (sectionsError) {
-        console.error("Error saving sections:", sectionsError);
-      }
+      // Update template via abstraction layer
+      await updateConstitutionTemplate(template.id, {
+        title: templateData.title,
+        description: templateData.description,
+        is_published: publish ? true : template.is_published,
+        sections: SECTIONS.map((section) => ({
+          section_number: section.number,
+          title: section.title,
+          content: templateData.sections[section.id] || "",
+          is_required: true
+        }))
+      });
 
       // Update local state
       setTemplate({
@@ -250,19 +222,8 @@ export default function ConstitutionDetailPage({ params }: { params: Promise<{ i
 
     setIsDeleting(true);
     try {
-      // Delete sections first
-      await supabase
-        .from('constitution_sections')
-        .delete()
-        .eq('template_id', template.id);
-
-      // Delete template
-      const { error } = await supabase
-        .from('constitution_templates')
-        .delete()
-        .eq('id', template.id);
-
-      if (error) throw error;
+      // Delete template via abstraction layer (sections are deleted by DB cascade)
+      await deleteConstitutionTemplate(template.id);
 
       toast.success("Template deleted");
       router.push("/knowledge");

@@ -3,7 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  getFamily,
+  getFamilyMembers,
+  addFamilyMember,
+  deleteFamily as deleteFamilyApi
+} from "@/lib/supabase/families";
+import { getTasksByFamily, createTask, toggleTaskComplete } from "@/lib/supabase/tasks";
+import { getConsultationsByFamily, createConsultation } from "@/lib/supabase";
+import { getServicesByFamily, createFamilyService } from "@/lib/services";
+import { createInvoice } from "@/lib/transactions";
 import { toast } from "sonner";
 import {
   Home,
@@ -181,40 +190,23 @@ export default function FamilyDetailPage() {
   const fetchFamily = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch family with related data
-      const { data: familyData, error: familyError } = await supabase
-        .from('families')
-        .select('*')
-        .eq('id', parseInt(familyId))
-        .single();
-
-      if (familyError) throw familyError;
+      const familyIdNum = parseInt(familyId);
+      
+      // Fetch family data using abstraction
+      const familyData = await getFamily(familyIdNum);
+      if (!familyData) throw new Error("Family not found");
 
       // Fetch members
-      const { data: membersData } = await supabase
-        .from('family_members')
-        .select('*')
-        .eq('family_id', parseInt(familyId));
+      const membersData = await getFamilyMembers(familyIdNum);
 
       // Fetch tasks
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('family_id', parseInt(familyId))
-        .order('created_at', { ascending: false });
+      const tasksData = await getTasksByFamily(familyIdNum);
 
       // Fetch services
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select('*')
-        .eq('family_id', parseInt(familyId));
+      const { data: servicesData } = await getServicesByFamily(familyIdNum);
 
       // Fetch consultations
-      const { data: consultationsData } = await supabase
-        .from('consultations')
-        .select('*')
-        .eq('family_id', parseInt(familyId))
-        .order('date', { ascending: false });
+      const consultationsData = await getConsultationsByFamily(familyIdNum);
 
       const family: Family = {
         id: familyData.id,
@@ -280,18 +272,12 @@ export default function FamilyDetailPage() {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('family_members')
-        .insert([{
-          family_id: family.id,
-          name: newMember.name,
-          email: newMember.email,
-          role: newMember.role
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await addFamilyMember({
+        family_id: family.id,
+        name: newMember.name,
+        email: newMember.email,
+        role: newMember.role
+      });
 
       const member: FamilyMember = {
         id: data.id,
@@ -318,19 +304,12 @@ export default function FamilyDetailPage() {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([{
-          family_id: family.id,
-          title: newTask.title,
-          due_date: newTask.dueDate.toISOString().split('T')[0],
-          priority: newTask.priority,
-          completed: false
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await createTask({
+        family_id: family.id,
+        title: newTask.title,
+        due_date: newTask.dueDate.toISOString().split('T')[0],
+        priority: newTask.priority as "low" | "medium" | "high"
+      });
 
       const task: Task = {
         id: data.id,
@@ -359,12 +338,7 @@ export default function FamilyDetailPage() {
     if (!task) return;
 
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ completed: !task.completed })
-        .eq('id', taskId);
-
-      if (error) throw error;
+      await toggleTaskComplete(taskId);
 
       setFamily({
         ...family,
@@ -384,30 +358,23 @@ export default function FamilyDetailPage() {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('services')
-        .insert([{
-          family_id: family.id,
-          name: newProposal.name,
-          status: "Pending",
-          progress: 0,
-          price: `$${newProposal.price}`,
-          description: newProposal.description,
-          start_date: new Date().toISOString()
-        }])
-        .select()
-        .single();
+      const { data, error } = await createFamilyService({
+        family_id: family.id,
+        name: newProposal.name,
+        price: `$${newProposal.price}`,
+        description: newProposal.description
+      });
 
       if (error) throw error;
 
       const service: Service = {
-        id: data.id,
-        name: data.name,
+        id: data!.id,
+        name: data!.name,
         status: "Pending",
         progress: 0,
-        price: data.price,
-        start_date: data.start_date,
-        description: data.description
+        price: data!.price || `$${newProposal.price}`,
+        start_date: data!.start_date || new Date().toISOString(),
+        description: data!.description || undefined
       };
 
       setFamily({ ...family, services: [service, ...family.services] });
@@ -427,19 +394,13 @@ export default function FamilyDetailPage() {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .insert([{
-          family_id: family.id,
-          title: newConsultation.title,
-          date: newConsultation.date.toISOString().split('T')[0],
-          time: newConsultation.time || "10:00 AM",
-          status: "scheduled"
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await createConsultation({
+        family_id: family.id,
+        title: newConsultation.title,
+        date: newConsultation.date.toISOString().split('T')[0],
+        time: newConsultation.time || "10:00 AM",
+        status: "scheduled"
+      });
 
       const consultation: Consultation = {
         id: data.id,
@@ -466,16 +427,12 @@ export default function FamilyDetailPage() {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert([{
-          family_id: family.id,
-          type: "invoice",
-          amount: parseFloat(newInvoice.amount),
-          status: "pending",
-          due_date: newInvoice.dueDate.toISOString().split('T')[0],
-          description: newInvoice.serviceId ? `Invoice for ${newInvoice.serviceId}` : "Service invoice"
-        }]);
+      const { error } = await createInvoice({
+        family_id: family.id,
+        amount: parseFloat(newInvoice.amount),
+        due_date: newInvoice.dueDate.toISOString().split('T')[0],
+        description: newInvoice.serviceId ? `Invoice for ${newInvoice.serviceId}` : "Service invoice"
+      });
 
       if (error) throw error;
 
@@ -496,12 +453,7 @@ export default function FamilyDetailPage() {
 
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('families')
-        .delete()
-        .eq('id', family.id);
-
-      if (error) throw error;
+      await deleteFamilyApi(family.id);
 
       toast.success("Family removed");
       router.push("/families");
@@ -517,6 +469,7 @@ export default function FamilyDetailPage() {
   if (isLoading) {
     return <FamilyDetailSkeleton />;
   }
+
 
   if (!family) {
     return (

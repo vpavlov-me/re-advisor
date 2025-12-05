@@ -33,6 +33,22 @@ export interface CreateMessageInput {
   content: string;
 }
 
+export interface CreateMessageWithAttachmentInput {
+  conversation_id: number;
+  content: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  attachment_size?: number;
+}
+
+export interface UpdateConversationInput {
+  last_message?: string;
+  last_message_time?: string;
+  unread_count?: number;
+  pinned?: boolean;
+}
+
 // Conversations CRUD
 export async function getConversations() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -260,6 +276,85 @@ export async function searchMessages(query: string) {
     .ilike("content", `%${query}%`)
     .order("created_at", { ascending: false })
     .limit(20);
+
+  if (error) throw error;
+  return data;
+}
+
+// Send message with attachment support
+export async function sendMessageWithAttachment(input: CreateMessageWithAttachmentInput) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  // Get user's name from profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("id", user.id)
+    .single();
+
+  const senderName = profile 
+    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "You"
+    : "You";
+
+  const { data, error } = await supabase
+    .from("messages")
+    .insert([{
+      conversation_id: input.conversation_id,
+      sender_id: user.id,
+      sender_name: senderName,
+      content: input.content,
+      is_own: true,
+      read: true,
+      attachment_url: input.attachment_url,
+      attachment_name: input.attachment_name,
+      attachment_type: input.attachment_type,
+      attachment_size: input.attachment_size,
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // Update conversation's last message
+  const lastMessageText = input.attachment_name 
+    ? `📎 ${input.attachment_name}` 
+    : input.content.substring(0, 100);
+
+  await updateConversation(input.conversation_id, {
+    last_message: lastMessageText,
+    last_message_time: new Date().toISOString()
+  });
+
+  return data;
+}
+
+// Update conversation
+export async function updateConversation(id: number, input: UpdateConversationInput) {
+  const { data, error } = await supabase
+    .from("conversations")
+    .update(input)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// Get families with members for message page
+export async function getFamiliesForMessaging() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from('families')
+    .select(`
+      id, 
+      name,
+      members:family_members(id, name, role)
+    `)
+    .eq('advisor_id', user.id);
 
   if (error) throw error;
   return data;

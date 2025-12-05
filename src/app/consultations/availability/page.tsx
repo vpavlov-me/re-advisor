@@ -8,7 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus, Trash2, Clock, Globe, Home, ChevronRight, ArrowLeft, Save } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  getAvailabilitySettings,
+  upsertAvailabilitySettings,
+  getWeeklySchedule,
+  saveWeeklySchedule
+} from "@/lib/supabase";
 import { toast } from "sonner";
 
 const DAYS = [
@@ -72,14 +78,10 @@ export default function AvailabilityPage() {
     DAYS.map((_, i) => ({ dayOfWeek: i, isEnabled: i > 0 && i < 6, slots: [{ startTime: "09:00", endTime: "17:00" }] }))
   );
 
-  const fetchAvailability = useCallback(async (advisorId: string) => {
+  const fetchAvailability = useCallback(async () => {
     try {
       // Fetch availability settings
-      const { data: settingsData } = await supabase
-        .from('availability_settings')
-        .select('*')
-        .eq('advisor_id', advisorId)
-        .single();
+      const settingsData = await getAvailabilitySettings();
 
       if (settingsData) {
         setConfig({
@@ -92,12 +94,7 @@ export default function AvailabilityPage() {
       }
 
       // Fetch weekly schedule
-      const { data: scheduleData, error } = await supabase
-        .from('weekly_schedule')
-        .select('*')
-        .eq('advisor_id', advisorId);
-
-      if (error) throw error;
+      const scheduleData = await getWeeklySchedule();
 
       if (scheduleData && scheduleData.length > 0) {
         // Transform flat slots to structured schedule
@@ -133,10 +130,10 @@ export default function AvailabilityPage() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCurrentUser();
       if (user) {
         setUserId(user.id);
-        fetchAvailability(user.id);
+        fetchAvailability();
       } else {
         setLoading(false);
       }
@@ -153,46 +150,25 @@ export default function AvailabilityPage() {
     setSaving(true);
     try {
       // 1. Upsert availability settings
-      const { error: settingsError } = await supabase
-        .from('availability_settings')
-        .upsert({
-          advisor_id: userId,
-          timezone: config.timezone,
-          buffer_before_minutes: config.bufferBeforeMinutes,
-          buffer_after_minutes: config.bufferAfterMinutes,
-          min_notice_hours: config.minNoticeHours,
-          max_advance_days: config.maxAdvanceDays,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'advisor_id' });
+      await upsertAvailabilitySettings({
+        timezone: config.timezone,
+        buffer_before_minutes: config.bufferBeforeMinutes,
+        buffer_after_minutes: config.bufferAfterMinutes,
+        min_notice_hours: config.minNoticeHours,
+        max_advance_days: config.maxAdvanceDays,
+      });
 
-      if (settingsError) throw settingsError;
-
-      // 2. Delete all existing schedule slots for this user
-      const { error: deleteError } = await supabase
-        .from('weekly_schedule')
-        .delete()
-        .eq('advisor_id', userId);
-
-      if (deleteError) throw deleteError;
-
-      // 3. Prepare new slots
+      // 2. Save weekly schedule (replaces all existing slots)
       const slotsToInsert = schedule
         .filter(day => day.isEnabled)
         .flatMap(day => day.slots.map(slot => ({
-          advisor_id: userId,
           day_of_week: day.dayOfWeek,
           start_time: slot.startTime,
           end_time: slot.endTime,
           is_available: true,
         })));
 
-      if (slotsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('weekly_schedule')
-          .insert(slotsToInsert);
-          
-        if (insertError) throw insertError;
-      }
+      await saveWeeklySchedule(slotsToInsert);
 
       toast.success("Availability saved successfully!");
     } catch (error) {

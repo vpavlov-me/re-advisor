@@ -41,7 +41,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabaseClient";
+import { getCurrentUser, signOut, updatePassword } from "@/lib/auth";
 import {
   getUserSessions,
   upsertCurrentSession,
@@ -127,7 +127,8 @@ export default function SettingsPage() {
     const getUser = async () => {
       setIsLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Use auth abstraction to get current user
+        const user = await getCurrentUser();
         if (user && user.email) {
           setUserEmail(user.email);
           
@@ -168,9 +169,8 @@ export default function SettingsPage() {
   const onPasswordSubmit = async (data: PasswordFormData) => {
     setIsUpdatingPassword(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.new
-      });
+      // Use auth abstraction for password update
+      const { error } = await updatePassword(data.new);
 
       if (error) throw error;
 
@@ -187,7 +187,8 @@ export default function SettingsPage() {
   const handleSignOutAll = async () => {
     setIsSigningOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      // Use auth abstraction for sign out
+      const { error } = await signOut();
       if (error) throw error;
       toast.success("Signed out from all devices");
       window.location.href = '/auth/login';

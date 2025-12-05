@@ -26,7 +26,7 @@ export interface Credential {
   name: string;
   issuer?: string;
   year?: string;
-  status: string;
+  status?: string;
   credential_id?: string;
   created_at: string;
 }
@@ -51,6 +51,15 @@ export interface UpdateProfileInput {
   linkedin?: string;
   twitter?: string;
   bio?: string;
+  avatar_url?: string;
+  profile_status?: string;
+  onboarding_progress?: number;
+  onboarding_completed_at?: string;
+  two_factor_enabled?: boolean;
+  city?: string;
+  country?: string;
+  linkedin_url?: string;
+  expertise_areas?: string[];
 }
 
 // Profile CRUD

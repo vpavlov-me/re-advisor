@@ -39,7 +39,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/lib/supabaseClient";
 import {
   getLoginHistory,
   formatLoginDate,

@@ -10,9 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
-import { updatePassword } from "@/lib/auth";
+import { updatePassword, getSession, setSession as setAuthSession } from "@/lib/auth";
 import { resetPasswordSchema, type ResetPasswordFormData } from "@/lib/validations";
-import { supabase } from "@/lib/supabaseClient";
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -65,10 +64,8 @@ function ResetPasswordContent() {
           const refreshToken = params.get("refresh_token");
           
           if (accessToken && refreshToken) {
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
+            // Use auth abstraction
+            const { error: sessionError } = await setAuthSession(accessToken, refreshToken);
             
             if (sessionError) {
               setTokenError(true);
@@ -85,7 +82,7 @@ function ResetPasswordContent() {
         }
 
         // Check if we already have a valid session (from callback redirect)
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getSession();
         
         if (!session) {
           setTokenError(true);

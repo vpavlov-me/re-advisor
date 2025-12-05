@@ -3,7 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  getServiceRequests,
+  type ServiceRequest,
+  type ServiceRequestStatus,
+  type ServiceRequestItem,
+  type ServiceDeliverable,
+  type ConsultantService
+} from "@/lib/supabase";
 import { toast } from "sonner";
 import {
   Home,
@@ -71,73 +78,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Types
-type ServiceRequestStatus = 
-  | "pending_consultant"
-  | "awaiting_family_approval"
-  | "in_progress"
-  | "delivered"
-  | "completed_paid"
-  | "declined_consultant"
-  | "declined_family"
-  | "cancelled";
-
-type ServiceRequest = {
-  id: number;
-  request_number: string;
-  family_id: number;
-  family_name: string;
-  family_email?: string;
-  consultant_id: string;
-  original_service_id: number | null;
-  original_service_name: string;
-  status: ServiceRequestStatus;
-  family_notes: string | null;
-  consultant_comment: string | null;
-  decline_reason: string | null;
-  original_amount: number;
-  additional_amount: number;
-  total_amount: number;
-  estimated_timeline: string | null;
-  booked_at: string;
-  consultant_response_deadline: string;
-  consultant_confirmed_at: string | null;
-  family_approved_at: string | null;
-  started_at: string | null;
-  completed_at: string | null;
-  paid_at: string | null;
-  items: ServiceRequestItem[];
-  deliverables: ServiceDeliverable[];
-};
-
-type ServiceRequestItem = {
-  id: number;
-  service_request_id: number;
-  service_id: number | null;
-  service_name: string;
-  service_description: string | null;
-  price_at_booking: number;
-  is_original: boolean;
-  added_by: "family" | "consultant";
-};
-
-type ServiceDeliverable = {
-  id: number;
-  service_request_id: number;
-  title: string;
-  description: string | null;
-  external_link: string;
-  uploaded_at: string;
-};
-
-type ConsultantService = {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  price_amount: number;
-};
 
 // Status configuration
 const statusConfig: Record<ServiceRequestStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -210,7 +150,9 @@ const formatDate = (dateString: string) => {
 };
 
 // Helper to calculate time remaining
-const getTimeRemaining = (deadline: string) => {
+const getTimeRemaining = (deadline?: string) => {
+  if (!deadline) return { expired: true, text: "No deadline" };
+  
   const now = new Date();
   const end = new Date(deadline);
   const diff = end.getTime() - now.getTime();
@@ -264,128 +206,10 @@ export default function ServiceRequestsPage() {
   // Fetch service requests
   const fetchRequests = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch service requests from database
-      const { data: requestsData, error: requestsError } = await supabase
-        .from("service_requests")
-        .select(`
-          *,
-          families:family_id (
-            id,
-            name,
-            email
-          ),
-          services:original_service_id (
-            id,
-            name
-          )
-        `)
-        .eq("consultant_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (requestsError) {
-        console.error("Error fetching service requests:", requestsError);
-        toast.error("Failed to load service requests");
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch items and deliverables for all requests
-      const requestIds = requestsData?.map((r: any) => r.id) || [];
+      const { requests: fetchedRequests, consultantServices: fetchedServices } = await getServiceRequests();
       
-      let itemsData: any[] = [];
-      let deliverablesData: any[] = [];
-      
-      if (requestIds.length > 0) {
-        const [itemsResult, deliverablesResult] = await Promise.all([
-          supabase
-            .from("service_request_items")
-            .select("*")
-            .in("service_request_id", requestIds),
-          supabase
-            .from("service_deliverables")
-            .select("*")
-            .in("service_request_id", requestIds)
-        ]);
-        
-        itemsData = itemsResult.data || [];
-        deliverablesData = deliverablesResult.data || [];
-      }
-
-      // Transform data to match component types
-      const transformedRequests: ServiceRequest[] = (requestsData || []).map((req: any) => ({
-        id: req.id,
-        request_number: req.request_number || `SR-${req.id}`,
-        family_id: req.family_id,
-        family_name: req.families?.name || "Unknown Family",
-        family_email: req.families?.email || undefined,
-        consultant_id: req.consultant_id,
-        original_service_id: req.original_service_id,
-        original_service_name: req.services?.name || "Service",
-        status: req.status as ServiceRequestStatus,
-        family_notes: req.family_notes,
-        consultant_comment: req.consultant_comment,
-        decline_reason: req.decline_reason,
-        original_amount: Number(req.original_amount) || 0,
-        additional_amount: Number(req.additional_amount) || 0,
-        total_amount: Number(req.total_amount) || 0,
-        estimated_timeline: req.estimated_timeline,
-        booked_at: req.booked_at || req.created_at,
-        consultant_response_deadline: req.consultant_response_deadline,
-        consultant_confirmed_at: req.consultant_confirmed_at,
-        family_approved_at: req.family_approved_at,
-        started_at: req.started_at,
-        completed_at: req.completed_at,
-        paid_at: req.paid_at,
-        items: itemsData
-          .filter((item: any) => item.service_request_id === req.id)
-          .map((item: any) => ({
-            id: item.id,
-            service_request_id: item.service_request_id,
-            service_id: item.service_id,
-            service_name: item.service_name,
-            service_description: item.service_description,
-            price_at_booking: Number(item.price_at_booking) || 0,
-            is_original: item.is_original,
-            added_by: item.added_by as "family" | "consultant",
-          })),
-        deliverables: deliverablesData
-          .filter((d: any) => d.service_request_id === req.id)
-          .map((d: any) => ({
-            id: d.id,
-            service_request_id: d.service_request_id,
-            title: d.title,
-            description: d.description,
-            external_link: d.external_link,
-            uploaded_at: d.uploaded_at,
-          })),
-      }));
-
-      setRequests(transformedRequests);
-
-      // Fetch consultant's services for adding to requests
-      const { data: servicesData } = await supabase
-        .from("services")
-        .select("id, name, description, price, price_amount")
-        .eq("advisor_id", user.id)
-        .eq("status", "active");
-
-      if (servicesData) {
-        setConsultantServices(
-          servicesData.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            description: s.description || "",
-            price: s.price || "$0",
-            price_amount: s.price_amount || 0,
-          }))
-        );
-      }
+      setRequests(fetchedRequests);
+      setConsultantServices(fetchedServices);
     } catch (error) {
       console.error("Error fetching requests:", error);
       toast.error("Failed to load service requests");
@@ -494,8 +318,8 @@ export default function ServiceRequestsPage() {
             ? {
                 ...r,
                 status: "awaiting_family_approval" as ServiceRequestStatus,
-                consultant_comment: acceptForm.comment || null,
-                estimated_timeline: acceptForm.estimatedTimeline || null,
+                consultant_comment: acceptForm.comment || undefined,
+                estimated_timeline: acceptForm.estimatedTimeline || undefined,
                 additional_amount: additionalAmount,
                 total_amount: r.original_amount + additionalAmount,
                 consultant_confirmed_at: new Date().toISOString(),
@@ -607,7 +431,7 @@ export default function ServiceRequestsPage() {
         id: Date.now(),
         service_request_id: selectedRequest.id,
         title: deliverableForm.title,
-        description: deliverableForm.description || null,
+        description: deliverableForm.description || undefined,
         external_link: deliverableForm.externalLink,
         uploaded_at: new Date().toISOString(),
       };

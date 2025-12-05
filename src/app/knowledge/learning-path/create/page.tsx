@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getKnowledgeResources, createLearningPathWithSteps } from "@/lib/supabase";
 import { toast } from "sonner";
 import { 
   ChevronLeft, 
@@ -81,38 +81,25 @@ export default function CreateLearningPathPage() {
 
   const activeModule = modules.find(m => m.id === activeModuleId);
 
-  // Fetch resources from database
+  // Fetch resources from database via abstraction layer
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setIsLoadingResources(false);
-          return;
-        }
+        const data = await getKnowledgeResources();
 
-        const { data, error } = await supabase
-          .from("knowledge_resources")
-          .select("id, title, type, description")
-          .eq("advisor_id", user.id)
-          .eq("is_published", true)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error fetching resources:", error);
-          toast.error("Failed to load resources");
-        } else {
-          setAvailableResources(
-            (data || []).map((r: any) => ({
+        setAvailableResources(
+          (data || [])
+            .filter((r: any) => r.is_published)
+            .map((r: any) => ({
               id: String(r.id),
               title: r.title,
               type: r.type || "document",
               description: r.description,
             }))
-          );
-        }
+        );
       } catch (error) {
         console.error("Error fetching resources:", error);
+        toast.error("Failed to load resources");
       } finally {
         setIsLoadingResources(false);
       }
@@ -135,46 +122,19 @@ export default function CreateLearningPathPage() {
     
     setIsSaving(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("You must be logged in to create a learning path");
-        return;
-      }
-
-      // Create the learning path
-      const { data: pathData, error: pathError } = await supabase
-        .from('learning_paths')
-        .insert([{
-          advisor_id: user.id,
-          title,
-          description,
-          difficulty: 'beginner',
-          is_published: !asDraft
-        }])
-        .select()
-        .single();
-
-      if (pathError) throw pathError;
-
-      // Create steps for each module
-      if (pathData && modules.length > 0) {
-        const steps = modules.map((module, index) => ({
-          learning_path_id: pathData.id,
+      // Create the learning path with steps via abstraction layer
+      await createLearningPathWithSteps({
+        title,
+        description,
+        category,
+        difficulty: "beginner",
+        is_published: !asDraft,
+        steps: modules.map((module, index) => ({
           title: module.title,
           description: module.description,
-          step_order: index + 1,
-          // Resources are stored as references - could link to knowledge_resources if needed
-        }));
-
-        const { error: stepsError } = await supabase
-          .from('learning_path_steps')
-          .insert(steps);
-
-        if (stepsError) {
-          console.error("Error saving steps:", stepsError);
-        }
-      }
+          step_order: index + 1
+        }))
+      });
 
       toast.success(asDraft ? "Draft saved successfully!" : "Learning Path published!");
       router.push("/knowledge");
