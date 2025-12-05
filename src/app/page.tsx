@@ -50,6 +50,8 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
 import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
+import type { Profile } from "@/lib/database.types";
 
 // Icon mapping for dynamic rendering
 const iconMap: Record<string, LucideIcon> = {
@@ -76,16 +78,18 @@ const initialStats = [
 function OnboardingCard({ step }: { step: { id: number; label: string; icon: React.ElementType; status: "completed" | "current" | "pending" | "locked"; href: string } }) {
   const Icon = step.icon;
   
-  const CardContent = (
-    <div className={`flex items-center gap-3 px-3 py-3 bg-card border border-border rounded-[10px] min-w-[200px] flex-1 transition-colors ${
-      step.status !== "locked" ? "hover:border-primary/50 cursor-pointer" : "opacity-70 cursor-not-allowed"
+  const CardContentElement = (
+    <div className={`flex items-center gap-3 px-3 py-3 bg-card border border-border rounded-[10px] min-w-[200px] flex-1 transition-all duration-200 ${
+      step.status !== "locked" 
+        ? "hover:border-primary hover:bg-primary/5 hover:shadow-md hover:shadow-primary/10 hover:scale-[1.02] cursor-pointer" 
+        : "opacity-70 cursor-not-allowed"
     }`}>
-      <div className={`flex items-center justify-center h-5 w-5 ${
-        step.status === "locked" ? "text-muted-foreground/50" : "text-foreground"
+      <div className={`flex items-center justify-center h-5 w-5 transition-colors ${
+        step.status === "locked" ? "text-muted-foreground/50" : "text-foreground group-hover:text-primary"
       }`}>
         <Icon className="h-5 w-5" />
       </div>
-      <span className={`text-sm font-medium flex-1 ${
+      <span className={`text-sm font-medium flex-1 transition-colors ${
         step.status === "locked" ? "text-muted-foreground" : "text-foreground"
       }`}>
         {step.label}
@@ -96,12 +100,12 @@ function OnboardingCard({ step }: { step: { id: number; label: string; icon: Rea
   );
 
   if (step.status === "locked") {
-    return CardContent;
+    return CardContentElement;
   }
 
   return (
-    <Link href={step.href} className="flex-1">
-      {CardContent}
+    <Link href={step.href} className="flex-1 group">
+      {CardContentElement}
     </Link>
   );
 }
@@ -318,6 +322,18 @@ export default function HomePage() {
   const [userName, setUserName] = useState("Advisor");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<Partial<Profile> | null>(null);
+  const [hideProfileCard, setHideProfileCard] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hideProfileCompletionCard') === 'true';
+    }
+    return false;
+  });
+
+  const handleHideProfileCard = () => {
+    setHideProfileCard(true);
+    localStorage.setItem('hideProfileCompletionCard', 'true');
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -341,13 +357,14 @@ export default function HomePage() {
         // Fetch Profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('first_name, last_name, avatar_url')
+          .select('*')
           .eq('id', user.id)
           .single();
         
         if (profile) {
           setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
           setUserAvatarUrl(profile.avatar_url);
+          setUserProfile(profile);
         }
 
         // Fetch Counts
@@ -788,7 +805,18 @@ export default function HomePage() {
           </div>
 
           {/* Quick Actions - 1 column */}
-          <div>
+          <div className="space-y-4">
+            {/* Profile Completion Card */}
+            {!hideProfileCard && userProfile && (
+              <ProfileCompletionCard
+                profile={userProfile}
+                onEditProfile={() => window.location.href = '/profile'}
+                onSetupPayments={() => window.location.href = '/payments'}
+                onVerifyIdentity={() => window.location.href = '/settings'}
+                onHide={handleHideProfileCard}
+              />
+            )}
+            
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-base">Quick Actions</CardTitle>

@@ -15,7 +15,9 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  Image
+  Image,
+  X,
+  Calendar
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,8 @@ interface ProfileCompletionCardProps {
   onEditProfile?: () => void;
   onSetupPayments?: () => void;
   onVerifyIdentity?: () => void;
+  onAddAvailability?: () => void;
+  onHide?: () => void;
   compact?: boolean;
 }
 
@@ -55,20 +59,22 @@ const fieldIcons: Record<string, React.ComponentType<{ className?: string }>> = 
   kyc_status: Shield,
 };
 
-// Map field keys to action buttons
+// Map field keys to action buttons and their hrefs
 function getFieldAction(
   field: ProfileField,
   onEditProfile?: () => void,
   onSetupPayments?: () => void,
   onVerifyIdentity?: () => void
-): { label: string; onClick: () => void } | null {
+): { label: string; onClick?: () => void; href?: string } | null {
   switch (field.key) {
     case 'stripe_account_status':
-      return onSetupPayments ? { label: 'Set up payments', onClick: onSetupPayments } : null;
+      return { label: 'Set up payments', onClick: onSetupPayments, href: '/payments' };
     case 'kyc_status':
-      return onVerifyIdentity ? { label: 'Verify identity', onClick: onVerifyIdentity } : null;
+      return { label: 'Verify identity', onClick: onVerifyIdentity, href: '/settings' };
+    case 'avatar_url':
+      return { label: 'Add photo', onClick: onEditProfile, href: '/profile' };
     default:
-      return onEditProfile ? { label: `Add ${field.label.toLowerCase()}`, onClick: onEditProfile } : null;
+      return onEditProfile ? { label: `Add ${field.label.toLowerCase()}`, onClick: onEditProfile, href: '/profile' } : null;
   }
 }
 
@@ -77,6 +83,8 @@ export function ProfileCompletionCard({
   onEditProfile,
   onSetupPayments,
   onVerifyIdentity,
+  onAddAvailability,
+  onHide,
   compact = false,
 }: ProfileCompletionCardProps) {
   const completion = useMemo(() => calculateProfileCompletion(profile), [profile]);
@@ -120,17 +128,29 @@ export function ProfileCompletionCard({
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-base font-medium text-foreground">Profile Completion</h3>
-            <p className="text-sm text-muted-foreground">
-              {completion.percentage >= 100 
-                ? 'Your profile is complete!' 
-                : 'Complete your profile to attract more families'}
-            </p>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <h3 className="text-base font-medium text-foreground">Profile Completion</h3>
+              <p className="text-sm text-muted-foreground">
+                {completion.percentage >= 100 
+                  ? 'Your profile is complete!' 
+                  : 'Complete your profile to attract more families'}
+              </p>
+            </div>
           </div>
-          <div className="text-right">
+          <div className="flex items-center gap-3">
             <span className="text-3xl font-bold text-primary">{completion.percentage}%</span>
+            {onHide && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={onHide}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -138,67 +158,22 @@ export function ProfileCompletionCard({
           <Progress value={completion.percentage} className="h-3" />
         </div>
 
-        {/* Section Progress */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {Object.entries(completion.sectionProgress).map(([section, data]) => (
-            <div key={section} className="text-center">
-              <div className="text-xs text-muted-foreground capitalize mb-1">{section}</div>
-              <div className="flex items-center justify-center gap-1">
-                {data.percentage === 100 ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                ) : (
-                  <span className="text-sm font-medium">{data.percentage}%</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Next Action Alert */}
-        {nextAction.field && nextAction.priority === 'high' && (
-          <div className="p-3 mb-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                {nextAction.message}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions */}
+        {/* Quick Actions as Buttons */}
         {quickActions.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              Complete these to improve your profile
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {quickActions.map(({ field, icon: Icon, action }) => (
-                <Badge
-                  key={field.key}
+          <div className="flex flex-wrap gap-2">
+            {quickActions.map(({ field, action }) => (
+              <Link key={field.key} href={action?.href || '/profile'}>
+                <Button
                   variant="outline"
-                  className="cursor-pointer hover:bg-muted/50 transition-colors py-1.5 px-3"
+                  size="sm"
+                  className="h-9 px-4 hover:bg-muted/50 transition-colors"
                   onClick={action?.onClick}
                 >
-                  <Icon className="h-3 w-3 mr-1.5" />
-                  {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
-                </Badge>
-              ))}
-            </div>
+                  {action?.label || field.label}
+                </Button>
+              </Link>
+            ))}
           </div>
-        )}
-
-        {/* Complete Profile Button */}
-        {completion.percentage < 100 && onEditProfile && (
-          <Button 
-            variant="outline" 
-            className="w-full mt-4"
-            onClick={onEditProfile}
-          >
-            Complete Your Profile
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
         )}
 
         {completion.percentage === 100 && (
