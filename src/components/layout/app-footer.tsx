@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/logo";
+import { BackToTop } from "@/components/ui/back-to-top";
 
 export function AppFooter() {
   return (
@@ -120,7 +121,13 @@ export function AppFooter() {
             </Link>
           </div>
         </div>
+        
+        {/* Mobile Back to Top - inside footer */}
+        <BackToTop />
       </div>
+
+      {/* Desktop Back to Top - fixed position */}
+      <BackToTop />
     </footer>
   );
 }

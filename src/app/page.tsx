@@ -153,11 +153,13 @@ function DashboardSkeleton() {
               <Skeleton className="h-4 w-full" />
             </div>
             <div className="space-y-3">
+              {/* Row 1 - 4 cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map((i) => (
                   <Skeleton key={i} className="h-12 rounded-[10px]" />
                 ))}
               </div>
+              {/* Row 2 - 4 cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[5, 6, 7, 8].map((i) => (
                   <Skeleton key={i} className="h-12 rounded-[10px]" />
