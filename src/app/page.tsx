@@ -50,8 +50,6 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { LucideIcon } from "lucide-react";
 import { syncOnboardingProgress, getStepStatus, ONBOARDING_STEPS, type OnboardingProgress } from "@/lib/onboarding";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
-import type { Profile } from "@/lib/database.types";
 
 // Icon mapping for dynamic rendering
 const iconMap: Record<string, LucideIcon> = {
@@ -322,18 +320,6 @@ export default function HomePage() {
   const [userName, setUserName] = useState("Advisor");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<Partial<Profile> | null>(null);
-  const [hideProfileCard, setHideProfileCard] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('hideProfileCompletionCard') === 'true';
-    }
-    return false;
-  });
-
-  const handleHideProfileCard = () => {
-    setHideProfileCard(true);
-    localStorage.setItem('hideProfileCompletionCard', 'true');
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -357,14 +343,13 @@ export default function HomePage() {
         // Fetch Profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('first_name, last_name, avatar_url')
           .eq('id', user.id)
           .single();
         
         if (profile) {
           setUserName(`${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "Advisor");
           setUserAvatarUrl(profile.avatar_url);
-          setUserProfile(profile);
         }
 
         // Fetch Counts
@@ -805,18 +790,7 @@ export default function HomePage() {
           </div>
 
           {/* Quick Actions - 1 column */}
-          <div className="space-y-4">
-            {/* Profile Completion Card */}
-            {!hideProfileCard && userProfile && (
-              <ProfileCompletionCard
-                profile={userProfile}
-                onEditProfile={() => window.location.href = '/profile'}
-                onSetupPayments={() => window.location.href = '/payments'}
-                onVerifyIdentity={() => window.location.href = '/settings'}
-                onHide={handleHideProfileCard}
-              />
-            )}
-            
+          <div>
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-base">Quick Actions</CardTitle>
