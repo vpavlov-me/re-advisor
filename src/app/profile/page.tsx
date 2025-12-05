@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +29,15 @@ import {
   Trash2,
   Loader2,
   Briefcase,
-  ArrowRight
+  ArrowRight,
+  Star,
+  Play,
+  GraduationCap,
+  BadgeCheck,
+  ExternalLink,
+  Settings,
+  FileText,
+  Share2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,9 +58,12 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabaseClient";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { updateProfileAvatar, removeProfileAvatar } from "@/lib/supabase/storage";
+import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
+import { useRouter } from "next/navigation";
 
 // Zod Validation Schemas
 const profileSchema = z.object({
@@ -66,7 +78,7 @@ const profileSchema = z.object({
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
   linkedin: z.string().optional(),
   twitter: z.string().optional(),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional()
+  bio: z.string().max(2000, "Bio must be less than 2000 characters").optional()
 });
 
 const credentialSchema = z.object({
@@ -95,8 +107,12 @@ interface Profile {
   twitter: string;
   bio: string;
   avatar_url: string | null;
+  banner_url?: string | null;
+  video_url?: string | null;
   joined_date: string;
   completion_percentage: number;
+  rating?: number;
+  reviews_count?: number;
 }
 
 interface Credential {
@@ -108,37 +124,82 @@ interface Credential {
   credential_id?: string;
 }
 
-interface Expertise {
+interface Experience {
   id: number;
-  area: string;
+  role: string;
+  company: string;
+  period: string;
+  description?: string;
+}
+
+interface Education {
+  id: number;
+  degree: string;
+  institution: string;
+  year: string;
 }
 
 interface Service {
   id: number;
   name: string;
+  description?: string;
+  duration?: string;
   price: string;
   status: string;
 }
 
+interface Recommendation {
+  id: number;
+  author_name: string;
+  author_title: string;
+  author_avatar?: string;
+  rating: number;
+  text: string;
+  date: string;
+}
+
+// Quick Actions
+const quickActions = [
+  { label: "Edit Profile", href: "#", icon: Edit, action: "edit" },
+  { label: "View Public Profile", href: "/advisor/preview", icon: ExternalLink },
+  { label: "Share Profile", href: "#", icon: Share2, action: "share" },
+];
+
 // Settings links
 const settingsLinks = [
-  { label: "Account & Security", href: "/settings", icon: Shield, description: "Password, 2FA, login history" },
-  { label: "Notifications", href: "/notifications", icon: Bell, description: "Email, push, and SMS preferences" },
-  { label: "Payment Methods", href: "/payments", icon: CreditCard, description: "Cards, bank accounts, billing" },
-  { label: "Subscription", href: "/subscription", icon: Award, description: "Plan details and usage" },
+  { label: "Account & Security", href: "/settings", icon: Shield },
+  { label: "Notifications", href: "/notifications", icon: Bell },
+  { label: "Payment Methods", href: "/payments", icon: CreditCard },
+  { label: "Subscription", href: "/subscription", icon: Award },
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [expertiseList, setExpertiseList] = useState<string[]>([]);
+  const [skillsList, setSkillsList] = useState<string[]>([]);
   const [credentialsList, setCredentialsList] = useState<Credential[]>([]);
   const [servicesList, setServicesList] = useState<Service[]>([]);
+  const [experienceList, setExperienceList] = useState<Experience[]>([]);
+  const [educationList, setEducationList] = useState<Education[]>([]);
+  const [recommendationsList, setRecommendationsList] = useState<Recommendation[]>([]);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [isCredentialSheetOpen, setIsCredentialSheetOpen] = useState(false);
   const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
   const [newExpertise, setNewExpertise] = useState("");
+  const [hideProfileCompletionCard, setHideProfileCompletionCard] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hideProfileCompletionCard') === 'true';
+    }
+    return false;
+  });
+
+  const handleHideProfileCompletionCard = () => {
+    setHideProfileCompletionCard(true);
+    localStorage.setItem('hideProfileCompletionCard', 'true');
+  };
 
   // React Hook Form for Profile
   const {
@@ -170,7 +231,6 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // For demo purposes if no user, use mock data or redirect
         console.log("No user found");
         setLoading(false);
         return;
@@ -189,7 +249,6 @@ export default function ProfilePage() {
 
       if (profileData) {
         setProfile(profileData);
-        // Set form values
         resetProfile({
           first_name: profileData.first_name || "",
           last_name: profileData.last_name || "",
@@ -205,7 +264,6 @@ export default function ProfilePage() {
           bio: profileData.bio || ""
         });
       } else {
-        // Create default profile if not exists
         const defaultProfile = {
           id: user.id,
           first_name: "",
@@ -221,7 +279,9 @@ export default function ProfilePage() {
           twitter: "",
           bio: "",
           joined_date: new Date().toLocaleDateString(),
-          completion_percentage: 0
+          completion_percentage: 0,
+          rating: 0,
+          reviews_count: 0
         };
         setProfile(defaultProfile as Profile);
         resetProfile({
@@ -241,7 +301,7 @@ export default function ProfilePage() {
       }
 
       // Fetch Credentials
-      const { data: credentialsData, error: credentialsError } = await supabase
+      const { data: credentialsData } = await supabase
         .from('credentials')
         .select('*')
         .eq('advisor_id', user.id);
@@ -250,8 +310,8 @@ export default function ProfilePage() {
         setCredentialsList(credentialsData);
       }
 
-      // Fetch Expertise
-      const { data: expertiseData, error: expertiseError } = await supabase
+      // Fetch Expertise/Specialization
+      const { data: expertiseData } = await supabase
         .from('expertise')
         .select('area')
         .eq('advisor_id', user.id);
@@ -261,15 +321,35 @@ export default function ProfilePage() {
       }
 
       // Fetch Services
-      const { data: servicesData, error: servicesError } = await supabase
+      const { data: servicesData } = await supabase
         .from('services')
-        .select('id, name, price, status')
-        .eq('advisor_id', user.id)
-        .limit(5);
+        .select('id, name, description, duration, price, status')
+        .eq('advisor_id', user.id);
 
       if (servicesData) {
         setServicesList(servicesData);
       }
+
+      // Fetch Experience - mock data for now
+      setExperienceList([
+        { id: 1, role: "Senior Financial Advisor", company: "Wealth Management Inc.", period: "2018 - Present", description: "Managing high-net-worth client portfolios and providing comprehensive financial planning services." },
+        { id: 2, role: "Financial Analyst", company: "Investment Partners LLC", period: "2014 - 2018", description: "Analyzed investment opportunities and market trends for institutional clients." },
+      ]);
+
+      // Fetch Education - mock data for now
+      setEducationList([
+        { id: 1, degree: "MBA Finance", institution: "Harvard Business School", year: "2014" },
+        { id: 2, degree: "BS Economics", institution: "University of Pennsylvania", year: "2010" },
+      ]);
+
+      // Fetch Skills - mock data for now
+      setSkillsList(["Portfolio Management", "Tax Planning", "Estate Planning", "Risk Assessment", "Client Relations", "Financial Modeling"]);
+
+      // Fetch Recommendations - mock data for now
+      setRecommendationsList([
+        { id: 1, author_name: "John Smith", author_title: "CEO, Tech Startup", rating: 5, text: "Exceptional advisor who truly understands the needs of entrepreneurs. Helped me navigate complex tax situations with ease.", date: "2024-01-15" },
+        { id: 2, author_name: "Sarah Johnson", author_title: "Real Estate Investor", rating: 5, text: "Professional, knowledgeable, and always available when I need advice. Highly recommended!", date: "2023-11-20" },
+      ]);
 
     } catch (error) {
       console.error('Error loading profile data:', error);
@@ -577,6 +657,10 @@ export default function ProfilePage() {
     return <div className="p-8 text-center">Please log in to view profile.</div>;
   }
 
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Breadcrumb Bar */}
@@ -592,337 +676,149 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="container py-8 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your personal information and credentials.
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => setIsProfileSheetOpen(true)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Profile
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left Column - Profile Info */}
+      <div className="container py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          {/* Left Column - Main Content */}
           <div className="space-y-6">
-            {/* Profile Card */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="relative mb-4">
-                    <AvatarUpload
-                      currentAvatarUrl={profile.avatar_url}
-                      fallbackName={`${profile.first_name} ${profile.last_name}`}
-                      size="xl"
-                      onUpload={async (file) => {
-                        const newUrl = await updateProfileAvatar(profile.id, file);
-                        setProfile({ ...profile, avatar_url: newUrl });
-                        toast.success('Avatar updated successfully');
-                        return newUrl;
-                      }}
-                      onRemove={async () => {
-                        await removeProfileAvatar(profile.id);
-                        setProfile({ ...profile, avatar_url: null });
-                        toast.success('Avatar removed');
-                      }}
-                    />
-                  </div>
-                  <h2 className="text-xl font-semibold text-foreground">{profile.first_name} {profile.last_name}</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{profile.title}</p>
-                  <Badge variant="success" className="mt-2">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Verified Advisor
-                  </Badge>
-                </div>
-
-                <Separator className="my-6" />
-
-                <div className="space-y-4 text-sm">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{profile.email}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{profile.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{profile.location}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{profile.timezone}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{profile.company}</span>
+            {/* Profile Header with Banner */}
+            <Card id="header" className="overflow-hidden scroll-mt-24">
+              {/* Banner */}
+              <div className="h-40 bg-gradient-to-br from-primary via-primary/80 to-primary/60 relative">
+                {profile.banner_url ? (
+                  <Image
+                    src={profile.banner_url}
+                    alt="Profile banner"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6bS0xMiAwYzAtMiAyLTQgMi00czIgMiAyIDQtMiA0LTIgNC0yLTItMi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
+                )}
+              </div>
+              
+              {/* Profile Info */}
+              <CardContent className="relative pt-0">
+                {/* Avatar */}
+                <div className="absolute -top-12 left-6">
+                  <div className="relative">
+                    <Avatar className="h-24 w-24 border-4 border-background">
+                      <AvatarImage src={profile.avatar_url || undefined} alt={`${profile.first_name} ${profile.last_name}`} />
+                      <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
+                        {getInitials(profile.first_name, profile.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-success rounded-full flex items-center justify-center border-2 border-background">
+                      <BadgeCheck className="h-4 w-4 text-white" />
+                    </div>
                   </div>
                 </div>
 
-                <Separator className="my-6" />
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a href="#" className="text-primary hover:underline">{profile.website}</a>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Linkedin className="h-4 w-4 text-muted-foreground" />
-                    <a href="#" className="text-primary hover:underline">{profile.linkedin}</a>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Twitter className="h-4 w-4 text-muted-foreground" />
-                    <a href="#" className="text-primary hover:underline">{profile.twitter}</a>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  {/* Edit Profile Sheet */}
-                  <Sheet open={isProfileSheetOpen} onOpenChange={setIsProfileSheetOpen}>
-                    <SheetTrigger asChild>
-                      <Button className="w-full" variant="outline">
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="overflow-y-auto">
-                      <SheetHeader>
-                        <SheetTitle>Edit Profile</SheetTitle>
-                        <SheetDescription>
-                          Update your personal information and contact details.
-                        </SheetDescription>
-                      </SheetHeader>
-                      <form onSubmit={handleProfileSubmit(handleSaveProfile)}>
-                        <div className="space-y-6 py-6">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="firstName">First Name</Label>
-                              <Input 
-                                id="firstName" 
-                                {...registerProfile("first_name")}
-                              />
-                              {profileErrors.first_name && (
-                                <p className="text-sm text-red-500">{profileErrors.first_name.message}</p>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="lastName">Last Name</Label>
-                              <Input 
-                                id="lastName" 
-                                {...registerProfile("last_name")}
-                              />
-                              {profileErrors.last_name && (
-                                <p className="text-sm text-red-500">{profileErrors.last_name.message}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="title">Professional Title</Label>
-                            <Input 
-                              id="title" 
-                              {...registerProfile("title")}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input 
-                              id="email" 
-                              type="email" 
-                              {...registerProfile("email")}
-                            />
-                            {profileErrors.email && (
-                              <p className="text-sm text-red-500">{profileErrors.email.message}</p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone</Label>
-                            <Input 
-                              id="phone" 
-                              {...registerProfile("phone")}
-                            />
-                            {profileErrors.phone && (
-                              <p className="text-sm text-red-500">{profileErrors.phone.message}</p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="location">Location</Label>
-                            <Input 
-                              id="location" 
-                              {...registerProfile("location")}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="company">Company</Label>
-                            <Input 
-                              id="company" 
-                              {...registerProfile("company")}
-                            />
-                          </div>
-                          <Separator />
-                          <div className="space-y-2">
-                            <Label htmlFor="website">Website</Label>
-                            <Input 
-                              id="website" 
-                              placeholder="https://example.com"
-                              {...registerProfile("website")}
-                            />
-                            {profileErrors.website && (
-                              <p className="text-sm text-red-500">{profileErrors.website.message}</p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="linkedin">LinkedIn</Label>
-                            <Input 
-                              id="linkedin" 
-                              {...registerProfile("linkedin")}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="twitter">Twitter</Label>
-                            <Input 
-                              id="twitter" 
-                              {...registerProfile("twitter")}
-                            />
-                          </div>
-                          <Separator />
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <Label htmlFor="bio">Bio</Label>
-                              <span className="text-xs text-muted-foreground">{bioCharCount}/500</span>
-                            </div>
-                            <Textarea 
-                              id="bio" 
-                              rows={4}
-                              placeholder="Tell clients about yourself..."
-                              {...registerProfile("bio")}
-                            />
-                            {profileErrors.bio && (
-                              <p className="text-sm text-red-500">{profileErrors.bio.message}</p>
-                            )}
-                          </div>
+                {/* Name and Title */}
+                <div className="pt-16 pb-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold">{profile.first_name} {profile.last_name}</h1>
+                        <Badge variant="success" className="h-6">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground mt-1">{profile.title || "Financial Advisor"}</p>
+                      {profile.location && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span>{profile.location}</span>
                         </div>
-                        <SheetFooter>
-                          <Button type="button" variant="outline" onClick={() => setIsProfileSheetOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" disabled={saving}>
-                            {saving ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Saving...
-                              </>
-                            ) : (
-                              "Save Changes"
-                            )}
-                          </Button>
-                        </SheetFooter>
-                      </form>
-                    </SheetContent>
-                  </Sheet>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Links */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {settingsLinks.map((link) => (
-                  <Link 
-                    key={link.href} 
-                    href={link.href}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <link.icon className="h-4 w-4 text-primary" />
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{link.label}</p>
-                      <p className="text-xs text-muted-foreground truncate">{link.description}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Details */}
-          <div className="col-span-2 space-y-6">
-            {/* Profile Completion */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-base font-medium text-foreground">Profile Completion</h3>
-                    <p className="text-sm text-muted-foreground">Complete your profile to attract more families</p>
+                    {/* Rating */}
+                    {(profile.rating || 0) > 0 && (
+                      <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold">{profile.rating?.toFixed(1)}</span>
+                        <span className="text-muted-foreground text-sm">({profile.reviews_count} reviews)</span>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-2xl font-semibold text-primary">{profile.completion_percentage}%</span>
-                </div>
-                <Progress value={profile.completion_percentage} className="h-2" />
-                <div className="mt-4 flex gap-2">
-                  <Badge variant="outline" className="text-xs">Add photo</Badge>
-                  <Badge variant="outline" className="text-xs">Verify credential</Badge>
-                  <Badge variant="outline" className="text-xs">Add availability</Badge>
                 </div>
               </CardContent>
             </Card>
 
-            {/* About */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">About</CardTitle>
+            {/* About Section */}
+            <Card id="about" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">About</CardTitle>
                 <Button variant="ghost" size="sm" onClick={() => setIsProfileSheetOpen(true)}>
                   <Edit className="h-4 w-4" />
                 </Button>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground leading-relaxed">
                   {profile.bio || "No bio added yet. Click edit to add one."}
                 </p>
+                
+                {/* Video Placeholder */}
+                {profile.video_url ? (
+                  <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                    <video src={profile.video_url} controls className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="aspect-video rounded-lg bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                      <Play className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Add an intro video</p>
+                    <Button variant="outline" size="sm">Upload Video</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Services */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">My Services</CardTitle>
+            {/* Services Offered */}
+            <Card id="services" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Services Offered</CardTitle>
+                <Link href="/services">
+                  <Button variant="ghost" size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Service
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent>
                 {servicesList.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {servicesList.map((service) => (
-                      <div key={service.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div className="flex items-center gap-3">
-                          <Briefcase className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{service.name}</span>
+                      <Card key={service.id} variant="elevated" className="p-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium">{service.name}</h4>
+                          {service.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+                          )}
+                          <div className="flex items-center justify-between pt-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              {service.duration && (
+                                <>
+                                  <Clock className="h-3.5 w-3.5" />
+                                  <span>{service.duration}</span>
+                                </>
+                              )}
+                            </div>
+                            <span className="font-semibold text-primary">{service.price}</span>
+                          </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">{service.price}</span>
-                      </div>
+                      </Card>
                     ))}
-                    <Link 
-                      href="/services" 
-                      className="flex items-center gap-1 text-sm text-primary hover:underline pt-2"
-                    >
-                      View all services
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
                   </div>
                 ) : (
-                  <div className="text-center py-4">
+                  <div className="text-center py-8">
+                    <Briefcase className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No services added yet</p>
                     <Link href="/services">
                       <Button variant="outline" size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Services
+                        Add Your First Service
                       </Button>
                     </Link>
                   </div>
@@ -930,17 +826,198 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Credentials */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">Credentials & Certifications</CardTitle>
+            {/* Specialization */}
+            <Card id="specialization" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Specialization</CardTitle>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Edit Specialization</SheetTitle>
+                      <SheetDescription>
+                        Select your areas of expertise and specialization.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="py-6">
+                      <div className="space-y-4">
+                        <Label>Current Expertise Areas</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {expertiseList.map((area, index) => (
+                            <Badge key={index} variant="secondary" className="pl-3 pr-1 py-1.5">
+                              {area}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-4 ml-1 hover:bg-destructive/20"
+                                onClick={() => handleRemoveExpertise(area)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label>Add New Expertise</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="e.g., Estate Planning" 
+                              value={newExpertise}
+                              onChange={(e) => setNewExpertise(e.target.value)}
+                            />
+                            <Button size="icon" onClick={handleAddExpertise}>
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-muted-foreground">Suggested Areas</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {["Estate Planning", "Tax Strategy", "Philanthropy", "Real Estate", "Retirement Planning", "Investment Management"].map((area) => (
+                              <Button 
+                                key={area} 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7"
+                                onClick={() => handleAddExpertise(area)}
+                                disabled={expertiseList.includes(area)}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                {area}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <SheetFooter>
+                      <SheetClose asChild>
+                        <Button>Done</Button>
+                      </SheetClose>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </CardHeader>
+              <CardContent>
+                {expertiseList.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {expertiseList.map((area, index) => (
+                      <Badge key={index} variant="outline" className="px-3 py-1.5">
+                        {area}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No specializations added yet</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Experience */}
+            <Card id="experience" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Experience</CardTitle>
+                <Button variant="ghost" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {experienceList.length > 0 ? (
+                  <div className="space-y-4">
+                    {experienceList.map((exp, index) => (
+                      <div key={exp.id} className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{exp.role}</h4>
+                          <p className="text-sm text-muted-foreground">{exp.company}</p>
+                          <p className="text-sm text-muted-foreground">{exp.period}</p>
+                          {exp.description && (
+                            <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No experience added yet</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Education */}
+            <Card id="education" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Education</CardTitle>
+                <Button variant="ghost" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {educationList.length > 0 ? (
+                  <div className="space-y-4">
+                    {educationList.map((edu) => (
+                      <div key={edu.id} className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                          <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{edu.degree}</h4>
+                          <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                          <p className="text-sm text-muted-foreground">{edu.year}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No education added yet</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Skills */}
+            <Card id="skills" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Skills</CardTitle>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {skillsList.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {skillsList.map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No skills added yet</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Credentials & Certifications */}
+            <Card id="credentials" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Credentials & Certifications</CardTitle>
                 <Sheet open={isCredentialSheetOpen} onOpenChange={(open) => {
                   setIsCredentialSheetOpen(open);
                   if (!open) resetCredential();
                 }}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="sm">
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
                     </Button>
                   </SheetTrigger>
                   <SheetContent>
@@ -1015,207 +1092,266 @@ export default function ProfilePage() {
                 </Sheet>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {credentialsList.map((credential) => (
-                    <div key={credential.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Award className="h-5 w-5 text-primary" />
+                {credentialsList.length > 0 ? (
+                  <div className="space-y-3">
+                    {credentialsList.map((credential) => (
+                      <div key={credential.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Award className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{credential.name}</p>
+                            <p className="text-sm text-muted-foreground">{credential.issuer} • {credential.year}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{credential.name}</p>
-                          <p className="text-xs text-muted-foreground">Obtained {credential.year}</p>
+                        <div className="flex items-center gap-2">
+                          {credential.status === "verified" ? (
+                            <Badge variant="success">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </Badge>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => setEditingCredential(credential)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {credential.status === "verified" ? (
-                          <Badge variant="success">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-300">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => setEditingCredential(credential)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Edit Credential Sheet */}
-            <Sheet open={!!editingCredential} onOpenChange={(open) => !open && setEditingCredential(null)}>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Credential Details</SheetTitle>
-                  <SheetDescription>
-                    View and manage credential information.
-                  </SheetDescription>
-                </SheetHeader>
-                {editingCredential && (
-                  <div className="space-y-6 py-6">
-                    <div className="space-y-2">
-                      <Label>Credential Name</Label>
-                      <p className="text-sm font-medium">{editingCredential.name}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Issuer</Label>
-                      <p className="text-sm">{editingCredential.issuer}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Year Obtained</Label>
-                      <p className="text-sm">{editingCredential.year}</p>
-                    </div>
-                    {editingCredential.credential_id && (
-                      <div className="space-y-2">
-                        <Label>Credential ID</Label>
-                        <p className="text-sm">{editingCredential.credential_id}</p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Badge variant={editingCredential.status === "verified" ? "default" : "secondary"}>
-                        {editingCredential.status === "verified" ? (
-                          <>
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </>
-                        ) : (
-                          <>
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending
-                          </>
-                        )}
-                      </Badge>
-                    </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">No credentials added yet</p>
+                    <Button variant="outline" size="sm" onClick={() => setIsCredentialSheetOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Credential
+                    </Button>
                   </div>
                 )}
-                <SheetFooter className="flex-col gap-2 sm:flex-col">
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setEditingCredential(null)}
-                  >
-                    Close
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full"
-                    disabled={saving}
-                    onClick={() => editingCredential && handleDeleteCredential(editingCredential.id)}
-                  >
-                    {saving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 mr-2" />
-                    )}
-                    Delete Credential
-                  </Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-
-            {/* Expertise */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base">Areas of Expertise</CardTitle>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>Edit Expertise</SheetTitle>
-                      <SheetDescription>
-                        Select your areas of expertise and specialization.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="py-6">
-                      <div className="space-y-4">
-                        <Label>Current Expertise Areas</Label>
-                        <div className="flex flex-wrap gap-2">
-                          {expertiseList.map((area, index) => (
-                            <Badge key={index} variant="secondary" className="pl-3 pr-1 py-1">
-                              {area}
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-4 ml-1 hover:bg-destructive/20"
-                                onClick={() => handleRemoveExpertise(area)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          ))}
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <Label>Add New Expertise</Label>
-                          <div className="flex gap-2">
-                            <Input 
-                              placeholder="e.g., Estate Planning" 
-                              value={newExpertise}
-                              onChange={(e) => setNewExpertise(e.target.value)}
-                            />
-                            <Button size="icon" onClick={handleAddExpertise}>
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-muted-foreground">Suggested Areas</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {["Estate Planning", "Tax Strategy", "Philanthropy", "Real Estate"].map((area) => (
-                              <Button 
-                                key={area} 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7"
-                                onClick={() => handleAddExpertise(area)}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                {area}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <SheetFooter>
-                      <SheetClose asChild>
-                        <Button>Done</Button>
-                      </SheetClose>
-                    </SheetFooter>
-                  </SheetContent>
-                </Sheet>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {expertiseList.map((area, index) => (
-                    <Badge key={index} variant="secondary">
-                      {area}
-                    </Badge>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
-            {/* Member Info */}
+            {/* Recommendations */}
+            <Card id="recommendations" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Recommendations</CardTitle>
+                <Button variant="ghost" size="sm">
+                  Request
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {recommendationsList.length > 0 ? (
+                  <div className="space-y-4">
+                    {recommendationsList.map((rec) => (
+                      <div key={rec.id} className="p-4 rounded-lg bg-muted/30">
+                        <div className="flex items-start gap-3 mb-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={rec.author_avatar} />
+                            <AvatarFallback>{rec.author_name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{rec.author_name}</p>
+                                <p className="text-sm text-muted-foreground">{rec.author_title}</p>
+                              </div>
+                              <div className="flex items-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-4 w-4 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{rec.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Star className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">No recommendations yet</p>
+                    <Button variant="outline" size="sm">
+                      Request Recommendation
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Contact Information */}
+            <Card id="contact" className="scroll-mt-24">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Contact Information</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setIsProfileSheetOpen(true)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="text-sm font-medium">{profile.email || "Not provided"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="text-sm font-medium">{profile.phone || "Not provided"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Website</p>
+                      {profile.website ? (
+                        <a href={profile.website} className="text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                          {profile.website}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium">Not provided</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                      <Linkedin className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">LinkedIn</p>
+                      {profile.linkedin ? (
+                        <a href={`https://linkedin.com/in/${profile.linkedin}`} className="text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                          {profile.linkedin}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium">Not provided</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Quick Actions & Settings */}
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            {/* Page Navigation */}
             <Card>
-              <CardContent className="p-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">On This Page</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {[
+                  { id: "header", label: "Profile" },
+                  { id: "about", label: "About" },
+                  { id: "services", label: "Services" },
+                  { id: "specialization", label: "Specialization" },
+                  { id: "experience", label: "Experience" },
+                  { id: "education", label: "Education" },
+                  { id: "skills", label: "Skills" },
+                  { id: "credentials", label: "Credentials" },
+                  { id: "recommendations", label: "Recommendations" },
+                  { id: "contact", label: "Contact" },
+                ].map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    className="block text-sm text-muted-foreground hover:text-foreground py-1.5 px-2 rounded-md hover:bg-muted/50 transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Profile Completion */}
+            {!hideProfileCompletionCard && (
+              <ProfileCompletionCard
+                profile={profile}
+                onEditProfile={() => setIsProfileSheetOpen(true)}
+                onSetupPayments={() => router.push('/payments')}
+                onVerifyIdentity={() => router.push('/settings')}
+                onAddAvailability={() => router.push('/consultations/availability')}
+                onHide={handleHideProfileCompletionCard}
+              />
+            )}
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={() => setIsProfileSheetOpen(true)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Link href="/advisor/preview" className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View Public Profile
+                  </Button>
+                </Link>
+                <Button variant="outline" className="w-full justify-start" onClick={() => {
+                  navigator.clipboard.writeText(window.location.origin + '/advisor/' + profile.id);
+                  toast.success('Profile link copied!');
+                }}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Profile
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Settings */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {settingsLinks.map((link) => (
+                  <Link 
+                    key={link.href} 
+                    href={link.href}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <link.icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{link.label}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Member Since */}
+            <Card>
+              <CardContent className="p-4">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>Member since {profile.joined_date}</span>
@@ -1225,6 +1361,247 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Sheet */}
+      <Sheet open={isProfileSheetOpen} onOpenChange={setIsProfileSheetOpen}>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Edit Profile</SheetTitle>
+            <SheetDescription>
+              Update your personal information and contact details.
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleProfileSubmit(handleSaveProfile)}>
+            <div className="space-y-6 py-6">
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center">
+                <AvatarUpload
+                  currentAvatarUrl={profile.avatar_url}
+                  fallbackName={`${profile.first_name} ${profile.last_name}`}
+                  size="lg"
+                  onUpload={async (file) => {
+                    const newUrl = await updateProfileAvatar(profile.id, file);
+                    setProfile({ ...profile, avatar_url: newUrl });
+                    toast.success('Avatar updated successfully');
+                    return newUrl;
+                  }}
+                  onRemove={async () => {
+                    await removeProfileAvatar(profile.id);
+                    setProfile({ ...profile, avatar_url: null });
+                    toast.success('Avatar removed');
+                  }}
+                />
+              </div>
+              
+              <Separator />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input 
+                    id="firstName" 
+                    {...registerProfile("first_name")}
+                  />
+                  {profileErrors.first_name && (
+                    <p className="text-sm text-red-500">{profileErrors.first_name.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input 
+                    id="lastName" 
+                    {...registerProfile("last_name")}
+                  />
+                  {profileErrors.last_name && (
+                    <p className="text-sm text-red-500">{profileErrors.last_name.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Professional Title</Label>
+                <Input 
+                  id="title" 
+                  placeholder="e.g., Senior Financial Advisor"
+                  {...registerProfile("title")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  {...registerProfile("email")}
+                />
+                {profileErrors.email && (
+                  <p className="text-sm text-red-500">{profileErrors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input 
+                  id="phone" 
+                  placeholder="+1 (555) 000-0000"
+                  {...registerProfile("phone")}
+                />
+                {profileErrors.phone && (
+                  <p className="text-sm text-red-500">{profileErrors.phone.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input 
+                  id="location" 
+                  placeholder="e.g., New York, NY"
+                  {...registerProfile("location")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company">Company</Label>
+                <Input 
+                  id="company" 
+                  placeholder="e.g., Wealth Management Inc."
+                  {...registerProfile("company")}
+                />
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input 
+                  id="website" 
+                  placeholder="https://example.com"
+                  {...registerProfile("website")}
+                />
+                {profileErrors.website && (
+                  <p className="text-sm text-red-500">{profileErrors.website.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="linkedin">LinkedIn</Label>
+                <Input 
+                  id="linkedin" 
+                  placeholder="username"
+                  {...registerProfile("linkedin")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="twitter">Twitter</Label>
+                <Input 
+                  id="twitter" 
+                  placeholder="@username"
+                  {...registerProfile("twitter")}
+                />
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="bio">Bio</Label>
+                  <span className="text-xs text-muted-foreground">{bioCharCount}/2000</span>
+                </div>
+                <Textarea 
+                  id="bio" 
+                  rows={6}
+                  placeholder="Tell clients about yourself, your experience, and what makes you unique..."
+                  {...registerProfile("bio")}
+                />
+                {profileErrors.bio && (
+                  <p className="text-sm text-red-500">{profileErrors.bio.message}</p>
+                )}
+              </div>
+            </div>
+            <SheetFooter>
+              <Button type="button" variant="outline" onClick={() => setIsProfileSheetOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Credential Sheet */}
+      <Sheet open={!!editingCredential} onOpenChange={(open) => !open && setEditingCredential(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Credential Details</SheetTitle>
+            <SheetDescription>
+              View and manage credential information.
+            </SheetDescription>
+          </SheetHeader>
+          {editingCredential && (
+            <div className="space-y-6 py-6">
+              <div className="space-y-2">
+                <Label>Credential Name</Label>
+                <p className="text-sm font-medium">{editingCredential.name}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Issuer</Label>
+                <p className="text-sm">{editingCredential.issuer}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Year Obtained</Label>
+                <p className="text-sm">{editingCredential.year}</p>
+              </div>
+              {editingCredential.credential_id && (
+                <div className="space-y-2">
+                  <Label>Credential ID</Label>
+                  <p className="text-sm">{editingCredential.credential_id}</p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Badge variant={editingCredential.status === "verified" ? "success" : "secondary"}>
+                  {editingCredential.status === "verified" ? (
+                    <>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Verified
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-3 w-3 mr-1" />
+                      Pending
+                    </>
+                  )}
+                </Badge>
+              </div>
+            </div>
+          )}
+          <SheetFooter className="flex-col gap-2 sm:flex-col">
+            <Button 
+              variant="outline"
+              className="w-full"
+              onClick={() => setEditingCredential(null)}
+            >
+              Close
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              disabled={saving}
+              onClick={() => editingCredential && handleDeleteCredential(editingCredential.id)}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Delete Credential
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
