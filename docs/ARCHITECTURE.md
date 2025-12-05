@@ -148,3 +148,23 @@ supabase functions deploy stripe-checkout
 ```
 
 See `/supabase/functions/` for Edge Function implementations.
+
+## AI Development Guidelines
+
+When using AI coding assistants to work on this project, please follow the strict architectural patterns defined in:
+
+- **[AI_DEVELOPMENT_RULES.md](AI_DEVELOPMENT_RULES.md)** - Complete guidelines for AI assistants
+- **[../.cursorrules](../.cursorrules)** - Quick reference
+
+**Critical Rules**:
+
+1. **UI Components**: ONLY use shadcn/ui components from `@/components/ui/`
+   - ❌ Do NOT create custom UI components
+   - ❌ Do NOT use other UI libraries (MUI, Ant Design, etc.)
+
+2. **Backend Operations**: ALWAYS go through service abstraction layers
+   - ✅ Create services in `src/lib/services/`
+   - ❌ Do NOT call Supabase directly from components
+   - ❌ Do NOT put database logic in UI code
+
+These rules ensure consistency, maintainability, and proper separation of concerns throughout the codebase.

@@ -1,0 +1,322 @@
+# RE-Advisor Development Rules for AI Assistants
+
+## Project Overview
+RE-Advisor is a modern web application for Family Advisors built with Next.js, TypeScript, Supabase, and shadcn/ui components.
+
+## Critical Architecture Rules
+
+### 1. UI Components - MANDATORY shadcn/ui Usage
+**ALWAYS use shadcn/ui components for ALL user interface elements.**
+
+- ✅ **DO**: Use components from `@/components/ui/` (shadcn/ui based)
+- ✅ **DO**: Use Radix UI primitives via shadcn/ui wrappers
+- ✅ **DO**: Extend existing shadcn components with variants using CVA
+- ❌ **DON'T**: Create custom UI components from scratch
+- ❌ **DON'T**: Use other UI libraries (Material-UI, Ant Design, etc.)
+- ❌ **DON'T**: Write raw Radix UI components without shadcn wrapper
+
+**Available shadcn/ui components:**
+```
+Button, Input, Textarea, Label, Checkbox, Switch, Select, Radio,
+Card, Dialog, Sheet, Popover, Alert, AlertDialog,
+Tabs, Dropdown Menu, Command, Tooltip,
+Table, Badge, Avatar, Progress, Skeleton,
+Toaster, Scroll Area, Separator
+```
+
+**Example - CORRECT:**
+```tsx
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+function MyComponent() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Title</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button>Click me</Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+**Example - INCORRECT:**
+```tsx
+// ❌ Don't create custom components
+function CustomButton() {
+  return <button className="custom-button">Click</button>;
+}
+
+// ❌ Don't use other libraries
+import Button from '@mui/material/Button';
+```
+
+### 2. Backend Abstraction Layers - MANDATORY
+**ALWAYS use service abstraction layers for backend operations.**
+
+- ✅ **DO**: Create services in `src/lib/services/` or `src/lib/`
+- ✅ **DO**: Abstract all Supabase operations through service functions
+- ✅ **DO**: Use mock mode support for development (`NEXT_PUBLIC_*_MODE=mock`)
+- ✅ **DO**: Export types alongside service functions
+- ❌ **DON'T**: Call Supabase directly from components or pages
+- ❌ **DON'T**: Put database logic in UI components
+- ❌ **DON'T**: Skip creating service layers for new features
+
+**Service Layer Pattern:**
+```typescript
+// src/lib/services/my-feature.service.ts
+
+import { supabase } from '@/lib/supabaseClient';
+
+export type MyData = {
+  id: string;
+  name: string;
+};
+
+export type MyResult = {
+  success: boolean;
+  data?: MyData;
+  error?: string;
+};
+
+/**
+ * Get data from backend
+ */
+export async function getMyData(id: string): Promise<MyResult> {
+  try {
+    const { data, error } = await supabase
+      .from('my_table')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+```
+
+**Usage in components - CORRECT:**
+```tsx
+import { getMyData } from '@/lib/services/my-feature.service';
+
+async function MyComponent({ id }: { id: string }) {
+  const result = await getMyData(id);
+  
+  if (!result.success) {
+    return <div>Error: {result.error}</div>;
+  }
+  
+  return <div>{result.data.name}</div>;
+}
+```
+
+**Usage in components - INCORRECT:**
+```tsx
+// ❌ Don't call Supabase directly
+import { supabase } from '@/lib/supabaseClient';
+
+async function MyComponent({ id }: { id: string }) {
+  const { data } = await supabase.from('my_table').select('*').eq('id', id);
+  return <div>{data?.name}</div>;
+}
+```
+
+### 3. Styling Guidelines
+
+- ✅ **DO**: Use Tailwind CSS utility classes
+- ✅ **DO**: Use the `cn()` utility for conditional classes
+- ✅ **DO**: Use CSS variables for colors (e.g., `bg-primary`, `text-foreground`)
+- ✅ **DO**: Support both light and dark themes
+- ❌ **DON'T**: Write custom CSS files
+- ❌ **DON'T**: Use inline styles
+- ❌ **DON'T**: Use hardcoded color values
+
+**Example:**
+```tsx
+import { cn } from "@/lib/utils";
+
+<Button
+  className={cn(
+    "w-full",
+    isActive && "bg-primary",
+    isDisabled && "opacity-50"
+  )}
+>
+  Action
+</Button>
+```
+
+### 4. TypeScript Requirements
+
+- ✅ **DO**: Always use TypeScript
+- ✅ **DO**: Define types for all function parameters and returns
+- ✅ **DO**: Use existing types from `src/lib/database.types.ts`
+- ✅ **DO**: Export types alongside functions
+- ❌ **DON'T**: Use `any` type
+- ❌ **DON'T**: Skip type definitions
+
+### 5. File Organization
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Route pages
+│   ├── layout.tsx         # Layouts
+│   └── api/               # API routes
+├── components/
+│   ├── ui/                # shadcn/ui components (DON'T MODIFY)
+│   ├── layout/            # Layout components
+│   └── [feature]/         # Feature-specific components
+├── lib/
+│   ├── services/          # Service abstraction layers
+│   ├── supabase/          # Supabase utilities
+│   └── utils.ts           # Utility functions
+└── types/                 # Shared TypeScript types
+```
+
+### 6. State Management
+
+- ✅ **DO**: Use React Server Components when possible
+- ✅ **DO**: Use React hooks for client state
+- ✅ **DO**: Use React Context for shared state
+- ✅ **DO**: Use Supabase Realtime for live updates
+- ❌ **DON'T**: Install Redux, MobX, or other state libraries without discussion
+
+### 7. Forms
+
+- ✅ **DO**: Use `react-hook-form` with Zod validation
+- ✅ **DO**: Use shadcn/ui form components
+- ✅ **DO**: Define validation schemas with Zod
+- ❌ **DON'T**: Use other form libraries
+
+**Example:**
+```tsx
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+const schema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+});
+
+type FormData = z.infer<typeof schema>;
+
+function MyForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data: FormData) => {
+    // Use service layer
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input {...register("name")} />
+      {errors.name && <span>{errors.name.message}</span>}
+      <Button type="submit">Submit</Button>
+    </form>
+  );
+}
+```
+
+### 8. Icons
+
+- ✅ **DO**: Use `lucide-react` for all icons
+- ❌ **DON'T**: Use other icon libraries
+
+```tsx
+import { Home, Settings, User, Mail, Calendar } from 'lucide-react';
+
+<Home className="h-5 w-5" />
+```
+
+### 9. Authentication & Authorization
+
+- ✅ **DO**: Use Supabase Auth via service layer
+- ✅ **DO**: Check auth in middleware (`src/middleware.ts`)
+- ✅ **DO**: Protect routes at the middleware level
+- ❌ **DON'T**: Implement custom auth logic
+
+### 10. Testing
+
+- ✅ **DO**: Write tests for services
+- ✅ **DO**: Write tests for complex components
+- ✅ **DO**: Use Jest and React Testing Library
+- ✅ **DO**: Mock Supabase in tests
+
+### 11. Performance
+
+- ✅ **DO**: Use Server Components by default
+- ✅ **DO**: Add 'use client' only when needed
+- ✅ **DO**: Use Next.js Image component for images
+- ✅ **DO**: Implement proper loading states with Skeleton components
+- ❌ **DON'T**: Over-use client components
+
+### 12. Error Handling
+
+- ✅ **DO**: Handle errors in service layer
+- ✅ **DO**: Return structured error responses
+- ✅ **DO**: Show user-friendly error messages
+- ✅ **DO**: Use toast notifications for errors
+
+```tsx
+import { toast } from "sonner";
+
+const result = await myService();
+if (!result.success) {
+  toast.error(result.error || "Something went wrong");
+  return;
+}
+toast.success("Success!");
+```
+
+## Quick Reference Checklist
+
+Before submitting code, ensure:
+
+- [ ] UI components are from shadcn/ui (`@/components/ui/`)
+- [ ] Backend calls go through service abstraction layers
+- [ ] No direct Supabase calls from components
+- [ ] TypeScript types are properly defined
+- [ ] Tailwind CSS is used for styling
+- [ ] Forms use react-hook-form + Zod
+- [ ] Icons are from lucide-react
+- [ ] Both light and dark themes are supported
+- [ ] Loading states are implemented with Skeleton
+- [ ] Errors are handled gracefully
+
+## Need to Add New Components?
+
+1. Check if shadcn/ui has the component: https://ui.shadcn.com/
+2. Install it: `npx shadcn@latest add [component-name]`
+3. Use it from `@/components/ui/[component-name]`
+
+## Need to Add New Backend Functionality?
+
+1. Create service in `src/lib/services/` or `src/lib/`
+2. Abstract Supabase calls in service functions
+3. Export types for data structures
+4. Use service from components/pages
+5. Add tests for the service
+
+## Documentation
+
+See also:
+- `docs/DESIGN_SYSTEM.md` - Complete design system documentation
+- `docs/ARCHITECTURE.md` - Architecture decisions and patterns
+- `docs/PROJECT_STRUCTURE.md` - File organization
+- `docs/TESTING.md` - Testing guidelines
