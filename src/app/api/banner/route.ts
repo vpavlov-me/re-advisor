@@ -1,56 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use service role for server-side operations (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+// Environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Check if Supabase is configured
+const isConfigured = supabaseUrl && supabaseServiceKey && supabaseAnonKey;
+
+// Create Supabase client with service role (bypasses RLS for storage operations)
+const supabaseAdmin = isConfigured ? createClient(
+  supabaseUrl,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   }
-);
+) : null;
+
+// Create regular Supabase client to verify user session
+const supabaseClient = isConfigured ? createClient(
+  supabaseUrl,
+  supabaseAnonKey
+) : null;
 
 const BANNER_BUCKET = 'banners';
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // POST - Upload banner
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!isConfigured || !supabaseClient || !supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Service not configured' },
+        { status: 503 }
+      );
+    }
+
     // Get user from auth header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.replace('Bearer ', '');
 
-    // Verify user with token
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    // Verify user with token using anon key client
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
     // Get file from form data
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json({ 
         error: 'Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.' 
       }, { status: 400 });
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ 
         error: 'File is too large. Maximum size is 10MB.' 
       }, { status: 400 });
@@ -130,18 +152,26 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove banner
 export async function DELETE(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!isConfigured || !supabaseClient || !supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Service not configured' },
+        { status: 503 }
+      );
+    }
+
     // Get user from auth header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.replace('Bearer ', '');
 
-    // Verify user with token
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    // Verify user with token using anon key client
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
     // Get current banner URL
