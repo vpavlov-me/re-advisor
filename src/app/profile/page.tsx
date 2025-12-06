@@ -94,18 +94,18 @@ type CredentialFormData = z.infer<typeof credentialSchema>;
 // Types
 interface Profile {
   id: string;
-  first_name: string;
-  last_name: string;
-  title: string;
-  email: string;
-  phone: string;
-  location: string;
-  timezone: string;
-  company: string;
-  website: string;
-  linkedin: string;
-  twitter: string;
-  bio: string;
+  first_name: string | null;
+  last_name: string | null;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  timezone: string | null;
+  company: string | null;
+  website: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  bio: string | null;
   avatar_url: string | null;
   banner_url?: string | null;
   video_url?: string | null;
@@ -113,6 +113,7 @@ interface Profile {
   completion_percentage: number;
   rating?: number;
   reviews_count?: number;
+  updated_at?: string;
 }
 
 interface Credential {
@@ -248,7 +249,18 @@ export default function ProfilePage() {
       }
 
       if (profileData) {
-        setProfile(profileData);
+        // Format joined_date for display
+        const formattedProfile = {
+          ...profileData,
+          joined_date: profileData.joined_date 
+            ? new Date(profileData.joined_date).toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+              })
+            : 'Recently',
+        };
+        
+        setProfile(formattedProfile);
         resetProfile({
           first_name: profileData.first_name || "",
           last_name: profileData.last_name || "",
@@ -520,9 +532,38 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="container py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="container py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
             {/* Left Column Skeleton */}
+            <div className="space-y-6">
+              {/* Profile Header Skeleton */}
+              <Card className="overflow-hidden">
+                <div className="h-40 bg-muted" />
+                <CardContent className="pt-0 pb-6 px-6">
+                  <div className="flex flex-col sm:flex-row gap-6 -mt-16">
+                    <Skeleton className="h-32 w-32 rounded-full border-4 border-background" />
+                    <div className="flex-1 pt-16 sm:pt-20">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div>
+                          <Skeleton className="h-8 w-48 mb-2" />
+                          <Skeleton className="h-5 w-64 mb-3" />
+                          <div className="flex items-center gap-4">
+                            <Skeleton className="h-5 w-20" />
+                            <Skeleton className="h-5 w-24" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Skeleton className="h-10 w-24" />
+                          <Skeleton className="h-10 w-10" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column Skeleton */}
             <div className="space-y-6">
               <Card>
                 <CardContent className="p-6">
@@ -579,7 +620,18 @@ export default function ProfilePage() {
             </div>
 
             {/* Right Column Skeleton */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6">
+              {/* Quick Actions Skeleton */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-10 w-32" />
+                    <Skeleton className="h-10 w-40" />
+                    <Skeleton className="h-10 w-32" />
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Profile Completion Skeleton */}
               <Card>
                 <CardContent className="p-6">
@@ -657,8 +709,17 @@ export default function ProfilePage() {
     return <div className="p-8 text-center">Please log in to view profile.</div>;
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  const getInitials = (firstName: string | null, lastName: string | null) => {
+    const first = firstName?.charAt(0) || '';
+    const last = lastName?.charAt(0) || '';
+    return `${first}${last}`.toUpperCase() || 'U';
+  };
+
+  const getFullName = (profile: Profile | null) => {
+    if (!profile) return 'User';
+    const firstName = profile.first_name || '';
+    const lastName = profile.last_name || '';
+    return `${firstName} ${lastName}`.trim() || 'User';
   };
 
   return (
@@ -702,7 +763,7 @@ export default function ProfilePage() {
                 <div className="absolute -top-12 left-6">
                   <div className="relative">
                     <Avatar className="h-24 w-24 border-4 border-background">
-                      <AvatarImage src={profile.avatar_url || undefined} alt={`${profile.first_name} ${profile.last_name}`} />
+                      <AvatarImage src={profile.avatar_url || undefined} alt={getFullName(profile)} />
                       <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
                         {getInitials(profile.first_name, profile.last_name)}
                       </AvatarFallback>
@@ -718,7 +779,7 @@ export default function ProfilePage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold">{profile.first_name} {profile.last_name}</h1>
+                        <h1 className="text-2xl font-bold">{getFullName(profile)}</h1>
                         <Badge variant="success" className="h-6">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Verified
@@ -1251,6 +1312,28 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
+                  {profile.timezone && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Timezone</p>
+                        <p className="text-sm font-medium">{profile.timezone}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile.company && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Company</p>
+                        <p className="text-sm font-medium">{profile.company}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1377,7 +1460,7 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center">
                 <AvatarUpload
                   currentAvatarUrl={profile.avatar_url}
-                  fallbackName={`${profile.first_name} ${profile.last_name}`}
+                  fallbackName={getFullName(profile)}
                   size="lg"
                   onUpload={async (file) => {
                     const newUrl = await updateProfileAvatar(profile.id, file);
