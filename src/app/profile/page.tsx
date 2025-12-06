@@ -72,7 +72,26 @@ import {
   getExpertise,
   addExpertise,
   deleteExpertise,
+  getExperience,
+  addExperience,
+  updateExperience,
+  deleteExperience,
+  getEducation,
+  addEducation,
+  updateEducation,
+  deleteEducation,
+  getSkills,
+  addSkill,
+  deleteSkill,
+  getRecommendations,
+  addRecommendation,
+  updateRecommendation,
+  deleteRecommendation,
   type UpdateProfileInput,
+  type Experience as ExperienceType,
+  type Education as EducationType,
+  type Skill,
+  type Recommendation as RecommendationType,
 } from "@/lib/supabase/profile";
 import { getServices } from "@/lib/services";
 
@@ -298,26 +317,65 @@ export default function ProfilePage() {
         console.log("No services found");
       }
 
-      // Fetch Experience - mock data for now
-      setExperienceList([
-        { id: 1, role: "Senior Financial Advisor", company: "Wealth Management Inc.", period: "2018 - Present", description: "Managing high-net-worth client portfolios and providing comprehensive financial planning services." },
-        { id: 2, role: "Financial Analyst", company: "Investment Partners LLC", period: "2014 - 2018", description: "Analyzed investment opportunities and market trends for institutional clients." },
-      ]);
+      // Fetch Experience
+      try {
+        const experienceData = await getExperience();
+        if (experienceData) {
+          // Format data for display
+          setExperienceList(experienceData.map(exp => ({
+            id: exp.id,
+            role: exp.role,
+            company: exp.company,
+            period: formatPeriod(exp.start_date, exp.end_date, exp.is_current),
+            description: exp.description
+          })));
+        }
+      } catch (e) {
+        console.log("No experience found");
+      }
 
-      // Fetch Education - mock data for now
-      setEducationList([
-        { id: 1, degree: "MBA Finance", institution: "Harvard Business School", year: "2014" },
-        { id: 2, degree: "BS Economics", institution: "University of Pennsylvania", year: "2010" },
-      ]);
+      // Fetch Education
+      try {
+        const educationData = await getEducation();
+        if (educationData) {
+          setEducationList(educationData.map(edu => ({
+            id: edu.id,
+            degree: edu.degree,
+            institution: edu.institution,
+            year: edu.end_year || ''
+          })));
+        }
+      } catch (e) {
+        console.log("No education found");
+      }
 
-      // Fetch Skills - mock data for now
-      setSkillsList(["Portfolio Management", "Tax Planning", "Estate Planning", "Risk Assessment", "Client Relations", "Financial Modeling"]);
+      // Fetch Skills
+      try {
+        const skillsData = await getSkills();
+        if (skillsData) {
+          setSkillsList(skillsData.map(skill => skill.name));
+        }
+      } catch (e) {
+        console.log("No skills found");
+      }
 
-      // Fetch Recommendations - mock data for now
-      setRecommendationsList([
-        { id: 1, author_name: "John Smith", author_title: "CEO, Tech Startup", rating: 5, text: "Exceptional advisor who truly understands the needs of entrepreneurs. Helped me navigate complex tax situations with ease.", date: "2024-01-15" },
-        { id: 2, author_name: "Sarah Johnson", author_title: "Real Estate Investor", rating: 5, text: "Professional, knowledgeable, and always available when I need advice. Highly recommended!", date: "2023-11-20" },
-      ]);
+      // Fetch Recommendations
+      try {
+        const recommendationsData = await getRecommendations();
+        if (recommendationsData) {
+          setRecommendationsList(recommendationsData.map(rec => ({
+            id: rec.id,
+            author_name: rec.author_name,
+            author_title: rec.author_title || '',
+            author_avatar: rec.author_avatar_url,
+            rating: rec.rating || 5,
+            text: rec.text,
+            date: new Date(rec.created_at).toISOString().split('T')[0]
+          })));
+        }
+      } catch (e) {
+        console.log("No recommendations found");
+      }
 
     } catch (error) {
       console.error('Error loading profile data:', error);
@@ -359,10 +417,7 @@ export default function ProfilePage() {
       toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error saving profile:', error);
-      // Fallback for demo
-      setProfile({ ...profile, ...data });
-      setIsProfileSheetOpen(false);
-      toast.success('Profile updated successfully');
+      toast.error('Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -388,19 +443,7 @@ export default function ProfilePage() {
       toast.success('Credential added successfully');
     } catch (error) {
       console.error('Error adding credential:', error);
-      // Fallback for demo
-      const newId = Math.max(...credentialsList.map(c => c.id), 0) + 1;
-      setCredentialsList([...credentialsList, { 
-        id: newId, 
-        name: data.name, 
-        issuer: data.issuer, 
-        year: data.year, 
-        status: "pending",
-        credential_id: data.credential_id
-      }]);
-      setIsCredentialSheetOpen(false);
-      resetCredential();
-      toast.success('Credential added successfully');
+      toast.error('Failed to add credential');
     } finally {
       setSaving(false);
     }
@@ -415,9 +458,7 @@ export default function ProfilePage() {
       toast.success('Credential deleted');
     } catch (error) {
       console.error('Error deleting credential:', error);
-      // Fallback for demo
-      setCredentialsList(credentialsList.filter(c => c.id !== id));
-      toast.success('Credential deleted');
+      toast.error('Failed to delete credential');
     } finally {
       setSaving(false);
     }
@@ -658,6 +699,22 @@ export default function ProfilePage() {
     const firstName = profile.first_name || '';
     const lastName = profile.last_name || '';
     return `${firstName} ${lastName}`.trim() || 'User';
+  };
+
+  const formatPeriod = (startDate?: string, endDate?: string, isCurrent?: boolean) => {
+    if (!startDate) return '';
+    
+    const start = new Date(startDate);
+    const startYear = start.getFullYear();
+    
+    if (isCurrent || !endDate) {
+      return `${startYear} - Present`;
+    }
+    
+    const end = new Date(endDate);
+    const endYear = end.getFullYear();
+    
+    return `${startYear} - ${endYear}`;
   };
 
   return (
