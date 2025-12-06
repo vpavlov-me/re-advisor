@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - img "RE:Advisor Logo" [ref=e10]
+          - heading "Welcome to RE:Advisor" [level=1] [ref=e22]
+          - generic [ref=e23]:
+            - text: Don't have an account?
+            - link "Sign up" [ref=e24] [cursor=pointer]:
+              - /url: /auth/register
+        - generic [ref=e25]:
+          - img [ref=e26]
+          - generic [ref=e30]: Invalid email or password. Please try again.
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]: Email
+            - textbox "Email" [ref=e34]:
+              - /placeholder: m@example.com
+              - text: v.pavlov@reluna.com
+          - generic [ref=e35]:
+            - generic [ref=e36]:
+              - generic [ref=e37]: Password
+              - link "Forgot password?" [ref=e38] [cursor=pointer]:
+                - /url: /auth/forgot-password
+            - generic [ref=e39]:
+              - textbox "Password" [ref=e40]: test-password
+              - button [ref=e41] [cursor=pointer]:
+                - img
+          - button "Sign in" [ref=e42] [cursor=pointer]
+        - generic [ref=e43]: Or continue with
+        - generic [ref=e44]:
+          - button "Sign in with LinkedIn" [ref=e45] [cursor=pointer]:
+            - img
+            - generic [ref=e46]: Sign in with LinkedIn
+          - button "Sign in with Google" [ref=e47] [cursor=pointer]:
+            - img
+            - generic [ref=e48]: Sign in with Google
+          - button "Sign in with Apple" [ref=e49] [cursor=pointer]:
+            - img
+            - generic [ref=e50]: Sign in with Apple
+      - generic [ref=e51]:
+        - text: By clicking continue, you agree to our
+        - link "Terms of Service" [ref=e52] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e53] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+  - region "Notifications alt+T"
+  - status [ref=e54]:
+    - generic [ref=e55]:
+      - img [ref=e57]
+      - generic [ref=e59]:
+        - text: Static route
+        - button "Hide static indicator" [ref=e60] [cursor=pointer]:
+          - img [ref=e61]
+  - alert [ref=e64]
+```
