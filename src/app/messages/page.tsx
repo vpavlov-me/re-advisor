@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useMessaging } from "@/lib/hooks/use-messaging";
 import { togglePinConversation, addConversationParticipant, getConversationParticipants } from "@/lib/messages";
 import type { ConversationParticipant } from "@/lib/messages";
 import { uploadAttachment, formatFileSize } from "@/lib/storage";
 import { toast } from "sonner";
+import { getCurrentUser } from "@/lib/auth";
+import { 
+  getConversations,
+  getMessages,
+  sendMessageWithAttachment,
+  createConversation,
+  updateConversation,
+  subscribeToMessages,
+  subscribeToConversations,
+  unsubscribe,
+  getFamiliesForMessaging,
+} from "@/lib/supabase/messages";
 import { 
   Home, 
   ChevronRight, 
@@ -223,15 +234,8 @@ export default function MessagesPage() {
 
   const fetchData = useCallback(async (advisorId: string) => {
     try {
-      // Fetch Families
-      const { data: familiesData } = await supabase
-        .from('families')
-        .select(`
-          id, 
-          name,
-          members:family_members(id, name, role)
-        `)
-        .eq('advisor_id', advisorId);
+      // Fetch Families using abstraction
+      const familiesData = await getFamiliesForMessaging();
       
       if (familiesData) {
         const mappedFamilies = familiesData.map((f: any) => ({
@@ -248,15 +252,8 @@ export default function MessagesPage() {
         setFamiliesList(mappedFamilies);
       }
 
-      // Fetch Conversations via families (conversations are linked to families)
-      const { data: conversationsData } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          family:families!inner(name, advisor_id)
-        `)
-        .eq('family.advisor_id', advisorId)
-        .order('last_message_time', { ascending: false });
+      // Fetch Conversations using abstraction
+      const conversationsData = await getConversations();
 
       if (conversationsData && conversationsData.length > 0) {
         const mappedConversations = conversationsData.map((c: any) => ({
@@ -304,8 +301,8 @@ export default function MessagesPage() {
     const init = async () => {
       setLoading(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current user using abstraction
+      const user = await getCurrentUser();
       if (user) {
         setUserId(user.id);
         await fetchData(user.id);
@@ -320,70 +317,45 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!selectedConversation) return;
 
-    // Set up real-time subscription for new messages
-    const messagesChannel = supabase
-      .channel('messages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload) => {
-          const newMsg = payload.new as any;
-          const formattedMsg: Message = {
-            id: newMsg.id,
-            sender: newMsg.sender_name || "Unknown",
-            content: newMsg.content,
-            time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isOwn: newMsg.sender_id === userId,
-            status: 'delivered'
-          };
-          
-          // Only add if not already in list (avoid duplicates from optimistic update)
-          setMessagesList(prev => {
-            if (prev.some(m => m.id === formattedMsg.id)) return prev;
-            return [...prev, formattedMsg];
-          });
-          
-          if (!formattedMsg.isOwn) {
-            toast.info(`New message from ${formattedMsg.sender}`, {
-              description: formattedMsg.content.substring(0, 50) + (formattedMsg.content.length > 50 ? '...' : '')
-            });
-          }
-        }
-      )
-      .subscribe();
+    // Set up real-time subscription for new messages using abstraction
+    const messagesChannel = subscribeToMessages(selectedConversation.id, (newMsg: any) => {
+      const formattedMsg: Message = {
+        id: newMsg.id,
+        sender: newMsg.sender_name || "Unknown",
+        content: newMsg.content,
+        time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: newMsg.sender_id === userId,
+        status: 'delivered'
+      };
+      
+      // Only add if not already in list (avoid duplicates from optimistic update)
+      setMessagesList(prev => {
+        if (prev.some(m => m.id === formattedMsg.id)) return prev;
+        return [...prev, formattedMsg];
+      });
+      
+      if (!formattedMsg.isOwn) {
+        toast.info(`New message from ${formattedMsg.sender}`, {
+          description: formattedMsg.content.substring(0, 50) + (formattedMsg.content.length > 50 ? '...' : '')
+        });
+      }
+    });
 
-    // Set up real-time subscription for conversation updates
-    const conversationsChannel = supabase
-      .channel('conversations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversations'
-        },
-        (payload) => {
-          const updated = payload.new as any;
-          setConversationsList(prev => 
-            prev.map(c => c.id === updated.id ? {
-              ...c,
-              lastMessage: updated.last_message,
-              lastMessageTime: updated.last_message_time ? formatMessageTime(updated.last_message_time) : c.lastMessageTime,
-              unread: updated.unread_count
-            } : c)
-          );
-        }
-      )
-      .subscribe();
+    // Set up real-time subscription for conversation updates using abstraction
+    const conversationsChannel = subscribeToConversations((updated: any) => {
+      setConversationsList(prev => 
+        prev.map(c => c.id === updated.id ? {
+          ...c,
+          lastMessage: updated.last_message,
+          lastMessageTime: updated.last_message_time ? formatMessageTime(updated.last_message_time) : c.lastMessageTime,
+          unread: updated.unread_count
+        } : c)
+      );
+    });
 
     return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(conversationsChannel);
+      unsubscribe(messagesChannel);
+      unsubscribe(conversationsChannel);
     };
   }, [selectedConversation?.id, userId]);
 
@@ -409,11 +381,8 @@ export default function MessagesPage() {
   const fetchMessages = async (conversationId: number) => {
     setLoadingMessages(true);
     try {
-      const { data: messagesData } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      // Use abstraction for fetching messages
+      const messagesData = await getMessages(conversationId);
 
       if (messagesData && messagesData.length > 0) {
         const mappedMessages: Message[] = messagesData.map((m: any) => ({
@@ -499,56 +468,39 @@ export default function MessagesPage() {
     setPendingAttachment(null);
 
     try {
-      // Send message with attachment data to Supabase
-      const { error: sendError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: selectedConversation.id,
-          sender_id: userId,
-          sender_name: 'You',
-          content: messageContent || (attachmentData ? '' : ''),
-          read: true,
-          is_own: true,
-          attachment_url: attachmentData?.url,
-          attachment_name: attachmentData?.name,
-          attachment_type: attachmentData?.type,
-          attachment_size: attachmentData?.size,
-        });
+      // Send message with attachment using abstraction
+      await sendMessageWithAttachment({
+        conversation_id: selectedConversation.id,
+        content: messageContent || (attachmentData ? '' : ''),
+        attachment_url: attachmentData?.url,
+        attachment_name: attachmentData?.name,
+        attachment_type: attachmentData?.type,
+        attachment_size: attachmentData?.size,
+      });
       
-      if (!sendError) {
-        // Update message with status
+      // Update message with status
+      setMessagesList(prev => prev.map(m => 
+        m.id === tempId 
+          ? { ...m, status: 'sent' as MessageStatus }
+          : m
+      ));
+
+      // Simulate delivery after a moment
+      setTimeout(() => {
         setMessagesList(prev => prev.map(m => 
           m.id === tempId 
-            ? { ...m, status: 'sent' as MessageStatus }
+            ? { ...m, status: 'delivered' as MessageStatus }
             : m
         ));
+      }, 1000);
 
-        // Simulate delivery after a moment
-        setTimeout(() => {
-          setMessagesList(prev => prev.map(m => 
-            m.id === tempId 
-              ? { ...m, status: 'delivered' as MessageStatus }
-              : m
-          ));
-        }, 1000);
-
-        // Update conversation's last message locally
-        const lastMessageText = attachmentData ? `📎 ${attachmentData.name}` : messageContent;
-        setConversationsList(prev => prev.map(c => 
-          c.id === selectedConversation.id 
-            ? { ...c, lastMessage: lastMessageText, lastMessageTime: "Just now" }
-            : c
-        ));
-        
-        // Update conversation in DB
-        await supabase
-          .from('conversations')
-          .update({
-            last_message: lastMessageText,
-            last_message_time: new Date().toISOString(),
-          })
-          .eq('id', selectedConversation.id);
-      }
+      // Update conversation's last message locally
+      const lastMessageText = attachmentData ? `📎 ${attachmentData.name}` : messageContent;
+      setConversationsList(prev => prev.map(c => 
+        c.id === selectedConversation.id 
+          ? { ...c, lastMessage: lastMessageText, lastMessageTime: "Just now" }
+          : c
+      ));
     } catch (error) {
       console.error("Error sending message:", error);
       // Update status to show error but keep the message
@@ -691,21 +643,8 @@ export default function MessagesPage() {
     
     setSending(true);
     try {
-      // Create conversation in Supabase
-      const { data: convData, error: convError } = await supabase
-        .from('conversations')
-        .insert([{
-          title: "New Conversation",
-          family_id: selectedFamilyForConv?.id,
-          last_message: "Started a new conversation",
-          last_message_time: new Date().toISOString(),
-          unread_count: 0,
-          pinned: false
-        }])
-        .select()
-        .single();
-
-      if (convError) throw convError;
+      // Create conversation using abstraction
+      const convData = await createConversation(selectedFamilyForConv?.id || 0, "New Conversation");
 
       const selectedMemberNames = selectedFamilyForConv?.members
         .filter((m: FamilyMember) => selectedParticipants.includes(m.id))
@@ -738,7 +677,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-background">
+    <div className="flex flex-col flex-1 bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border shrink-0">
         <div className="container py-3">

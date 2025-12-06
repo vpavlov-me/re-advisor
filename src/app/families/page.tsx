@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -44,6 +43,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  getFamilies,
+  createFamily,
+  deleteFamily,
+  addFamilyMember,
+  type CreateFamilyInput,
+} from "@/lib/supabase/families";
 
 // Types
 type AdvisorRole = "external-consul" | "consultant" | "personal-advisor" | "lead-advisor";
@@ -121,26 +127,15 @@ export default function FamiliesPage() {
     message: ""
   });
 
-  const fetchFamilies = useCallback(async () => {
+  const fetchFamiliesData = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('families')
-        .select(`
-          *,
-          members:family_members(count),
-          consultations:consultations(id, status, date)
-        `);
+      const data = await getFamilies();
       
-      if (error) {
-        console.error("Supabase error:", error.message);
-        return;
-      }
-
       if (data && data.length > 0) {
         const mappedFamilies: Family[] = data.map((f: any) => ({
           id: f.id,
           name: f.name,
-          members: f.members?.[0]?.count || 0,
+          members: f.members?.length || 0,
           role: (f.role as AdvisorRole) || "consultant",
           meetings: { 
             upcoming: f.consultations?.filter((c: any) => c.status === 'scheduled').length || 0, 
@@ -162,8 +157,8 @@ export default function FamiliesPage() {
   }, []);
 
   useEffect(() => {
-    fetchFamilies();
-  }, [fetchFamilies]);
+    fetchFamiliesData();
+  }, [fetchFamiliesData]);
 
   const navigateToFamily = (familyId: number) => {
     router.push(`/families/${familyId}`);
@@ -179,13 +174,7 @@ export default function FamiliesPage() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('families')
-        .delete()
-        .eq('id', deletingFamilyId);
-
-      if (error) throw error;
-
+      await deleteFamily(deletingFamilyId);
       setFamiliesList(familiesList.filter(f => f.id !== deletingFamilyId));
       toast.success('Family removed successfully');
     } catch (error) {
@@ -204,39 +193,24 @@ export default function FamiliesPage() {
     
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('You must be logged in to invite families');
-        return;
-      }
-
       const familyName = inviteForm.familyName || `${inviteForm.contactName}'s Family`;
       
-      const { data: familyData, error: familyError } = await supabase
-        .from('families')
-        .insert([{
-          advisor_id: user.id,
-          name: familyName,
-          role: inviteForm.role,
-          status: 'pending',
-          email: inviteForm.contactEmail,
-          payment_status: 'no-invoices',
-          description: 'New family invitation sent.'
-        }])
-        .select()
-        .single();
+      const familyInput: CreateFamilyInput = {
+        name: familyName,
+        role: inviteForm.role,
+        email: inviteForm.contactEmail,
+        description: 'New family invitation sent.'
+      };
 
-      if (familyError) throw familyError;
+      const familyData = await createFamily(familyInput);
 
       if (familyData) {
-        await supabase
-          .from('family_members')
-          .insert([{
-            family_id: familyData.id,
-            name: inviteForm.contactName,
-            email: inviteForm.contactEmail,
-            role: 'Primary Contact'
-          }]);
+        await addFamilyMember({
+          family_id: familyData.id,
+          name: inviteForm.contactName,
+          email: inviteForm.contactEmail,
+          role: 'Primary Contact'
+        });
       }
 
       const newFamily: Family = {
@@ -282,7 +256,7 @@ export default function FamiliesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

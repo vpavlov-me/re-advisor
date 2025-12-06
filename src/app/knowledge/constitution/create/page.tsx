@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { supabase } from "@/lib/supabaseClient";
+import { createConstitutionTemplate } from "@/lib/supabase";
 
 // Predefined Sections (BR-KC-007: Constitution Template Structure)
 const SECTIONS = [
@@ -92,46 +92,18 @@ export default function CreateConstitutionTemplatePage() {
 
     setIsSaving(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("You must be logged in to create a template");
-        return;
-      }
-
-      // Create the constitution template
-      const { data: templateResult, error: templateError } = await supabase
-        .from('constitution_templates')
-        .insert([{
-          advisor_id: user.id,
-          title: templateData.title,
-          description: templateData.description,
-          is_published: !asDraft
-        }])
-        .select()
-        .single();
-
-      if (templateError) throw templateError;
-
-      // Create sections
-      if (templateResult) {
-        const sectionsToInsert = SECTIONS.map((section) => ({
-          template_id: templateResult.id,
+      // Create the constitution template with sections via abstraction layer
+      await createConstitutionTemplate({
+        title: templateData.title,
+        description: templateData.description,
+        is_published: !asDraft,
+        sections: SECTIONS.map((section) => ({
           section_number: section.number,
           title: section.title,
           content: templateData.sections[section.id] || "",
           is_required: true
-        }));
-
-        const { error: sectionsError } = await supabase
-          .from('constitution_sections')
-          .insert(sectionsToInsert);
-
-        if (sectionsError) {
-          console.error("Error saving sections:", sectionsError);
-          // Don't fail the whole operation, template is created
-        }
-      }
+        }))
+      });
 
       toast.success(asDraft ? "Draft saved successfully!" : "Template published successfully!");
       router.push("/knowledge");
@@ -149,7 +121,7 @@ export default function CreateConstitutionTemplatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-page-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="container py-3 flex items-center justify-between">

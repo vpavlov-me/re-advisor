@@ -3,7 +3,33 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getKnowledgeResources,
+  getDeletedResources,
+  createKnowledgeResource,
+  updateKnowledgeResource,
+  deleteKnowledgeResource,
+  permanentDeleteKnowledgeResource,
+  restoreKnowledgeResource,
+  duplicateKnowledgeResource,
+  getResourceFolders,
+  createResourceFolder,
+  deleteResourceFolder,
+  moveResourceToFolder,
+  getConstitutionTemplates,
+  getLearningPaths,
+  deleteLearningPath,
+  shareResource,
+  toggleResourceFeatured,
+  shareResourceWithVersioning,
+  shareConstitutionTemplateToFamily,
+  duplicateConstitutionTemplate,
+  duplicateLearningPath,
+  deleteConstitutionTemplate
+} from "@/lib/supabase";
+import { getFamilies } from "@/lib/supabase/families";
+import { getProfile } from "@/lib/supabase/profile";
+import { getCurrentUser } from "@/lib/auth";
 import { toast } from "sonner";
 import { 
   Home, 
@@ -237,27 +263,21 @@ function KnowledgeCenterContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showSidebar, setShowSidebar] = useState(true);
 
-  const fetchData = useCallback(async (advisorId: string) => {
+  const fetchData = useCallback(async () => {
     try {
-      // Fetch user profile for notifications
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', advisorId)
-        .single();
-      
-      if (profileData) {
-        setUserProfile(profileData);
+      // Fetch user profile for notifications via abstraction layer
+      try {
+        const profileData = await getProfile();
+        if (profileData) {
+          setUserProfile({ first_name: profileData.first_name || '', last_name: profileData.last_name || '' });
+        }
+      } catch (e) {
+        console.error("Error fetching profile:", e);
       }
 
-      // Fetch folders (may not exist if migration not applied)
+      // Fetch folders via abstraction layer
       try {
-        const { data: foldersData } = await supabase
-          .from('resource_folders')
-          .select('*')
-          .eq('advisor_id', advisorId)
-          .order('name');
-        
+        const foldersData = await getResourceFolders();
         if (foldersData) {
           setFolders(foldersData);
         }
@@ -266,51 +286,17 @@ function KnowledgeCenterContent() {
         setFolders([]);
       }
 
-      // Fetch active resources - try with deleted_at filter first, fallback without
+      // Fetch active resources via abstraction layer
       let resourcesData: any[] | null = null;
-      let resourcesError: any = null;
-      
       try {
-        const result = await supabase
-          .from('knowledge_resources')
-          .select('*, shares:resource_shares(count)')
-          .eq('advisor_id', advisorId)
-          .is('deleted_at', null);
-        
-        resourcesData = result.data;
-        resourcesError = result.error;
+        resourcesData = await getKnowledgeResources();
       } catch (e) {
-        // Fallback: fetch without deleted_at filter (column may not exist)
-        const result = await supabase
-          .from('knowledge_resources')
-          .select('*, shares:resource_shares(count)')
-          .eq('advisor_id', advisorId);
-        
-        resourcesData = result.data;
-        resourcesError = result.error;
+        console.error("Error fetching resources:", e);
       }
-      
-      // If still error with deleted_at, try without it
-      if (resourcesError && resourcesError.message?.includes('deleted_at')) {
-        const result = await supabase
-          .from('knowledge_resources')
-          .select('*, shares:resource_shares(count)')
-          .eq('advisor_id', advisorId);
-        
-        resourcesData = result.data;
-        resourcesError = result.error;
-      }
-      
-      if (resourcesError) throw resourcesError;
 
-      // Fetch deleted resources (soft deleted) - only if column exists
+      // Fetch deleted resources (soft deleted) via abstraction layer
       try {
-        const { data: deletedData } = await supabase
-          .from('knowledge_resources')
-          .select('*')
-          .eq('advisor_id', advisorId)
-          .not('deleted_at', 'is', null);
-        
+        const deletedData = await getDeletedResources();
         if (deletedData) {
           const deleted = deletedData.map((r: any) => ({
             id: r.id.toString(),
@@ -332,26 +318,20 @@ function KnowledgeCenterContent() {
         setDeletedResources([]);
       }
       
-      // Fetch constitution templates
-      const { data: templatesData } = await supabase
-        .from('constitution_templates')
-        .select('*')
-        .eq('advisor_id', advisorId);
+      // Fetch constitution templates via abstraction layer
+      const templatesData = await getConstitutionTemplates();
 
-      // Fetch learning paths
-      const { data: learningPathsData } = await supabase
-        .from('learning_paths')
-        .select('*')
-        .eq('advisor_id', advisorId);
+      // Fetch learning paths via abstraction layer
+      const learningPathsData = await getLearningPaths();
 
-      // Fetch families for sharing
-      const { data: familiesData } = await supabase
-        .from('families')
-        .select('id, name')
-        .eq('advisor_id', advisorId);
-
-      if (familiesData) {
-        setFamilies(familiesData);
+      // Fetch families for sharing via abstraction layer
+      try {
+        const familiesData = await getFamilies();
+        if (familiesData) {
+          setFamilies(familiesData.map((f: any) => ({ id: f.id, name: f.name })));
+        }
+      } catch (e) {
+        console.error("Error fetching families:", e);
       }
 
       let allResources: Resource[] = [];
@@ -411,16 +391,16 @@ function KnowledgeCenterContent() {
   }, []);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const init = async () => {
+      const user = await getCurrentUser();
       if (user) {
         setUserId(user.id);
-        fetchData(user.id);
+        fetchData();
       } else {
         setIsLoading(false);
       }
     };
-    getUser();
+    init();
   }, [fetchData]);
 
   // Navigate to resource detail page
@@ -509,11 +489,7 @@ function KnowledgeCenterContent() {
     if (!newFolderName.trim() || !userId) return;
     
     try {
-      const { data, error } = await supabase
-        .from('resource_folders')
-        .insert([{ advisor_id: userId, name: newFolderName.trim() }])
-        .select()
-        .single();
+      const { data, error } = await createResourceFolder(newFolderName.trim());
       
       if (error) {
         if (error.code === '23505') {
@@ -545,12 +521,7 @@ function KnowledgeCenterContent() {
     }
     
     try {
-      const { error } = await supabase
-        .from('knowledge_resources')
-        .update({ folder_id: folderId })
-        .eq('id', parseInt(resourceId));
-      
-      if (error) throw error;
+      await moveResourceToFolder(parseInt(resourceId), folderId);
       
       setResources(resources.map(r => 
         r.id === resourceId 
@@ -568,12 +539,7 @@ function KnowledgeCenterContent() {
   // Handle folder deletion
   const handleDeleteFolder = async (folderId: number) => {
     try {
-      const { error } = await supabase
-        .from('resource_folders')
-        .delete()
-        .eq('id', folderId);
-      
-      if (error) throw error;
+      await deleteResourceFolder(folderId);
       
       setFolders(folders.filter(f => f.id !== folderId));
       if (selectedFolderId === folderId) {
@@ -594,10 +560,7 @@ function KnowledgeCenterContent() {
   const handleRestoreResource = async (resourceId: string) => {
     setIsRestoring(true);
     try {
-      const { error } = await supabase
-        .from('knowledge_resources')
-        .update({ deleted_at: null })
-        .eq('id', parseInt(resourceId));
+      const { error } = await restoreKnowledgeResource(parseInt(resourceId));
       
       if (error) throw error;
       
@@ -618,12 +581,7 @@ function KnowledgeCenterContent() {
   // Permanent delete (for deleted resources section)
   const handlePermanentDelete = async (resourceId: string) => {
     try {
-      const { error } = await supabase
-        .from('knowledge_resources')
-        .delete()
-        .eq('id', parseInt(resourceId));
-      
-      if (error) throw error;
+      await permanentDeleteKnowledgeResource(parseInt(resourceId));
       
       setDeletedResources(deletedResources.filter(r => r.id !== resourceId));
       toast.success("Resource permanently deleted");
@@ -689,35 +647,28 @@ function KnowledgeCenterContent() {
 
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('knowledge_resources')
-        .insert([{
-          advisor_id: userId,
-          title: newResource.title,
-          description: newResource.description,
-          type: newResource.type,
-          category: newResource.category,
-          content: newResource.content || null,
-          file_url: null, // No file upload - using external_url instead
-          external_url: newResource.external_url || null,
-          thumbnail_url: newResource.thumbnail_url || null,
-          is_featured: newResource.is_featured,
-          is_published: newResource.is_published
-        }])
-        .select();
+      const data = await createKnowledgeResource({
+        title: newResource.title,
+        description: newResource.description,
+        type: newResource.type,
+        category: newResource.category,
+        content: newResource.content || undefined,
+        external_url: newResource.external_url || undefined,
+        thumbnail_url: newResource.thumbnail_url || undefined,
+        is_featured: newResource.is_featured,
+        is_published: newResource.is_published
+      });
 
-      if (error) throw error;
-
-      if (data && data[0]) {
+      if (data) {
         const newRes: Resource = {
-          id: data[0].id.toString(),
-          title: data[0].title,
-          type: data[0].type as ResourceType,
-          category: data[0].category,
+          id: data.id.toString(),
+          title: data.title,
+          type: data.type as ResourceType,
+          category: data.category,
           updatedAt: new Date().toISOString().split('T')[0],
           sharedWith: 0,
           isFeatured: false,
-          description: data[0].description || ""
+          description: data.description || ""
         };
         setResources([newRes, ...resources]);
         toast.success("Resource created successfully!");
@@ -764,76 +715,7 @@ function KnowledgeCenterContent() {
       const resourceId = parseInt(selectedResource.id);
       const advisorName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}`.trim() : "Your advisor";
 
-      // Get resource details for snapshot
-      const { data: resourceData } = await supabase
-        .from('knowledge_resources')
-        .select('*')
-        .eq('id', resourceId)
-        .single();
-
-      // Create snapshot of resource
-      const resourceSnapshot = resourceData ? {
-        id: resourceData.id,
-        title: resourceData.title,
-        description: resourceData.description,
-        type: resourceData.type,
-        category: resourceData.category,
-        content: resourceData.content,
-        external_url: resourceData.external_url,
-        is_featured: resourceData.is_featured,
-        created_at: resourceData.created_at,
-        snapshot_created_at: new Date().toISOString()
-      } : null;
-
-      // Get current max version for each family
-      const { data: existingShares } = await supabase
-        .from('resource_shares')
-        .select('family_id, version')
-        .eq('resource_id', resourceId)
-        .in('family_id', selectedFamilies);
-
-      const versionMap = new Map<number, number>();
-      existingShares?.forEach(share => {
-        const currentMax = versionMap.get(share.family_id) || 0;
-        versionMap.set(share.family_id, Math.max(currentMax, share.version || 1));
-      });
-
-      // Insert NEW share records (versioning - no upsert)
-      const shares = selectedFamilies.map(familyId => ({
-        resource_id: resourceId,
-        family_id: familyId,
-        shared_by: userId,
-        advisor_id: userId,
-        version: (versionMap.get(familyId) || 0) + 1,
-        resource_snapshot: resourceSnapshot,
-        created_at: new Date().toISOString()
-      }));
-
-      const { error: shareError } = await supabase
-        .from('resource_shares')
-        .insert(shares);
-
-      if (shareError) throw shareError;
-
-      // Create notifications for each family's council members (BR-KC-014)
-      for (const familyId of selectedFamilies) {
-        // Get family members who should receive notifications
-        const { data: familyMembers } = await supabase
-          .from('family_members')
-          .select('id, email')
-          .eq('family_id', familyId);
-        
-        // For now, create a notification record (family members would see this)
-        await supabase
-          .from('notifications')
-          .insert([{
-            user_id: userId, // This should be family member's user_id when family auth is implemented
-            type: 'resource',
-            title: `New resource shared: ${selectedResource.title}`,
-            description: `${advisorName} shared "${selectedResource.title}" with your family.`,
-            read: false
-          }]);
-      }
+      await shareResourceWithVersioning(resourceId, selectedFamilies, advisorName);
 
       // Update local share count
       setResources(resources.map(r => 
@@ -861,51 +743,13 @@ function KnowledgeCenterContent() {
       const templateId = parseInt(selectedResource.id.replace('ct-', ''));
       const advisorName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}`.trim() : "Your advisor";
 
-      // Get constitution template with sections
-      const { data: templateData } = await supabase
-        .from('constitution_templates')
-        .select('*, sections:constitution_sections(*)')
-        .eq('id', templateId)
-        .single();
+      const result = await shareConstitutionTemplateToFamily(templateId, selectedFamilies, advisorName);
 
-      if (!templateData) {
-        toast.error("Constitution template not found");
-        return;
+      if (result.success) {
+        toast.success(`Constitution template shared with ${result.sharedCount} families!`);
+      } else {
+        toast.error("Failed to share constitution template");
       }
-
-      // Create family constitutions from template for each family
-      for (const familyId of selectedFamilies) {
-        // Create family constitution based on template
-        const { data: familyConstitution, error: constError } = await supabase
-          .from('family_constitutions')
-          .insert([{
-            family_id: familyId,
-            advisor_id: userId,
-            template_id: templateId,
-            title: templateData.title,
-            status: 'draft'
-          }])
-          .select()
-          .single();
-
-        if (constError) {
-          console.error("Error creating family constitution:", constError);
-          continue;
-        }
-
-        // Create notification
-        await supabase
-          .from('notifications')
-          .insert([{
-            user_id: userId,
-            type: 'resource',
-            title: `Constitution template shared: ${templateData.title}`,
-            description: `${advisorName} shared a constitution template with your family.`,
-            read: false
-          }]);
-      }
-
-      toast.success(`Constitution template shared with ${selectedFamilies.length} families!`);
     } catch (error) {
       console.error("Error sharing constitution template:", error);
       toast.error("Failed to share constitution template");
@@ -921,12 +765,7 @@ function KnowledgeCenterContent() {
     if (!resource || id.startsWith('ct-')) return;
     
     try {
-      const { error } = await supabase
-        .from('knowledge_resources')
-        .update({ is_featured: !resource.isFeatured })
-        .eq('id', parseInt(id));
-
-      if (error) throw error;
+      await toggleResourceFeatured(parseInt(id), resource.isFeatured);
 
       setResources(resources.map(r => 
         r.id === id ? { ...r, isFeatured: !r.isFeatured } : r
@@ -950,47 +789,7 @@ function KnowledgeCenterContent() {
       try {
         const templateId = parseInt(resource.id.replace('ct-', ''));
         
-        // Get original template with sections
-        const { data: originalTemplate } = await supabase
-          .from('constitution_templates')
-          .select('*, sections:constitution_sections(*)')
-          .eq('id', templateId)
-          .single();
-        
-        if (!originalTemplate) {
-          toast.error("Template not found");
-          return;
-        }
-
-        // Create duplicate template
-        const { data: newTemplate, error: templateError } = await supabase
-          .from('constitution_templates')
-          .insert([{
-            advisor_id: userId,
-            title: `${originalTemplate.title} (Copy)`,
-            description: originalTemplate.description,
-            is_published: false,
-            sections_content: originalTemplate.sections_content
-          }])
-          .select()
-          .single();
-
-        if (templateError) throw templateError;
-
-        // Copy sections
-        if (newTemplate && originalTemplate.sections?.length > 0) {
-          const newSections = originalTemplate.sections.map((s: any) => ({
-            template_id: newTemplate.id,
-            section_number: s.section_number,
-            title: s.title,
-            content: s.content,
-            is_required: s.is_required
-          }));
-
-          await supabase
-            .from('constitution_sections')
-            .insert(newSections);
-        }
+        const newTemplate = await duplicateConstitutionTemplate(templateId);
 
         // Add to local state
         const duplicatedTemplate: Resource = {
@@ -1018,52 +817,13 @@ function KnowledgeCenterContent() {
       try {
         const pathId = parseInt(resource.id.replace('lp-', ''));
         
-        const { data: originalPath } = await supabase
-          .from('learning_paths')
-          .select('*, steps:learning_path_steps(*)')
-          .eq('id', pathId)
-          .single();
-        
-        if (!originalPath) {
-          toast.error("Learning path not found");
-          return;
-        }
-
-        const { data: newPath, error: pathError } = await supabase
-          .from('learning_paths')
-          .insert([{
-            advisor_id: userId,
-            title: `${originalPath.title} (Copy)`,
-            description: originalPath.description,
-            difficulty: originalPath.difficulty,
-            is_published: false
-          }])
-          .select()
-          .single();
-
-        if (pathError) throw pathError;
-
-        // Copy steps
-        if (newPath && originalPath.steps?.length > 0) {
-          const newSteps = originalPath.steps.map((s: any) => ({
-            learning_path_id: newPath.id,
-            title: s.title,
-            description: s.description,
-            content: s.content,
-            step_order: s.step_order,
-            resource_id: s.resource_id
-          }));
-
-          await supabase
-            .from('learning_path_steps')
-            .insert(newSteps);
-        }
+        const newPath = await duplicateLearningPath(pathId);
 
         const duplicatedPath: Resource = {
           id: `lp-${newPath.id}`,
           title: newPath.title,
           type: "learning-path",
-          category: originalPath.difficulty === 'advanced' ? 'Advanced' : originalPath.difficulty === 'intermediate' ? 'Intermediate' : 'Beginner',
+          category: "Governance",
           updatedAt: new Date().toISOString().split('T')[0],
           sharedWith: 0,
           isFeatured: false,
@@ -1081,33 +841,7 @@ function KnowledgeCenterContent() {
 
     // Regular resource duplication - copy ALL fields
     try {
-      // First get the full resource data
-      const { data: originalData } = await supabase
-        .from('knowledge_resources')
-        .select('*')
-        .eq('id', parseInt(resource.id))
-        .single();
-
-      if (!originalData) {
-        toast.error("Resource not found");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('knowledge_resources')
-        .insert([{
-          advisor_id: userId,
-          title: `${originalData.title} (Copy)`,
-          description: originalData.description,
-          type: originalData.type,
-          category: originalData.category,
-          content: originalData.content,
-          external_url: originalData.external_url,
-          is_featured: false,
-          is_published: false,
-          folder_id: originalData.folder_id
-        }])
-        .select();
+      const { data, error } = await duplicateKnowledgeResource(parseInt(resource.id));
 
       if (error) throw error;
 
@@ -1145,30 +879,18 @@ function KnowledgeCenterContent() {
       // Handle constitution templates - hard delete (they don't have soft delete)
       if (selectedResource.id.startsWith('ct-')) {
         const templateId = parseInt(selectedResource.id.replace('ct-', ''));
-        const { error } = await supabase
-          .from('constitution_templates')
-          .delete()
-          .eq('id', templateId);
-        if (error) throw error;
+        await deleteConstitutionTemplate(templateId);
         setResources(resources.filter(r => r.id !== selectedResource.id));
         toast.success("Constitution template deleted");
       } else if (selectedResource.id.startsWith('lp-')) {
         // Handle learning paths - hard delete
         const pathId = parseInt(selectedResource.id.replace('lp-', ''));
-        const { error } = await supabase
-          .from('learning_paths')
-          .delete()
-          .eq('id', pathId);
-        if (error) throw error;
+        await deleteLearningPath(pathId);
         setResources(resources.filter(r => r.id !== selectedResource.id));
         toast.success("Learning path deleted");
       } else {
         // SOFT DELETE for regular resources
-        const { error } = await supabase
-          .from('knowledge_resources')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('id', parseInt(selectedResource.id));
-        if (error) throw error;
+        await deleteKnowledgeResource(parseInt(selectedResource.id));
         
         // Move to deleted resources
         const deletedResource = resources.find(r => r.id === selectedResource.id);
@@ -1189,7 +911,7 @@ function KnowledgeCenterContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
@@ -2294,7 +2016,7 @@ function KnowledgeCenterContent() {
 export default function KnowledgeCenterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     }>

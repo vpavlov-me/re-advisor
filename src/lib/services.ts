@@ -188,3 +188,47 @@ export async function duplicateService(id: number): Promise<{ data: Service | nu
     is_published: false, // Copies start as unpublished
   });
 }
+
+// Create a service for a specific family (proposal)
+export interface CreateFamilyServiceInput {
+  family_id: number;
+  name: string;
+  price: string;
+  description?: string;
+}
+
+export async function createFamilyService(input: CreateFamilyServiceInput): Promise<{ data: Service | null; error: Error | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { data: null, error: new Error('Not authenticated') };
+  }
+
+  const { data, error } = await supabase
+    .from('services')
+    .insert({
+      advisor_id: user.id,
+      family_id: input.family_id,
+      name: input.name,
+      description: input.description || null,
+      price: input.price,
+      status: 'Pending',
+      progress: 0,
+      start_date: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+// Get services for a specific family
+export async function getServicesByFamily(familyId: number): Promise<{ data: Service[] | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('family_id', familyId)
+    .order('created_at', { ascending: false });
+
+  return { data, error };
+}

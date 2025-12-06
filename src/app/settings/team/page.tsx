@@ -6,7 +6,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getTeamMembers,
+  createTeamMember,
+  deleteTeamMember,
+  updateTeamMemberRole,
+  type TeamMember,
+} from "@/lib/supabase/team";
 import { 
   Home, 
   ChevronRight, 
@@ -78,18 +84,6 @@ const settingsNav = [
   { label: "Subscription", href: "/subscription", icon: Monitor, active: false },
 ];
 
-// Team member type based on database schema
-interface TeamMember {
-  id: number;
-  advisor_id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  avatar_url: string | null;
-  created_at: string;
-}
-
 const roles = [
   { value: "admin", label: "Admin", description: "Full access to all settings and data." },
   { value: "senior_advisor", label: "Senior Advisor", description: "Can manage families and knowledge base." },
@@ -132,12 +126,8 @@ export default function TeamSettingsPage() {
     const fetchTeam = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('team_members')
-          .select('*');
-        
-        if (error) throw error;
-        
+        // Use team abstraction
+        const data = await getTeamMembers();
         if (data) {
           setTeam(data);
         }
@@ -153,25 +143,13 @@ export default function TeamSettingsPage() {
   const onInviteSubmit = async (data: InviteFormData) => {
     setIsInviting(true);
     try {
-      // Get the current user's ID for advisor_id
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const newMemberData = {
-        advisor_id: user?.id,
+      // Use team abstraction
+      const insertedData = await createTeamMember({
         name: data.email.split("@")[0],
         email: data.email,
         role: roles.find(r => r.value === data.role)?.label || "Junior Advisor",
         status: "pending",
-        avatar_url: null
-      };
-
-      const { data: insertedData, error } = await supabase
-        .from('team_members')
-        .insert([newMemberData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      });
 
       if (insertedData) {
         setTeam([...team, insertedData]);
@@ -201,13 +179,8 @@ export default function TeamSettingsPage() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('team_members')
-        .delete()
-        .eq('id', selectedMember.id);
-
-      if (error) throw error;
-
+      // Use team abstraction
+      await deleteTeamMember(selectedMember.id);
       setTeam(team.filter(m => m.id !== selectedMember.id));
       toast.success(`${selectedMember.name} removed from team`);
     } catch (error) {
@@ -238,12 +211,8 @@ export default function TeamSettingsPage() {
     try {
       const newRoleLabel = roles.find(r => r.value === newRole)?.label;
       
-      const { error } = await supabase
-        .from('team_members')
-        .update({ role: newRoleLabel })
-        .eq('id', memberId);
-      
-      if (error) throw error;
+      // Use team abstraction
+      await updateTeamMemberRole(memberId, newRoleLabel || newRole);
       
       setTeam(team.map(m => 
         m.id === memberId 
@@ -258,7 +227,7 @@ export default function TeamSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

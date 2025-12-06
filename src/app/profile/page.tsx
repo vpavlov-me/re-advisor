@@ -58,12 +58,20 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/lib/supabaseClient";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { updateProfileAvatar, removeProfileAvatar } from "@/lib/supabase/storage";
-import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
-import { useRouter } from "next/navigation";
+import {
+  getProfile,
+  upsertProfile,
+  getCredentials,
+  addCredential,
+  deleteCredential,
+  getExpertise,
+  addExpertise,
+  deleteExpertise,
+  type UpdateProfileInput,
+} from "@/lib/supabase/profile";
+import { getServices } from "@/lib/services";
 
 // Zod Validation Schemas
 const profileSchema = z.object({
@@ -229,38 +237,13 @@ export default function ProfilePage() {
   const fetchProfileData = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        console.log("No user found");
-        setLoading(false);
-        return;
-      }
-
-      // Fetch Profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileError);
-      }
+      // Fetch Profile using abstraction layer
+      const profileData = await getProfile();
 
       if (profileData) {
-        // Format joined_date for display
-        const formattedProfile = {
-          ...profileData,
-          joined_date: profileData.joined_date 
-            ? new Date(profileData.joined_date).toLocaleDateString('en-US', { 
-                month: 'long', 
-                year: 'numeric' 
-              })
-            : 'Recently',
-        };
-        
-        setProfile(formattedProfile);
+        setProfile(profileData as Profile);
+        // Set form values
         resetProfile({
           first_name: profileData.first_name || "",
           last_name: profileData.last_name || "",
@@ -275,71 +258,41 @@ export default function ProfilePage() {
           twitter: profileData.twitter || "",
           bio: profileData.bio || ""
         });
-      } else {
-        const defaultProfile = {
-          id: user.id,
-          first_name: "",
-          last_name: "",
-          title: "",
-          email: user.email || "",
-          phone: "",
-          location: "",
-          timezone: "",
-          company: "",
-          website: "",
-          linkedin: "",
-          twitter: "",
-          bio: "",
-          joined_date: new Date().toLocaleDateString(),
-          completion_percentage: 0,
-          rating: 0,
-          reviews_count: 0
-        };
-        setProfile(defaultProfile as Profile);
-        resetProfile({
-          first_name: "",
-          last_name: "",
-          title: "",
-          email: user.email || "",
-          phone: "",
-          location: "",
-          timezone: "",
-          company: "",
-          website: "",
-          linkedin: "",
-          twitter: "",
-          bio: ""
-        });
       }
 
       // Fetch Credentials
-      const { data: credentialsData } = await supabase
-        .from('credentials')
-        .select('*')
-        .eq('advisor_id', user.id);
-
-      if (credentialsData) {
-        setCredentialsList(credentialsData);
+      try {
+        const credentialsData = await getCredentials();
+        if (credentialsData) {
+          setCredentialsList(credentialsData as Credential[]);
+        }
+      } catch (e) {
+        console.log("No credentials found");
       }
 
-      // Fetch Expertise/Specialization
-      const { data: expertiseData } = await supabase
-        .from('expertise')
-        .select('area')
-        .eq('advisor_id', user.id);
-
-      if (expertiseData) {
-        setExpertiseList(expertiseData.map(e => e.area));
+      // Fetch Expertise
+      try {
+        const expertiseData = await getExpertise();
+        if (expertiseData) {
+          setExpertiseList(expertiseData.map(e => e.area));
+        }
+      } catch (e) {
+        console.log("No expertise found");
       }
 
       // Fetch Services
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select('id, name, description, duration, price, status')
-        .eq('advisor_id', user.id);
-
-      if (servicesData) {
-        setServicesList(servicesData);
+      try {
+        const { data: servicesData } = await getServices();
+        if (servicesData) {
+          setServicesList(servicesData.slice(0, 5).map(s => ({
+            id: s.id,
+            name: s.name,
+            price: s.rate ? `$${s.rate}` : "$0",
+            status: s.status || "Active"
+          })));
+        }
+      } catch (e) {
+        console.log("No services found");
       }
 
       // Fetch Experience - mock data for now
@@ -379,19 +332,26 @@ export default function ProfilePage() {
     
     setSaving(true);
     try {
-      const updatedProfile = {
-        ...profile,
-        ...data,
-        updated_at: new Date().toISOString()
+      const profileInput: UpdateProfileInput = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        title: data.title,
+        email: data.email,
+        phone: data.phone,
+        location: data.location,
+        timezone: data.timezone,
+        company: data.company,
+        website: data.website,
+        linkedin: data.linkedin,
+        twitter: data.twitter,
+        bio: data.bio
       };
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(updatedProfile);
-
-      if (error) throw error;
+      const updatedData = await upsertProfile(profileInput);
       
-      setProfile(updatedProfile);
+      if (updatedData) {
+        setProfile({ ...profile, ...updatedData });
+      }
       setIsProfileSheetOpen(false);
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -410,24 +370,15 @@ export default function ProfilePage() {
     
     setSaving(true);
     try {
-      const newCred = {
-        advisor_id: profile.id,
+      const insertedData = await addCredential({
         name: data.name,
         issuer: data.issuer,
         year: data.year,
-        credential_id: data.credential_id || "",
-        status: "pending"
-      };
+        credential_id: data.credential_id
+      });
 
-      const { data: insertedData, error } = await supabase
-        .from('credentials')
-        .insert([newCred])
-        .select()
-        .single();
-
-      if (error) throw error;
       if (insertedData) {
-        setCredentialsList([...credentialsList, insertedData]);
+        setCredentialsList([...credentialsList, insertedData as Credential]);
       }
       setIsCredentialSheetOpen(false);
       resetCredential();
@@ -455,13 +406,7 @@ export default function ProfilePage() {
   const handleDeleteCredential = async (id: number) => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('credentials')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await deleteCredential(id);
       setCredentialsList(credentialsList.filter(c => c.id !== id));
       setEditingCredential(null);
       toast.success('Credential deleted');
@@ -480,15 +425,7 @@ export default function ProfilePage() {
     if (!area || expertiseList.includes(area) || !profile) return;
     
     try {
-      const { error } = await supabase
-        .from('expertise')
-        .insert([{
-          advisor_id: profile.id,
-          area: area
-        }]);
-
-      if (error) throw error;
-
+      await addExpertise(area);
       setExpertiseList([...expertiseList, area]);
       if (typeof areaToAdd !== 'string') setNewExpertise("");
       toast.success('Expertise area added');
@@ -502,14 +439,12 @@ export default function ProfilePage() {
     if (!profile) return;
 
     try {
-      const { error } = await supabase
-        .from('expertise')
-        .delete()
-        .eq('advisor_id', profile.id)
-        .eq('area', item);
-
-      if (error) throw error;
-
+      // Find the expertise item by area name and get its ID
+      const expertiseData = await getExpertise();
+      const itemToDelete = expertiseData?.find(e => e.area === item);
+      if (itemToDelete) {
+        await deleteExpertise(itemToDelete.id);
+      }
       setExpertiseList(expertiseList.filter(i => i !== item));
       toast.success('Expertise area removed');
     } catch (error) {
@@ -520,7 +455,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-page-background">
         {/* Breadcrumb Bar Skeleton */}
         <div className="bg-card border-b border-border">
           <div className="container py-3">
@@ -723,7 +658,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

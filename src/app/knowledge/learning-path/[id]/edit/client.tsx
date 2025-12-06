@@ -3,7 +3,12 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { 
+  getLearningPath, 
+  updateLearningPathWithSteps, 
+  deleteLearningPath,
+  getKnowledgeResources 
+} from "@/lib/supabase";
 import { toast } from "sonner";
 import { 
   ChevronLeft, 
@@ -112,14 +117,8 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
           return;
         }
 
-        // Fetch learning path
-        const { data: pathData, error: pathError } = await supabase
-          .from('learning_paths')
-          .select('*')
-          .eq('id', numericId)
-          .single();
-
-        if (pathError) throw pathError;
+        // Fetch learning path with steps via abstraction layer
+        const pathData = await getLearningPath(numericId);
 
         if (!pathData) {
           toast.error("Learning path not found");
@@ -132,20 +131,11 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
         setDescription(pathData.description || "");
         setDifficulty(pathData.difficulty || "beginner");
 
-        // Fetch steps
-        const { data: stepsData, error: stepsError } = await supabase
-          .from('learning_path_steps')
-          .select('*')
-          .eq('learning_path_id', numericId)
-          .order('step_order');
-
-        if (stepsError) {
-          console.error("Error fetching steps:", stepsError);
-        }
-
         // Convert steps to modules
-        if (stepsData && stepsData.length > 0) {
-          const loadedModules: Module[] = stepsData.map((step, index) => ({
+        const stepsData = pathData.steps || [];
+        if (stepsData.length > 0) {
+          const sortedSteps = [...stepsData].sort((a: any, b: any) => a.step_order - b.step_order);
+          const loadedModules: Module[] = sortedSteps.map((step: any, index: number) => ({
             id: `m${index + 1}`,
             dbId: step.id,
             title: step.title,
@@ -167,22 +157,18 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
           setActiveModuleId("m1");
         }
 
-        // Fetch available resources
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: resourcesData } = await supabase
-            .from('knowledge_resources')
-            .select('id, title, type')
-            .eq('advisor_id', user.id)
-            .eq('is_published', true);
-
-          if (resourcesData) {
-            setAvailableResources(resourcesData.map(r => ({
+        // Fetch available resources via abstraction layer
+        try {
+          const resourcesData = await getKnowledgeResources();
+          setAvailableResources((resourcesData || [])
+            .filter((r: any) => r.is_published)
+            .map((r: any) => ({
               id: r.id.toString(),
               title: r.title,
               type: r.type
             })));
-          }
+        } catch (e) {
+          console.error("Error fetching resources:", e);
         }
       } catch (error) {
         console.error("Error fetching learning path:", error);
@@ -204,41 +190,19 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
 
     setIsSaving(true);
     try {
-      const { error: pathError } = await supabase
-        .from('learning_paths')
-        .update({
-          title,
-          description,
-          difficulty,
-          is_published: publish ? true : learningPath.is_published,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', learningPath.id);
-
-      if (pathError) throw pathError;
-
-      await supabase
-        .from('learning_path_steps')
-        .delete()
-        .eq('learning_path_id', learningPath.id);
-
-      if (modules.length > 0) {
-        const steps = modules.map((module, index) => ({
-          learning_path_id: learningPath.id,
+      // Update learning path with steps via abstraction layer
+      await updateLearningPathWithSteps(learningPath.id, {
+        title,
+        description,
+        difficulty,
+        is_published: publish ? true : learningPath.is_published,
+        steps: modules.map((module, index) => ({
           title: module.title,
           description: module.description,
           step_order: index + 1,
-          estimated_duration_minutes: module.estimatedDuration || null
-        }));
-
-        const { error: stepsError } = await supabase
-          .from('learning_path_steps')
-          .insert(steps);
-
-        if (stepsError) {
-          console.error("Error saving steps:", stepsError);
-        }
-      }
+          estimated_duration_minutes: module.estimatedDuration || undefined
+        }))
+      });
 
       setLearningPath({
         ...learningPath,
@@ -263,17 +227,8 @@ export default function EditLearningPathClient({ params }: { params: Promise<{ i
 
     setIsDeleting(true);
     try {
-      await supabase
-        .from('learning_path_steps')
-        .delete()
-        .eq('learning_path_id', learningPath.id);
-
-      const { error } = await supabase
-        .from('learning_paths')
-        .delete()
-        .eq('id', learningPath.id);
-
-      if (error) throw error;
+      // Delete learning path via abstraction layer (steps deleted by DB cascade)
+      await deleteLearningPath(learningPath.id);
 
       toast.success("Learning path deleted");
       router.push("/knowledge");

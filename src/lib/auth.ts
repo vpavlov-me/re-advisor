@@ -129,3 +129,16 @@ export function onAuthStateChange(callback: (event: string, session: Session | n
 export function isEmailVerified(user: User | null): boolean {
   return user?.email_confirmed_at != null;
 }
+
+// Exchange code for session (PKCE flow)
+export async function exchangeCodeForSession(code: string) {
+  return await supabase.auth.exchangeCodeForSession(code);
+}
+
+// Set session manually (from hash tokens)
+export async function setSession(accessToken: string, refreshToken: string) {
+  return await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+}

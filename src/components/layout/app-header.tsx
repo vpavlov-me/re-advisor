@@ -38,6 +38,34 @@ export function AppHeader() {
   const { setTheme, theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [loggingOut, setLoggingOut] = React.useState(false);
+  const [isVisible, setIsVisible] = React.useState(true);
+  const [lastScrollY, setLastScrollY] = React.useState(0);
+
+  // Handle scroll to show/hide header
+  React.useEffect(() => {
+    const controlHeader = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY < 10) {
+        // Always show header at the top
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down & past 100px - hide header
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up - show header
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", controlHeader);
+
+    return () => {
+      window.removeEventListener("scroll", controlHeader);
+    };
+  }, [lastScrollY]);
 
   // Get user initials for avatar fallback - prefer profile data
   const userInitials = React.useMemo(() => {
@@ -71,7 +99,13 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
+    <header 
+      className={cn(
+        "sticky top-0 z-50 w-full border-b border-border bg-background",
+        "transition-transform duration-300 ease-in-out",
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      )}
+    >
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">

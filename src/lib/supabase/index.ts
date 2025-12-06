@@ -33,9 +33,16 @@ export {
   addConsultationMember,
   removeConsultationMember,
   getConsultationsForMonth,
+  // Availability
+  getAvailabilitySettings,
+  upsertAvailabilitySettings,
+  getWeeklySchedule,
+  saveWeeklySchedule,
   type Consultation,
   type ConsultationMember,
-  type CreateConsultationInput
+  type CreateConsultationInput,
+  type AvailabilitySettings,
+  type WeeklyScheduleSlot
 } from "./consultations";
 
 // Messages
@@ -126,3 +133,119 @@ export {
   type CreateTaskInput
 } from "./tasks";
 
+// Team
+export {
+  getTeamMembers,
+  createTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+  updateTeamMemberRole,
+  type TeamMember,
+  type CreateTeamMemberInput
+} from "./team";
+
+// Knowledge
+export {
+  getKnowledgeArticles,
+  getKnowledgeArticle,
+  createKnowledgeArticle,
+  updateKnowledgeArticle,
+  deleteKnowledgeArticle,
+  getLearningPaths,
+  getLearningPath,
+  createLearningPath,
+  createLearningPathWithSteps,
+  updateLearningPath,
+  updateLearningPathWithSteps,
+  deleteLearningPath,
+  getLearningModules,
+  createLearningModule,
+  updateLearningModule,
+  deleteLearningModule,
+  getFamilyConstitutions,
+  getFamilyConstitution,
+  createFamilyConstitution,
+  updateFamilyConstitution,
+  deleteFamilyConstitution,
+  // Knowledge Resources
+  getKnowledgeResources,
+  getKnowledgeResourceById,
+  getDeletedResources,
+  createKnowledgeResource,
+  updateKnowledgeResource,
+  deleteKnowledgeResource,
+  permanentDeleteKnowledgeResource,
+  restoreKnowledgeResource,
+  duplicateKnowledgeResource,
+  // Resource Folders
+  getResourceFolders,
+  createResourceFolder,
+  deleteResourceFolder,
+  moveResourceToFolder,
+  // Constitution Templates
+  getConstitutionTemplates,
+  createConstitutionTemplate,
+  getConstitutionTemplate,
+  updateConstitutionTemplate,
+  deleteConstitutionTemplate,
+  // Resource Sharing
+  shareResource,
+  getResourceShares,
+  getResourceSharesWithFamilies,
+  removeResourceShare,
+  // Resource Management
+  toggleResourceFeatured,
+  shareResourceWithVersioning,
+  shareConstitutionTemplateToFamily,
+  duplicateConstitutionTemplate,
+  duplicateLearningPath,
+  type KnowledgeArticle,
+  type LearningPath,
+  type LearningModule,
+  type FamilyConstitution,
+  type ConstitutionSection,
+  type KnowledgeResource,
+  type ResourceFolder,
+  type ConstitutionTemplate,
+  type CreateConstitutionTemplateInput,
+  type ConstitutionSectionInput,
+  type CreateLearningPathWithStepsInput,
+  type LearningPathStepInput
+} from "./knowledge";
+
+// Availability (from consultations)
+export {
+  getAvailabilitySlots,
+  upsertAvailabilitySlot,
+  deleteAvailabilitySlot,
+  getAvailabilityExceptions,
+  createAvailabilityException,
+  deleteAvailabilityException,
+  type AvailabilitySlot,
+  type AvailabilityException
+} from "./consultations";
+
+// Service Requests
+export {
+  getServiceRequests,
+  updateServiceRequestStatus,
+  addDeliverable,
+  addServiceItem,
+  type ServiceRequest,
+  type ServiceRequestItem,
+  type ServiceDeliverable,
+  type ServiceRequestStatus,
+  type ConsultantService
+} from "./service-requests";
+
+// Family Portal (for family members, not advisors)
+export {
+  getUserFamilyMembership,
+  getSharedResourcesForFamily,
+  getFamilyConstitutionsForFamily,
+  type FamilyMembership,
+  type SharedResourceWithDetails
+} from "./family-portal";
+
+// Utilities
+export { isSupabaseConfigured } from "../supabaseClient";

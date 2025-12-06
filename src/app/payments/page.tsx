@@ -6,8 +6,20 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
 import { usePayments } from "@/lib/hooks/use-payments";
+import { getCurrentUser } from "@/lib/auth";
+import { getProfile } from "@/lib/supabase/profile";
+import { 
+  getTransactions,
+  getPaymentMethods,
+  getBankAccounts,
+  addPaymentMethod,
+  addBankAccount,
+  setDefaultPaymentMethod,
+  setDefaultBankAccount,
+  deletePaymentMethod,
+  deleteBankAccount,
+} from "@/lib/supabase/payments";
 import { 
   Home, 
   ChevronRight, 
@@ -226,22 +238,17 @@ export default function PaymentsPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get current user using abstraction
+        const user = await getCurrentUser();
         if (!user) {
           setIsLoading(false);
           return;
         }
 
-        // Fetch Payment Methods for this advisor (safe - don't throw on error)
+        // Fetch Payment Methods using abstraction
         try {
-          const { data: methods, error: methodsError } = await supabase
-            .from('payment_methods')
-            .select('*')
-            .eq('advisor_id', user.id)
-            .order('is_default', { ascending: false });
-          
-          if (!methodsError && methods && methods.length > 0) {
+          const methods = await getPaymentMethods();
+          if (methods && methods.length > 0) {
             setPaymentMethods(methods.map((m: any) => ({
               id: m.id,
               type: m.type,
@@ -255,15 +262,10 @@ export default function PaymentsPage() {
           console.warn("Could not fetch payment methods:", e);
         }
 
-        // Fetch Bank Accounts for this advisor (safe - don't throw on error)
+        // Fetch Bank Accounts using abstraction
         try {
-          const { data: banks, error: banksError } = await supabase
-            .from('bank_accounts')
-            .select('*')
-            .eq('advisor_id', user.id)
-            .order('is_default', { ascending: false });
-          
-          if (!banksError && banks && banks.length > 0) {
+          const banks = await getBankAccounts();
+          if (banks && banks.length > 0) {
             setBankAccountsList(banks.map((b: any) => ({
               id: b.id,
               bankName: b.bank_name,
@@ -276,15 +278,10 @@ export default function PaymentsPage() {
           console.warn("Could not fetch bank accounts:", e);
         }
 
-        // Fetch Transactions for this advisor (safe - don't throw on error)
+        // Fetch Transactions using abstraction
         try {
-          const { data: txs, error: txsError } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('advisor_id', user.id)
-            .order('date', { ascending: false });
-          
-          if (!txsError && txs && txs.length > 0) {
+          const txs = await getTransactions();
+          if (txs && txs.length > 0) {
             setTransactions(txs.map((t: any) => ({
               id: t.id,
               date: new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -316,14 +313,9 @@ export default function PaymentsPage() {
           console.warn("Could not fetch transactions:", e);
         }
 
-        // Check Stripe Connect status (safe)
+        // Check Stripe Connect status using abstraction
         try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('stripe_customer_id')
-            .eq('id', user.id)
-            .single();
-          
+          const profile = await getProfile();
           if (profile?.stripe_customer_id) {
             setIsStripeConnected(true);
           }
@@ -354,35 +346,25 @@ export default function PaymentsPage() {
   const onAddCard = async (data: CardFormData) => {
     setIsAddingCard(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const method = {
-        advisor_id: user.id,
+      // Use abstraction to add payment method
+      const savedData = await addPaymentMethod({
         type: "card",
         brand: detectCardBrand(data.number),
         last4: data.number.replace(/\s/g, '').slice(-4),
         expiry: data.expiry,
         is_default: paymentMethods.length === 0,
-      };
-
-      const { data: savedData, error } = await supabase.from('payment_methods').insert([method]).select();
-      
-      if (error) throw error;
+      });
 
       if (savedData) {
         const newMethod = {
-          id: savedData[0].id,
-          type: savedData[0].type,
-          brand: savedData[0].brand,
-          last4: savedData[0].last4,
-          expiry: savedData[0].expiry,
-          isDefault: savedData[0].is_default
+          id: savedData.id,
+          type: savedData.type,
+          brand: savedData.brand,
+          last4: savedData.last4,
+          expiry: savedData.expiry,
+          isDefault: savedData.is_default
         };
         setPaymentMethods([...paymentMethods, newMethod]);
-      } else {
-        // Fallback for demo
-        setPaymentMethods([...paymentMethods, { ...method, id: Date.now(), isDefault: method.is_default }]);
       }
       
       toast.success("Payment method added successfully");
@@ -411,39 +393,23 @@ export default function PaymentsPage() {
   const onAddBank = async (data: BankFormData) => {
     setIsAddingBank(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const account = {
-        advisor_id: user.id,
+      // Use abstraction to add bank account
+      const savedData = await addBankAccount({
         bank_name: data.bankName,
         account_type: data.accountType,
         last4: data.accountNumber.slice(-4),
         is_default: bankAccountsList.length === 0,
-      };
-
-      const { data: savedData, error } = await supabase.from('bank_accounts').insert([account]).select();
-      
-      if (error) throw error;
+      });
 
       if (savedData) {
         const newAccount = {
-          id: savedData[0].id,
-          bankName: savedData[0].bank_name,
-          accountType: savedData[0].account_type,
-          last4: savedData[0].last4,
-          isDefault: savedData[0].is_default
+          id: savedData.id,
+          bankName: savedData.bank_name,
+          accountType: savedData.account_type,
+          last4: savedData.last4,
+          isDefault: savedData.is_default
         };
         setBankAccountsList([...bankAccountsList, newAccount]);
-      } else {
-        // Fallback for demo
-        setBankAccountsList([...bankAccountsList, { 
-          id: Date.now(), 
-          bankName: data.bankName, 
-          accountType: data.accountType, 
-          last4: data.accountNumber.slice(-4),
-          isDefault: bankAccountsList.length === 0 
-        }]);
       }
       
       toast.success("Bank account added successfully");
@@ -477,15 +443,13 @@ export default function PaymentsPage() {
     
     setIsDeleting(true);
     try {
-      const table = selectedItem.type === 'card' ? 'payment_methods' : 'bank_accounts';
-      const { error } = await supabase.from(table).delete().eq('id', selectedItem.id);
-      
-      if (error) throw error;
-
+      // Use abstraction for delete
       if (selectedItem.type === 'card') {
+        await deletePaymentMethod(selectedItem.id);
         setPaymentMethods(paymentMethods.filter(m => m.id !== selectedItem.id));
         toast.success("Payment method removed");
       } else {
+        await deleteBankAccount(selectedItem.id);
         setBankAccountsList(bankAccountsList.filter(b => b.id !== selectedItem.id));
         toast.success("Bank account removed");
       }
@@ -509,19 +473,15 @@ export default function PaymentsPage() {
   const setAsDefault = async (type: 'card' | 'bank', id: number) => {
     setSettingDefaultId(id);
     try {
+      // Use abstraction for setting default
       if (type === 'card') {
-        // Update all cards to non-default, then set selected as default
-        await supabase.from('payment_methods').update({ is_default: false }).neq('id', id);
-        await supabase.from('payment_methods').update({ is_default: true }).eq('id', id);
-        
+        await setDefaultPaymentMethod(id);
         setPaymentMethods(paymentMethods.map(m => ({
           ...m,
           isDefault: m.id === id
         })));
       } else {
-        await supabase.from('bank_accounts').update({ is_default: false }).neq('id', id);
-        await supabase.from('bank_accounts').update({ is_default: true }).eq('id', id);
-        
+        await setDefaultBankAccount(id);
         setBankAccountsList(bankAccountsList.map(b => ({
           ...b,
           isDefault: b.id === id
@@ -762,7 +722,7 @@ export default function PaymentsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

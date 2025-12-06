@@ -30,8 +30,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabaseClient";
 import { NotificationSettings } from "@/components/notifications/notification-settings";
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  deleteAllNotifications,
+  subscribeToNotifications,
+  unsubscribe as unsubscribeNotifications,
+  type Notification as NotificationData,
+} from "@/lib/supabase/notifications";
 
 type NotificationType = "message" | "consultation" | "payment" | "system" | "family" | "alert";
 
@@ -129,23 +138,8 @@ export default function NotificationsPage() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        // Set real data from database, or empty array if no notifications
-        setNotifications(data || []);
-        return;
-      }
-      
-      // Not logged in - show empty state
-      setNotifications([]);
+      const data = await getNotifications();
+      setNotifications(data || []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       // On error, show empty state instead of mock data
@@ -161,54 +155,16 @@ export default function NotificationsPage() {
     };
     init();
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
-          toast.info(newNotification.title, {
-            description: newNotification.description
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          const updated = payload.new as Notification;
-          setNotifications(prev => 
-            prev.map(n => n.id === updated.id ? updated : n)
-          );
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications'
-        },
-        (payload) => {
-          const deleted = payload.old as { id: number };
-          setNotifications(prev => prev.filter(n => n.id !== deleted.id));
-        }
-      )
-      .subscribe();
+    // Set up real-time subscription using the abstraction layer
+    const channel = subscribeToNotifications((newNotification) => {
+      setNotifications(prev => [newNotification as Notification, ...prev]);
+      toast.info(newNotification.title, {
+        description: newNotification.description
+      });
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribeNotifications(channel);
     };
   }, [fetchNotifications]);
 
@@ -228,17 +184,7 @@ export default function NotificationsPage() {
     
     setIsMarkingAllRead(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from('notifications')
-          .update({ read: true })
-          .eq('user_id', user.id)
-          .eq('read', false);
-
-        if (error) throw error;
-      }
-
+      await markAllAsRead();
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       toast.success(`Marked ${unreadCount} notification${unreadCount > 1 ? 's' : ''} as read`);
     } catch (error) {
@@ -254,13 +200,7 @@ export default function NotificationsPage() {
   const handleMarkRead = async (id: number) => {
     setMarkingReadId(id);
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await markAsRead(id);
       setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (error) {
       console.error("Error marking read:", error);
@@ -274,13 +214,7 @@ export default function NotificationsPage() {
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await deleteNotification(id);
       setNotifications(notifications.filter(n => n.id !== id));
       toast.success("Notification deleted");
     } catch (error) {
@@ -296,16 +230,7 @@ export default function NotificationsPage() {
   const handleClearAll = async () => {
     setIsClearing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from('notifications')
-          .delete()
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      }
-
+      await deleteAllNotifications();
       setNotifications([]);
       toast.success("All notifications cleared");
     } catch (error) {
@@ -388,7 +313,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

@@ -55,7 +55,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  getServices,
+  createService,
+  updateService,
+  deleteService,
+  duplicateService,
+  type CreateServiceInput,
+} from "@/lib/services";
 
 // Constants
 const SERVICE_CATEGORIES = ["Governance", "Planning", "Mediation", "Assessment", "Education", "Other"];
@@ -155,27 +162,16 @@ export default function ServicesPage() {
   ];
 
   useEffect(() => {
-    fetchServices();
+    fetchServicesData();
   }, []);
 
-  const fetchServices = async () => {
+  const fetchServicesData = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await getServices();
       
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('advisor_id', user.id)
-        .order('created_at', { ascending: false });
-
       if (error) {
-        console.log("Supabase error (using mock data if needed):", error.message);
+        console.log("Error fetching services:", error.message);
         setLoading(false);
         return;
       }
@@ -185,16 +181,16 @@ export default function ServicesPage() {
           id: s.id,
           name: s.name,
           description: s.description,
-          priceModel: s.price_model,
-          priceAmount: s.price_amount,
-          price: s.price,
-          duration: s.duration,
-          category: s.category,
-          status: s.status,
-          activeClients: s.active_clients || 0,
-          totalRevenue: s.total_revenue || "$0",
-          rating: s.rating || 0,
-          reviews: s.reviews || 0
+          priceModel: s.rate_type,
+          priceAmount: s.rate?.toString(),
+          price: s.rate ? `$${s.rate}` : "$0",
+          duration: "1 hour", // Default, not stored in current schema
+          category: s.service_type?.category || "Other",
+          status: s.is_published ? "active" : "draft",
+          activeClients: s.current_clients || 0,
+          totalRevenue: "$0",
+          rating: 0,
+          reviews: 0
         }));
         setServices(mappedServices);
       }
@@ -259,44 +255,25 @@ export default function ServicesPage() {
     }
 
     setSaving(true);
-    const formattedPrice = `$${formData.priceAmount}`; // Simple formatting
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Please log in to save services");
-        setSaving(false);
-        return;
-      }
-
-      const serviceData = {
+      const serviceInput: CreateServiceInput = {
         name: formData.name,
         description: formData.description,
-        price_model: formData.priceModel,
-        price_amount: parseFloat(formData.priceAmount) || 0,
-        price: formattedPrice,
-        duration: formData.duration,
-        category: formData.category,
-        status: formData.status,
-        advisor_id: user.id
+        rate: parseFloat(formData.priceAmount) || null,
+        rate_type: formData.priceModel === "Hourly Rate" ? "hourly" : 
+                   formData.priceModel === "Monthly Retainer" ? "retainer" : "fixed",
+        service_type_id: null,
+        max_clients: null,
+        is_published: formData.status === "active"
       };
       
       let result;
       
       if (editingService) {
-        result = await supabase
-          .from('services')
-          .update(serviceData)
-          .eq('id', editingService.id)
-          .select()
-          .single();
+        result = await updateService({ id: editingService.id as number, ...serviceInput });
       } else {
-        result = await supabase
-          .from('services')
-          .insert([serviceData])
-          .select()
-          .single();
+        result = await createService(serviceInput);
       }
 
       const { data: savedData, error } = result;
@@ -307,17 +284,17 @@ export default function ServicesPage() {
         const mappedService: Service = {
           id: savedData.id,
           name: savedData.name,
-          description: savedData.description,
-          priceModel: savedData.price_model,
-          priceAmount: savedData.price_amount,
-          price: savedData.price,
-          duration: savedData.duration,
-          category: savedData.category,
-          status: savedData.status,
-          activeClients: savedData.active_clients || 0,
-          totalRevenue: savedData.total_revenue || "$0",
-          rating: savedData.rating || 0,
-          reviews: savedData.reviews || 0
+          description: savedData.description || "",
+          priceModel: savedData.rate_type,
+          priceAmount: savedData.rate?.toString(),
+          price: savedData.rate ? `$${savedData.rate}` : "$0",
+          duration: formData.duration,
+          category: savedData.service_type?.category || formData.category,
+          status: savedData.is_published ? "active" : "draft",
+          activeClients: savedData.current_clients || 0,
+          totalRevenue: "$0",
+          rating: 0,
+          reviews: 0
         };
 
         if (editingService) {
@@ -348,10 +325,7 @@ export default function ServicesPage() {
     setDeleting(serviceToDelete.id);
     
     try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', serviceToDelete.id);
+      const { error } = await deleteService(serviceToDelete.id as number);
 
       if (error) throw error;
 
@@ -369,30 +343,7 @@ export default function ServicesPage() {
 
   const handleDuplicate = async (service: Service) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Please log in to duplicate services");
-        return;
-      }
-
-      const newServiceData = {
-        name: `${service.name} (Copy)`,
-        description: service.description,
-        price_model: service.priceModel,
-        price_amount: parseFloat(service.priceAmount || "0"),
-        price: service.price,
-        duration: service.duration,
-        category: service.category,
-        status: "draft" as const,
-        advisor_id: user.id
-      };
-
-      const { data, error } = await supabase
-        .from('services')
-        .insert([newServiceData])
-        .select()
-        .single();
+      const { data, error } = await duplicateService(service.id as number);
 
       if (error) throw error;
 
@@ -400,13 +351,13 @@ export default function ServicesPage() {
         const mappedService: Service = {
           id: data.id,
           name: data.name,
-          description: data.description,
-          priceModel: data.price_model,
-          priceAmount: data.price_amount,
-          price: data.price,
-          duration: data.duration,
-          category: data.category,
-          status: data.status,
+          description: data.description || "",
+          priceModel: data.rate_type,
+          priceAmount: data.rate?.toString(),
+          price: data.rate ? `$${data.rate}` : "$0",
+          duration: "1 hour",
+          category: data.service_type?.category || "Other",
+          status: data.is_published ? "active" : "draft",
           activeClients: 0,
           totalRevenue: "$0",
           rating: 0,
@@ -423,10 +374,7 @@ export default function ServicesPage() {
 
   const handlePublish = async (service: Service) => {
     try {
-      const { error } = await supabase
-        .from('services')
-        .update({ status: 'active' })
-        .eq('id', service.id);
+      const { error } = await updateService({ id: service.id as number, is_published: true });
 
       if (error) throw error;
 
@@ -441,7 +389,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">

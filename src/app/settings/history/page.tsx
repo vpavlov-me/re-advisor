@@ -39,7 +39,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/lib/supabaseClient";
 import {
   getLoginHistory,
   formatLoginDate,
@@ -148,7 +147,7 @@ export default function LoginHistoryPage() {
   const blockedCount = loginHistory.filter(e => e.status === "blocked").length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-border">
         <div className="container py-3">
