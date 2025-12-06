@@ -18,6 +18,11 @@ const supabaseAdmin = isConfigured ? createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
+    global: {
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`
+      }
+    }
   }
 ) : null;
 
@@ -52,8 +57,11 @@ export async function POST(request: NextRequest) {
 
     // Verify user with token using anon key client
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
     if (userError || !user) {
-      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+      return NextResponse.json({ 
+        error: 'Invalid or expired session' 
+      }, { status: 401 });
     }
 
     // Get file from form data
@@ -115,7 +123,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      console.error('Banner upload error:', uploadError);
       return NextResponse.json({ 
         error: `Upload failed: ${uploadError.message}` 
       }, { status: 500 });
