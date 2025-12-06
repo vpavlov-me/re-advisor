@@ -50,15 +50,6 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.replace('Bearer ', '');
 
-    // Create authenticated client with user's token (for RLS-protected storage operations)
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
-
     // Verify user with token using anon key client
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
@@ -102,7 +93,7 @@ export async function POST(request: NextRequest) {
       const bucketIndex = urlParts.findIndex((part: string) => part === BANNER_BUCKET);
       if (bucketIndex !== -1) {
         const oldFilePath = urlParts.slice(bucketIndex + 1).join('/');
-        await supabaseAuth.storage
+        await supabaseAdmin.storage
           .from(BANNER_BUCKET)
           .remove([oldFilePath]);
       }
@@ -117,8 +108,8 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload file using authenticated client (uses RLS policies)
-    const { error: uploadError } = await supabaseAuth.storage
+    // Upload file using service role (bypasses RLS)
+    const { error: uploadError } = await supabaseAdmin.storage
       .from(BANNER_BUCKET)
       .upload(filePath, buffer, {
         contentType: file.type,
@@ -134,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabaseAuth.storage
+    const { data: { publicUrl } } = supabaseAdmin.storage
       .from(BANNER_BUCKET)
       .getPublicUrl(filePath);
 
@@ -180,15 +171,6 @@ export async function DELETE(request: NextRequest) {
 
     const token = authHeader.replace('Bearer ', '');
 
-    // Create authenticated client with user's token (for RLS-protected storage operations)
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
-
     // Verify user with token using anon key client
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
@@ -209,8 +191,8 @@ export async function DELETE(request: NextRequest) {
       if (bucketIndex !== -1) {
         const filePath = urlParts.slice(bucketIndex + 1).join('/');
         
-        // Delete file from storage using authenticated client
-        await supabaseAuth.storage
+        // Delete file from storage
+        await supabaseAdmin.storage
           .from(BANNER_BUCKET)
           .remove([filePath]);
       }
