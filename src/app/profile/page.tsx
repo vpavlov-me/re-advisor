@@ -58,8 +58,11 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { updateProfileAvatar, removeProfileAvatar } from "@/lib/supabase/storage";
+import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
+import { useRouter } from "next/navigation";
 import {
   getProfile,
   upsertProfile,
