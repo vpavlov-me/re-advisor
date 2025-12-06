@@ -17,11 +17,6 @@ const supabaseAdmin = isConfigured ? createClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-    },
-    global: {
-      headers: {
-        'Authorization': `Bearer ${supabaseServiceKey}`
-      }
     }
   }
 ) : null;
