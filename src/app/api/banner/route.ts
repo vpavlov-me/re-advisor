@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     if (profile?.banner_url) {
       const urlParts = profile.banner_url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === BANNER_BUCKET);
+      const bucketIndex = urlParts.findIndex((part: string) => part === BANNER_BUCKET);
       if (bucketIndex !== -1) {
         const oldFilePath = urlParts.slice(bucketIndex + 1).join('/');
         await supabaseAdmin.storage
@@ -154,7 +154,7 @@ export async function DELETE(request: NextRequest) {
     if (profile?.banner_url) {
       // Extract file path from URL
       const urlParts = profile.banner_url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === BANNER_BUCKET);
+      const bucketIndex = urlParts.findIndex((part: string) => part === BANNER_BUCKET);
       if (bucketIndex !== -1) {
         const filePath = urlParts.slice(bucketIndex + 1).join('/');
         
