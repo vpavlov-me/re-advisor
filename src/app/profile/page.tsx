@@ -130,7 +130,7 @@ const experienceSchema = z.object({
   company: z.string().min(2, "Company is required").max(100),
   start_date: z.string().optional().or(z.literal("")),
   end_date: z.string().optional().or(z.literal("")),
-  is_current: z.boolean().default(false),
+  is_current: z.boolean().optional(),
   description: z.string().max(500).optional().or(z.literal("")),
   location: z.string().max(100).optional().or(z.literal(""))
 });
@@ -150,10 +150,10 @@ const recommendationSchema = z.object({
   author_title: z.string().max(100).optional(),
   author_company: z.string().max(100).optional(),
   relationship: z.string().max(100).optional(),
-  rating: z.coerce.number().min(1).max(5),
+  rating: z.number().min(1).max(5).optional(),
   text: z.string().min(10, "Recommendation text must be at least 10 characters").max(1000),
-  is_featured: z.boolean().default(false),
-  is_visible: z.boolean().default(true)
+  is_featured: z.boolean().optional(),
+  is_visible: z.boolean().optional()
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -604,8 +604,8 @@ export default function ProfilePage() {
           role: data.role,
           company: data.company,
           start_date: data.start_date || undefined,
-          end_date: data.is_current ? undefined : (data.end_date || undefined),
-          is_current: data.is_current,
+          end_date: (data.is_current ?? false) ? undefined : (data.end_date || undefined),
+          is_current: data.is_current ?? false,
           description: data.description || undefined,
           location: data.location || undefined
         });
@@ -631,8 +631,8 @@ export default function ProfilePage() {
           role: data.role,
           company: data.company,
           start_date: data.start_date || undefined,
-          end_date: data.is_current ? undefined : (data.end_date || undefined),
-          is_current: data.is_current,
+          end_date: (data.is_current ?? false) ? undefined : (data.end_date || undefined),
+          is_current: data.is_current ?? false,
           description: data.description || undefined,
           location: data.location || undefined
         });
@@ -877,10 +877,10 @@ export default function ProfilePage() {
           author_title: data.author_title || undefined,
           author_company: data.author_company || undefined,
           relationship: data.relationship || undefined,
-          rating: data.rating,
+          rating: data.rating ?? 5,
           text: data.text,
-          is_featured: data.is_featured,
-          is_visible: data.is_visible
+          is_featured: data.is_featured ?? false,
+          is_visible: data.is_visible ?? true
         });
 
         if (updatedData) {
@@ -907,10 +907,10 @@ export default function ProfilePage() {
           author_title: data.author_title || undefined,
           author_company: data.author_company || undefined,
           relationship: data.relationship || undefined,
-          rating: data.rating,
+          rating: data.rating ?? 5,
           text: data.text,
-          is_featured: data.is_featured,
-          is_visible: data.is_visible
+          is_featured: data.is_featured ?? false,
+          is_visible: data.is_visible ?? true
         });
 
         if (insertedData) {
