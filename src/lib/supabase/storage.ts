@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabaseClient';
 
 const AVATAR_BUCKET = 'avatars';
+const BANNER_BUCKET = 'banners';
 
 // Upload avatar via API route (recommended - uses service role on server)
 export async function uploadAvatarViaAPI(file: File): Promise<string> {
@@ -201,4 +202,80 @@ export async function getSignedAvatarUrl(filePath: string, expiresIn = 3600): Pr
   }
 
   return data.signedUrl;
+}
+
+// ============= BANNER FUNCTIONS =============
+
+// Upload banner via API route (recommended - uses service role on server)
+export async function uploadBannerViaAPI(file: File): Promise<string> {
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.');
+  }
+
+  // Validate file size (max 10MB for banners - higher resolution)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    throw new Error('File is too large. Maximum size is 10MB.');
+  }
+
+  // Get current session token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Please log in to upload a banner.');
+  }
+
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // Upload via API route
+  const response = await fetch('/api/banner', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to upload banner');
+  }
+
+  return result.url;
+}
+
+// Delete banner via API route
+export async function deleteBannerViaAPI(): Promise<void> {
+  // Get current session token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Please log in to remove banner.');
+  }
+
+  const response = await fetch('/api/banner', {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Failed to remove banner');
+  }
+}
+
+// Update profile banner - uses API route for reliable uploads
+export async function updateProfileBanner(userId: string, file: File): Promise<string> {
+  return await uploadBannerViaAPI(file);
+}
+
+// Remove profile banner - uses API route for reliable deletion
+export async function removeProfileBanner(userId: string): Promise<void> {
+  await deleteBannerViaAPI();
 }

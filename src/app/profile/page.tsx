@@ -60,7 +60,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
-import { updateProfileAvatar, removeProfileAvatar } from "@/lib/supabase/storage";
+import { BannerUpload } from "@/components/ui/banner-upload";
+import { 
+  updateProfileAvatar, 
+  removeProfileAvatar,
+  updateProfileBanner,
+  removeProfileBanner 
+} from "@/lib/supabase/storage";
 import { ProfileCompletionCard } from "@/components/profile/profile-completion-card";
 import { useRouter } from "next/navigation";
 import {
@@ -118,8 +124,42 @@ const credentialSchema = z.object({
   credential_id: z.string().optional()
 });
 
+const experienceSchema = z.object({
+  role: z.string().min(2, "Role is required").max(100),
+  company: z.string().min(2, "Company is required").max(100),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  is_current: z.boolean().default(false),
+  description: z.string().max(500).optional(),
+  location: z.string().max(100).optional()
+});
+
+const educationSchema = z.object({
+  degree: z.string().min(2, "Degree is required").max(100),
+  institution: z.string().min(2, "Institution is required").max(100),
+  field_of_study: z.string().max(100).optional(),
+  start_year: z.string().optional(),
+  end_year: z.string().optional(),
+  grade: z.string().max(50).optional(),
+  description: z.string().max(500).optional()
+});
+
+const recommendationSchema = z.object({
+  author_name: z.string().min(2, "Name is required").max(100),
+  author_title: z.string().max(100).optional(),
+  author_company: z.string().max(100).optional(),
+  relationship: z.string().max(100).optional(),
+  rating: z.coerce.number().min(1).max(5),
+  text: z.string().min(10, "Recommendation text must be at least 10 characters").max(1000),
+  is_featured: z.boolean().default(false),
+  is_visible: z.boolean().default(true)
+});
+
 type ProfileFormData = z.infer<typeof profileSchema>;
 type CredentialFormData = z.infer<typeof credentialSchema>;
+type ExperienceFormData = z.infer<typeof experienceSchema>;
+type EducationFormData = z.infer<typeof educationSchema>;
+type RecommendationFormData = z.infer<typeof recommendationSchema>;
 
 // Types
 interface Profile {
@@ -217,9 +257,17 @@ export default function ProfilePage() {
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [recommendationsList, setRecommendationsList] = useState<Recommendation[]>([]);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
+  const [isBannerSheetOpen, setIsBannerSheetOpen] = useState(false);
   const [isCredentialSheetOpen, setIsCredentialSheetOpen] = useState(false);
   const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
+  const [isExperienceSheetOpen, setIsExperienceSheetOpen] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
+  const [isEducationSheetOpen, setIsEducationSheetOpen] = useState(false);
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+  const [isRecommendationSheetOpen, setIsRecommendationSheetOpen] = useState(false);
+  const [editingRecommendation, setEditingRecommendation] = useState<Recommendation | null>(null);
   const [newExpertise, setNewExpertise] = useState("");
+  const [newSkill, setNewSkill] = useState("");
   const [hideProfileCompletionCard, setHideProfileCompletionCard] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('hideProfileCompletionCard') === 'true';
@@ -251,6 +299,39 @@ export default function ProfilePage() {
     reset: resetCredential
   } = useForm<CredentialFormData>({
     resolver: zodResolver(credentialSchema)
+  });
+
+  // React Hook Form for Experience
+  const {
+    register: registerExperience,
+    handleSubmit: handleExperienceSubmit,
+    formState: { errors: experienceErrors },
+    reset: resetExperience,
+    watch: watchExperience
+  } = useForm<ExperienceFormData>({
+    resolver: zodResolver(experienceSchema)
+  });
+
+  // React Hook Form for Education
+  const {
+    register: registerEducation,
+    handleSubmit: handleEducationSubmit,
+    formState: { errors: educationErrors },
+    reset: resetEducation,
+    watch: watchEducation
+  } = useForm<EducationFormData>({
+    resolver: zodResolver(educationSchema)
+  });
+
+  // React Hook Form for Recommendation
+  const {
+    register: registerRecommendation,
+    handleSubmit: handleRecommendationSubmit,
+    formState: { errors: recommendationErrors },
+    reset: resetRecommendation,
+    watch: watchRecommendation
+  } = useForm<RecommendationFormData>({
+    resolver: zodResolver(recommendationSchema)
   });
 
   const bioValue = watchProfile("bio") || "";
@@ -497,6 +578,401 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSaveExperience = async (data: ExperienceFormData) => {
+    if (!profile) return;
+    
+    setSaving(true);
+    try {
+      if (editingExperience) {
+        // Update existing experience
+        const updatedData = await updateExperience(editingExperience.id, {
+          role: data.role,
+          company: data.company,
+          start_date: data.start_date || null,
+          end_date: data.is_current ? null : (data.end_date || null),
+          is_current: data.is_current,
+          description: data.description || null,
+          location: data.location || null
+        });
+
+        if (updatedData) {
+          setExperienceList(experienceList.map(exp => 
+            exp.id === editingExperience.id 
+              ? {
+                  ...exp,
+                  role: updatedData.role,
+                  company: updatedData.company,
+                  period: formatPeriod(updatedData.start_date, updatedData.end_date, updatedData.is_current),
+                  description: updatedData.description || undefined,
+                  location: updatedData.location || undefined
+                }
+              : exp
+          ));
+          toast.success('Experience updated successfully');
+        }
+      } else {
+        // Add new experience
+        const insertedData = await addExperience({
+          role: data.role,
+          company: data.company,
+          start_date: data.start_date || null,
+          end_date: data.is_current ? null : (data.end_date || null),
+          is_current: data.is_current,
+          description: data.description || null,
+          location: data.location || null
+        });
+
+        if (insertedData) {
+          setExperienceList([
+            ...experienceList,
+            {
+              id: insertedData.id,
+              role: insertedData.role,
+              company: insertedData.company,
+              period: formatPeriod(insertedData.start_date, insertedData.end_date, insertedData.is_current),
+              description: insertedData.description || undefined,
+              location: insertedData.location || undefined
+            }
+          ]);
+          toast.success('Experience added successfully');
+        }
+      }
+      
+      setIsExperienceSheetOpen(false);
+      setEditingExperience(null);
+      resetExperience();
+    } catch (error) {
+      console.error('Error saving experience:', error);
+      toast.error('Failed to save experience');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteExperience = async (id: number) => {
+    setSaving(true);
+    try {
+      await deleteExperience(id);
+      setExperienceList(experienceList.filter(exp => exp.id !== id));
+      setIsExperienceSheetOpen(false);
+      setEditingExperience(null);
+      toast.success('Experience deleted');
+    } catch (error) {
+      console.error('Error deleting experience:', error);
+      toast.error('Failed to delete experience');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditExperience = (exp: Experience) => {
+    setEditingExperience(exp);
+    // Parse period back to dates if needed (for now just set empty)
+    resetExperience({
+      role: exp.role,
+      company: exp.company,
+      start_date: "",
+      end_date: "",
+      is_current: false,
+      description: exp.description || "",
+      location: exp.location || ""
+    });
+    setIsExperienceSheetOpen(true);
+  };
+
+  const handleAddExperienceClick = () => {
+    setEditingExperience(null);
+    resetExperience({
+      role: "",
+      company: "",
+      start_date: "",
+      end_date: "",
+      is_current: false,
+      description: "",
+      location: ""
+    });
+    setIsExperienceSheetOpen(true);
+  };
+
+  const handleSaveEducation = async (data: EducationFormData) => {
+    if (!profile) return;
+    
+    setSaving(true);
+    try {
+      if (editingEducation) {
+        // Update existing education
+        const updatedData = await updateEducation(editingEducation.id, {
+          degree: data.degree,
+          institution: data.institution,
+          field_of_study: data.field_of_study || null,
+          start_year: data.start_year || null,
+          end_year: data.end_year || null,
+          grade: data.grade || null,
+          description: data.description || null
+        });
+
+        if (updatedData) {
+          setEducationList(educationList.map(edu => 
+            edu.id === editingEducation.id 
+              ? {
+                  ...edu,
+                  degree: updatedData.degree,
+                  institution: updatedData.institution,
+                  field: updatedData.field_of_study || undefined,
+                  year: updatedData.start_year && updatedData.end_year 
+                    ? `${updatedData.start_year} - ${updatedData.end_year}`
+                    : updatedData.start_year || updatedData.end_year || "",
+                  grade: updatedData.grade || undefined,
+                  description: updatedData.description || undefined
+                }
+              : edu
+          ));
+          toast.success('Education updated successfully');
+        }
+      } else {
+        // Add new education
+        const insertedData = await addEducation({
+          degree: data.degree,
+          institution: data.institution,
+          field_of_study: data.field_of_study || null,
+          start_year: data.start_year || null,
+          end_year: data.end_year || null,
+          grade: data.grade || null,
+          description: data.description || null
+        });
+
+        if (insertedData) {
+          setEducationList([
+            ...educationList,
+            {
+              id: insertedData.id,
+              degree: insertedData.degree,
+              institution: insertedData.institution,
+              field: insertedData.field_of_study || undefined,
+              year: insertedData.start_year && insertedData.end_year 
+                ? `${insertedData.start_year} - ${insertedData.end_year}`
+                : insertedData.start_year || insertedData.end_year || "",
+              grade: insertedData.grade || undefined,
+              description: insertedData.description || undefined
+            }
+          ]);
+          toast.success('Education added successfully');
+        }
+      }
+      
+      setIsEducationSheetOpen(false);
+      setEditingEducation(null);
+      resetEducation();
+    } catch (error) {
+      console.error('Error saving education:', error);
+      toast.error('Failed to save education');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteEducation = async (id: number) => {
+    setSaving(true);
+    try {
+      await deleteEducation(id);
+      setEducationList(educationList.filter(edu => edu.id !== id));
+      setIsEducationSheetOpen(false);
+      setEditingEducation(null);
+      toast.success('Education deleted');
+    } catch (error) {
+      console.error('Error deleting education:', error);
+      toast.error('Failed to delete education');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditEducation = (edu: Education) => {
+    setEditingEducation(edu);
+    // Parse year range
+    const years = edu.year.split(' - ');
+    resetEducation({
+      degree: edu.degree,
+      institution: edu.institution,
+      field_of_study: edu.field || "",
+      start_year: years[0] || "",
+      end_year: years[1] || "",
+      grade: edu.grade || "",
+      description: edu.description || ""
+    });
+    setIsEducationSheetOpen(true);
+  };
+
+  const handleAddEducationClick = () => {
+    setEditingEducation(null);
+    resetEducation({
+      degree: "",
+      institution: "",
+      field_of_study: "",
+      start_year: "",
+      end_year: "",
+      grade: "",
+      description: ""
+    });
+    setIsEducationSheetOpen(true);
+  };
+
+  const handleAddSkill = async (skillToAdd?: string | any) => {
+    const skillName = typeof skillToAdd === 'string' ? skillToAdd : newSkill;
+    if (!skillName || skillsList.includes(skillName) || !profile) return;
+    
+    try {
+      await addSkill(skillName);
+      setSkillsList([...skillsList, skillName]);
+      if (typeof skillToAdd !== 'string') setNewSkill("");
+      toast.success('Skill added');
+    } catch (error) {
+      console.error('Error adding skill:', error);
+      toast.error('Failed to add skill');
+    }
+  };
+
+  const handleRemoveSkill = async (skillName: string) => {
+    if (!profile) return;
+
+    try {
+      // Find the skill item by name and get its ID
+      const skillsData = await getSkills();
+      const itemToDelete = skillsData?.find(s => s.name === skillName);
+      if (itemToDelete) {
+        await deleteSkill(itemToDelete.id);
+      }
+      setSkillsList(skillsList.filter(s => s !== skillName));
+      toast.success('Skill removed');
+    } catch (error) {
+      console.error('Error removing skill:', error);
+      toast.error('Failed to remove skill');
+    }
+  };
+
+  const handleSaveRecommendation = async (data: RecommendationFormData) => {
+    if (!profile) return;
+    
+    setSaving(true);
+    try {
+      if (editingRecommendation) {
+        // Update existing recommendation
+        const updatedData = await updateRecommendation(editingRecommendation.id, {
+          author_name: data.author_name,
+          author_title: data.author_title || null,
+          author_company: data.author_company || null,
+          relationship: data.relationship || null,
+          rating: data.rating,
+          text: data.text,
+          is_featured: data.is_featured,
+          is_visible: data.is_visible
+        });
+
+        if (updatedData) {
+          setRecommendationsList(recommendationsList.map(rec => 
+            rec.id === editingRecommendation.id 
+              ? {
+                  ...rec,
+                  author: updatedData.author_name,
+                  title: updatedData.author_title || undefined,
+                  company: updatedData.author_company || undefined,
+                  relationship: updatedData.relationship || undefined,
+                  rating: updatedData.rating,
+                  text: updatedData.text,
+                  featured: updatedData.is_featured
+                }
+              : rec
+          ));
+          toast.success('Recommendation updated successfully');
+        }
+      } else {
+        // Add new recommendation
+        const insertedData = await addRecommendation({
+          author_name: data.author_name,
+          author_title: data.author_title || null,
+          author_company: data.author_company || null,
+          relationship: data.relationship || null,
+          rating: data.rating,
+          text: data.text,
+          is_featured: data.is_featured,
+          is_visible: data.is_visible
+        });
+
+        if (insertedData) {
+          setRecommendationsList([
+            ...recommendationsList,
+            {
+              id: insertedData.id,
+              author: insertedData.author_name,
+              title: insertedData.author_title || undefined,
+              company: insertedData.author_company || undefined,
+              relationship: insertedData.relationship || undefined,
+              rating: insertedData.rating,
+              text: insertedData.text,
+              featured: insertedData.is_featured
+            }
+          ]);
+          toast.success('Recommendation added successfully');
+        }
+      }
+      
+      setIsRecommendationSheetOpen(false);
+      setEditingRecommendation(null);
+      resetRecommendation();
+    } catch (error) {
+      console.error('Error saving recommendation:', error);
+      toast.error('Failed to save recommendation');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRecommendation = async (id: number) => {
+    setSaving(true);
+    try {
+      await deleteRecommendation(id);
+      setRecommendationsList(recommendationsList.filter(rec => rec.id !== id));
+      setIsRecommendationSheetOpen(false);
+      setEditingRecommendation(null);
+      toast.success('Recommendation deleted');
+    } catch (error) {
+      console.error('Error deleting recommendation:', error);
+      toast.error('Failed to delete recommendation');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditRecommendation = (rec: Recommendation) => {
+    setEditingRecommendation(rec);
+    resetRecommendation({
+      author_name: rec.author,
+      author_title: rec.title || "",
+      author_company: rec.company || "",
+      relationship: rec.relationship || "",
+      rating: rec.rating,
+      text: rec.text,
+      is_featured: rec.featured || false,
+      is_visible: true
+    });
+    setIsRecommendationSheetOpen(true);
+  };
+
+  const handleAddRecommendationClick = () => {
+    setEditingRecommendation(null);
+    resetRecommendation({
+      author_name: "",
+      author_title: "",
+      author_company: "",
+      relationship: "",
+      rating: 5,
+      text: "",
+      is_featured: false,
+      is_visible: true
+    });
+    setIsRecommendationSheetOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-page-background">
@@ -738,18 +1214,30 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Profile Header with Banner */}
             <Card id="header" className="overflow-hidden scroll-mt-24">
-              {/* Banner */}
-              <div className="h-40 bg-gradient-to-br from-primary via-primary/80 to-primary/60 relative">
-                {profile.banner_url ? (
-                  <Image
-                    src={profile.banner_url}
-                    alt="Profile banner"
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6bS0xMiAwYzAtMiAyLTQgMi00czIgMiAyIDQtMiA0LTIgNC0yLTItMi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-                )}
+              {/* Banner with Upload */}
+              <div className="relative group">
+                <div className="h-40 bg-gradient-to-br from-primary via-primary/80 to-primary/60 relative">
+                  {profile.banner_url ? (
+                    <Image
+                      src={profile.banner_url}
+                      alt="Profile banner"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6bS0xMiAwYzAtMiAyLTQgMi00czIgMiAyIDQtMiA0LTIgNC0yLTItMi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
+                  )}
+                </div>
+                {/* Edit Banner Button */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setIsBannerSheetOpen(true)}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit Banner
+                </Button>
               </div>
               
               {/* Profile Info */}
@@ -978,7 +1466,7 @@ export default function ProfilePage() {
             <Card id="experience" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Experience</CardTitle>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={handleAddExperienceClick}>
                   <Plus className="h-4 w-4 mr-1" />
                   Add
                 </Button>
@@ -986,8 +1474,8 @@ export default function ProfilePage() {
               <CardContent>
                 {experienceList.length > 0 ? (
                   <div className="space-y-4">
-                    {experienceList.map((exp, index) => (
-                      <div key={exp.id} className="flex gap-4">
+                    {experienceList.map((exp) => (
+                      <div key={exp.id} className="group flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                           <Building2 className="h-5 w-5 text-muted-foreground" />
                         </div>
@@ -995,10 +1483,21 @@ export default function ProfilePage() {
                           <h4 className="font-medium">{exp.role}</h4>
                           <p className="text-sm text-muted-foreground">{exp.company}</p>
                           <p className="text-sm text-muted-foreground">{exp.period}</p>
+                          {exp.location && (
+                            <p className="text-xs text-muted-foreground mt-1">📍 {exp.location}</p>
+                          )}
                           {exp.description && (
                             <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
                           )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleEditExperience(exp)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -1012,7 +1511,7 @@ export default function ProfilePage() {
             <Card id="education" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Education</CardTitle>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={handleAddEducationClick}>
                   <Plus className="h-4 w-4 mr-1" />
                   Add
                 </Button>
@@ -1021,15 +1520,32 @@ export default function ProfilePage() {
                 {educationList.length > 0 ? (
                   <div className="space-y-4">
                     {educationList.map((edu) => (
-                      <div key={edu.id} className="flex gap-4">
+                      <div key={edu.id} className="group flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                           <GraduationCap className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium">{edu.degree}</h4>
                           <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                          {edu.field && (
+                            <p className="text-sm text-muted-foreground">{edu.field}</p>
+                          )}
                           <p className="text-sm text-muted-foreground">{edu.year}</p>
+                          {edu.grade && (
+                            <p className="text-xs text-muted-foreground mt-1">Grade: {edu.grade}</p>
+                          )}
+                          {edu.description && (
+                            <p className="text-sm text-muted-foreground mt-2">{edu.description}</p>
+                          )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleEditEducation(edu)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -1041,23 +1557,53 @@ export default function ProfilePage() {
 
             {/* Skills */}
             <Card id="skills" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader>
                 <CardTitle className="text-lg">Skills</CardTitle>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {/* Add new skill */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a skill (e.g., Financial Planning)"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
+                  />
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => handleAddSkill()}
+                    disabled={!newSkill.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Skills list */}
                 {skillsList.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {skillsList.map((skill, index) => (
-                      <Badge key={index} variant="secondary">
-                        {skill}
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="px-3 py-1.5 text-sm group hover:bg-destructive/10 cursor-pointer transition-colors"
+                      >
+                        <span>{skill}</span>
+                        <button
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="ml-2 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No skills added yet</p>
+                  <p className="text-sm text-muted-foreground">No skills added yet. Add your professional skills above.</p>
                 )}
               </CardContent>
             </Card>
@@ -1202,38 +1748,63 @@ export default function ProfilePage() {
             <Card id="recommendations" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Recommendations</CardTitle>
-                <Button variant="ghost" size="sm">
-                  Request
+                <Button variant="ghost" size="sm" onClick={handleAddRecommendationClick}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
                 </Button>
               </CardHeader>
               <CardContent>
                 {recommendationsList.length > 0 ? (
                   <div className="space-y-4">
                     {recommendationsList.map((rec) => (
-                      <div key={rec.id} className="p-4 rounded-lg bg-muted/30">
+                      <div key={rec.id} className="group relative p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                         <div className="flex items-start gap-3 mb-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={rec.author_avatar} />
-                            <AvatarFallback>{rec.author_name.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{rec.author.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium">{rec.author_name}</p>
-                                <p className="text-sm text-muted-foreground">{rec.author_title}</p>
+                                <p className="font-medium">{rec.author}</p>
+                                {rec.title && (
+                                  <p className="text-sm text-muted-foreground">{rec.title}</p>
+                                )}
+                                {rec.company && (
+                                  <p className="text-xs text-muted-foreground">{rec.company}</p>
+                                )}
                               </div>
-                              <div className="flex items-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`h-4 w-4 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
-                                  />
-                                ))}
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star 
+                                      key={i} 
+                                      className={`h-4 w-4 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                                    />
+                                  ))}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleEditRecommendation(rec)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                           </div>
                         </div>
                         <p className="text-sm text-muted-foreground">{rec.text}</p>
+                        {rec.relationship && (
+                          <p className="text-xs text-muted-foreground mt-2 italic">
+                            Relationship: {rec.relationship}
+                          </p>
+                        )}
+                        {rec.featured && (
+                          <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
+                            Featured
+                          </Badge>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1241,8 +1812,9 @@ export default function ProfilePage() {
                   <div className="text-center py-6">
                     <Star className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No recommendations yet</p>
-                    <Button variant="outline" size="sm">
-                      Request Recommendation
+                    <Button variant="outline" size="sm" onClick={handleAddRecommendationClick}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Recommendation
                     </Button>
                   </div>
                 )}
@@ -1678,6 +2250,435 @@ export default function ProfilePage() {
               Delete Credential
             </Button>
           </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Banner Sheet */}
+      <Sheet open={isBannerSheetOpen} onOpenChange={setIsBannerSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Profile Banner</SheetTitle>
+            <SheetDescription>
+              Upload a banner image for your profile. Recommended size: 1200x300px
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-6">
+            <BannerUpload
+              currentBannerUrl={profile.banner_url}
+              onUpload={async (file) => {
+                const newUrl = await updateProfileBanner(profile.id, file);
+                setProfile({ ...profile, banner_url: newUrl });
+                toast.success('Banner updated successfully');
+                setIsBannerSheetOpen(false);
+                return newUrl;
+              }}
+              onRemove={async () => {
+                await removeProfileBanner(profile.id);
+                setProfile({ ...profile, banner_url: null });
+                toast.success('Banner removed');
+                setIsBannerSheetOpen(false);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add/Edit Experience Sheet */}
+      <Sheet open={isExperienceSheetOpen} onOpenChange={setIsExperienceSheetOpen}>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{editingExperience ? 'Edit' : 'Add'} Experience</SheetTitle>
+            <SheetDescription>
+              {editingExperience ? 'Update your work experience' : 'Add a new position to your work history'}
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleExperienceSubmit(handleSaveExperience)}>
+            <div className="space-y-4 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="role">Role/Position *</Label>
+                <Input
+                  id="role"
+                  placeholder="e.g., Senior Financial Advisor"
+                  {...registerExperience("role")}
+                />
+                {experienceErrors.role && (
+                  <p className="text-sm text-destructive">{experienceErrors.role.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company">Company *</Label>
+                <Input
+                  id="company"
+                  placeholder="e.g., Goldman Sachs"
+                  {...registerExperience("company")}
+                />
+                {experienceErrors.company && (
+                  <p className="text-sm text-destructive">{experienceErrors.company.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  placeholder="e.g., New York, NY"
+                  {...registerExperience("location")}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input
+                    id="start_date"
+                    type="month"
+                    {...registerExperience("start_date")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input
+                    id="end_date"
+                    type="month"
+                    disabled={watchExperience("is_current")}
+                    {...registerExperience("end_date")}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_current"
+                  className="h-4 w-4 rounded border-gray-300"
+                  {...registerExperience("is_current")}
+                />
+                <Label htmlFor="is_current" className="cursor-pointer">
+                  I currently work here
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe your role and achievements..."
+                  rows={4}
+                  maxLength={500}
+                  {...registerExperience("description")}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {watchExperience("description")?.length || 0}/500
+                </p>
+              </div>
+            </div>
+
+            <SheetFooter className="flex-col gap-2 sm:flex-row">
+              {editingExperience && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full sm:w-auto"
+                  disabled={saving}
+                  onClick={() => handleDeleteExperience(editingExperience.id)}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete
+                </Button>
+              )}
+              <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add/Edit Education Sheet */}
+      <Sheet open={isEducationSheetOpen} onOpenChange={setIsEducationSheetOpen}>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{editingEducation ? 'Edit' : 'Add'} Education</SheetTitle>
+            <SheetDescription>
+              {editingEducation ? 'Update your educational qualification' : 'Add a new degree or certification'}
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleEducationSubmit(handleSaveEducation)}>
+            <div className="space-y-4 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="degree">Degree/Certificate *</Label>
+                <Input
+                  id="degree"
+                  placeholder="e.g., Bachelor of Business Administration"
+                  {...registerEducation("degree")}
+                />
+                {educationErrors.degree && (
+                  <p className="text-sm text-destructive">{educationErrors.degree.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="institution">Institution *</Label>
+                <Input
+                  id="institution"
+                  placeholder="e.g., Harvard University"
+                  {...registerEducation("institution")}
+                />
+                {educationErrors.institution && (
+                  <p className="text-sm text-destructive">{educationErrors.institution.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="field_of_study">Field of Study</Label>
+                <Input
+                  id="field_of_study"
+                  placeholder="e.g., Finance"
+                  {...registerEducation("field_of_study")}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_year">Start Year</Label>
+                  <Input
+                    id="start_year"
+                    placeholder="2015"
+                    maxLength={4}
+                    {...registerEducation("start_year")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_year">End Year</Label>
+                  <Input
+                    id="end_year"
+                    placeholder="2019"
+                    maxLength={4}
+                    {...registerEducation("end_year")}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="grade">Grade/GPA</Label>
+                <Input
+                  id="grade"
+                  placeholder="e.g., 3.8 GPA or First Class"
+                  {...registerEducation("grade")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edu_description">Description</Label>
+                <Textarea
+                  id="edu_description"
+                  placeholder="Achievements, activities, or relevant coursework..."
+                  rows={4}
+                  maxLength={500}
+                  {...registerEducation("description")}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {watchEducation("description")?.length || 0}/500
+                </p>
+              </div>
+            </div>
+
+            <SheetFooter className="flex-col gap-2 sm:flex-row">
+              {editingEducation && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full sm:w-auto"
+                  disabled={saving}
+                  onClick={() => handleDeleteEducation(editingEducation.id)}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete
+                </Button>
+              )}
+              <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add/Edit Recommendation Sheet */}
+      <Sheet open={isRecommendationSheetOpen} onOpenChange={setIsRecommendationSheetOpen}>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{editingRecommendation ? 'Edit' : 'Add'} Recommendation</SheetTitle>
+            <SheetDescription>
+              {editingRecommendation ? 'Update client testimonial' : 'Add a client testimonial or recommendation'}
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleRecommendationSubmit(handleSaveRecommendation)}>
+            <div className="space-y-4 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="author_name">Name *</Label>
+                <Input
+                  id="author_name"
+                  placeholder="e.g., John Smith"
+                  {...registerRecommendation("author_name")}
+                />
+                {recommendationErrors.author_name && (
+                  <p className="text-sm text-destructive">{recommendationErrors.author_name.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="author_title">Title/Position</Label>
+                <Input
+                  id="author_title"
+                  placeholder="e.g., CEO"
+                  {...registerRecommendation("author_title")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="author_company">Company</Label>
+                <Input
+                  id="author_company"
+                  placeholder="e.g., ABC Corp"
+                  {...registerRecommendation("author_company")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="relationship">Relationship</Label>
+                <Input
+                  id="relationship"
+                  placeholder="e.g., Former Client, Colleague"
+                  {...registerRecommendation("relationship")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rating">Rating *</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="rating"
+                    type="number"
+                    min="1"
+                    max="5"
+                    defaultValue="5"
+                    className="w-20"
+                    {...registerRecommendation("rating")}
+                  />
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={`h-5 w-5 ${i < (watchRecommendation("rating") || 5) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                      />
+                    ))}
+                  </div>
+                </div>
+                {recommendationErrors.rating && (
+                  <p className="text-sm text-destructive">{recommendationErrors.rating.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rec_text">Recommendation Text *</Label>
+                <Textarea
+                  id="rec_text"
+                  placeholder="Write the recommendation text..."
+                  rows={6}
+                  maxLength={1000}
+                  {...registerRecommendation("text")}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {watchRecommendation("text")?.length || 0}/1000
+                </p>
+                {recommendationErrors.text && (
+                  <p className="text-sm text-destructive">{recommendationErrors.text.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_featured"
+                    className="h-4 w-4 rounded border-gray-300"
+                    {...registerRecommendation("is_featured")}
+                  />
+                  <Label htmlFor="is_featured" className="cursor-pointer">
+                    Feature this recommendation
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_visible"
+                    defaultChecked
+                    className="h-4 w-4 rounded border-gray-300"
+                    {...registerRecommendation("is_visible")}
+                  />
+                  <Label htmlFor="is_visible" className="cursor-pointer">
+                    Visible on profile
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <SheetFooter className="flex-col gap-2 sm:flex-row">
+              {editingRecommendation && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full sm:w-auto"
+                  disabled={saving}
+                  onClick={() => handleDeleteRecommendation(editingRecommendation.id)}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Delete
+                </Button>
+              )}
+              <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </Button>
+            </SheetFooter>
+          </form>
         </SheetContent>
       </Sheet>
     </div>
