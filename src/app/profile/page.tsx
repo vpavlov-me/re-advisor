@@ -37,7 +37,8 @@ import {
   ExternalLink,
   Settings,
   FileText,
-  Share2
+  Share2,
+  X
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,21 +128,21 @@ const credentialSchema = z.object({
 const experienceSchema = z.object({
   role: z.string().min(2, "Role is required").max(100),
   company: z.string().min(2, "Company is required").max(100),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
+  start_date: z.string().optional().or(z.literal("")),
+  end_date: z.string().optional().or(z.literal("")),
   is_current: z.boolean().default(false),
-  description: z.string().max(500).optional(),
-  location: z.string().max(100).optional()
+  description: z.string().max(500).optional().or(z.literal("")),
+  location: z.string().max(100).optional().or(z.literal(""))
 });
 
 const educationSchema = z.object({
   degree: z.string().min(2, "Degree is required").max(100),
   institution: z.string().min(2, "Institution is required").max(100),
-  field_of_study: z.string().max(100).optional(),
-  start_year: z.string().optional(),
-  end_year: z.string().optional(),
-  grade: z.string().max(50).optional(),
-  description: z.string().max(500).optional()
+  field_of_study: z.string().max(100).optional().or(z.literal("")),
+  start_year: z.string().optional().or(z.literal("")),
+  end_year: z.string().optional().or(z.literal("")),
+  grade: z.string().max(50).optional().or(z.literal("")),
+  description: z.string().max(500).optional().or(z.literal(""))
 });
 
 const recommendationSchema = z.object({
@@ -201,6 +202,7 @@ interface Experience {
   company: string;
   period: string;
   description?: string;
+  location?: string;
 }
 
 interface Education {
@@ -208,6 +210,9 @@ interface Education {
   degree: string;
   institution: string;
   year: string;
+  field?: string;
+  grade?: string;
+  description?: string;
 }
 
 interface Service {
@@ -221,12 +226,13 @@ interface Service {
 
 interface Recommendation {
   id: number;
-  author_name: string;
-  author_title: string;
-  author_avatar?: string;
+  author: string;
+  title?: string;
+  company?: string;
+  relationship?: string;
   rating: number;
   text: string;
-  date: string;
+  featured?: boolean;
 }
 
 // Quick Actions
@@ -309,7 +315,10 @@ export default function ProfilePage() {
     reset: resetExperience,
     watch: watchExperience
   } = useForm<ExperienceFormData>({
-    resolver: zodResolver(experienceSchema)
+    resolver: zodResolver(experienceSchema),
+    defaultValues: {
+      is_current: false
+    }
   });
 
   // React Hook Form for Education
@@ -331,7 +340,12 @@ export default function ProfilePage() {
     reset: resetRecommendation,
     watch: watchRecommendation
   } = useForm<RecommendationFormData>({
-    resolver: zodResolver(recommendationSchema)
+    resolver: zodResolver(recommendationSchema),
+    defaultValues: {
+      rating: 5,
+      is_featured: false,
+      is_visible: true
+    }
   });
 
   const bioValue = watchProfile("bio") || "";
@@ -446,12 +460,13 @@ export default function ProfilePage() {
         if (recommendationsData) {
           setRecommendationsList(recommendationsData.map(rec => ({
             id: rec.id,
-            author_name: rec.author_name,
-            author_title: rec.author_title || '',
-            author_avatar: rec.author_avatar_url,
+            author: rec.author_name,
+            title: rec.author_title || undefined,
+            company: rec.author_company || undefined,
+            relationship: rec.relationship || undefined,
             rating: rec.rating || 5,
             text: rec.text,
-            date: new Date(rec.created_at).toISOString().split('T')[0]
+            featured: rec.is_featured || false
           })));
         }
       } catch (e) {
@@ -588,11 +603,11 @@ export default function ProfilePage() {
         const updatedData = await updateExperience(editingExperience.id, {
           role: data.role,
           company: data.company,
-          start_date: data.start_date || null,
-          end_date: data.is_current ? null : (data.end_date || null),
+          start_date: data.start_date || undefined,
+          end_date: data.is_current ? undefined : (data.end_date || undefined),
           is_current: data.is_current,
-          description: data.description || null,
-          location: data.location || null
+          description: data.description || undefined,
+          location: data.location || undefined
         });
 
         if (updatedData) {
@@ -615,11 +630,11 @@ export default function ProfilePage() {
         const insertedData = await addExperience({
           role: data.role,
           company: data.company,
-          start_date: data.start_date || null,
-          end_date: data.is_current ? null : (data.end_date || null),
+          start_date: data.start_date || undefined,
+          end_date: data.is_current ? undefined : (data.end_date || undefined),
           is_current: data.is_current,
-          description: data.description || null,
-          location: data.location || null
+          description: data.description || undefined,
+          location: data.location || undefined
         });
 
         if (insertedData) {
@@ -704,11 +719,11 @@ export default function ProfilePage() {
         const updatedData = await updateEducation(editingEducation.id, {
           degree: data.degree,
           institution: data.institution,
-          field_of_study: data.field_of_study || null,
-          start_year: data.start_year || null,
-          end_year: data.end_year || null,
-          grade: data.grade || null,
-          description: data.description || null
+          field_of_study: data.field_of_study || undefined,
+          start_year: data.start_year || undefined,
+          end_year: data.end_year || undefined,
+          grade: data.grade || undefined,
+          description: data.description || undefined
         });
 
         if (updatedData) {
@@ -734,11 +749,11 @@ export default function ProfilePage() {
         const insertedData = await addEducation({
           degree: data.degree,
           institution: data.institution,
-          field_of_study: data.field_of_study || null,
-          start_year: data.start_year || null,
-          end_year: data.end_year || null,
-          grade: data.grade || null,
-          description: data.description || null
+          field_of_study: data.field_of_study || undefined,
+          start_year: data.start_year || undefined,
+          end_year: data.end_year || undefined,
+          grade: data.grade || undefined,
+          description: data.description || undefined
         });
 
         if (insertedData) {
@@ -859,9 +874,9 @@ export default function ProfilePage() {
         // Update existing recommendation
         const updatedData = await updateRecommendation(editingRecommendation.id, {
           author_name: data.author_name,
-          author_title: data.author_title || null,
-          author_company: data.author_company || null,
-          relationship: data.relationship || null,
+          author_title: data.author_title || undefined,
+          author_company: data.author_company || undefined,
+          relationship: data.relationship || undefined,
           rating: data.rating,
           text: data.text,
           is_featured: data.is_featured,
@@ -889,9 +904,9 @@ export default function ProfilePage() {
         // Add new recommendation
         const insertedData = await addRecommendation({
           author_name: data.author_name,
-          author_title: data.author_title || null,
-          author_company: data.author_company || null,
-          relationship: data.relationship || null,
+          author_title: data.author_title || undefined,
+          author_company: data.author_company || undefined,
+          relationship: data.relationship || undefined,
           rating: data.rating,
           text: data.text,
           is_featured: data.is_featured,
