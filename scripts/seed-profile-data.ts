@@ -1,9 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import { resolve } from 'path';
 
-// Load environment variables
-dotenv.config({ path: resolve(__dirname, '../.env.local') });
+// Note: Run this script with `tsx --env-file=.env.local scripts/seed-profile-data.ts`
+// or ensure environment variables are set
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
