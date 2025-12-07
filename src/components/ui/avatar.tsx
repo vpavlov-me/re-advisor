@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "@/lib/utils";
+import { getAvatarColor } from "@/lib/avatar-colors";
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -31,19 +32,36 @@ const AvatarImage = React.forwardRef<
 ));
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 
+interface AvatarFallbackProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
+  /**
+   * String to generate color from (e.g., user name)
+   * If provided, generates a consistent color for this avatar
+   */
+  colorSeed?: string;
+}
+
 const AvatarFallback = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Fallback>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Fallback
-    ref={ref}
-    className={cn(
-      "flex h-full w-full items-center justify-center rounded-full bg-muted",
-      className
-    )}
-    {...props}
-  />
-));
+  AvatarFallbackProps
+>(({ className, colorSeed, children, ...props }, ref) => {
+  // Generate color based on colorSeed if provided
+  const avatarColor = colorSeed ? getAvatarColor(colorSeed) : null;
+  
+  return (
+    <AvatarPrimitive.Fallback
+      ref={ref}
+      className={cn(
+        "flex h-full w-full items-center justify-center rounded-full font-medium",
+        // Apply generated colors if colorSeed is provided, otherwise use default
+        avatarColor ? `${avatarColor.bg} ${avatarColor.text}` : "bg-muted text-muted-foreground",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </AvatarPrimitive.Fallback>
+  );
+});
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
 export { Avatar, AvatarImage, AvatarFallback };

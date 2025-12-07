@@ -605,16 +605,16 @@ export default function HomePage() {
           {stats.map((stat) => (
             <Card key={stat.label}>
               <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-[10px] bg-primary/10 flex items-center justify-center">
-                    <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="text-xl sm:text-2xl font-semibold text-foreground">{stat.value}</div>
                     <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
                     <Link href={stat.href} className="text-xs sm:text-sm text-primary hover:underline flex items-center gap-1 mt-2">
                       See More <ChevronRight className="h-3 w-3" />
                     </Link>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-[10px] bg-primary/10 flex items-center justify-center shrink-0">
+                    <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                 </div>
               </CardContent>
@@ -728,13 +728,13 @@ export default function HomePage() {
                     <div className="text-center py-8 text-muted-foreground">No recent messages</div>
                   ) : (
                     messages.map((message) => (
-                    <div key={message.id} className="py-4 first:pt-0 last:pb-0">
+                    <Link key={message.id} href={`/messages?conversation=${message.conversationId}`} className="block py-4 first:pt-0 last:pb-0 hover:bg-muted/50 -mx-6 px-6 transition-colors cursor-pointer">
                       <div className="flex items-start gap-4">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <span className="text-xs text-muted-foreground font-medium">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback colorSeed={message.title} className="text-xs font-medium">
                             {message.title.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
@@ -744,7 +744,7 @@ export default function HomePage() {
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <Avatar className="h-5 w-5">
-                                  <AvatarFallback className="text-xs">
+                                  <AvatarFallback colorSeed={message.sender} className="text-xs">
                                     {message.sender.split(" ").map((n: string) => n[0]).join("")}
                                   </AvatarFallback>
                                 </Avatar>
@@ -760,7 +760,7 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   )))}
                 </div>
               </CardContent>

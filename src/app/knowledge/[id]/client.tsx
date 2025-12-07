@@ -460,7 +460,7 @@ export default function ResourceDetailPage() {
 
   if (!resource) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
           <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-lg font-medium mb-2">Resource not found</h2>
@@ -475,9 +475,9 @@ export default function ResourceDetailPage() {
   const Icon = getIconForType(resource.type);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="sticky top-0 z-40 bg-page-background/95 backdrop-blur supports-[backdrop-filter]:bg-page-background/60 border-b">
         {/* Breadcrumb */}
         <div className="bg-card/50 border-b border-border/50">
           <div className="container py-2">

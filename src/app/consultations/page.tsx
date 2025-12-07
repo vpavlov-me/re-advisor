@@ -177,7 +177,7 @@ function ConsultationCard({
                 <div className="flex -space-x-2">
                   {consultation.members.slice(0, 3).map((member) => (
                     <Avatar key={member.initials} className="h-6 w-6 border-2 border-card">
-                      <AvatarFallback className="text-xs">{member.initials}</AvatarFallback>
+                      <AvatarFallback colorSeed={member.name} className="text-xs">{member.initials}</AvatarFallback>
                     </Avatar>
                   ))}
                 </div>

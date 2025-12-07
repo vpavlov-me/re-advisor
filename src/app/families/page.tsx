@@ -370,7 +370,7 @@ export default function FamiliesPage() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9">
-                                <AvatarFallback className="text-xs">
+                                <AvatarFallback colorSeed={family.name} className="text-xs">
                                   {family.name.split(" ")[0][0]}{family.name.split(" ")[1]?.[0] || ""}
                                 </AvatarFallback>
                               </Avatar>

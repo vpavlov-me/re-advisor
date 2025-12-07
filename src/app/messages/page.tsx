@@ -783,7 +783,7 @@ export default function MessagesPage() {
                           <div className="flex items-start gap-3">
                             <div className="relative">
                               <Avatar className="h-10 w-10">
-                                <AvatarFallback>
+                                <AvatarFallback colorSeed={conv.title}>
                                   {conv.title.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                                 </AvatarFallback>
                               </Avatar>
@@ -866,7 +866,7 @@ export default function MessagesPage() {
                           <Menu className="h-5 w-5" />
                         </Button>
                         <Avatar className="h-10 w-10">
-                          <AvatarFallback>{selectedConversation?.title?.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
+                          <AvatarFallback colorSeed={selectedConversation?.title}>{selectedConversation?.title?.substring(0, 2).toUpperCase() || "CP"}</AvatarFallback>
                         </Avatar>
                         <div>
                           <h2 className="font-semibold text-foreground">{selectedConversation?.title || "Select a conversation"}</h2>
@@ -1190,7 +1190,7 @@ export default function MessagesPage() {
                     className="flex items-center gap-3 p-3 rounded-[10px] border border-border hover:border-primary/50 cursor-pointer transition-colors"
                   >
                     <Avatar>
-                      <AvatarFallback>{family.name.split(" ")[0][0]}{family.name.split(" ")[1]?.[0]}</AvatarFallback>
+                      <AvatarFallback colorSeed={family.name}>{family.name.split(" ")[0][0]}{family.name.split(" ")[1]?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="font-medium text-foreground">{family.name}</div>

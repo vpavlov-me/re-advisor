@@ -473,7 +473,7 @@ export default function FamilyDetailPage() {
 
   if (!family) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
           <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-lg font-medium mb-2">Family not found</h2>
@@ -489,9 +489,9 @@ export default function FamilyDetailPage() {
   const openTasks = family.tasks.filter(t => !t.completed);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-page-background">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="sticky top-0 z-40 bg-page-background/95 backdrop-blur supports-[backdrop-filter]:bg-page-background/60 border-b">
         {/* Breadcrumb */}
         <div className="bg-card/50 border-b border-border/50">
           <div className="container py-2">
@@ -518,7 +518,7 @@ export default function FamilyDetailPage() {
                 </Link>
               </Button>
               <Avatar className="h-10 w-10 shrink-0">
-                <AvatarFallback className="text-sm">
+                <AvatarFallback colorSeed={family.name} className="text-sm">
                   {family.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -685,7 +685,7 @@ export default function FamilyDetailPage() {
                     {family.members.map((member) => (
                       <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg border border-border">
                         <Avatar>
-                          <AvatarFallback>{member.avatar}</AvatarFallback>
+                          <AvatarFallback colorSeed={member.name}>{member.avatar}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm text-foreground truncate">{member.name}</div>
