@@ -58,6 +58,12 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
@@ -115,7 +121,8 @@ const profileSchema = z.object({
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
   linkedin: z.string().optional(),
   twitter: z.string().optional(),
-  bio: z.string().max(2000, "Bio must be less than 2000 characters").optional()
+  bio: z.string().max(2000, "Bio must be less than 2000 characters").optional(),
+  video_url: z.string().url("Invalid URL").optional().or(z.literal(""))
 });
 
 const credentialSchema = z.object({
@@ -262,6 +269,7 @@ export default function ProfilePage() {
   const [experienceList, setExperienceList] = useState<Experience[]>([]);
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [recommendationsList, setRecommendationsList] = useState<Recommendation[]>([]);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [isBannerSheetOpen, setIsBannerSheetOpen] = useState(false);
   const [isCredentialSheetOpen, setIsCredentialSheetOpen] = useState(false);
@@ -1313,22 +1321,51 @@ export default function ProfilePage() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-muted-foreground leading-relaxed">
+                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {profile.bio || "No bio added yet. Click edit to add one."}
-                </p>
+                </div>
                 
-                {/* Video Placeholder */}
+                {/* Video Link */}
                 {profile.video_url ? (
-                  <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                    <video src={profile.video_url} controls className="w-full h-full object-cover" />
+                  <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Play className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Intro Video</p>
+                      <a 
+                        href={profile.video_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline truncate block"
+                      >
+                        {profile.video_url}
+                      </a>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setIsProfileSheetOpen(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                   </div>
                 ) : (
-                  <div className="aspect-video rounded-lg bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-2">
-                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border bg-muted/30">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
                       <Play className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground">Add an intro video</p>
-                    <Button variant="outline" size="sm">Upload Video</Button>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Add intro video link</p>
+                      <p className="text-xs text-muted-foreground">Share a video introduction</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsProfileSheetOpen(true)}
+                    >
+                      Add Link
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -1337,7 +1374,10 @@ export default function ProfilePage() {
             {/* Services Offered */}
             <Card id="services" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Services Offered</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Services Offered</CardTitle>
+                  <p className="text-sm text-muted-foreground">Professional services and consulting offerings</p>
+                </div>
                 <Link href="/services">
                   <Button variant="ghost" size="sm">
                     <Plus className="h-4 w-4 mr-1" />
@@ -1347,27 +1387,30 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {servicesList.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     {servicesList.map((service) => (
-                      <Card key={service.id} variant="elevated" className="p-4">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">{service.name}</h4>
-                          {service.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
-                          )}
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Link key={service.id} href={`/services/${service.id}`}>
+                        <Card className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium group-hover:text-primary transition-colors">{service.name}</h4>
+                                <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                              {service.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+                              )}
                               {service.duration && (
-                                <>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground pt-1">
                                   <Clock className="h-3.5 w-3.5" />
-                                  <span>{service.duration}</span>
-                                </>
+                                  {service.duration}
+                                </div>
                               )}
                             </div>
-                            <span className="font-semibold text-primary">{service.price}</span>
+                            <span className="font-semibold text-primary shrink-0">{service.price}</span>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 ) : (
@@ -1388,7 +1431,10 @@ export default function ProfilePage() {
             {/* Specialization */}
             <Card id="specialization" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Specialization</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Specialization</CardTitle>
+                  <p className="text-sm text-muted-foreground">Areas of expertise and focus</p>
+                </div>
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="sm">
@@ -1480,7 +1526,10 @@ export default function ProfilePage() {
             {/* Experience */}
             <Card id="experience" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Experience</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Experience</CardTitle>
+                  <p className="text-sm text-muted-foreground">Professional background and career history</p>
+                </div>
                 <Button variant="ghost" size="sm" onClick={handleAddExperienceClick}>
                   <Plus className="h-4 w-4 mr-1" />
                   Add
@@ -1626,7 +1675,10 @@ export default function ProfilePage() {
             {/* Credentials & Certifications */}
             <Card id="credentials" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Credentials & Certifications</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Credentials & Certifications</CardTitle>
+                  <p className="text-sm text-muted-foreground">Professional certifications and licenses</p>
+                </div>
                 <Sheet open={isCredentialSheetOpen} onOpenChange={(open) => {
                   setIsCredentialSheetOpen(open);
                   if (!open) resetCredential();
@@ -1712,9 +1764,9 @@ export default function ProfilePage() {
                 {credentialsList.length > 0 ? (
                   <div className="space-y-3">
                     {credentialsList.map((credential) => (
-                      <div key={credential.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                      <div key={credential.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="h-11 w-11 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shrink-0">
                             <Award className="h-5 w-5 text-primary" />
                           </div>
                           <div>
@@ -1762,7 +1814,10 @@ export default function ProfilePage() {
             {/* Recommendations */}
             <Card id="recommendations" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Recommendations</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Recommendations</CardTitle>
+                  <p className="text-sm text-muted-foreground">Client testimonials and peer endorsements</p>
+                </div>
                 <Button variant="ghost" size="sm" onClick={handleAddRecommendationClick}>
                   <Plus className="h-4 w-4 mr-1" />
                   Add
@@ -1770,57 +1825,71 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {recommendationsList.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {recommendationsList.map((rec) => (
-                      <div key={rec.id} className="group relative p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start gap-3 mb-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>{rec.author.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium">{rec.author}</p>
-                                {rec.title && (
-                                  <p className="text-sm text-muted-foreground">{rec.title}</p>
-                                )}
-                                {rec.company && (
-                                  <p className="text-xs text-muted-foreground">{rec.company}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star 
-                                      key={i} 
-                                      className={`h-4 w-4 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
-                                    />
-                                  ))}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleEditRecommendation(rec)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{rec.text}</p>
-                        {rec.relationship && (
-                          <p className="text-xs text-muted-foreground mt-2 italic">
-                            Relationship: {rec.relationship}
-                          </p>
-                        )}
+                      <Card 
+                        key={rec.id} 
+                        className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group relative"
+                        onClick={() => setSelectedRecommendation(rec)}
+                      >
                         {rec.featured && (
-                          <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
+                          <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
+                            <Star className="h-3 w-3 mr-1 fill-current" />
                             Featured
                           </Badge>
                         )}
-                      </div>
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-11 w-11 shrink-0">
+                            <AvatarFallback colorSeed={rec.author}>{rec.author.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium">{rec.author}</p>
+                                {rec.title && (
+                                  <p className="text-sm text-muted-foreground truncate">{rec.title}</p>
+                                )}
+                                {rec.company && (
+                                  <p className="text-xs text-muted-foreground truncate">{rec.company}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-3.5 w-3.5 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              "{rec.text}"
+                            </p>
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              className="h-auto p-0 mt-2 text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRecommendation(rec);
+                              }}
+                            >
+                              Read more <ArrowRight className="h-3 w-3 ml-1" />
+                            </Button>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditRecommendation(rec);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </Card>
                     ))}
                   </div>
                 ) : (
@@ -1839,7 +1908,10 @@ export default function ProfilePage() {
             {/* Contact Information */}
             <Card id="contact" className="scroll-mt-24">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Contact Information</CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Contact Information</CardTitle>
+                  <p className="text-sm text-muted-foreground">Ways to connect and reach out</p>
+                </div>
                 <Button variant="ghost" size="sm" onClick={() => setIsProfileSheetOpen(true)}>
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -1868,10 +1940,10 @@ export default function ProfilePage() {
                     <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
                       <Globe className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-muted-foreground">Website</p>
                       {profile.website ? (
-                        <a href={profile.website} className="text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                        <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} className="text-sm font-medium text-primary hover:underline truncate block max-w-[250px]" target="_blank" rel="noopener noreferrer">
                           {profile.website}
                         </a>
                       ) : (
@@ -1886,7 +1958,7 @@ export default function ProfilePage() {
                     <div>
                       <p className="text-sm text-muted-foreground">LinkedIn</p>
                       {profile.linkedin ? (
-                        <a href={`https://linkedin.com/in/${profile.linkedin}`} className="text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                        <a href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`} className="text-sm font-medium text-primary hover:underline truncate block max-w-[250px]" target="_blank" rel="noopener noreferrer">
                           {profile.linkedin}
                         </a>
                       ) : (
@@ -2146,7 +2218,7 @@ export default function ProfilePage() {
                 <Label htmlFor="linkedin">LinkedIn</Label>
                 <Input 
                   id="linkedin" 
-                  placeholder="username"
+                  placeholder="https://linkedin.com/in/username"
                   {...registerProfile("linkedin")}
                 />
               </div>
@@ -2157,6 +2229,18 @@ export default function ProfilePage() {
                   placeholder="@username"
                   {...registerProfile("twitter")}
                 />
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <Label htmlFor="video_url">Intro Video URL</Label>
+                <Input 
+                  id="video_url" 
+                  placeholder="https://youtube.com/watch?v=..."
+                  {...registerProfile("video_url")}
+                />
+                <p className="text-xs text-muted-foreground">Link to your introduction video (YouTube, Vimeo, etc.)</p>
               </div>
               
               <Separator />
@@ -2543,6 +2627,73 @@ export default function ProfilePage() {
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* View Recommendation Dialog */}
+      <Dialog open={!!selectedRecommendation} onOpenChange={(open) => !open && setSelectedRecommendation(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Recommendation</DialogTitle>
+          </DialogHeader>
+          {selectedRecommendation && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-14 w-14 shrink-0">
+                  <AvatarFallback colorSeed={selectedRecommendation.author} className="text-lg">
+                    {selectedRecommendation.author.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-lg">{selectedRecommendation.author}</p>
+                      {selectedRecommendation.title && (
+                        <p className="text-sm text-muted-foreground">{selectedRecommendation.title}</p>
+                      )}
+                      {selectedRecommendation.company && (
+                        <p className="text-sm text-muted-foreground">{selectedRecommendation.company}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-4 w-4 ${i < selectedRecommendation.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {selectedRecommendation.relationship && (
+                    <Badge variant="outline" className="mt-2">
+                      {selectedRecommendation.relationship}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <Separator />
+              <div className="prose prose-sm max-w-none">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  "{selectedRecommendation.text}"
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedRecommendation(null);
+                    handleEditRecommendation(selectedRecommendation);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button onClick={() => setSelectedRecommendation(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Recommendation Sheet */}
       <Sheet open={isRecommendationSheetOpen} onOpenChange={setIsRecommendationSheetOpen}>
