@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getStripe } from "@/lib/stripe";
 
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
-    
+
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -28,8 +27,20 @@ export async function GET() {
       });
     }
 
-    // Get balance from Stripe Connect account
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.warn("STRIPE_SECRET_KEY not set, returning zero balance");
+      return NextResponse.json({
+        available: 0,
+        pending: 0,
+        currency: "usd",
+      });
+    }
+
+    // Dynamically import Stripe to avoid build errors
+    const { getStripe } = await import("@/lib/stripe");
     const stripe = getStripe();
+
     const balance = await stripe.balance.retrieve({
       stripeAccount: profile.stripe_account_id,
     });

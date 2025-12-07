@@ -62,7 +62,7 @@ export function usePayments(): UsePaymentsResult {
 
   const fetchData = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      setError('Supabase not configured');
+      console.warn('usePayments: Supabase not configured, using defaults');
       setIsLoading(false);
       return;
     }
@@ -71,19 +71,24 @@ export function usePayments(): UsePaymentsResult {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.warn('usePayments: Auth error:', authError.message);
+        setIsLoading(false);
+        return;
+      }
       if (!user) {
-        setError('Not authenticated');
+        console.warn('usePayments: No user found');
         setIsLoading(false);
         return;
       }
 
       // Fetch all data in parallel with individual error handling
       const results = await Promise.allSettled([
-        getSubscription(),
-        getStripeAccountStatus(),
-        getBalance(),
-        getTransactions(20),
+        getSubscription().catch(e => { console.warn('getSubscription failed:', e); return { subscription: null, error: e.message }; }),
+        getStripeAccountStatus().catch(e => { console.warn('getStripeAccountStatus failed:', e); return { account: null, error: e.message }; }),
+        getBalance().catch(e => { console.warn('getBalance failed:', e); return { available: 0, pending: 0, currency: 'usd', error: e.message }; }),
+        getTransactions(20).catch(e => { console.warn('getTransactions failed:', e); return { transactions: [], error: e.message }; }),
       ]);
 
       // Process results safely

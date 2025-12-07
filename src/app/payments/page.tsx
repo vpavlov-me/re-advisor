@@ -194,15 +194,20 @@ export default function PaymentsPage() {
 
   // Sync data from hook when available
   useEffect(() => {
-    if (!payments.isLoading && payments.paymentMethods.length > 0) {
-      setPaymentMethods(payments.paymentMethods);
-    }
-    if (!payments.isLoading && payments.transactions.length > 0) {
-      setTransactions(payments.transactions);
-    }
-    if (!payments.isLoading) {
-      setBalance(payments.balance.available);
-      setIsStripeConnected(payments.stripeAccount?.status === 'active');
+    try {
+      if (!payments.isLoading && payments.paymentMethods && payments.paymentMethods.length > 0) {
+        setPaymentMethods(payments.paymentMethods);
+      }
+      if (!payments.isLoading && payments.transactions && payments.transactions.length > 0) {
+        setTransactions(payments.transactions);
+      }
+      if (!payments.isLoading) {
+        setBalance(payments.balance?.available ?? 0);
+        setIsStripeConnected(payments.stripeAccount?.status === 'active');
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error('Error syncing payment data:', err);
       setIsLoading(false);
     }
   }, [payments.isLoading, payments.paymentMethods, payments.transactions, payments.balance, payments.stripeAccount]);
@@ -716,10 +721,19 @@ export default function PaymentsPage() {
     }
   };
 
-  const filteredTransactions = transactions.filter(tx => {
-    if (filterType === "all") return true;
-    return tx.type === filterType;
-  });
+  const filteredTransactions = transactions
+    .map(tx => ({
+      ...tx,
+      amount: String(tx.amount || "$0"),
+      status: tx.status || "pending",
+      type: tx.type || "income",
+      description: tx.description || "",
+      date: tx.date || new Date().toLocaleDateString()
+    }))
+    .filter(tx => {
+      if (filterType === "all") return true;
+      return tx.type === filterType;
+    });
 
   return (
     <div className="min-h-screen bg-page-background">
@@ -1297,12 +1311,12 @@ export default function PaymentsPage() {
                             <TableRow key={tx.id}>
                               <TableCell className="text-muted-foreground">{tx.date}</TableCell>
                               <TableCell className="font-medium">{tx.description}</TableCell>
-                              <TableCell className={tx.amount.startsWith("+") ? "text-green-600" : "text-foreground"}>
+                              <TableCell className={String(tx.amount || "").startsWith("+") || tx.type === "income" || tx.type === "payout" ? "text-green-600" : "text-foreground"}>
                                 {tx.amount}
                               </TableCell>
                               <TableCell>
                                 <Badge variant={tx.status === 'completed' ? "success" : "warning"}>
-                                  {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                                  {(tx.status || "pending").charAt(0).toUpperCase() + (tx.status || "pending").slice(1)}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">

@@ -133,16 +133,18 @@ describe('usePayments Hook', () => {
   });
 
   describe('Error Handling', () => {
-    it('handles unauthenticated user', async () => {
+    it('handles unauthenticated user gracefully', async () => {
       mockGetUser.mockResolvedValue({ data: { user: null } });
-      
+
       const { result } = renderHook(() => usePayments());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-      
-      expect(result.current.error).toBe('Not authenticated');
+
+      // Should gracefully handle unauthenticated state without setting error
+      expect(result.current.error).toBeNull();
+      expect(result.current.subscription).toBeNull();
     });
 
     it('handles subscription fetch error gracefully', async () => {

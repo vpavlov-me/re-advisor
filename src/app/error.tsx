@@ -30,18 +30,16 @@ export default function Error({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {process.env.NODE_ENV === "development" && (
-            <div className="rounded-lg bg-muted p-3">
-              <p className="text-xs font-mono text-muted-foreground break-all">
-                {error.message}
+          <div className="rounded-lg bg-muted p-3">
+            <p className="text-xs font-mono text-muted-foreground break-all">
+              {error.message || "Unknown error"}
+            </p>
+            {error.digest && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Error ID: {error.digest}
               </p>
-              {error.digest && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Error ID: {error.digest}
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
           
           <div className="flex flex-col gap-2">
             <Button onClick={reset} className="w-full">
