@@ -4,8 +4,17 @@ import Link from "next/link";
 
 import { Logo } from "@/components/ui/logo";
 import { BackToTop } from "@/components/ui/back-to-top";
+import { MessagesButton, MessagesFooterButton } from "@/components/MessagesButton";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useMessaging } from "@/lib/hooks";
 
 export function AppFooter() {
+  // Получаем текущего пользователя
+  const { user } = useAuth();
+  // Получаем количество новых сообщений (сумма unreadCount по всем беседам)
+  const { conversations } = useMessaging(user?.id ?? null);
+  const newMessagesCount = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+
   return (
     <footer className="border-t border-border bg-background mt-auto">
       <div className="container py-10">
@@ -101,8 +110,9 @@ export function AppFooter() {
         </div>
       </div>
 
+
       {/* Bottom Bar */}
-      <div className="border-t border-border">
+      <div className="border-t border-border relative">
         <div className="container py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground/70">
             © 2025 Reluna Family. All rights reserved.  v0.1.3 Beta
@@ -120,10 +130,13 @@ export function AppFooter() {
               Sitemap
             </Link>
           </div>
+          {/* Кнопка сообщений для мобильных (в футере) */}
+          <MessagesFooterButton newMessagesCount={newMessagesCount} />
         </div>
-        
         {/* Mobile Back to Top - inside footer */}
         <BackToTop />
+        {/* Кнопка сообщений для десктопа (фиксированная) */}
+        <MessagesButton newMessagesCount={newMessagesCount} />
       </div>
 
       {/* Desktop Back to Top - fixed position */}
