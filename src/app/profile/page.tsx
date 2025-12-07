@@ -7,6 +7,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+
+// Profile Components
+import { ProfileHeader } from "./components/profile-header";
+import { ProfileVideo } from "./components/profile-video";
+import { ProfileAbout } from "./components/profile-about";
+import { ProfileServices } from "./components/profile-services";
+import { ProfileExperience } from "./components/profile-experience";
+import { ProfileEducation } from "./components/profile-education";
+import { ProfileSkills } from "./components/profile-skills";
+import { ProfileCredentials } from "./components/profile-credentials";
+import { ProfileRecommendations } from "./components/profile-recommendations";
+import { ProfileContact } from "./components/profile-contact";
+import { ProfileSidebar } from "./components/profile-sidebar";
+import { ServicePreviewDialog } from "./components/service-preview-dialog";
+import { RecommendationDialog } from "./components/recommendation-dialog";
+import { getFullName as getFullNameUtil, getInitials as getInitialsUtil } from "./utils";
+import { settingsLinks as settingsLinksConstant } from "./constants";
 import { 
   Home, 
   ChevronRight, 
@@ -104,7 +121,6 @@ import {
   type Experience as ExperienceType,
   type Education as EducationType,
   type Skill,
-  type Recommendation as RecommendationType,
 } from "@/lib/supabase/profile";
 import { getServices } from "@/lib/services";
 
@@ -216,14 +232,14 @@ interface Education {
   id: number;
   degree: string;
   institution: string;
-  year: string;
+  year?: string;
   field?: string;
   grade?: string;
   description?: string;
 }
 
 interface Service {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   duration?: string;
@@ -270,6 +286,7 @@ export default function ProfilePage() {
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [recommendationsList, setRecommendationsList] = useState<Recommendation[]>([]);
   const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [isBannerSheetOpen, setIsBannerSheetOpen] = useState(false);
   const [isCredentialSheetOpen, setIsCredentialSheetOpen] = useState(false);
@@ -410,7 +427,7 @@ export default function ProfilePage() {
         const { data: servicesData } = await getServices();
         if (servicesData) {
           setServicesList(servicesData.slice(0, 5).map(s => ({
-            id: s.id,
+            id: String(s.id),
             name: s.name,
             price: s.rate ? `$${s.rate}` : "$0",
             status: s.status || "Active"
@@ -509,7 +526,8 @@ export default function ProfilePage() {
         website: data.website,
         linkedin: data.linkedin,
         twitter: data.twitter,
-        bio: data.bio
+        bio: data.bio,
+        video_url: data.video_url || null
       };
 
       const updatedData = await upsertProfile(profileInput);
@@ -813,7 +831,7 @@ export default function ProfilePage() {
   const handleEditEducation = (edu: Education) => {
     setEditingEducation(edu);
     // Parse year range
-    const years = edu.year.split(' - ');
+    const years = (edu.year || '').split(' - ');
     resetEducation({
       degree: edu.degree,
       institution: edu.institution,
@@ -1187,7 +1205,7 @@ export default function ProfilePage() {
     return <div className="p-8 text-center">Please log in to view profile.</div>;
   }
 
-  const getInitials = (firstName: string | null, lastName: string | null) => {
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
     const first = firstName?.charAt(0) || '';
     const last = lastName?.charAt(0) || '';
     return `${first}${last}`.toUpperCase() || 'U';
@@ -1235,198 +1253,26 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
           {/* Left Column - Main Content */}
           <div className="space-y-6">
-            {/* Profile Header with Banner */}
-            <Card id="header" className="overflow-hidden scroll-mt-24">
-              {/* Banner with Upload */}
-              <div className="relative group">
-                <div className="h-40 bg-gradient-to-br from-primary via-primary/80 to-primary/60 relative">
-                  {profile.banner_url ? (
-                    <Image
-                      src={profile.banner_url}
-                      alt="Profile banner"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNC0yIDQtMiA0LTItMi0yLTR6bS0xMiAwYzAtMiAyLTQgMi00czIgMiAyIDQtMiA0LTIgNC0yLTItMi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-                  )}
-                </div>
-                {/* Edit Banner Button */}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => setIsBannerSheetOpen(true)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Banner
-                </Button>
-              </div>
-              
-              {/* Profile Info */}
-              <CardContent className="relative pt-0">
-                {/* Avatar */}
-                <div className="absolute -top-12 left-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24 border-4 border-background">
-                      <AvatarImage src={profile.avatar_url || undefined} alt={getFullName(profile)} />
-                      <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
-                        {getInitials(profile.first_name, profile.last_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-success rounded-full flex items-center justify-center border-2 border-background">
-                      <BadgeCheck className="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                </div>
+            {/* Header with Avatar */}
+            <ProfileHeader
+              profile={profile}
+              onEditProfile={() => setIsProfileSheetOpen(true)}
+              onEditBanner={() => setIsBannerSheetOpen(true)}
+              getFullName={getFullName}
+              getInitials={getInitials}
+            />
 
-                {/* Name and Title */}
-                <div className="pt-16 pb-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold">{getFullName(profile)}</h1>
-                        <Badge variant="success" className="h-6">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground mt-1">{profile.title || "Financial Advisor"}</p>
-                      {profile.location && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
-                          <MapPin className="h-3.5 w-3.5" />
-                          <span>{profile.location}</span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Rating */}
-                    {(profile.rating || 0) > 0 && (
-                      <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{profile.rating?.toFixed(1)}</span>
-                        <span className="text-muted-foreground text-sm">({profile.reviews_count} reviews)</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* About */}
+            <ProfileAbout
+              bio={profile.bio}
+              onEdit={() => setIsProfileSheetOpen(true)}
+            />
 
-            {/* About Section */}
-            <Card id="about" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">About</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setIsProfileSheetOpen(true)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {profile.bio || "No bio added yet. Click edit to add one."}
-                </div>
-                
-                {/* Video Link */}
-                {profile.video_url ? (
-                  <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Play className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">Intro Video</p>
-                      <a 
-                        href={profile.video_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline truncate block"
-                      >
-                        {profile.video_url}
-                      </a>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setIsProfileSheetOpen(true)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border bg-muted/30">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <Play className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Add intro video link</p>
-                      <p className="text-xs text-muted-foreground">Share a video introduction</p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setIsProfileSheetOpen(true)}
-                    >
-                      Add Link
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Services Offered */}
-            <Card id="services" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Services Offered</CardTitle>
-                  <p className="text-sm text-muted-foreground">Professional services and consulting offerings</p>
-                </div>
-                <Link href="/services">
-                  <Button variant="ghost" size="sm">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Service
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {servicesList.length > 0 ? (
-                  <div className="space-y-3">
-                    {servicesList.map((service) => (
-                      <Link key={service.id} href={`/services/${service.id}`}>
-                        <Card className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium group-hover:text-primary transition-colors">{service.name}</h4>
-                                <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                              {service.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
-                              )}
-                              {service.duration && (
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground pt-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {service.duration}
-                                </div>
-                              )}
-                            </div>
-                            <span className="font-semibold text-primary shrink-0">{service.price}</span>
-                          </div>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Briefcase className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-3">No services added yet</p>
-                    <Link href="/services">
-                      <Button variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Your First Service
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Services */}
+            <ProfileServices
+              services={servicesList}
+              onServiceClick={setSelectedService}
+            />
 
             {/* Specialization */}
             <Card id="specialization" className="scroll-mt-24">
@@ -1524,582 +1370,58 @@ export default function ProfilePage() {
             </Card>
 
             {/* Experience */}
-            <Card id="experience" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Experience</CardTitle>
-                  <p className="text-sm text-muted-foreground">Professional background and career history</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleAddExperienceClick}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {experienceList.length > 0 ? (
-                  <div className="space-y-4">
-                    {experienceList.map((exp) => (
-                      <div key={exp.id} className="group flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{exp.role}</h4>
-                          <p className="text-sm text-muted-foreground">{exp.company}</p>
-                          <p className="text-sm text-muted-foreground">{exp.period}</p>
-                          {exp.location && (
-                            <p className="text-xs text-muted-foreground mt-1">📍 {exp.location}</p>
-                          )}
-                          {exp.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleEditExperience(exp)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No experience added yet</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Education */}
-            <Card id="education" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Education</CardTitle>
-                <Button variant="ghost" size="sm" onClick={handleAddEducationClick}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {educationList.length > 0 ? (
-                  <div className="space-y-4">
-                    {educationList.map((edu) => (
-                      <div key={edu.id} className="group flex gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                          <GraduationCap className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{edu.degree}</h4>
-                          <p className="text-sm text-muted-foreground">{edu.institution}</p>
-                          {edu.field && (
-                            <p className="text-sm text-muted-foreground">{edu.field}</p>
-                          )}
-                          <p className="text-sm text-muted-foreground">{edu.year}</p>
-                          {edu.grade && (
-                            <p className="text-xs text-muted-foreground mt-1">Grade: {edu.grade}</p>
-                          )}
-                          {edu.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{edu.description}</p>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleEditEducation(edu)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No education added yet</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Skills */}
-            <Card id="skills" className="scroll-mt-24">
-              <CardHeader>
-                <CardTitle className="text-lg">Skills</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Add new skill */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a skill (e.g., Financial Planning)"
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddSkill();
-                      }
-                    }}
-                  />
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => handleAddSkill()}
-                    disabled={!newSkill.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                {/* Skills list */}
-                {skillsList.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {skillsList.map((skill, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="px-3 py-1.5 text-sm group hover:bg-destructive/10 cursor-pointer transition-colors"
-                      >
-                        <span>{skill}</span>
-                        <button
-                          onClick={() => handleRemoveSkill(skill)}
-                          className="ml-2 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No skills added yet. Add your professional skills above.</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Credentials & Certifications */}
-            <Card id="credentials" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Credentials & Certifications</CardTitle>
-                  <p className="text-sm text-muted-foreground">Professional certifications and licenses</p>
-                </div>
-                <Sheet open={isCredentialSheetOpen} onOpenChange={(open) => {
-                  setIsCredentialSheetOpen(open);
-                  if (!open) resetCredential();
-                }}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>Add Credential</SheetTitle>
-                      <SheetDescription>
-                        Add a new certification or credential to your profile.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <form onSubmit={handleCredentialSubmit(handleAddCredential)}>
-                      <div className="space-y-6 py-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="credentialName">Credential Name</Label>
-                          <Input 
-                            id="credentialName" 
-                            placeholder="e.g., Certified Financial Planner (CFP)" 
-                            {...registerCredential("name")}
-                          />
-                          {credentialErrors.name && (
-                            <p className="text-sm text-red-500">{credentialErrors.name.message}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="issuingOrg">Issuing Organization</Label>
-                          <Input 
-                            id="issuingOrg" 
-                            placeholder="e.g., CFP Board" 
-                            {...registerCredential("issuer")}
-                          />
-                          {credentialErrors.issuer && (
-                            <p className="text-sm text-red-500">{credentialErrors.issuer.message}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="yearObtained">Year Obtained</Label>
-                          <Input 
-                            id="yearObtained" 
-                            placeholder="e.g., 2020" 
-                            {...registerCredential("year")}
-                          />
-                          {credentialErrors.year && (
-                            <p className="text-sm text-red-500">{credentialErrors.year.message}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="credentialId">Credential ID (Optional)</Label>
-                          <Input 
-                            id="credentialId" 
-                            placeholder="e.g., CFP-123456" 
-                            {...registerCredential("credential_id")}
-                          />
-                        </div>
-                      </div>
-                      <SheetFooter>
-                        <Button type="button" variant="outline" onClick={() => {
-                          setIsCredentialSheetOpen(false);
-                          resetCredential();
-                        }}>Cancel</Button>
-                        <Button type="submit" disabled={saving}>
-                          {saving ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Adding...
-                            </>
-                          ) : (
-                            "Add Credential"
-                          )}
-                        </Button>
-                      </SheetFooter>
-                    </form>
-                  </SheetContent>
-                </Sheet>
-              </CardHeader>
-              <CardContent>
-                {credentialsList.length > 0 ? (
-                  <div className="space-y-3">
-                    {credentialsList.map((credential) => (
-                      <div key={credential.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="h-11 w-11 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shrink-0">
-                            <Award className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{credential.name}</p>
-                            <p className="text-sm text-muted-foreground">{credential.issuer} • {credential.year}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {credential.status === "verified" ? (
-                            <Badge variant="success">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-yellow-600 border-yellow-300">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Pending
-                            </Badge>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => setEditingCredential(credential)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-3">No credentials added yet</p>
-                    <Button variant="outline" size="sm" onClick={() => setIsCredentialSheetOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Credential
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Recommendations */}
-            <Card id="recommendations" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Recommendations</CardTitle>
-                  <p className="text-sm text-muted-foreground">Client testimonials and peer endorsements</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleAddRecommendationClick}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {recommendationsList.length > 0 ? (
-                  <div className="space-y-3">
-                    {recommendationsList.map((rec) => (
-                      <Card 
-                        key={rec.id} 
-                        className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group relative"
-                        onClick={() => setSelectedRecommendation(rec)}
-                      >
-                        {rec.featured && (
-                          <Badge variant="secondary" className="absolute top-3 right-3 text-xs">
-                            <Star className="h-3 w-3 mr-1 fill-current" />
-                            Featured
-                          </Badge>
-                        )}
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-11 w-11 shrink-0">
-                            <AvatarFallback colorSeed={rec.author}>{rec.author.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-3 mb-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium">{rec.author}</p>
-                                {rec.title && (
-                                  <p className="text-sm text-muted-foreground truncate">{rec.title}</p>
-                                )}
-                                {rec.company && (
-                                  <p className="text-xs text-muted-foreground truncate">{rec.company}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`h-3.5 w-3.5 ${i < rec.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              "{rec.text}"
-                            </p>
-                            <Button 
-                              variant="link" 
-                              size="sm" 
-                              className="h-auto p-0 mt-2 text-primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedRecommendation(rec);
-                              }}
-                            >
-                              Read more <ArrowRight className="h-3 w-3 ml-1" />
-                            </Button>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditRecommendation(rec);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Star className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-3">No recommendations yet</p>
-                    <Button variant="outline" size="sm" onClick={handleAddRecommendationClick}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Recommendation
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Contact Information */}
-            <Card id="contact" className="scroll-mt-24">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">Contact Information</CardTitle>
-                  <p className="text-sm text-muted-foreground">Ways to connect and reach out</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setIsProfileSheetOpen(true)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="text-sm font-medium">{profile.email || "Not provided"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="text-sm font-medium">{profile.phone || "Not provided"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-muted-foreground">Website</p>
-                      {profile.website ? (
-                        <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} className="text-sm font-medium text-primary hover:underline truncate block max-w-[250px]" target="_blank" rel="noopener noreferrer">
-                          {profile.website}
-                        </a>
-                      ) : (
-                        <p className="text-sm font-medium">Not provided</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                      <Linkedin className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">LinkedIn</p>
-                      {profile.linkedin ? (
-                        <a href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`} className="text-sm font-medium text-primary hover:underline truncate block max-w-[250px]" target="_blank" rel="noopener noreferrer">
-                          {profile.linkedin}
-                        </a>
-                      ) : (
-                        <p className="text-sm font-medium">Not provided</p>
-                      )}
-                    </div>
-                  </div>
-                  {profile.timezone && (
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Timezone</p>
-                        <p className="text-sm font-medium">{profile.timezone}</p>
-                      </div>
-                    </div>
-                  )}
-                  {profile.company && (
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Company</p>
-                        <p className="text-sm font-medium">{profile.company}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileExperience
+              experience={experienceList}
+              onAdd={handleAddExperienceClick}
+              onEdit={handleEditExperience}
+            />
+            <ProfileEducation
+              education={educationList}
+              onAdd={handleAddEducationClick}
+              onEdit={handleEditEducation}
+            />
+            <ProfileSkills
+              skills={skillsList}
+              newSkill={newSkill}
+              onNewSkillChange={setNewSkill}
+              onAddSkill={handleAddSkill}
+              onRemoveSkill={handleRemoveSkill}
+            />
+            <ProfileCredentials
+              credentials={credentialsList}
+              onAdd={() => setIsCredentialSheetOpen(true)}
+            />
+            <ProfileRecommendations
+              recommendations={recommendationsList}
+              onAdd={handleAddRecommendationClick}
+              onEdit={handleEditRecommendation}
+              onClick={setSelectedRecommendation}
+            />
+            <ProfileContact
+              contact={profile}
+              onEdit={() => setIsProfileSheetOpen(true)}
+            />
           </div>
-
-          {/* Right Column - Quick Actions & Settings */}
-          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            {/* Page Navigation */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">On This Page</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {[
-                  { id: "header", label: "Profile" },
-                  { id: "about", label: "About" },
-                  { id: "services", label: "Services" },
-                  { id: "specialization", label: "Specialization" },
-                  { id: "experience", label: "Experience" },
-                  { id: "education", label: "Education" },
-                  { id: "skills", label: "Skills" },
-                  { id: "credentials", label: "Credentials" },
-                  { id: "recommendations", label: "Recommendations" },
-                  { id: "contact", label: "Contact" },
-                ].map((item) => (
-                  <a
-                    key={item.id}
-                    href={`#${item.id}`}
-                    className="block text-sm text-muted-foreground hover:text-foreground py-1.5 px-2 rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Profile Completion */}
-            {!hideProfileCompletionCard && (
-              <ProfileCompletionCard
-                profile={profile}
-                onEditProfile={() => setIsProfileSheetOpen(true)}
-                onSetupPayments={() => router.push('/payments')}
-                onVerifyIdentity={() => router.push('/settings')}
-                onAddAvailability={() => router.push('/consultations/availability')}
-                onHide={handleHideProfileCompletionCard}
-              />
-            )}
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={() => setIsProfileSheetOpen(true)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-                <Link href="/advisor/preview" className="block">
-                  <Button variant="outline" className="w-full justify-start">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Public Profile
-                  </Button>
-                </Link>
-                <Button variant="outline" className="w-full justify-start" onClick={() => {
-                  navigator.clipboard.writeText(window.location.origin + '/advisor/' + profile.id);
-                  toast.success('Profile link copied!');
-                }}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share Profile
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Settings */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {settingsLinks.map((link) => (
-                  <Link 
-                    key={link.href} 
-                    href={link.href}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <link.icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{link.label}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Member Since */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>Member since {profile.joined_date}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Right Column - Sidebar */}
+          <ProfileSidebar
+            profile={profile}
+            hideProfileCompletionCard={hideProfileCompletionCard}
+            settingsLinks={settingsLinks}
+            onEditProfile={() => setIsProfileSheetOpen(true)}
+            onHideProfileCompletionCard={handleHideProfileCompletionCard}
+          />
         </div>
       </div>
 
-      {/* Edit Profile Sheet */}
+      {/* Dialogs */}
+      <ServicePreviewDialog 
+        service={selectedService}
+        onClose={() => setSelectedService(null)}
+      />
+      <RecommendationDialog
+        recommendation={selectedRecommendation}
+        onClose={() => setSelectedRecommendation(null)}
+      />
       <Sheet open={isProfileSheetOpen} onOpenChange={setIsProfileSheetOpen}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
@@ -2629,6 +1951,50 @@ export default function ProfilePage() {
       </Sheet>
 
       {/* View Recommendation Dialog */}
+      {/* Service Preview Dialog */}
+      <Dialog open={!!selectedService} onOpenChange={(open) => !open && setSelectedService(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Service Details</DialogTitle>
+          </DialogHeader>
+          {selectedService && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">{selectedService.name}</h3>
+                {selectedService.description && (
+                  <p className="text-muted-foreground">{selectedService.description}</p>
+                )}
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Price</p>
+                  <p className="font-semibold text-lg">{selectedService.price}</p>
+                </div>
+                {selectedService.duration && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Duration</p>
+                    <p className="font-medium">{selectedService.duration}</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" asChild>
+                  <Link href="/services">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Manage Services
+                  </Link>
+                </Button>
+                <Button onClick={() => setSelectedService(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Recommendation Preview Dialog */}
       <Dialog open={!!selectedRecommendation} onOpenChange={(open) => !open && setSelectedRecommendation(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>

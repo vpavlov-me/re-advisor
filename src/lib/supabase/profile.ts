@@ -15,6 +15,9 @@ export interface Profile {
   linkedin?: string;
   twitter?: string;
   bio?: string;
+  avatar_url?: string | null;
+  banner_url?: string | null;
+  video_url?: string | null;
   joined_date: string;
   completion_percentage: number;
   updated_at: string;
@@ -52,6 +55,7 @@ export interface UpdateProfileInput {
   twitter?: string;
   bio?: string;
   avatar_url?: string;
+  video_url?: string | null;
   profile_status?: string;
   onboarding_progress?: number;
   onboarding_completed_at?: string;

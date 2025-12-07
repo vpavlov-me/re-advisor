@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2, FileText, Sun, Moon, Monitor } from "lucide-react";
+import { Menu, X, User, Settings, CreditCard, Crown, LogOut, Loader2, Sun, Moon, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
