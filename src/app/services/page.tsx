@@ -21,7 +21,6 @@ import {
   Settings,
   Check,
   ChevronDown,
-  Loader2,
   FileText,
   Crown
 } from "lucide-react";
@@ -32,6 +31,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -88,14 +96,20 @@ type Service = {
   reviews: number;
 };
 
-function getStatusBadge(status: "active" | "draft" | "paused") {
-  const variants = {
-    active: { className: "bg-green-100 text-green-700", label: "Active" },
-    draft: { className: "bg-gray-100 text-gray-700", label: "Draft" },
-    paused: { className: "bg-yellow-100 text-yellow-700", label: "Paused" },
-  };
-  return <Badge variant="secondary" className={variants[status].className}>{variants[status].label}</Badge>;
-}
+// Map service status to StatusBadge status type
+type ServiceStatus = "active" | "draft" | "paused";
+
+const serviceStatusMap = {
+  active: "active",
+  draft: "inactive",
+  paused: "pending",
+} as const;
+
+const serviceStatusLabels: Record<ServiceStatus, string> = {
+  active: "Active",
+  draft: "Draft",
+  paused: "Paused",
+};
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>(initialServices);
@@ -467,7 +481,7 @@ export default function ServicesPage() {
         {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Spinner size="lg" className="text-primary" />
           </div>
         ) : (
         /* Tabs */
@@ -501,7 +515,7 @@ export default function ServicesPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-foreground">{service.name}</h3>
-                        {getStatusBadge(service.status)}
+                        <StatusBadge status={serviceStatusMap[service.status]} label={serviceStatusLabels[service.status]} />
                         <Badge variant="outline">{service.category}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
@@ -591,7 +605,7 @@ export default function ServicesPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-foreground">{service.name}</h3>
-                        {getStatusBadge(service.status)}
+                        <StatusBadge status={serviceStatusMap[service.status]} label={serviceStatusLabels[service.status]} />
                         <Badge variant="outline">{service.category}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
@@ -670,7 +684,7 @@ export default function ServicesPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-foreground">{service.name}</h3>
-                        {getStatusBadge(service.status)}
+                        <StatusBadge status={serviceStatusMap[service.status]} label={serviceStatusLabels[service.status]} />
                         <Badge variant="outline">{service.category}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
@@ -735,31 +749,37 @@ export default function ServicesPage() {
             
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <select 
-                id="category"
-                className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <Select
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onValueChange={(value) => setFormData({...formData, category: value})}
               >
-                {SERVICE_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICE_CATEGORIES.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="priceModel">Pricing Model</Label>
-                <select 
-                  id="priceModel"
-                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                <Select
                   value={formData.priceModel}
-                  onChange={(e) => setFormData({...formData, priceModel: e.target.value})}
+                  onValueChange={(value) => setFormData({...formData, priceModel: value})}
                 >
-                  {PRICING_MODELS.map(model => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select pricing model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRICING_MODELS.map(model => (
+                      <SelectItem key={model} value={model}>{model}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priceAmount">Amount (USD)</Label>
@@ -819,16 +839,19 @@ export default function ServicesPage() {
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <select 
-                id="status"
-                className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                onValueChange={(value) => setFormData({...formData, status: value as ServiceStatus})}
               >
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="paused">Paused</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="bg-muted/50 p-4 rounded-lg text-sm">
@@ -855,7 +878,7 @@ export default function ServicesPage() {
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Saving...
                 </>
               ) : (
@@ -882,7 +905,7 @@ export default function ServicesPage() {
             <Button variant="destructive" onClick={handleDeleteConfirm} disabled={!!deleting}>
               {deleting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Deleting...
                 </>
               ) : (
@@ -905,17 +928,20 @@ export default function ServicesPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="noticePeriod">Minimum Notice Period</Label>
-              <select 
-                id="noticePeriod"
-                className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <Select
                 value={policies.noticePeriod}
-                onChange={(e) => setPolicies({...policies, noticePeriod: e.target.value})}
+                onValueChange={(value) => setPolicies({...policies, noticePeriod: value})}
               >
-                <option value="24 hours">24 hours</option>
-                <option value="48 hours">48 hours</option>
-                <option value="3 days">3 days</option>
-                <option value="1 week">1 week</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select notice period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="24 hours">24 hours</SelectItem>
+                  <SelectItem value="48 hours">48 hours</SelectItem>
+                  <SelectItem value="3 days">3 days</SelectItem>
+                  <SelectItem value="1 week">1 week</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">Minimum time before a session can be booked.</p>
             </div>
             <div className="space-y-2">

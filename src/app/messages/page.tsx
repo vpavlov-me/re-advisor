@@ -38,7 +38,6 @@ import {
   Users,
   ChevronDown,
   UserPlus,
-  Loader2,
   Clock,
   MessageSquare,
   RefreshCw,
@@ -50,6 +49,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner, SpinnerDots } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -756,7 +756,7 @@ export default function MessagesPage() {
                 <ScrollArea className="h-full">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <Spinner size="md" className="text-muted-foreground" />
                       <span className="ml-2 text-muted-foreground">Loading...</span>
                     </div>
                   ) : (
@@ -948,7 +948,7 @@ export default function MessagesPage() {
                   <ScrollArea className="flex-1 p-4">
                     {loadingMessages ? (
                       <div className="flex items-center justify-center h-full">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <Spinner size="md" className="text-muted-foreground" />
                         <span className="ml-2 text-muted-foreground">Loading messages...</span>
                       </div>
                     ) : messagesList.length === 0 ? (
@@ -1055,11 +1055,7 @@ export default function MessagesPage() {
                                 </AvatarFallback>
                               </Avatar>
                               <div className="bg-muted px-4 py-3 rounded-2xl">
-                                <div className="flex items-center gap-1">
-                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                  <span className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                                </div>
+                                <SpinnerDots size="md" className="text-muted-foreground" />
                               </div>
                             </div>
                           </div>
@@ -1146,12 +1142,12 @@ export default function MessagesPage() {
                       >
                         {uploadingAttachment ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Spinner size="sm" className="mr-2" />
                             Uploading
                           </>
                         ) : sending ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Spinner size="sm" className="mr-2" />
                             Sending
                           </>
                         ) : (
@@ -1437,7 +1433,7 @@ export default function MessagesPage() {
               >
                 {addingParticipants ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Spinner size="sm" className="mr-2" />
                     Adding...
                   </>
                 ) : (
@@ -1504,7 +1500,7 @@ export default function MessagesPage() {
             <div className="px-4">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <Spinner size="md" className="text-muted-foreground" />
                 </div>
               ) : filteredConversations.length === 0 ? (
                 <div className="text-center py-8">

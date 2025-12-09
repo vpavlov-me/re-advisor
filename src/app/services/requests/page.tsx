@@ -47,6 +47,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -79,49 +81,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Status configuration
-const statusConfig: Record<ServiceRequestStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending_consultant: { 
-    label: "Pending Your Review", 
-    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300", 
-    icon: Clock 
+// Status configuration - maps to StatusBadge and provides icons
+const statusConfig = {
+  pending_consultant: {
+    status: "pending-consultant" as const,
+    label: "Pending Your Review",
+    icon: Clock
   },
-  awaiting_family_approval: { 
-    label: "Awaiting Family Approval", 
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", 
-    icon: Timer 
+  awaiting_family_approval: {
+    status: "awaiting-family-approval" as const,
+    label: "Awaiting Family Approval",
+    icon: Timer
   },
-  in_progress: { 
-    label: "In Progress", 
-    color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", 
-    icon: Loader2 
+  in_progress: {
+    status: "in-progress" as const,
+    label: "In Progress",
+    icon: Loader2
   },
-  delivered: { 
-    label: "Delivered", 
-    color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", 
-    icon: Package 
+  delivered: {
+    status: "delivered" as const,
+    label: "Delivered",
+    icon: Package
   },
-  completed_paid: { 
-    label: "Completed & Paid", 
-    color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", 
-    icon: CheckCircle 
+  completed_paid: {
+    status: "completed-paid" as const,
+    label: "Completed & Paid",
+    icon: CheckCircle
   },
-  declined_consultant: { 
-    label: "Declined", 
-    color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", 
-    icon: XCircle 
+  declined_consultant: {
+    status: "declined-consultant" as const,
+    label: "Declined",
+    icon: XCircle
   },
-  declined_family: { 
-    label: "Family Declined", 
-    color: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300", 
-    icon: XCircle 
+  declined_family: {
+    status: "declined-family" as const,
+    label: "Family Declined",
+    icon: XCircle
   },
-  cancelled: { 
-    label: "Cancelled", 
-    color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", 
-    icon: AlertCircle 
+  cancelled: {
+    status: "cancelled" as const,
+    label: "Cancelled",
+    icon: AlertCircle
   },
-};
+} satisfies Record<ServiceRequestStatus, { status: string; label: string; icon: React.ElementType }>;
 
 const declineReasons = [
   { value: "outside_expertise", label: "Outside my expertise" },
@@ -532,7 +534,7 @@ export default function ServiceRequestsPage() {
                     Pending ({requests.filter((r) => r.status === "pending_consultant").length})
                   </TabsTrigger>
                   <TabsTrigger value="active" className="gap-2">
-                    <Loader2 className="h-4 w-4" />
+                    <Spinner size="sm" />
                     Active ({requests.filter((r) => ["awaiting_family_approval", "in_progress", "delivered"].includes(r.status)).length})
                   </TabsTrigger>
                   <TabsTrigger value="completed" className="gap-2">
@@ -559,7 +561,7 @@ export default function ServiceRequestsPage() {
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Spinner size="lg" className="text-primary" />
               </div>
             ) : filteredRequests.length === 0 ? (
               <div className="text-center py-12">
@@ -606,10 +608,10 @@ export default function ServiceRequestsPage() {
                                 <h4 className="font-medium text-foreground">
                                   {request.family_name}
                                 </h4>
-                                <Badge variant="secondary" className={statusInfo.color}>
-                                  <StatusIcon className="h-3 w-3 mr-1" />
-                                  {statusInfo.label}
-                                </Badge>
+                                <StatusBadge
+                                  status={statusInfo.status}
+                                  label={statusInfo.label}
+                                />
                                 {timeRemaining && !timeRemaining.expired && (
                                   <Badge
                                     variant="outline"
@@ -713,12 +715,10 @@ export default function ServiceRequestsPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-lg font-semibold">{selectedRequest.request_number}</h2>
-                      <Badge
-                        variant="secondary"
-                        className={statusConfig[selectedRequest.status].color}
-                      >
-                        {statusConfig[selectedRequest.status].label}
-                      </Badge>
+                      <StatusBadge
+                        status={statusConfig[selectedRequest.status].status}
+                        label={statusConfig[selectedRequest.status].label}
+                      />
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Booked on {formatDate(selectedRequest.booked_at)}
@@ -973,7 +973,7 @@ export default function ServiceRequestsPage() {
                       className="flex-1"
                     >
                       {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Spinner size="sm" className="mr-2" />
                       ) : (
                         <Package className="h-4 w-4 mr-2" />
                       )}
@@ -1123,7 +1123,7 @@ export default function ServiceRequestsPage() {
               }
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Spinner size="sm" className="mr-2" />
               ) : (
                 <Check className="h-4 w-4 mr-2" />
               )}
@@ -1193,7 +1193,7 @@ export default function ServiceRequestsPage() {
               }
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Spinner size="sm" className="mr-2" />
               ) : (
                 <X className="h-4 w-4 mr-2" />
               )}
@@ -1261,7 +1261,7 @@ export default function ServiceRequestsPage() {
               }
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Spinner size="sm" className="mr-2" />
               ) : (
                 <Plus className="h-4 w-4 mr-2" />
               )}

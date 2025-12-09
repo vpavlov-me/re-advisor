@@ -34,7 +34,6 @@ import {
   MessageSquare,
   UserPlus,
   ListTodo,
-  Loader2,
   Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,10 +41,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { FamilyDetailSkeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -131,35 +140,12 @@ interface Family {
   consultations: Consultation[];
 }
 
-function getRoleBadge(role: AdvisorRole) {
-  const variants = {
-    "external-consul": { className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", label: "External Consul" },
-    "consultant": { className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", label: "Consultant" },
-    "personal-advisor": { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Personal Family Advisor" },
-  };
-  const variant = variants[role] || variants.consultant;
-  return <Badge variant="secondary" className={variant.className}>{variant.label}</Badge>;
-}
-
-function getPaymentBadge(payment: PaymentStatus) {
-  const variants = {
-    "paid": { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Paid" },
-    "pending": { className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300", label: "Pending" },
-    "no-invoices": { className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400", label: "No Invoices" },
-  };
-  const variant = variants[payment] || variants["no-invoices"];
-  return <Badge variant="secondary" className={variant.className}>{variant.label}</Badge>;
-}
-
-function getStatusBadge(status: FamilyStatus) {
-  const variants = {
-    active: { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Active" },
-    pending: { className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300", label: "Pending" },
-    inactive: { className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400", label: "Inactive" },
-  };
-  const variant = variants[status] || variants.pending;
-  return <Badge variant="secondary" className={variant.className}>{variant.label}</Badge>;
-}
+// Map payment status to StatusBadge status type
+const paymentStatusMap = {
+  paid: "paid",
+  pending: "awaiting",
+  "no-invoices": "no-invoices",
+} as const;
 
 export default function FamilyDetailPage() {
   const router = useRouter();
@@ -525,8 +511,8 @@ export default function FamilyDetailPage() {
               <div className="min-w-0">
                 <h1 className="text-lg font-semibold truncate">{family.name}</h1>
                 <div className="flex items-center gap-2">
-                  {getRoleBadge(family.role)}
-                  {getStatusBadge(family.status)}
+                  <StatusBadge status={family.role} />
+                  <StatusBadge status={family.status} />
                 </div>
               </div>
             </div>
@@ -657,7 +643,7 @@ export default function FamilyDetailPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Payment Status</span>
-                    {getPaymentBadge(family.payment_status)}
+                    <StatusBadge status={paymentStatusMap[family.payment_status]} />
                   </div>
                 </CardContent>
               </Card>
@@ -904,18 +890,7 @@ export default function FamilyDetailPage() {
                             {new Date(consultation.date).toLocaleDateString()} at {consultation.time}
                           </div>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className={
-                            consultation.status === "scheduled"
-                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                              : consultation.status === "completed"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                          }
-                        >
-                          {consultation.status}
-                        </Badge>
+                        <StatusBadge status={consultation.status} />
                       </div>
                     </CardContent>
                   </Card>
@@ -953,18 +928,22 @@ export default function FamilyDetailPage() {
             </div>
             <div className="space-y-2">
               <Label>Role in Family</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+              <Select
                 value={newMember.role}
-                onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+                onValueChange={(value) => setNewMember({ ...newMember, role: value })}
               >
-                <option value="Child">Child</option>
-                <option value="Parent">Parent</option>
-                <option value="Spouse">Spouse</option>
-                <option value="Grandparent">Grandparent</option>
-                <option value="Sibling">Sibling</option>
-                <option value="Other">Other</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Child">Child</SelectItem>
+                  <SelectItem value="Parent">Parent</SelectItem>
+                  <SelectItem value="Spouse">Spouse</SelectItem>
+                  <SelectItem value="Grandparent">Grandparent</SelectItem>
+                  <SelectItem value="Sibling">Sibling</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -972,7 +951,7 @@ export default function FamilyDetailPage() {
               Cancel
             </Button>
             <Button onClick={handleAddMember} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Spinner size="sm" className="mr-2" /> : null}
               Add Member
             </Button>
           </DialogFooter>
@@ -1007,15 +986,19 @@ export default function FamilyDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>Priority</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+                <Select
                   value={newTask.priority}
-                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                  onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -1024,7 +1007,7 @@ export default function FamilyDetailPage() {
               Cancel
             </Button>
             <Button onClick={handleAddTask} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Spinner size="sm" className="mr-2" /> : null}
               Add Task
             </Button>
           </DialogFooter>
@@ -1058,8 +1041,7 @@ export default function FamilyDetailPage() {
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <textarea
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+              <Textarea
                 placeholder="Describe the service deliverables..."
                 value={newProposal.description}
                 onChange={(e) => setNewProposal({ ...newProposal, description: e.target.value })}
@@ -1071,7 +1053,7 @@ export default function FamilyDetailPage() {
               Cancel
             </Button>
             <Button onClick={handleProposeService} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Spinner size="sm" className="mr-2" /> : null}
               Send Proposal
             </Button>
           </DialogFooter>
@@ -1119,7 +1101,7 @@ export default function FamilyDetailPage() {
               Cancel
             </Button>
             <Button onClick={handleScheduleConsultation} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Spinner size="sm" className="mr-2" /> : null}
               Schedule Meeting
             </Button>
           </DialogFooter>
@@ -1154,18 +1136,21 @@ export default function FamilyDetailPage() {
             </div>
             <div className="space-y-2">
               <Label>Linked Service (Optional)</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+              <Select
                 value={newInvoice.serviceId}
-                onChange={(e) => setNewInvoice({ ...newInvoice, serviceId: e.target.value })}
+                onValueChange={(value) => setNewInvoice({ ...newInvoice, serviceId: value })}
               >
-                <option value="">Select a service...</option>
-                {family.services.map((service) => (
-                  <option key={service.id} value={service.name}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a service..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {family.services.map((service) => (
+                    <SelectItem key={service.id} value={service.name}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -1173,7 +1158,7 @@ export default function FamilyDetailPage() {
               Cancel
             </Button>
             <Button onClick={handleCreateInvoice} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Spinner size="sm" className="mr-2" /> : null}
               Generate Invoice
             </Button>
           </DialogFooter>
@@ -1196,7 +1181,7 @@ export default function FamilyDetailPage() {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isDeleting ? <Spinner size="sm" className="mr-2" /> : null}
               Remove Family
             </AlertDialogAction>
           </AlertDialogFooter>

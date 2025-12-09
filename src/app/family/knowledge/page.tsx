@@ -24,7 +24,6 @@ import {
   CheckSquare,
   GraduationCap,
   Star,
-  Loader2,
   ExternalLink,
   Eye,
   Clock,
@@ -37,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Card,
   CardContent,
@@ -197,7 +197,7 @@ export default function FamilyKnowledgeCenterPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Spinner size="lg" className="text-muted-foreground" />
         <span className="ml-2 text-muted-foreground">Loading your knowledge center...</span>
       </div>
     );

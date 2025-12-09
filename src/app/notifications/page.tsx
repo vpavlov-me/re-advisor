@@ -13,7 +13,6 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  Loader2,
   Trash2,
   RefreshCw,
   BellOff
@@ -22,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -283,7 +283,7 @@ export default function NotificationsPage() {
                   disabled={isMarkingRead}
                 >
                   {isMarkingRead ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Spinner size="xs" />
                   ) : (
                     <>
                       <div className="h-2 w-2 rounded-full bg-primary mr-1.5" />
@@ -300,7 +300,7 @@ export default function NotificationsPage() {
                 disabled={isDeleting}
               >
                 {isDeleting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Spinner size="xs" />
                 ) : (
                   <Trash2 className="h-3.5 w-3.5" />
                 )}
@@ -345,7 +345,7 @@ export default function NotificationsPage() {
             >
               {isMarkingAllRead ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Marking...
                 </>
               ) : (
@@ -387,7 +387,7 @@ export default function NotificationsPage() {
               <CardContent className="pt-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <Spinner size="md" className="text-muted-foreground" />
                     <span className="ml-2 text-muted-foreground">Loading notifications...</span>
                   </div>
                 ) : notifications.length === 0 ? (
@@ -421,7 +421,7 @@ export default function NotificationsPage() {
               <CardContent className="pt-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <Spinner size="md" className="text-muted-foreground" />
                     <span className="ml-2 text-muted-foreground">Loading...</span>
                   </div>
                 ) : unreadCount === 0 ? (
@@ -472,7 +472,7 @@ export default function NotificationsPage() {
             <Button variant="destructive" onClick={handleClearAll} disabled={isClearing}>
               {isClearing ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Clearing...
                 </>
               ) : (

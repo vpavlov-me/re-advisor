@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
@@ -32,7 +32,6 @@ import {
   CalendarClock,
   XCircle,
   Eye,
-  Loader2,
   FileText
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +41,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Sheet, 
   SheetContent, 
@@ -122,28 +130,6 @@ const getOverviewMetrics = (m: { total: number; upcoming: number; completedRate:
 // Pagination options
 const paginationOptions = [3, 5, 10];
 
-function getStatusBadge(status: "scheduled" | "confirmed" | "pending" | "completed" | "cancelled") {
-  const variants = {
-    scheduled: { className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", label: "Scheduled" },
-    confirmed: { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Confirmed" },
-    pending: { className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300", label: "Pending" },
-    completed: { className: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300", label: "Completed" },
-    cancelled: { className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", label: "Cancelled" },
-  };
-  
-  return <Badge variant="secondary" className={variants[status].className}>{variants[status].label}</Badge>;
-}
-
-function getPaymentBadge(status: "paid" | "awaiting" | "overdue") {
-  const variants = {
-    paid: { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Paid" },
-    awaiting: { className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300", label: "Awaiting Payment" },
-    overdue: { className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", label: "Overdue" },
-  };
-  
-  return <Badge variant="secondary" className={variants[status].className}>{variants[status].label}</Badge>;
-}
-
 // Consultation Card Component
 function ConsultationCard({ 
   consultation, 
@@ -165,8 +151,8 @@ function ConsultationCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium text-foreground">{consultation.title}</h3>
-            {getPaymentBadge(consultation.paymentStatus)}
-            {getStatusBadge(consultation.status)}
+            <StatusBadge status={consultation.paymentStatus} />
+            <StatusBadge status={consultation.status} />
           </div>
           <p className="text-sm text-muted-foreground mb-3">{consultation.family}</p>
           
@@ -279,7 +265,8 @@ export default function ConsultationsPage() {
     formState: { errors },
     reset,
     watch,
-    setValue
+    setValue,
+    control
   } = useForm<ScheduleFormData>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
@@ -879,8 +866,8 @@ export default function ConsultationsPage() {
                 {/* Header */}
                 <SheetHeader className="mb-6">
                   <div className="flex items-center gap-2 mb-2">
-                    {getStatusBadge(selectedConsultation.status)}
-                    {getPaymentBadge(selectedConsultation.paymentStatus)}
+                    <StatusBadge status={selectedConsultation.status} />
+                    <StatusBadge status={selectedConsultation.paymentStatus} />
                   </div>
                   <SheetTitle className="text-xl">{selectedConsultation.title}</SheetTitle>
                   <SheetDescription>{selectedConsultation.family}</SheetDescription>
@@ -1070,44 +1057,64 @@ export default function ConsultationsPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="family">Family Client</Label>
-                <select 
-                  id="family"
-                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...register("family")}
-                >
-                  <option value="">Select family...</option>
-                  {families.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </select>
+                <Controller
+                  name="family"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select family..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {families.map(f => (
+                          <SelectItem key={f.id} value={String(f.id)}>{f.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.family && (
                   <p className="text-sm text-red-500">{errors.family.message}</p>
                 )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">Consultation Type</Label>
-                <select 
-                  id="type"
-                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...register("type")}
-                >
-                  <option value="Video Call">Video Call</option>
-                  <option value="In-Person">In-Person Meeting</option>
-                  <option value="Phone Call">Phone Call</option>
-                </select>
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Video Call">Video Call</SelectItem>
+                        <SelectItem value="In-Person">In-Person Meeting</SelectItem>
+                        <SelectItem value="Phone Call">Phone Call</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="duration">Duration</Label>
-                <select 
-                  id="duration"
-                  className="flex h-10 w-full items-center justify-between rounded-[10px] border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...register("duration")}
-                >
-                  <option value="30 minutes">30 minutes</option>
-                  <option value="1 hour">1 hour</option>
-                  <option value="90 minutes">90 minutes</option>
-                  <option value="2 hours">2 hours</option>
-                </select>
+                <Controller
+                  name="duration"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30 minutes">30 minutes</SelectItem>
+                        <SelectItem value="1 hour">1 hour</SelectItem>
+                        <SelectItem value="90 minutes">90 minutes</SelectItem>
+                        <SelectItem value="2 hours">2 hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -1167,7 +1174,7 @@ export default function ConsultationsPage() {
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Spinner size="sm" className="mr-2" />
                     Scheduling...
                   </>
                 ) : (
@@ -1205,7 +1212,7 @@ export default function ConsultationsPage() {
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   Deleting...
                 </>
               ) : (

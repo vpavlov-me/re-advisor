@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { 
-  Home, 
-  ChevronRight, 
+import {
+  Home,
+  ChevronRight,
   Search,
   Filter,
   Plus,
@@ -23,11 +23,20 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Spinner, ButtonSpinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -74,34 +83,12 @@ const getStats = (familiesList: Family[]) => [
   { label: "Pending Payments", value: String(familiesList.filter(f => f.payment === 'pending').length), icon: DollarSign },
 ];
 
-function getRoleBadge(role: AdvisorRole) {
-  const variants: Record<AdvisorRole, { className: string; label: string }> = {
-    "external-consul": { className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", label: "External Consul" },
-    "consultant": { className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", label: "Consultant" },
-    "personal-advisor": { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Personal Family Advisor" },
-    "lead-advisor": { className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300", label: "Lead Advisor" },
-  };
-  const variant = variants[role] || variants["consultant"];
-  return <Badge variant="secondary" className={variant.className}>{variant.label}</Badge>;
-}
-
-function getPaymentBadge(payment: "paid" | "pending" | "no-invoices") {
-  const variants = {
-    "paid": { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Paid" },
-    "pending": { className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300", label: "Pending" },
-    "no-invoices": { className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400", label: "No Invoices" },
-  };
-  return <Badge variant="secondary" className={variants[payment].className}>{variants[payment].label}</Badge>;
-}
-
-function getStatusBadge(status: "active" | "pending" | "inactive") {
-  const variants = {
-    active: { className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", label: "Active" },
-    pending: { className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300", label: "Pending" },
-    inactive: { className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400", label: "Inactive" },
-  };
-  return <Badge variant="secondary" className={variants[status].className}>{variants[status].label}</Badge>;
-}
+// Map payment status to StatusBadge status type
+const paymentStatusMap = {
+  paid: "paid",
+  pending: "awaiting",
+  "no-invoices": "no-invoices",
+} as const;
 
 const paginationOptions = [5, 10, 20];
 
@@ -328,7 +315,7 @@ export default function FamiliesPage() {
           <CardContent className="pt-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <Spinner size="lg" className="text-primary" />
               </div>
             ) : paginatedFamilies.length === 0 ? (
               <div className="text-center py-12">
@@ -380,7 +367,7 @@ export default function FamiliesPage() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{getRoleBadge(family.role)}</TableCell>
+                          <TableCell><StatusBadge status={family.role} /></TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4 text-muted-foreground" />
@@ -396,8 +383,8 @@ export default function FamiliesPage() {
                               <span className="text-muted-foreground text-sm">No meetings</span>
                             )}
                           </TableCell>
-                          <TableCell>{getPaymentBadge(family.payment)}</TableCell>
-                          <TableCell>{getStatusBadge(family.status)}</TableCell>
+                          <TableCell><StatusBadge status={paymentStatusMap[family.payment]} /></TableCell>
+                          <TableCell><StatusBadge status={family.status} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{family.lastContact}</TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
@@ -563,22 +550,25 @@ export default function FamiliesPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Your Role</Label>
-              <select 
-                className="flex h-10 w-full items-center justify-between rounded-xl border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              <Select
                 value={inviteForm.role}
-                onChange={(e) => setInviteForm({...inviteForm, role: e.target.value as AdvisorRole})}
+                onValueChange={(value) => setInviteForm({...inviteForm, role: value as AdvisorRole})}
               >
-                <option value="external-consul">External Consul</option>
-                <option value="consultant">Consultant</option>
-                <option value="personal-advisor">Personal Family Advisor</option>
-                <option value="lead-advisor">Lead Advisor</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="external-consul">External Consul</SelectItem>
+                  <SelectItem value="consultant">Consultant</SelectItem>
+                  <SelectItem value="personal-advisor">Personal Family Advisor</SelectItem>
+                  <SelectItem value="lead-advisor">Lead Advisor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="message">Personal Message (Optional)</Label>
-              <textarea 
-                className="flex min-h-[80px] w-full rounded-xl border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                id="message" 
+              <Textarea
+                id="message"
                 placeholder="Hello, I'd like to invite you to join..."
                 value={inviteForm.message}
                 onChange={(e) => setInviteForm({...inviteForm, message: e.target.value})}
@@ -591,7 +581,7 @@ export default function FamiliesPage() {
               <Button type="submit" disabled={saving}>
                 {saving ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <ButtonSpinner className="mr-2" />
                     Sending...
                   </>
                 ) : (
@@ -622,14 +612,14 @@ export default function FamiliesPage() {
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDeleteFamily}
               disabled={isDeleting}
             >
               {isDeleting ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <ButtonSpinner className="mr-2" />
                   Removing...
                 </>
               ) : (
