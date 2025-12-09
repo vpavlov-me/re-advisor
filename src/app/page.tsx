@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { 
-  Home, 
-  ChevronRight, 
-  Calendar, 
-  CheckCircle2, 
+import {
+  Home,
+  ChevronRight,
+  ChevronDown,
+  Calendar,
+  CheckCircle2,
   DollarSign,
   Users,
   Briefcase,
@@ -328,6 +329,7 @@ export default function HomePage() {
   const [userName, setUserName] = useState("Advisor");
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProfileSetupExpanded, setIsProfileSetupExpanded] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -561,42 +563,62 @@ export default function HomePage() {
 
         {/* Profile Setup Card */}
         <Card>
-          <CardContent className="p-6">
-            <div className="mb-4">
-              <h2 className="text-base font-semibold text-foreground">
-                Set up your Adviser profile to start selling on the Experts
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Build credibility with verification, define your expertise and services, and get discovered by families.
-              </p>
-            </div>
-
-            {/* Onboarding Steps Grid */}
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {profileStepsRow1.map((step) => (
-                  <OnboardingCard key={step.id} step={step} />
-                ))}
+          <CardContent className={`transition-all duration-300 ease-in-out ${isProfileSetupExpanded ? 'p-6' : 'px-4 py-3'}`}>
+            {/* Header row - clickable to expand/collapse */}
+            <button
+              className="w-full flex items-center justify-between gap-4 text-left"
+              onClick={() => setIsProfileSetupExpanded(!isProfileSetupExpanded)}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <h2 className={`font-semibold text-foreground transition-all duration-200 ${isProfileSetupExpanded ? 'text-base' : 'text-sm'}`}>
+                  Set up your Adviser profile
+                </h2>
+                {!isProfileSetupExpanded && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">{completionPercentage >= 60 ? 'Ready' : 'Draft'}</Badge>
+                    <span className="text-xs text-muted-foreground">{completionPercentage}%</span>
+                    <Progress value={completionPercentage} className="h-1 w-20 hidden sm:block" />
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {profileStepsRow2.map((step) => (
-                  <OnboardingCard key={step.id} step={step} />
-                ))}
+              <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isProfileSetupExpanded ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Expandable content with animation */}
+            <div className={`grid transition-all duration-300 ease-in-out ${isProfileSetupExpanded ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
+              <div className="overflow-hidden">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Build credibility with verification, define your expertise and services, and get discovered by families.
+                </p>
+
+                {/* Onboarding Steps Grid */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {profileStepsRow1.map((step) => (
+                      <OnboardingCard key={step.id} step={step} />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {profileStepsRow2.map((step) => (
+                      <OnboardingCard key={step.id} step={step} />
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="my-5" />
+
+                {/* Progress Section */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge variant="secondary">{completionPercentage >= 60 ? 'Ready' : 'Draft'}</Badge>
+                    <span className="text-sm text-muted-foreground">· Completion: {completionPercentage}%</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">Submission requires ≥ 60% completeness.</span>
+                </div>
+                <Progress value={completionPercentage} className="mt-3 h-1.5" />
               </div>
             </div>
-
-            <Separator className="my-5" />
-
-            {/* Progress Section */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Badge variant="secondary">{completionPercentage >= 60 ? 'Ready' : 'Draft'}</Badge>
-                <span className="text-sm text-muted-foreground">· Completion: {completionPercentage}%</span>
-              </div>
-              <span className="text-sm text-muted-foreground">Submission requires ≥ 60% completeness.</span>
-            </div>
-            <Progress value={completionPercentage} className="mt-3 h-1.5" />
           </CardContent>
         </Card>
 
