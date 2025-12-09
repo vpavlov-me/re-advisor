@@ -8,6 +8,7 @@ import {
   type SharedResourceWithDetails
 } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
 import Link from "next/link";
 import { toast } from "sonner";
 import { 
@@ -36,7 +37,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Card,
   CardContent,
@@ -126,17 +126,29 @@ const getColorForType = (type: string) => {
 
 export default function FamilyKnowledgeCenterPage() {
   const router = useRouter();
-  
+
   // State
   const [isLoading, setIsLoading] = useState(true);
   const [familyName, setFamilyName] = useState<string>("");
-  
+
   const [sharedResources, setSharedResources] = useState<SharedResource[]>([]);
   const [constitutions, setConstitutions] = useState<FamilyConstitution[]>([]);
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // URL-synced state with nuqs
+  const [searchQuery, setSearchQuery] = useQueryState("q", { defaultValue: "" });
+  const [selectedType, setSelectedType] = useQueryState("type", { defaultValue: "all" });
+  const [viewMode, setViewMode] = useQueryState<"grid" | "list">("view", {
+    defaultValue: "grid",
+    parse: (value: string): "grid" | "list" => (value === "list" ? "list" : "grid"),
+    serialize: (value: "grid" | "list") => value
+  });
+
+  // Date formatter for locale-aware dates
+  const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
 
   // Fetch user's family info and shared resources
   const fetchData = useCallback(async () => {
@@ -193,12 +205,56 @@ export default function FamilyKnowledgeCenterPage() {
     return matchesSearch && matchesType;
   });
 
-  // Loading state
+  // Loading state with skeleton
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="lg" className="text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading your knowledge center...</span>
+      <div className="space-y-6 p-6">
+        {/* Breadcrumb skeleton */}
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-16 bg-muted animate-pulse rounded" />
+          <div className="h-4 w-4 bg-muted animate-pulse rounded" />
+          <div className="h-4 w-40 bg-muted animate-pulse rounded" />
+        </div>
+
+        {/* Header skeleton */}
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        </div>
+
+        {/* Tabs skeleton */}
+        <div className="h-10 w-80 bg-muted animate-pulse rounded" />
+
+        {/* Toolbar skeleton */}
+        <div className="flex gap-4">
+          <div className="h-10 flex-1 bg-muted animate-pulse rounded" />
+          <div className="h-10 w-[150px] bg-muted animate-pulse rounded" />
+          <div className="h-10 w-20 bg-muted animate-pulse rounded" />
+        </div>
+
+        {/* Cards skeleton grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                <div className="h-9 w-9 bg-muted rounded-lg" />
+                <div className="h-5 w-12 bg-muted rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 mb-4">
+                  <div className="h-6 w-3/4 bg-muted rounded" />
+                  <div className="h-4 w-full bg-muted rounded" />
+                  <div className="h-4 w-2/3 bg-muted rounded" />
+                </div>
+                <div className="h-4 w-32 bg-muted rounded mb-4" />
+                <div className="flex gap-2">
+                  <div className="h-9 flex-1 bg-muted rounded" />
+                  <div className="h-9 w-20 bg-muted rounded" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -277,6 +333,7 @@ export default function FamilyKnowledgeCenterPage() {
                         size="icon"
                         className="rounded-r-none"
                         onClick={() => setViewMode("grid")}
+                        aria-label="Grid view"
                       >
                         <LayoutGrid className="h-4 w-4" />
                       </Button>
@@ -290,6 +347,7 @@ export default function FamilyKnowledgeCenterPage() {
                         size="icon"
                         className="rounded-l-none"
                         onClick={() => setViewMode("list")}
+                        aria-label="List view"
                       >
                         <List className="h-4 w-4" />
                       </Button>
@@ -336,7 +394,7 @@ export default function FamilyKnowledgeCenterPage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
                         <Clock className="h-3 w-3" />
-                        <span>Shared {new Date(resource.shared_at).toLocaleDateString()}</span>
+                        <span>Shared {dateFormatter.format(new Date(resource.shared_at))}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {resource.external_url && (
@@ -384,11 +442,16 @@ export default function FamilyKnowledgeCenterPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-xs text-muted-foreground hidden sm:block">
-                            {new Date(resource.shared_at).toLocaleDateString()}
+                            {dateFormatter.format(new Date(resource.shared_at))}
                           </span>
                           {resource.external_url && (
                             <Button variant="outline" size="sm" asChild>
-                              <a href={resource.external_url} target="_blank" rel="noopener noreferrer">
+                              <a
+                                href={resource.external_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Open ${resource.title} in new tab`}
+                              >
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </Button>
@@ -434,7 +497,7 @@ export default function FamilyKnowledgeCenterPage() {
                     </div>
                     <CardTitle className="mt-4">{constitution.name}</CardTitle>
                     <CardDescription>
-                      Last updated: {new Date(constitution.updated_at).toLocaleDateString()}
+                      Last updated: {dateFormatter.format(new Date(constitution.updated_at))}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

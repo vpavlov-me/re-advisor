@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQueryState } from "nuqs";
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -23,6 +24,17 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // --- Educational Carousel Data ---
 const carouselSlides = [
@@ -81,14 +93,24 @@ const wizardSteps = [
 ];
 
 export default function FamilyOnboardingPage() {
-  const [mode, setMode] = useState<"carousel" | "wizard">("carousel");
-  
+  // URL-synced state
+  const [mode, setMode] = useQueryState<"carousel" | "wizard">("mode", {
+    defaultValue: "carousel",
+    parse: (value: string): "carousel" | "wizard" => (value === "wizard" ? "wizard" : "carousel"),
+    serialize: (value: "carousel" | "wizard") => value
+  });
+  const [currentStep, setCurrentStep] = useQueryState("step", {
+    defaultValue: 1,
+    parse: (value: string) => Math.max(1, Math.min(8, parseInt(value) || 1)),
+    serialize: (value: number) => String(value)
+  });
+
   // Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Wizard State
-  const [currentStep, setCurrentStep] = useState(1);
+  // Constitution Data
   const [constitutionData, setConstitutionData] = useState({
     values: "",
     vision: "",
@@ -99,8 +121,34 @@ export default function FamilyOnboardingPage() {
     amendmentProcess: "",
   });
 
-  // Carousel Auto-play
+  // Exit confirmation dialog
+  const [exitDialogOpen, setExitDialogOpen] = useState(false);
+
+  // Check if there's unsaved data
+  const hasUnsavedData = useCallback(() => {
+    return Object.values(constitutionData).some(value => value.trim() !== "");
+  }, [constitutionData]);
+
+  // Check for reduced motion preference
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+      if (e.matches) {
+        setIsPlaying(false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  // Carousel Auto-play (respects reduced motion)
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
     let interval: NodeJS.Timeout;
     if (mode === "carousel" && isPlaying) {
       interval = setInterval(() => {
@@ -108,7 +156,7 @@ export default function FamilyOnboardingPage() {
       }, 5000);
     }
     return () => clearInterval(interval);
-  }, [mode, isPlaying]);
+  }, [mode, isPlaying, prefersReducedMotion]);
 
   const handleCarouselNext = () => {
     setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
@@ -122,21 +170,43 @@ export default function FamilyOnboardingPage() {
 
   const startWizard = () => {
     setMode("wizard");
+    setCurrentStep(1);
   };
 
   const handleWizardNext = () => {
     if (currentStep < wizardSteps.length) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(currentStep + 1);
     } else {
       console.log("Constitution Completed:", constitutionData);
-      alert("Constitution Draft Created!");
+      toast.success("Constitution Draft Created!", {
+        description: "Your family constitution has been saved successfully."
+      });
     }
   };
 
   const handleWizardBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleSaveDraft = () => {
+    toast.success("Progress saved!", {
+      description: "Your draft has been saved. You can continue later."
+    });
+  };
+
+  const handleExit = () => {
+    if (hasUnsavedData()) {
+      setExitDialogOpen(true);
+    } else {
+      window.history.back();
+    }
+  };
+
+  const confirmExit = () => {
+    setExitDialogOpen(false);
+    window.history.back();
   };
 
   const updateData = (field: string, value: string) => {
@@ -183,14 +253,17 @@ export default function FamilyOnboardingPage() {
 
               <div className="space-y-8">
                 {/* Progress Indicators */}
-                <div className="flex justify-center gap-2">
-                  {carouselSlides.map((_, idx) => (
+                <div className="flex justify-center gap-2" role="tablist" aria-label="Carousel slides">
+                  {carouselSlides.map((slide, idx) => (
                     <button
                       key={idx}
                       onClick={() => { setCurrentSlide(idx); setIsPlaying(false); }}
                       className={`h-2 rounded-full transition-all duration-300 ${
                         idx === currentSlide ? "w-8 bg-primary" : "w-2 bg-slate-200"
                       }`}
+                      role="tab"
+                      aria-selected={idx === currentSlide}
+                      aria-label={`Go to slide ${idx + 1}: ${slide.title}`}
                     />
                   ))}
                 </div>
@@ -238,11 +311,11 @@ export default function FamilyOnboardingPage() {
             <p className="text-slate-500">Drafting your family's guiding principles</p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => alert("Progress saved!")}>
+            <Button variant="outline" onClick={handleSaveDraft}>
               <Save className="h-4 w-4 mr-2" />
               Save Draft
             </Button>
-            <Button variant="ghost" className="text-muted-foreground">
+            <Button variant="ghost" className="text-muted-foreground" onClick={handleExit}>
               Exit
             </Button>
           </div>
@@ -373,6 +446,28 @@ export default function FamilyOnboardingPage() {
           </Card>
         </div>
       </div>
+
+      {/* Exit confirmation dialog */}
+      <AlertDialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes in your constitution draft. Are you sure you want to leave?
+              Your progress will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Editing</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmExit}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Leave Without Saving
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

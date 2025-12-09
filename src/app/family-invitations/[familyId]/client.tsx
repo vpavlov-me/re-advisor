@@ -3,18 +3,18 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
+import {
   ArrowLeft,
   Plus,
   Copy,
   Check,
   Mail,
   Trash2,
-  Loader2,
   UserPlus,
   Clock,
   XCircle
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/lib/hooks";
 import { 
   getFamilyInvitations, 
@@ -55,6 +65,10 @@ export default function InvitationsClient() {
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invitationToDelete, setInvitationToDelete] = useState<FamilyInvitation | null>(null);
 
   // Form state
   const [email, setEmail] = useState("");
@@ -115,10 +129,17 @@ export default function InvitationsClient() {
     setCreating(false);
   };
 
-  const handleDelete = async (id: string) => {
-    const { success, error } = await cancelInvitation(id);
+  const openDeleteDialog = (invitation: FamilyInvitation) => {
+    setInvitationToDelete(invitation);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!invitationToDelete) return;
+
+    const { success, error } = await cancelInvitation(invitationToDelete.id);
     if (success) {
-      setInvitations(invitations.filter(inv => inv.id !== id));
+      setInvitations(invitations.filter(inv => inv.id !== invitationToDelete.id));
       toast({
         title: "Invitation Cancelled",
         description: "The invitation has been cancelled",
@@ -130,6 +151,8 @@ export default function InvitationsClient() {
         variant: "destructive",
       });
     }
+    setDeleteDialogOpen(false);
+    setInvitationToDelete(null);
   };
 
   const handleResend = async (id: string) => {
@@ -183,8 +206,47 @@ export default function InvitationsClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="container mx-auto py-6 space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-muted animate-pulse rounded" />
+          <div className="space-y-2">
+            <div className="h-7 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+
+        {/* Button skeleton */}
+        <div className="flex justify-end">
+          <div className="h-10 w-36 bg-muted animate-pulse rounded" />
+        </div>
+
+        {/* Cards skeleton */}
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted" />
+                    <div className="space-y-2">
+                      <div className="h-5 w-48 bg-muted rounded" />
+                      <div className="h-4 w-32 bg-muted rounded" />
+                    </div>
+                  </div>
+                  <div className="h-4 w-20 bg-muted rounded" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-24 bg-muted rounded" />
+                  <div className="h-8 w-20 bg-muted rounded" />
+                  <div className="h-8 w-20 bg-muted rounded" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -192,7 +254,7 @@ export default function InvitationsClient() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
+        <Button variant="ghost" size="icon" asChild aria-label="Back to families">
           <Link href={`/families`}>
             <ArrowLeft className="h-4 w-4" />
           </Link>
@@ -252,8 +314,8 @@ export default function InvitationsClient() {
               <Button onClick={handleCreate} disabled={creating}>
                 {creating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
+                    <Spinner size="sm" className="mr-2" />
+                    Sending…
                   </>
                 ) : (
                   <>
@@ -331,7 +393,7 @@ export default function InvitationsClient() {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(invitation.id)}
+                        onClick={() => openDeleteDialog(invitation)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Cancel
@@ -344,6 +406,29 @@ export default function InvitationsClient() {
           ))}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Invitation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel the invitation to{" "}
+              <span className="font-medium">{invitationToDelete?.email}</span>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Cancel Invitation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
