@@ -1,0 +1,27 @@
+{{> header subject=(concat "You're invited to join " family_name "'s client workspace") is_advisor=true}}
+
+<h1>Access invitation received</h1>
+
+<p class="lead-text">
+  <strong>{{admin_name}}</strong> invited you to {{family_name}}'s client workspace with the following access.
+</p>
+
+<div class="card">
+  <div class="card-title">Access summary</div>
+  <div class="card-content">
+    <p><strong>Role:</strong> {{advisor_role}}</p>
+    <p><strong>Modules:</strong> {{modules_summary}}</p>
+    <p><strong>Expires:</strong> {{expiration_date}} (7 days)</p>
+  </div>
+</div>
+
+<div class="button-center">
+  <a href="{{accept_url}}" class="button">Accept Invitation</a>
+  <a href="{{decline_url}}" class="button button-secondary">Decline</a>
+</div>
+
+<div class="info-box info-box-warning">
+  <p><strong>Action required:</strong> Invitation expires in 7 days.</p>
+</div>
+
+{{> footer user_email=user_email is_critical=false current_year=current_year portal_url=portal_url support_url=support_url}}

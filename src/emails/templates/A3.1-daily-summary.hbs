@@ -1,0 +1,73 @@
+{{> header subject=(concat "Daily summary: Updates across " family_count " clients") is_advisor=true}}
+
+<h1>Daily multi-client update</h1>
+
+<p class="lead-text">Here is your summary across {{family_count}} client workspaces.</p>
+
+{{#each families}}
+<hr class="divider">
+<h2>{{this.family_name}}</h2>
+
+{{#if this.priority_items}}
+<div class="info-box info-box-warning">
+  <p><strong>{{this.priority_items}} priority items</strong> need your attention.</p>
+</div>
+{{/if}}
+
+{{#if this.meetings}}
+<div class="card">
+  <div class="card-title">Meetings</div>
+  <div class="card-content">
+    {{#each this.meetings}}
+    <p><strong>{{this.title}}</strong> — {{this.date}} {{this.time}} | <a href="{{this.url}}">Open</a></p>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+{{#if this.decisions}}
+<div class="card">
+  <div class="card-title">Decisions</div>
+  <div class="card-content">
+    {{#each this.decisions}}
+    <p><strong>{{this.title}}</strong> — <a href="{{this.url}}">Review</a></p>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+{{#if this.tasks}}
+<div class="card">
+  <div class="card-title">Tasks</div>
+  <div class="card-content">
+    {{#each this.tasks}}
+    <p>{{this.title}} (due {{this.due_date}}) — <a href="{{this.url}}">View</a></p>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+{{#if this.messages}}
+<div class="card">
+  <div class="card-title">Messages</div>
+  <div class="card-content">
+    {{#each this.messages}}
+    <p><strong>{{this.from}}:</strong> {{this.preview}} — <a href="{{this.url}}">Reply</a></p>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+<div class="button-center" style="margin-top: 12px;">
+  <a href="{{this.portal_url}}" class="button button-secondary">Open {{this.family_name}} workspace</a>
+</div>
+{{/each}}
+
+<hr class="divider">
+<div class="button-center">
+  <a href="{{dashboard_url}}" class="button">View multi-client dashboard</a>
+</div>
+
+<p class="small-text" style="text-align:center; margin-top: 16px;">Adjust digest preferences in <a href="{{settings_url}}">notification settings</a>.</p>
+
+{{> footer user_email=user_email is_critical=false current_year=current_year portal_url=portal_url support_url=support_url}}

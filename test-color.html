@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .oklch-color {
+            width: 200px;
+            height: 100px;
+            background: oklch(0.6230 0.2140 259.8150);
+            margin: 10px;
+        }
+        .hex-color {
+            width: 200px;
+            height: 100px;
+            background: #5B68F4;
+            margin: 10px;
+        }
+        body { display: flex; gap: 20px; padding: 20px; }
+        div { border: 2px solid black; }
+    </style>
+</head>
+<body>
+    <div>
+        <h3>OKLCH (Portal)</h3>
+        <div class="oklch-color"></div>
+        <p>oklch(0.6230 0.2140 259.8150)</p>
+    </div>
+    <div>
+        <h3>HEX (Emails)</h3>
+        <div class="hex-color"></div>
+        <p>#5B68F4</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>New client added: </title>
+  
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  
+  <style>
+    /* ============================================
+       RE:ADVISOR PORTAL - EMAIL DESIGN SYSTEM
+       Exact copy of portal components styles
+       ============================================ */
+    
+    /* CSS Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; outline: none; text-decoration: none; }
+    
+    /* Portal Design System Colors - Exact Match */
+    :root {
+      --primary: oklch(0.6230 0.2140 259.8150); /* #5B68F4 */
+      --primary-foreground: oklch(0.9850 0 0); /* #FBFBFB */
+      --background: oklch(1 0 0); /* #FFFFFF */
+      --foreground: oklch(0.1450 0 0); /* #252525 */
+      --card: oklch(1 0 0); /* #FFFFFF */
+      --card-foreground: oklch(0.1450 0 0); /* #252525 */
+      --muted: oklch(0.9700 0 0); /* #F7F7F7 */
+      --muted-foreground: oklch(0.5560 0 0); /* #8B8B8B */
+      --border: oklch(0.9220 0 0); /* #ECECEC */
+      --destructive: oklch(0.5770 0.2450 27.3250); /* #E53E3E */
+      --destructive-foreground: oklch(1 0 0); /* #FFFFFF */
+      --secondary: oklch(0.9700 0 0); /* #F7F7F7 */
+      --secondary-foreground: oklch(0.2050 0 0); /* #353535 */
+      --accent: oklch(0.9700 0 0); /* #F7F7F7 */
+      --accent-foreground: oklch(0.2050 0 0); /* #353535 */
+      --page-background: #F5FAFF;
+      --radius: 0.625rem; /* 10px */
+    }
+    
+    /* Base Typography - PP Object Sans (Portal Font) */
+    body {
+      font-family: 'PP Object Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 400;
+      color: #252525;
+      background-color: #F5FAFF;
+      margin: 0;
+      padding: 0;
+      width: 100% !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Container */
+    .email-wrapper {
+      width: 100%;
+      background-color: #F7F8FC;
+      padding: 32px 16px;
+    }
+    
+    .email-container {
+      max-width: 620px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      border: 1px solid #E7E9F0;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+      overflow: hidden;
+    }
+    
+    /* Header - Minimal */
+    .email-header {
+      background: transparent;
+      padding: 24px 28px;
+      text-align: center;
+      border-bottom: 1px solid #E7E9F0;
+    }
+    
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo {
+      height: 28px;
+      width: auto;
+    }
+    
+    /* Body */
+    .email-body {
+      padding: 32px;
+    }
+    
+    /* Typography - Portal Style */
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #252525;
+      margin: 0 0 16px 0;
+      line-height: 1.3;
+      letter-spacing: -0.5px;
+    }
+    
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #252525;
+      margin: 32px 0 16px 0;
+      line-height: 1.4;
+    }
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #252525;
+      margin: 24px 0 12px 0;
+      line-height: 1.4;
+    }
+    
+    p {
+      margin: 0 0 16px 0;
+      line-height: 1.6;
+      color: #252525;
+    }
+    
+    .lead-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #3D3D3D;
+      margin-bottom: 24px;
+    }
+    
+    .small-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #8B8B8B;
+    }
+  
+    /* Icons */
+    .icon-inline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  
+    .icon-inline svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  
+    .icon-primary {
+      color: #5B68F4;
+      color: oklch(0.6230 0.2140 259.8150);
+    }
+    
+    /* Links - Portal Primary Color */
+    a {
+      color: #5B68F4;
+      color: oklch(0.6230 0.2140 259.8150);
+      text-decoration: none;
+    }
+    
+    a:hover {
+      color: #4A56D8;
+      color: oklch(0.5600 0.2140 259.8150);
+      text-decoration: underline;
+    }
+    
+    /* Buttons - Exact Portal Button Styles */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      padding: 8px 16px;
+      height: 40px;
+      background: #5B68F4;
+      background: oklch(0.6230 0.2140 259.8150);
+      color: #FBFBFB !important;
+      color: oklch(0.9850 0 0) !important;
+      font-size: 14px;
+      font-weight: 400;
+      text-decoration: none;
+      border-radius: 10px;
+      text-align: center;
+      transition: all 0.2s;
+      border: none;
+      line-height: 1;
+    }
+    
+    .button:hover {
+      background: rgba(91, 104, 244, 0.9);
+      background: oklch(0.6230 0.2140 259.8150 / 0.9);
+      text-decoration: none;
+    }
+    
+    .button-secondary {
+      background: #F7F7F7;
+      color: #353535 !important;
+    }
+    
+    .button-secondary:hover {
+      background: rgba(247, 247, 247, 0.8);
+    }
+    
+    .button-destructive {
+      background: #E53E3E;
+      color: #FFFFFF !important;
+    }
+    
+    .button-destructive:hover {
+      background: rgba(229, 62, 62, 0.9);
+    }
+    
+    .button-outline {
+      background: #FFFFFF;
+      color: #252525 !important;
+      border: 1px solid #ECECEC;
+    }
+    
+    .button-outline:hover {
+      background: #F7F7F7;
+      color: #353535 !important;
+    }
+    
+    .button-center {
+      text-align: center;
+      margin: 32px 0;
+    }
+    
+    .button-group {
+      text-align: center;
+      margin: 32px 0;
+    }
+    
+    .button-group .button {
+      margin: 0 8px 8px 0;
+    }
+    
+    /* Info Boxes - Portal Alert Styles */
+    .info-box {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin: 24px 0;
+      border: 1px solid;
+      font-size: 14px;
+    }
+    
+    .info-box-info {
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+      color: #1E3A8A;
+    }
+    
+    .info-box-success {
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+      color: #14532D;
+    }
+    
+    .info-box-warning {
+      background: #FEFCE8;
+      border-color: #FDE047;
+      color: #713F12;
+    }
+    
+    .info-box-error {
+      background: #FEF2F2;
+      border-color: #FECACA;
+      color: #7F1D1D;
+    }
+    
+    .info-box p {
+      margin: 0;
+      color: inherit;
+    }
+    
+    .info-box strong {
+      font-weight: 600;
+    }
+    
+    /* Lists */
+    ul, ol {
+      margin: 0 0 16px 0;
+      padding-left: 24px;
+    }
+    
+    li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    
+    /* Dividers */
+    .divider {
+      border: 0;
+      border-top: 1px solid #ECECEC;
+      margin: 32px 0;
+    }
+    
+    hr {
+      border: 0;
+      border-top: 1px solid #ECECEC;
+      margin: 32px 0;
+    }
+    
+    /* Tables */
+    .content-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      border: 1px solid #ECECEC;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .content-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background: #F7F7F7;
+      font-weight: 600;
+      font-size: 14px;
+      color: #252525;
+      border-bottom: 1px solid #ECECEC;
+    }
+    
+    .content-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #ECECEC;
+      font-size: 14px;
+      color: #252525;
+    }
+    
+    .content-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Badges - Portal Badge Styles */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      border: 1px solid transparent;
+    }
+    
+    .badge-primary {
+      background: #5B68F4;
+      background: oklch(0.6230 0.2140 259.8150);
+      color: #FBFBFB;
+      color: oklch(0.9850 0 0);
+    }
+    
+    .badge-secondary {
+      background: #F7F7F7;
+      color: #353535;
+    }
+    
+    .badge-success {
+      background: #ECFDF5;
+      color: #065F46;
+      border-color: #BBF7D0;
+    }
+    
+    .badge-warning {
+      background: #FEFCE8;
+      color: #713F12;
+      border-color: #FDE047;
+    }
+    
+    .badge-error {
+      background: #FEF2F2;
+      color: #7F1D1D;
+      border-color: #FECACA;
+    }
+    
+    .badge-info {
+      background: #EFF6FF;
+      color: #1E3A8A;
+      border-color: #BFDBFE;
+    }
+    
+    .badge-purple {
+      background: #FAF5FF;
+      color: #581C87;
+      border-color: #E9D5FF;
+    }
+    
+    .badge-orange {
+      background: #FFF7ED;
+      color: #7C2D12;
+      border-color: #FED7AA;
+    }
+    
+    /* Card - Portal Card Style */
+    .card {
+      background-color: #FFFFFF;
+      border: 1px solid #ECECEC;
+      border-radius: 10px;
+      padding: 24px;
+      margin: 16px 0;
+      box-shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+    }
+    
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #252525;
+      margin: 0 0 12px 0;
+      letter-spacing: -0.025em;
+    }
+    
+    .card-content {
+      font-size: 14px;
+      color: #252525;
+      line-height: 1.6;
+    }
+    
+    /* Footer */
+    .email-footer {
+      background: #F7F7F7;
+      padding: 32px 40px;
+      text-align: center;
+      border-top: 1px solid #ECECEC;
+    }
+    
+    .footer-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #8B8B8B;
+      margin: 0 0 16px 0;
+    }
+    
+    .footer-links {
+      margin: 24px 0;
+    }
+    
+    .footer-link {
+      display: inline-block;
+      margin: 0 12px;
+      font-size: 13px;
+      color: #5B68F4;
+      color: oklch(0.6230 0.2140 259.8150);
+      text-decoration: none;
+    }
+    
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+    
+    .social-icons {
+      margin: 24px 0;
+    }
+    
+    .social-icon {
+      display: inline-block;
+      margin: 0 8px;
+      width: 32px;
+      height: 32px;
+    }
+    
+    /* Responsive */
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 20px 10px !important;
+      }
+      
+      .email-body {
+        padding: 24px !important;
+      }
+      
+      .email-header {
+        padding: 24px !important;
+      }
+      
+      .email-footer {
+        padding: 24px !important;
+      }
+      
+      h1 {
+        font-size: 20px !important;
+      }
+      
+      h2 {
+        font-size: 16px !important;
+      }
+      
+      .button {
+        display: block !important;
+        width: 100% !important;
+        margin: 16px 0 !important;
+      }
+      
+      .footer-link {
+        display: block !important;
+        margin: 8px 0 !important;
+      }
+    }
+    
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1A1A1A !important;
+        color: #E5E5E5 !important;
+      }
+      
+      .email-wrapper {
+        background-color: #1A1A1A !important;
+      }
+      
+      .email-container {
+        background-color: #252525 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+      }
+      
+      h1, h2, h3, p, li, td {
+        color: #E5E5E5 !important;
+      }
+      
+      .lead-text {
+        color: #CCCCCC !important;
+      }
+      
+      .small-text, .footer-text {
+        color: #999999 !important;
+      }
+      
+      .email-footer {
+        background: #1F1F1F !important;
+        border-top-color: #3D3D3D !important;
+      }
+      
+      .divider, hr {
+        border-top-color: #3D3D3D !important;
+      }
+      
+      .content-table th {
+        background: #2A2A2A !important;
+        color: #E5E5E5 !important;
+      }
+      
+      .content-table td {
+        border-bottom-color: #3D3D3D !important;
+        color: #E5E5E5 !important;
+      }
+      
+      .info-box-info {
+        background: #1E3A5F !important;
+        color: #93C5FD !important;
+      }
+      
+      .info-box-success {
+        background: #064E3B !important;
+        color: #6EE7B7 !important;
+      }
+      
+      .info-box-warning {
+        background: #78350F !important;
+        color: #FCD34D !important;
+      }
+      
+      .info-box-error {
+        background: #7F1D1D !important;
+        color: #FCA5A5 !important;
+      }
+    }
+    
+    /* Outlook Fixes */
+    <!--[if mso]>
+    <style type="text/css">
+      body, table, td, a { font-family: Arial, sans-serif !important; }
+      .button { padding: 12px 24px !important; }
+    </style>
+    <![endif]-->
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <!-- Header -->
+      <div class="email-header">
+        <a class="logo-container" href="https://my.refamily.com" style="text-decoration: none;">
+          <svg width="87" height="31" viewBox="0 0 87 31" fill="none" xmlns="http://www.w3.org/2000/svg" style="height: 28px; width: auto; display: inline-block; vertical-align: middle;">
+            <path d="M7.55646 22.5435V12.5136H12.4009C13.1894 12.5136 13.878 12.6497 14.467 12.9221C15.0654 13.1944 15.5261 13.5795 15.8491 14.0772C16.1816 14.575 16.3478 15.1525 16.3478 15.8099C16.3478 16.3452 16.2243 16.8336 15.9773 17.275C15.7398 17.707 15.4074 18.0591 14.9799 18.3315C14.562 18.6038 14.0823 18.7729 13.5408 18.8386L13.4268 18.8527L16.6755 22.5435H13.9683L11.0616 19.0217H9.92171V22.5435H7.55646ZM12.0875 17.3736C12.6669 17.3736 13.1276 17.2374 13.4696 16.965C13.821 16.6833 13.9968 16.303 13.9968 15.824C13.9968 15.3544 13.821 14.9835 13.4696 14.7111C13.1181 14.4294 12.6574 14.2885 12.0875 14.2885H9.92171V17.3736H12.0875Z" fill="#252525"/>
+            <path d="M25.445 22.5435H17.8221V12.5136H25.3025V14.4012H20.1303V16.6129H24.9178V18.261H20.1303V20.6558H25.445V22.5435Z" fill="#252525"/>
+            <path d="M35.8967 22.5435H33.503L36.9369 12.5136H40.3565L43.7619 22.5435H41.3682L40.7412 20.7544H36.5237L35.8967 22.5435ZM38.5755 14.5139L37.0366 19.0358H40.2283L38.7179 14.5139H38.5755Z" fill="#252525"/>
+            <path d="M47.5282 22.7689C46.8633 22.7689 46.2696 22.6092 45.7471 22.2899C45.2247 21.9706 44.8162 21.5198 44.5218 20.9376C44.2273 20.3553 44.0801 19.6885 44.0801 18.9372C44.0801 18.1859 44.2273 17.5238 44.5218 16.951C44.8162 16.3687 45.2247 15.9179 45.7471 15.5986C46.2696 15.2699 46.8585 15.1056 47.5139 15.1056C48.0174 15.1056 48.4638 15.2042 48.8533 15.4014C49.2523 15.5892 49.58 15.8663 49.8364 16.2325H49.9789V12.091H52.0877V22.5435H49.9789V21.6278H49.8364C49.3045 22.3885 48.5351 22.7689 47.5282 22.7689ZM48.1266 20.9939C48.6871 20.9939 49.1478 20.7967 49.5087 20.4023C49.8697 20.0078 50.0502 19.5195 50.0502 18.9372C50.0502 18.355 49.8697 17.8713 49.5087 17.4863C49.1478 17.0918 48.6871 16.8946 48.1266 16.8946C47.5662 16.8946 47.1007 17.0918 46.7303 17.4863C46.3693 17.8713 46.1888 18.355 46.1888 18.9372C46.1888 19.5195 46.3741 20.0078 46.7445 20.4023C47.115 20.7967 47.5757 20.9939 48.1266 20.9939Z" fill="#252525"/>
+            <path d="M58.4189 22.5435H55.3698L52.8335 15.331H55.0563L56.8231 20.839H56.9656L58.7467 15.331H60.9552L58.4189 22.5435Z" fill="#252525"/>
+            <path d="M62.8364 14.3308C62.466 14.3308 62.162 14.2181 61.9245 13.9927C61.687 13.7579 61.5683 13.4621 61.5683 13.1052C61.5683 12.7483 61.687 12.4572 61.9245 12.2318C62.162 11.997 62.466 11.8797 62.8364 11.8797C63.2069 11.8797 63.5109 11.997 63.7483 12.2318C63.9858 12.4572 64.1045 12.7483 64.1045 13.1052C64.1045 13.4621 63.9858 13.7579 63.7483 13.9927C63.5109 14.2181 63.2069 14.3308 62.8364 14.3308ZM63.8908 22.5435H61.782V15.331H63.8908V22.5435Z" fill="#252525"/>
+            <path d="M68.614 22.797C67.5311 22.797 66.6809 22.5623 66.0635 22.0927C65.4461 21.6137 65.1373 20.961 65.1373 20.1346H67.0039C67.0039 20.5197 67.1511 20.8296 67.4456 21.0643C67.7496 21.2991 68.158 21.4165 68.671 21.4165C69.0699 21.4165 69.3881 21.3367 69.6256 21.177C69.8726 21.0174 69.9961 20.8014 69.9961 20.529C69.9961 20.2285 69.8631 20.0313 69.5971 19.9374C69.3311 19.8341 68.9179 19.7543 68.3575 19.6979C67.7401 19.6322 67.2176 19.5477 66.7902 19.4443C66.3722 19.3317 66.0065 19.1203 65.693 18.8104C65.3796 18.5005 65.2228 18.0591 65.2228 17.4863C65.2228 16.7537 65.5173 16.1715 66.1062 15.7395C66.7047 15.2981 67.4931 15.0774 68.4715 15.0774C69.1174 15.0774 69.6969 15.176 70.2098 15.3732C70.7227 15.5704 71.1217 15.8569 71.4067 16.2325C71.6917 16.5988 71.8341 17.0261 71.8341 17.5144H69.9106C69.9011 17.1951 69.7634 16.9416 69.4974 16.7537C69.2409 16.5565 68.8989 16.4579 68.4715 16.4579C68.082 16.4579 67.7686 16.5377 67.5311 16.6974C67.2936 16.8477 67.1749 17.0543 67.1749 17.3172C67.1749 17.5238 67.2556 17.6835 67.4171 17.7962C67.5881 17.8995 67.7781 17.9699 67.987 18.0075C68.2055 18.045 68.5712 18.092 69.0842 18.1483C69.6446 18.2141 70.1338 18.3127 70.5518 18.4442C70.9792 18.5663 71.3354 18.7823 71.6204 19.0922C71.9149 19.3927 72.0621 19.8106 72.0621 20.3459C72.0621 21.116 71.7534 21.717 71.136 22.149C70.528 22.581 69.6874 22.797 68.614 22.797Z" fill="#252525"/>
+            <path d="M76.9578 22.7689C76.1504 22.7689 75.4427 22.6139 74.8348 22.304C74.2268 21.9847 73.7519 21.5386 73.4099 20.9657C73.0775 20.3835 72.9112 19.7073 72.9112 18.9372C72.9112 18.1671 73.0775 17.4957 73.4099 16.9228C73.7519 16.3405 74.2268 15.8944 74.8348 15.5845C75.4427 15.2652 76.1504 15.1056 76.9578 15.1056C77.7557 15.1056 78.4587 15.2652 79.0666 15.5845C79.684 15.8944 80.159 16.3405 80.4914 16.9228C80.8334 17.4957 81.0044 18.1671 81.0044 18.9372C81.0044 19.7073 80.8334 20.3835 80.4914 20.9657C80.159 21.5386 79.684 21.9847 79.0666 22.304C78.4587 22.6139 77.7557 22.7689 76.9578 22.7689ZM76.9578 20.9939C77.5182 20.9939 77.979 20.8014 78.3399 20.4163C78.7009 20.0313 78.8814 19.5383 78.8814 18.9372C78.8814 18.3362 78.7009 17.8478 78.3399 17.4722C77.979 17.0871 77.5182 16.8946 76.9578 16.8946C76.3879 16.8946 75.9224 17.0871 75.5615 17.4722C75.2005 17.8478 75.02 18.3362 75.02 18.9372C75.02 19.5383 75.2005 20.0313 75.5615 20.4163C75.9224 20.8014 76.3879 20.9939 76.9578 20.9939Z" fill="#252525"/>
+            <path d="M82.1413 22.5435V15.331H84.2215V16.317H84.3783C84.5398 15.979 84.782 15.7066 85.1049 15.5C85.4374 15.2934 85.7936 15.1901 86.1736 15.1901C86.4776 15.1901 86.753 15.2511 87 15.3732V17.2468C86.81 17.1623 86.601 17.0965 86.3731 17.0496C86.1546 17.0026 85.9646 16.9791 85.8031 16.9791C85.3377 16.9791 84.9625 17.1529 84.6775 17.5003C84.3925 17.8478 84.25 18.2986 84.25 18.8527V22.5435H82.1413Z" fill="#252525"/>
+            <path d="M29.6228 16.6509C29.255 16.6509 28.9549 16.5425 28.7226 16.3257C28.4903 16.0995 28.3741 15.812 28.3741 15.4632C28.3741 15.1239 28.4903 14.8458 28.7226 14.629C28.9646 14.4028 29.2647 14.2897 29.6228 14.2897C29.981 14.2897 30.2762 14.4028 30.5085 14.629C30.7505 14.8458 30.8715 15.1239 30.8715 15.4632C30.8715 15.812 30.7554 16.0995 30.5231 16.3257C30.2907 16.5425 29.9907 16.6509 29.6228 16.6509ZM29.6228 21.5571C29.255 21.5571 28.9549 21.4487 28.7226 21.2319C28.4903 21.0057 28.3741 20.7182 28.3741 20.3694C28.3741 20.0207 28.4903 19.7379 28.7226 19.5211C28.9549 19.2949 29.255 19.1817 29.6228 19.1817C29.9907 19.1817 30.2907 19.2949 30.5231 19.5211C30.7554 19.7379 30.8715 20.0207 30.8715 20.3694C30.8715 20.7182 30.7554 21.0057 30.5231 21.2319C30.2907 21.4487 29.9907 21.5571 29.6228 21.5571Z" fill="#5B68F4"/>
+            <path d="M29.0907 7.11351C24.9887 2.90169 18.8113 1.10962 12.9244 2.42367C7.03758 3.73771 2.35351 7.95422 0.66619 13.4583C-1.02113 18.9624 0.54978 24.9011 4.77727 29L6.42207 27.5409C0.908304 22.0352 1.14806 13.3358 6.95759 8.11041C12.7671 2.88497 21.9465 3.11219 27.4602 8.61792L29.0907 7.11351Z" fill="#5B68F4"/>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Body -->
+      <div class="email-body">
+
+<h1>New client added to your portfolio</h1>
+
+<p class="lead-text"> is now in your advisor dashboard.</p>
+
+<div class="card">
+  <div class="card-title">Access summary</div>
+  <div class="card-content">
+    <p><strong>Modules:</strong> </p>
+    <p><strong>Primary contact:</strong> </p>
+    <p><strong>Getting started:</strong> </p>
+  </div>
+</div>
+
+<div class="button-center">
+  <a href="https://my.refamily.com" class="button">Get Started</a>
+</div>
+
+      </div>
+      
+      <!-- Footer -->
+      <div class="email-footer">
+        <p class="footer-text">
+          This email was sent to <strong>victoria.sterling@example.com</strong>
+        </p>
+        
+        <div class="footer-links">
+          <a href="https://my.refamily.com" class="footer-link">Open advisor.reluna.family</a>
+          <span style="color: #CCCCCC;">•</span>
+          <a href="https://my.refamily.com/settings/notifications" class="footer-link">Notification preferences</a>
+          <span style="color: #CCCCCC;">•</span>
+          <a href="https://support.refamily.com" class="footer-link">Support</a>
+        </div>
+        
+        <p class="footer-text" style="margin-top: 24px;">
+          <strong>RE:Advisor</strong> — Advisor Platform
+        </p>
+        
+        <p class="footer-text">
+          © 2025 RE:Advisor. All rights reserved.
+        </p>
+        
+        <p class="footer-text" style="margin-top: 20px; font-size: 12px; color: #999999;">
+          You're receiving this email because of your activity in the Advisor Portal.<br>
+          <a href="https://my.refamily.com/settings/notifications" style="color: #5B68F4;">Manage email preferences</a> or 
+          <a href="" style="color: #999999;">unsubscribe</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{{> header subject=(concat "Access removed: " family_name " client workspace") is_advisor=true}}
+
+<h1>Access removed</h1>
+
+<p class="lead-text">Your access to {{family_name}}'s client workspace was removed.</p>
+
+<div class="card">
+  <div class="card-title">Details</div>
+  <div class="card-content">
+    <p><strong>Effective date:</strong> {{effective_date}}</p>
+    {{#if reason}}
+    <p><strong>Reason:</strong> {{reason}}</p>
+    {{/if}}
+  </div>
+</div>
+
+<p>If you believe this is a mistake, contact the client admin.</p>
+
+{{> footer user_email=user_email is_critical=false current_year=current_year portal_url=portal_url support_url=support_url}}

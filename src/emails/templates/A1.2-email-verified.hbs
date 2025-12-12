@@ -1,0 +1,24 @@
+{{> header subject="Email verified - Complete your advisor profile" is_advisor=true}}
+
+<h1>Email verified</h1>
+
+<p class="lead-text">
+  Great job, {{user_name}}! Your advisor account is verified. Complete your profile to unlock full access and join families faster.
+</p>
+
+<div class="card">
+  <div class="card-title">Next steps</div>
+  <div class="card-content">
+    <p>• Add your credentials and firm details</p>
+    <p>• Set your availability and communication preferences</p>
+    <p>• Review data privacy and consent settings</p>
+  </div>
+</div>
+
+<div class="button-center">
+  <a href="{{profile_url}}" class="button">Complete Profile</a>
+</div>
+
+<p class="small-text">Need help? Contact support or check the onboarding guide.</p>
+
+{{> footer user_email=user_email is_critical=false current_year=current_year portal_url=portal_url support_url=support_url}}

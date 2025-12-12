@@ -11,6 +11,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
+      "emails:compile": "node src/emails/compile.js",
+      "emails:watch": "nodemon --watch src/emails/templates --watch src/emails/partials --ext hbs --exec 'npm run emails:compile'",
     "stripe:setup": "tsx scripts/setup-stripe.ts",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
