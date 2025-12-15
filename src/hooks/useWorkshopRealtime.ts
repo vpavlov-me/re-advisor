@@ -115,7 +115,7 @@ export function useWorkshopRealtime(options: UseWorkshopRealtimeOptions) {
           const stage = payload.new as WorkshopStage;
           
           setState((prev) => {
-            if (!prev) return null;
+            if (!prev || !prev.workshop) return prev;
             
             const updatedStages = prev.stages.map((s) =>
               s.id === stage.id ? stage : s

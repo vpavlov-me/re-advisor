@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getWorkshops, type Workshop, type WorkshopStatus } from '@/lib/services/';
+import { getWorkshops, type Workshop } from '@/lib/services/';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

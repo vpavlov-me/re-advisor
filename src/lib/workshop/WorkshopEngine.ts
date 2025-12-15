@@ -229,9 +229,10 @@ export class WorkshopEngine {
    */
   private notifyListeners(): void {
     if (this.currentState) {
+      const currentState = this.currentState;
       this.listeners.forEach(listener => {
         try {
-          listener(this.currentState!);
+          listener(currentState);
         } catch (error) {
           console.error('Listener error:', error);
         }

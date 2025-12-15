@@ -142,7 +142,7 @@ export class StageManager {
     // Check required fields
     if (validation.required_fields) {
       for (const field of validation.required_fields) {
-        if (!stage.data[field]) {
+        if (stage.data[field] == null || stage.data[field] === '') {
           errors.push(`${field} is required`);
         }
       }

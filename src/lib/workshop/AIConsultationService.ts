@@ -237,10 +237,21 @@ export class AIConsultationService {
   }
 
   /**
-   * Set base URL
+   * Set base URL (validates URL format for security)
    */
   setBaseUrl(baseUrl: string): void {
-    this.baseUrl = baseUrl;
+    // Validate URL format
+    try {
+      const url = new URL(baseUrl, window.location.origin);
+      // Only allow HTTP/HTTPS protocols
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        throw new Error('Invalid protocol');
+      }
+      this.baseUrl = baseUrl;
+    } catch (error) {
+      console.error('Invalid base URL:', error);
+      throw new Error('Invalid base URL format');
+    }
   }
 }
 
