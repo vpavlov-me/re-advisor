@@ -1,25 +1,17 @@
+"use client";
+
 import { NewWorkshopForm } from '@/components/workshops/new-workshop-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
-import { redirect } from 'next/navigation';
+import { useAuth } from '@/components/providers/auth-provider';
 
-export const metadata = {
-  title: 'New Workshop | Advisor Portal',
-  description: 'Create a new workshop for your family clients',
-};
+export default function NewWorkshopPage() {
+  const { user } = useAuth();
 
-async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/auth/login');
+    return null;
   }
-  return user;
-}
-
-export default async function NewWorkshopPage() {
-  const user = await getUser();
 
   return (
     <div className="container py-8 max-w-4xl">

@@ -1,25 +1,17 @@
+"use client";
+
 import { WorkshopList } from '@/components/workshops/workshop-list';
 import { Button } from '@/components/ui/button';
 import { Plus, BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
-import { redirect } from 'next/navigation';
+import { useAuth } from '@/components/providers/auth-provider';
 
-export const metadata = {
-  title: 'Workshops | Advisor Portal',
-  description: 'Manage and facilitate workshops with your family clients',
-};
+export default function WorkshopsPage() {
+  const { user } = useAuth();
 
-async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/auth/login');
+    return null;
   }
-  return user;
-}
-
-export default async function WorkshopsPage() {
-  const user = await getUser();
 
   return (
     <div className="container py-8 max-w-7xl">
