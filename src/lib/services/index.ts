@@ -54,3 +54,19 @@ export {
   getPlaceholderAvatarUrl,
   type UploadResult,
 } from './avatar.service';
+
+// Workshop Service
+export {
+  getWorkshops,
+  getWorkshop,
+  createWorkshop,
+  updateWorkshop,
+  deleteWorkshop,
+  getWorkshopStages,
+  updateWorkshopStage,
+  getWorkshopState,
+  startWorkshop,
+  completeWorkshop,
+  moveToNextStage,
+  createWorkshopFromTemplate,
+} from './workshop.service';
