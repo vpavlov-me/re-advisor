@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createWorkshopFromTemplate } from '@/lib/services/workshop.service';
+import { createWorkshopFromTemplate } from '@/lib/services/';
 import type { WorkshopConfig, WorkshopType } from '@/types/workshop';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

@@ -10,7 +10,7 @@ import {
   updateWorkshopStage,
   type WorkshopState,
   type WorkshopStage,
-} from '@/lib/services/workshop.service';
+} from '@/lib/services/';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -257,8 +257,8 @@ export function WorkshopView({ workshopId }: WorkshopViewProps) {
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Discussion Prompts</Label>
                 <ul className="space-y-2">
-                  {(currentStage.metadata.prompts as string[]).map((prompt, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  {(currentStage.metadata.prompts as string[]).map((prompt) => (
+                    <li key={prompt} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <ChevronRight className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <span>{prompt}</span>
                     </li>
