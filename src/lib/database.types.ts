@@ -460,6 +460,147 @@ export interface NotificationPreferences {
 }
 
 // ============================================
+// VMV WORKSHOP TYPES
+// ============================================
+
+export type VMVWorkshopFormat = 'online' | 'offline' | 'hybrid';
+export type VMVWorkshopMode = 'synchronous' | 'asynchronous';
+export type VMVFacilitationType = 'ai' | 'human';
+export type VMVWorkshopStatus = 'draft' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+export type VMVParticipantStatus = 'invited' | 'confirmed' | 'declined' | 'attended';
+export type VMVMessageType = 'chat' | 'system' | 'ai';
+export type VMVTipType = 'script' | 'timing' | 'engagement' | 'intervention';
+export type VMVVoteType = 'value_final' | 'mission_approve' | 'mission_revise';
+
+export interface VMVWorkshopSession {
+  id: number;
+  family_id: number;
+  facilitator_id: string;
+  title: string;
+  description: string | null;
+
+  // Configuration
+  format: VMVWorkshopFormat;
+  mode: VMVWorkshopMode;
+  facilitation_type: VMVFacilitationType;
+  expected_duration: number | null;
+
+  // Schedule
+  scheduled_date: string | null;
+  scheduled_time: string | null;
+  meeting_link: string | null;
+
+  // Status & Progress
+  status: VMVWorkshopStatus;
+  current_stage: number;
+
+  // Results
+  selected_values: any | null; // JSONB - array of value names
+  final_values: any | null; // JSONB - array of { name, definition, matrix }
+  mission_statement: string | null;
+  mission_short: string | null;
+  vision: any | null; // JSONB - vision by dimensions
+
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface VMVWorkshopParticipant {
+  id: number;
+  workshop_id: number;
+
+  // Participant (family member or guest)
+  family_member_id: number | null;
+  guest_email: string | null;
+  guest_name: string | null;
+  guest_phone: string | null;
+
+  // Status
+  status: VMVParticipantStatus;
+  joined_at: string | null;
+
+  // Progress (for async)
+  current_stage: number;
+  progress_data: any | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VMVValueSelection {
+  id: number;
+  workshop_id: number;
+  participant_id: number;
+  value_name: string;
+  is_custom: boolean;
+  selected_at: string;
+}
+
+export interface VMVValueDefinition {
+  id: number;
+  workshop_id: number;
+  value_name: string;
+  definition: string | null;
+  we_always: any | null; // JSONB array
+  we_never: any | null; // JSONB array
+  metrics: any | null; // JSONB array
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VMVWorkshopMessage {
+  id: number;
+  workshop_id: number;
+  participant_id: number | null;
+  message: string;
+  message_type: VMVMessageType;
+  created_at: string;
+}
+
+export interface VMVFacilitatorTip {
+  id: number;
+  workshop_id: number;
+  stage: number;
+  tip_type: VMVTipType;
+  content: string;
+  shown: boolean;
+  created_at: string;
+}
+
+export interface VMVStageProgress {
+  id: number;
+  workshop_id: number;
+  stage: number;
+  started_at: string | null;
+  completed_at: string | null;
+  time_spent: number | null; // seconds
+  stage_data: any | null;
+}
+
+export interface VMVMissionDraft {
+  id: number;
+  workshop_id: number;
+  participant_id: number;
+  purpose: string | null;
+  audience: string | null;
+  approach: string | null;
+  selected_values: any | null; // JSONB
+  generated_mission: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VMVVote {
+  id: number;
+  workshop_id: number;
+  participant_id: number;
+  vote_type: VMVVoteType;
+  vote_data: any; // JSONB
+  created_at: string;
+}
+
+// ============================================
 // DATABASE HELPER TYPE
 // ============================================
 
@@ -620,6 +761,51 @@ export interface Database {
         Row: NotificationPreferences;
         Insert: Omit<NotificationPreferences, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<NotificationPreferences>;
+      };
+      vmv_workshop_sessions: {
+        Row: VMVWorkshopSession;
+        Insert: Omit<VMVWorkshopSession, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<VMVWorkshopSession>;
+      };
+      vmv_workshop_participants: {
+        Row: VMVWorkshopParticipant;
+        Insert: Omit<VMVWorkshopParticipant, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<VMVWorkshopParticipant>;
+      };
+      vmv_value_selections: {
+        Row: VMVValueSelection;
+        Insert: Omit<VMVValueSelection, 'id' | 'selected_at'>;
+        Update: Partial<VMVValueSelection>;
+      };
+      vmv_value_definitions: {
+        Row: VMVValueDefinition;
+        Insert: Omit<VMVValueDefinition, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<VMVValueDefinition>;
+      };
+      vmv_workshop_messages: {
+        Row: VMVWorkshopMessage;
+        Insert: Omit<VMVWorkshopMessage, 'id' | 'created_at'>;
+        Update: Partial<VMVWorkshopMessage>;
+      };
+      vmv_facilitator_tips: {
+        Row: VMVFacilitatorTip;
+        Insert: Omit<VMVFacilitatorTip, 'id' | 'created_at'>;
+        Update: Partial<VMVFacilitatorTip>;
+      };
+      vmv_stage_progress: {
+        Row: VMVStageProgress;
+        Insert: Omit<VMVStageProgress, 'id'>;
+        Update: Partial<VMVStageProgress>;
+      };
+      vmv_mission_drafts: {
+        Row: VMVMissionDraft;
+        Insert: Omit<VMVMissionDraft, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<VMVMissionDraft>;
+      };
+      vmv_votes: {
+        Row: VMVVote;
+        Insert: Omit<VMVVote, 'id' | 'created_at'>;
+        Update: Partial<VMVVote>;
       };
     };
   };
