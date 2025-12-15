@@ -46,7 +46,8 @@ export type {
 // CONFIGURATION
 // ============================================
 
-const MOCK_MODE = process.env.NEXT_PUBLIC_WORKSHOP_MODE === 'mock';
+// Default to mock mode if not explicitly set to 'live'
+const MOCK_MODE = process.env.NEXT_PUBLIC_WORKSHOP_MODE !== 'live';
 
 // ============================================
 // WORKSHOP CRUD OPERATIONS
@@ -543,6 +544,23 @@ function getMockWorkshops(advisorId: string, status?: WorkshopStatus): Workshop[
       created_at: now,
       updated_at: now,
     },
+    {
+      id: 'workshop-test-complete',
+      advisor_id: advisorId,
+      family_id: 'family-1',
+      title: 'Johnson Family VMV Workshop - Test',
+      description: 'A fully populated test workshop demonstrating the complete VMV process with all stages filled out',
+      type: 'vmv',
+      status: 'in_progress',
+      scheduled_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      started_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(), // 90 minutes ago
+      current_stage_id: 'stage-workshop-test-complete-2',
+      metadata: {
+        facilitator_notes: 'Great engagement from all family members',
+      },
+      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+      updated_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    },
   ];
 
   return status ? workshops.filter((w) => w.status === status) : workshops;
@@ -601,6 +619,94 @@ function updateMockWorkshop(workshopId: string, params: UpdateWorkshopParams): W
 
 function getMockWorkshopStages(workshopId: string): WorkshopStage[] {
   const now = new Date().toISOString();
+  
+  // Return fully populated stages for the test workshop
+  if (workshopId === 'workshop-test-complete') {
+    return [
+      {
+        id: `stage-${workshopId}-1`,
+        workshop_id: workshopId,
+        stage_number: 1,
+        title: 'Vision Statement',
+        description: 'Define the family vision for the future',
+        status: 'completed',
+        duration_minutes: 45,
+        started_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+        completed_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+        data: {
+          statement: 'To be the leading family in sustainable business practices and philanthropic impact, creating generational wealth while preserving our core values and family unity.',
+          timeframe: '10-20 years',
+          key_elements: [
+            'Sustainable business leadership',
+            'Generational wealth preservation',
+            'Philanthropic excellence',
+            'Family unity and values',
+          ],
+          notes: 'Family unanimously agreed on focusing on sustainability and philanthropy. Strong consensus on the 20-year vision timeframe.',
+        },
+        metadata: {
+          prompts: [
+            'What does success look like for our family in 10-20 years?',
+            'What legacy do we want to leave?',
+            'What impact do we want to have on the world?',
+          ],
+        },
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `stage-${workshopId}-2`,
+        workshop_id: workshopId,
+        stage_number: 2,
+        title: 'Mission Statement',
+        description: 'Articulate the family mission and purpose',
+        status: 'in_progress',
+        duration_minutes: 45,
+        started_at: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+        data: {
+          statement: 'We empower each generation to build upon our legacy through education, entrepreneurship, and ethical stewardship of our resources.',
+          core_purpose: 'Empower future generations through education and ethical business practices',
+          key_activities: [
+            'Family education programs',
+            'Entrepreneurship support',
+            'Ethical investment practices',
+            'Community engagement',
+          ],
+          notes: 'Currently refining the core purpose statement. Discussion ongoing about balancing business growth with family time.',
+        },
+        metadata: {
+          prompts: [
+            'What is our family\'s core purpose?',
+            'How do we work together to achieve our vision?',
+            'What makes our family unique?',
+          ],
+        },
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      },
+      {
+        id: `stage-${workshopId}-3`,
+        workshop_id: workshopId,
+        stage_number: 3,
+        title: 'Core Values',
+        description: 'Identify and prioritize core family values',
+        status: 'not_started',
+        duration_minutes: 60,
+        data: {},
+        metadata: {
+          prompts: [
+            'What principles are most important to us?',
+            'How do we make decisions as a family?',
+            'What behaviors do we encourage and discourage?',
+          ],
+        },
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+  }
+  
+  // Default stages for other workshops
   return [
     {
       id: `stage-${workshopId}-1`,
@@ -611,7 +717,13 @@ function getMockWorkshopStages(workshopId: string): WorkshopStage[] {
       status: 'not_started',
       duration_minutes: 45,
       data: {},
-      metadata: {},
+      metadata: {
+        prompts: [
+          'What does success look like for our family in 10-20 years?',
+          'What legacy do we want to leave?',
+          'What impact do we want to have on the world?',
+        ],
+      },
       created_at: now,
       updated_at: now,
     },
@@ -624,7 +736,13 @@ function getMockWorkshopStages(workshopId: string): WorkshopStage[] {
       status: 'not_started',
       duration_minutes: 45,
       data: {},
-      metadata: {},
+      metadata: {
+        prompts: [
+          'What is our family\'s core purpose?',
+          'How do we work together to achieve our vision?',
+          'What makes our family unique?',
+        ],
+      },
       created_at: now,
       updated_at: now,
     },
@@ -637,7 +755,13 @@ function getMockWorkshopStages(workshopId: string): WorkshopStage[] {
       status: 'not_started',
       duration_minutes: 60,
       data: {},
-      metadata: {},
+      metadata: {
+        prompts: [
+          'What principles are most important to us?',
+          'How do we make decisions as a family?',
+          'What behaviors do we encourage and discourage?',
+        ],
+      },
       created_at: now,
       updated_at: now,
     },
