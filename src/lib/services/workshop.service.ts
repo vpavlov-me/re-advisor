@@ -458,6 +458,55 @@ export async function moveToNextStage(workshopId: string): Promise<WorkshopStage
   }
 }
 
+/**
+ * Move to previous stage in a workshop
+ */
+export async function moveToPreviousStage(workshopId: string): Promise<WorkshopStageResult> {
+  try {
+    const stateResult = await getWorkshopState(workshopId);
+    if (!stateResult.success || !stateResult.data) {
+      throw new Error('Failed to get workshop state');
+    }
+
+    const { stages, currentStage } = stateResult.data;
+
+    if (!currentStage) {
+      throw new Error('No current stage found');
+    }
+
+    if (currentStage.stage_number === 1) {
+      throw new Error('Already at first stage');
+    }
+
+    // Find previous stage
+    const previousStage = stages.find(
+      (stage) => stage.stage_number === currentStage.stage_number - 1
+    );
+
+    if (!previousStage) {
+      throw new Error('Previous stage not found');
+    }
+
+    // Update workshop to point to previous stage
+    await updateWorkshop(workshopId, {
+      current_stage_id: previousStage.id,
+    });
+
+    // Set previous stage to in_progress
+    const result = await updateWorkshopStage(previousStage.id, {
+      status: 'in_progress',
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Failed to move to previous stage:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to move to previous stage',
+    };
+  }
+}
+
 // ============================================
 // WORKSHOP TEMPLATES
 // ============================================
