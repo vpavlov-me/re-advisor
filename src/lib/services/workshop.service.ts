@@ -23,6 +23,25 @@ import type {
   WorkshopConfig,
 } from '@/types/workshop';
 
+// Re-export types for convenience
+export type {
+  Workshop,
+  WorkshopStage,
+  WorkshopParticipant,
+  WorkshopState,
+  WorkshopResult,
+  WorkshopsListResult,
+  WorkshopStageResult,
+  WorkshopStagesListResult,
+  WorkshopStateResult,
+  CreateWorkshopParams,
+  UpdateWorkshopParams,
+  UpdateStageParams,
+  WorkshopStatus,
+  StageStatus,
+  WorkshopConfig,
+};
+
 // ============================================
 // CONFIGURATION
 // ============================================

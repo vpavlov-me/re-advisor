@@ -253,8 +253,7 @@ export function WorkshopView({ workshopId }: WorkshopViewProps) {
               </div>
             )}
 
-            {/* Stage-specific prompts */}
-            {currentStage.metadata?.prompts && Array.isArray(currentStage.metadata.prompts) && (
+            {Array.isArray(currentStage.metadata?.prompts) && currentStage.metadata.prompts.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Discussion Prompts</Label>
                 <ul className="space-y-2">
@@ -268,7 +267,6 @@ export function WorkshopView({ workshopId }: WorkshopViewProps) {
               </div>
             )}
 
-            {/* Data collection */}
             <div className="space-y-4 pt-4">
               <Label htmlFor="notes">Notes & Insights</Label>
               <Textarea
