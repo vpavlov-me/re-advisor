@@ -7,11 +7,21 @@ import Link from 'next/link';
 import { useAuth } from '@/components/providers/auth-provider';
 
 export default function NewWorkshopPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!user) {
-    return null;
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="container py-8 max-w-4xl">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
+
+  // Use demo user ID if no user is authenticated
+  const userId = user?.id || 'demo-advisor-123';
 
   return (
     <div className="container py-8 max-w-4xl">
@@ -24,7 +34,7 @@ export default function NewWorkshopPage() {
         </Button>
       </div>
 
-      <NewWorkshopForm advisorId={user.id} />
+      <NewWorkshopForm advisorId={userId} />
     </div>
   );
 }
