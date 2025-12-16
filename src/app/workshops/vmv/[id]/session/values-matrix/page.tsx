@@ -132,6 +132,19 @@ export default function ValuesMatrixPage({ params }: { params: Promise<{ id: str
 
   const activeValue = values[activeValueIndex];
 
+  // Show loading state while values are being initialized
+  if (!activeValue) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">Loading workshop data...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const updateValueDefinition = (definition: string) => {
     const updated = [...values];
     updated[activeValueIndex].matrix.definition = definition;
