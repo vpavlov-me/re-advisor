@@ -27,6 +27,7 @@ const navItems = [
   { label: "Messages", href: "/messages" },
   { label: "Consultations", href: "/consultations" },
   { label: "Families", href: "/families" },
+  { label: "Workshops", href: "/workshops/vmv" },
   { label: "Services", href: "/services" },
   { label: "Knowledge Center", href: "/knowledge" },
 ];
