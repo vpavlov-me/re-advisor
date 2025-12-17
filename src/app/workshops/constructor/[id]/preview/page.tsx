@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { RoleSelector, getRoleConfig } from "@/components/workshops/role-selector";
 import type { WorkshopTemplate, WorkshopScreen, WorkshopRole } from "@/types/workshop-constructor";
+import { VMV_MASTER_TEMPLATE } from "@/data/vmv-master-template";
 
 export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -70,105 +71,111 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
     try {
       setLoading(true);
       // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Mock data
-      setTemplate({
-        id,
-        created_by: "user1",
-        name: "Strategic Planning Workshop",
-        description: "Comprehensive strategic planning session for family businesses",
-        duration_minutes: 180,
-        target_audience: "Family Council, Board",
-        category: "Strategy",
-        is_public: false,
-        is_master: true,
-        cloned_from: null,
-        version: 1,
-        status: "draft",
-        settings: { enableAI: true, enableChat: true, showProgressBar: true },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        published_at: null,
-      });
+      // Check if this is the VMV master template
+      if (id === "vmv-master-template") {
+        setTemplate(VMV_MASTER_TEMPLATE);
+        setScreens(VMV_MASTER_TEMPLATE.screens);
+      } else {
+        // Mock data for other templates
+        setTemplate({
+          id,
+          created_by: "user1",
+          name: "Strategic Planning Workshop",
+          description: "Comprehensive strategic planning session for family businesses",
+          duration_minutes: 180,
+          target_audience: "Family Council, Board",
+          category: "Strategy",
+          is_public: false,
+          is_master: true,
+          cloned_from: null,
+          version: 1,
+          status: "draft",
+          settings: { enableAI: true, enableChat: true, showProgressBar: true },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          published_at: null,
+        });
 
-      setScreens([
-        {
-          id: "screen-1",
-          template_id: id,
-          screen_key: "kickoff",
-          name: "Welcome & Kickoff",
-          description: "Workshop introduction and objectives",
-          order_index: 0,
-          duration_minutes: 10,
-          screen_type: "text",
-          content_type: "introduction",
-          content: {
-            title: "Welcome to the Strategic Planning Workshop",
-            description: "Thank you for participating in today's workshop. We'll be working together to develop a comprehensive strategic plan for our family business.",
-            objectives: [
-              "Define our long-term vision and goals",
-              "Identify strategic priorities",
-              "Create an actionable strategic plan",
-              "Align family members on direction"
-            ]
+        setScreens([
+          {
+            id: "screen-1",
+            template_id: id,
+            screen_key: "kickoff",
+            name: "Welcome & Kickoff",
+            description: "Workshop introduction and objectives",
+            order_index: 0,
+            duration_minutes: 10,
+            screen_type: "text",
+            content_type: "introduction",
+            content: {
+              title: "Welcome to the Strategic Planning Workshop",
+              description: "Thank you for participating in today's workshop. We'll be working together to develop a comprehensive strategic plan for our family business.",
+              objectives: [
+                "Define our long-term vision and goals",
+                "Identify strategic priorities",
+                "Create an actionable strategic plan",
+                "Align family members on direction"
+              ]
+            },
+            navigation: { next: "screen-2" },
+            ai_config: { enabled: false },
+            has_timer: false,
+            timer_config: {},
+            is_optional: false,
+            show_conditions: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
-          navigation: { next: "screen-2" },
-          ai_config: { enabled: false },
-          has_timer: false,
-          timer_config: {},
-          is_optional: false,
-          show_conditions: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "screen-2",
-          template_id: id,
-          screen_key: "swot-analysis",
-          name: "SWOT Analysis",
-          description: "Analyze strengths, weaknesses, opportunities, threats",
-          order_index: 1,
-          duration_minutes: 30,
-          screen_type: "exercise",
-          content_type: "swot",
-          content: {
-            title: "SWOT Analysis",
-            description: "Let's analyze our strategic position by examining internal strengths and weaknesses, as well as external opportunities and threats."
+          {
+            id: "screen-2",
+            template_id: id,
+            screen_key: "swot-analysis",
+            name: "SWOT Analysis",
+            description: "Analyze strengths, weaknesses, opportunities, threats",
+            order_index: 1,
+            duration_minutes: 30,
+            screen_type: "exercise",
+            content_type: "swot",
+            content: {
+              title: "SWOT Analysis",
+              description: "Let's analyze our strategic position by examining internal strengths and weaknesses, as well as external opportunities and threats."
+            },
+            navigation: { previous: "screen-1", next: "screen-3" },
+            ai_config: { enabled: true, style: "supportive", prompt: "Help participants think critically about each quadrant" },
+            has_timer: true,
+            timer_config: { duration: 30, showWarning: true, warningAt: 5 },
+            is_optional: false,
+            show_conditions: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
-          navigation: { previous: "screen-1", next: "screen-3" },
-          ai_config: { enabled: true, style: "supportive", prompt: "Help participants think critically about each quadrant" },
-          has_timer: true,
-          timer_config: { duration: 30, showWarning: true, warningAt: 5 },
-          is_optional: false,
-          show_conditions: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "screen-3",
-          template_id: id,
-          screen_key: "action-plan",
-          name: "Action Plan",
-          description: "Define next steps and accountability",
-          order_index: 2,
-          duration_minutes: 20,
-          screen_type: "exercise",
-          content_type: "action-plan",
-          content: {
-            title: "Action Plan",
-            description: "Let's create concrete next steps with clear owners and deadlines."
+          {
+            id: "screen-3",
+            template_id: id,
+            screen_key: "action-plan",
+            name: "Action Plan",
+            description: "Define next steps and accountability",
+            order_index: 2,
+            duration_minutes: 20,
+            screen_type: "exercise",
+            content_type: "action-plan",
+            content: {
+              title: "Action Plan",
+              description: "Let's create concrete next steps with clear owners and deadlines."
+            },
+            navigation: { previous: "screen-2" },
+            ai_config: { enabled: false },
+            has_timer: false,
+            timer_config: {},
+            is_optional: false,
+            show_conditions: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
-          navigation: { previous: "screen-2" },
-          ai_config: { enabled: false },
-          has_timer: false,
-          timer_config: {},
-          is_optional: false,
-          show_conditions: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ]);
+        ]);
+      }
     } catch (error) {
       toast.error("Failed to load workshop");
       console.error(error);
