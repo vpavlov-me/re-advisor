@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { WorkshopScreen, ScreenType, ContentType } from "@/types/workshop-constructor";
+import { ContentEditor } from "@/components/workshops/content-editors/content-editor";
 
 export default function ScreenEditorPage({ params }: { params: Promise<{ id: string; screenKey: string }> }) {
   const { id, screenKey } = use(params);
@@ -254,58 +255,62 @@ export default function ScreenEditorPage({ params }: { params: Promise<{ id: str
               <CardHeader>
                 <CardTitle>Screen Content</CardTitle>
                 <CardDescription>
-                  The main content that participants will see
+                  Content editor adapts based on the content type selected below
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="content-title">Title</Label>
-                  <Input
-                    id="content-title"
-                    value={screen.content.title || ""}
-                    onChange={(e) => updateContent("title", e.target.value)}
-                  />
+              <CardContent>
+                <div className="mb-4">
+                  <Label htmlFor="content-type">Content Type</Label>
+                  <Select
+                    value={screen.content_type || ""}
+                    onValueChange={(value) => updateScreen("content_type", value as ContentType)}
+                  >
+                    <SelectTrigger id="content-type">
+                      <SelectValue placeholder="Select content type" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectItem value="introduction">Introduction</SelectItem>
+                      <SelectItem value="rules">Rules</SelectItem>
+                      <SelectItem value="objectives">Objectives</SelectItem>
+                      <SelectItem value="questionnaire">Questionnaire</SelectItem>
+                      <SelectItem value="360-review">360 Review</SelectItem>
+                      <SelectItem value="values-selection">Values Selection</SelectItem>
+                      <SelectItem value="raci-matrix">RACI Matrix</SelectItem>
+                      <SelectItem value="three-circles">Three Circles</SelectItem>
+                      <SelectItem value="stakeholder-map">Stakeholder Map</SelectItem>
+                      <SelectItem value="force-field">Force Field Analysis</SelectItem>
+                      <SelectItem value="swot">SWOT Analysis</SelectItem>
+                      <SelectItem value="brainstorm">Brainstorm</SelectItem>
+                      <SelectItem value="group-discussion">Group Discussion</SelectItem>
+                      <SelectItem value="ai-facilitated">AI Facilitated</SelectItem>
+                      <SelectItem value="conflict-protocol">Conflict Protocol</SelectItem>
+                      <SelectItem value="governance-structure">Governance Structure</SelectItem>
+                      <SelectItem value="decision-matrix">Decision Matrix</SelectItem>
+                      <SelectItem value="mission-draft">Mission Draft</SelectItem>
+                      <SelectItem value="vision-matrix">Vision Matrix</SelectItem>
+                      <SelectItem value="values-matrix">Values Matrix</SelectItem>
+                      <SelectItem value="9-box-matrix">9-Box Matrix</SelectItem>
+                      <SelectItem value="timeline">Timeline</SelectItem>
+                      <SelectItem value="action-plan">Action Plan</SelectItem>
+                      <SelectItem value="summary">Summary</SelectItem>
+                      <SelectItem value="feedback">Feedback</SelectItem>
+                      <SelectItem value="next-steps">Next Steps</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The content editor will adapt to show relevant fields for this type
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="content-description">Description</Label>
-                  <Textarea
-                    id="content-description"
-                    value={screen.content.description || ""}
-                    onChange={(e) => updateContent("description", e.target.value)}
-                    rows={3}
-                  />
-                </div>
+                <Separator className="my-6" />
 
-                <div className="space-y-2">
-                  <Label htmlFor="content-text">Main Text</Label>
-                  <Textarea
-                    id="content-text"
-                    value={screen.content.text || ""}
-                    onChange={(e) => updateContent("text", e.target.value)}
-                    rows={6}
-                    placeholder="Enter the main content for this screen..."
-                  />
-                </div>
-
-                {screen.content.objectives && (
-                  <div className="space-y-2">
-                    <Label>Objectives</Label>
-                    <div className="space-y-2">
-                      {screen.content.objectives.map((obj: string, index: number) => (
-                        <Input
-                          key={index}
-                          value={obj}
-                          onChange={(e) => {
-                            const newObjectives = [...screen.content.objectives];
-                            newObjectives[index] = e.target.value;
-                            updateContent("objectives", newObjectives);
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <ContentEditor
+                  contentType={screen.content_type}
+                  content={screen.content}
+                  onChange={(newContent) => {
+                    setScreen({ ...screen, content: newContent });
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
