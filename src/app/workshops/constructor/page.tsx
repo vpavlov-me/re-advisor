@@ -116,7 +116,7 @@ export default function WorkshopConstructorPage() {
   };
 
   const handleEditTemplate = (id: string) => {
-    router.push(`/workshops/constructor/${id}/edit`);
+    router.push(`/workshops/constructor/${id}/builder`);
   };
 
   const handlePreviewTemplate = (id: string) => {

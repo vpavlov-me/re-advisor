@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner";
 import { TemplateLibraryBrowser } from "@/components/workshops/template-library-browser";
 import type { WorkshopTemplate, WorkshopScreen, WorkshopTemplateBlock } from "@/types/workshop-constructor";
+import { VMV_MASTER_TEMPLATE } from "@/data/vmv-master-template";
 
 export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -87,83 +88,94 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
     try {
       setLoading(true);
       // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Mock data
-      setTemplate({
-        id,
-        created_by: "user1",
-        name: "Strategic Planning Workshop",
-        description: "Comprehensive strategic planning session",
-        duration_minutes: 180,
-        target_audience: "Family Council, Board",
-        category: "Strategy",
-        is_public: false,
-        is_master: true,
-        cloned_from: null,
-        version: 1,
-        status: "draft",
-        settings: { enableAI: true, enableChat: true },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        published_at: null,
-      });
+      // Check if this is the VMV master template
+      if (id === "vmv-master-template") {
+        setTemplate(VMV_MASTER_TEMPLATE);
+        setScreens(VMV_MASTER_TEMPLATE.screens);
 
-      const loadedScreens: WorkshopScreen[] = [
-        {
-          id: "screen-1",
-          template_id: id,
-          screen_key: "kickoff",
-          name: "Welcome & Kickoff",
-          description: "Workshop introduction and objectives",
-          order_index: 0,
-          duration_minutes: 10,
-          screen_type: "text" as const,
-          content_type: "introduction" as const,
-          content: {
-            title: "Welcome to the Workshop",
-            description: "We'll be working together to develop a strategic plan",
-            objectives: ["Define vision", "Identify goals", "Create action plan"]
-          },
-          navigation: { next: "screen-2" },
-          ai_config: { enabled: false },
-          has_timer: false,
-          timer_config: {},
-          is_optional: false,
-          show_conditions: {},
+        // Set initial selected screen
+        if (!selectedScreen && VMV_MASTER_TEMPLATE.screens.length > 0) {
+          setSelectedScreen(VMV_MASTER_TEMPLATE.screens[0]);
+        }
+      } else {
+        // Mock data for other templates
+        setTemplate({
+          id,
+          created_by: "user1",
+          name: "Strategic Planning Workshop",
+          description: "Comprehensive strategic planning session",
+          duration_minutes: 180,
+          target_audience: "Family Council, Board",
+          category: "Strategy",
+          is_public: false,
+          is_master: true,
+          cloned_from: null,
+          version: 1,
+          status: "draft",
+          settings: { enableAI: true, enableChat: true },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        },
-        {
-          id: "screen-2",
-          template_id: id,
-          screen_key: "swot-analysis",
-          name: "SWOT Analysis",
-          description: "Analyze strengths, weaknesses, opportunities, threats",
-          order_index: 1,
-          duration_minutes: 30,
-          screen_type: "exercise" as const,
-          content_type: "swot" as const,
-          content: {
-            title: "SWOT Analysis",
-            description: "Collaborative analysis of our strategic position"
+          published_at: null,
+        });
+
+        const loadedScreens: WorkshopScreen[] = [
+          {
+            id: "screen-1",
+            template_id: id,
+            screen_key: "kickoff",
+            name: "Welcome & Kickoff",
+            description: "Workshop introduction and objectives",
+            order_index: 0,
+            duration_minutes: 10,
+            screen_type: "text" as const,
+            content_type: "introduction" as const,
+            content: {
+              title: "Welcome to the Workshop",
+              description: "We'll be working together to develop a strategic plan",
+              objectives: ["Define vision", "Identify goals", "Create action plan"]
+            },
+            navigation: { next: "screen-2" },
+            ai_config: { enabled: false },
+            has_timer: false,
+            timer_config: {},
+            is_optional: false,
+            show_conditions: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
-          navigation: { previous: "screen-1", next: "screen-3" },
-          ai_config: { enabled: true, style: "supportive" },
-          has_timer: true,
-          timer_config: { duration: 30, showWarning: true, warningAt: 5 },
-          is_optional: false,
-          show_conditions: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
+          {
+            id: "screen-2",
+            template_id: id,
+            screen_key: "swot-analysis",
+            name: "SWOT Analysis",
+            description: "Analyze strengths, weaknesses, opportunities, threats",
+            order_index: 1,
+            duration_minutes: 30,
+            screen_type: "exercise" as const,
+            content_type: "swot" as const,
+            content: {
+              title: "SWOT Analysis",
+              description: "Collaborative analysis of our strategic position"
+            },
+            navigation: { previous: "screen-1", next: "screen-3" },
+            ai_config: { enabled: true, style: "supportive" },
+            has_timer: true,
+            timer_config: { duration: 30, showWarning: true, warningAt: 5 },
+            is_optional: false,
+            show_conditions: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ];
 
-      setScreens(loadedScreens);
+        setScreens(loadedScreens);
 
-      // Set initial selected screen if none is selected
-      if (!selectedScreen && loadedScreens.length > 0) {
-        setSelectedScreen(loadedScreens[0]);
+        // Set initial selected screen if none is selected
+        if (!selectedScreen && loadedScreens.length > 0) {
+          setSelectedScreen(loadedScreens[0]);
+        }
       }
     } catch (error) {
       toast.error("Failed to load template");
