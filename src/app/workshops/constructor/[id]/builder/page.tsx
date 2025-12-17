@@ -109,7 +109,7 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
         published_at: null,
       });
 
-      const loadedScreens = [
+      const loadedScreens: WorkshopScreen[] = [
         {
           id: "screen-1",
           template_id: id,
@@ -118,8 +118,8 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
           description: "Workshop introduction and objectives",
           order_index: 0,
           duration_minutes: 10,
-          screen_type: "text",
-          content_type: "introduction",
+          screen_type: "text" as const,
+          content_type: "introduction" as const,
           content: {
             title: "Welcome to the Workshop",
             description: "We'll be working together to develop a strategic plan",
@@ -142,8 +142,8 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
           description: "Analyze strengths, weaknesses, opportunities, threats",
           order_index: 1,
           duration_minutes: 30,
-          screen_type: "exercise",
-          content_type: "swot",
+          screen_type: "exercise" as const,
+          content_type: "swot" as const,
           content: {
             title: "SWOT Analysis",
             description: "Collaborative analysis of our strategic position"
