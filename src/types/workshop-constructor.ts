@@ -108,6 +108,7 @@ export interface TimerConfig {
   showWarning?: boolean;
   warningAt?: number;
   canExtend?: boolean;
+  extensionDuration?: number;
   autoAdvance?: boolean;
 }
 

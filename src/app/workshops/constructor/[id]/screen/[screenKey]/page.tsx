@@ -389,13 +389,43 @@ export default function ScreenEditorPage({ params }: { params: Promise<{ id: str
                     )}
 
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="can-extend">Allow Extension</Label>
+                      <div className="space-y-0.5">
+                        <Label htmlFor="can-extend">Allow Extension</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Participants can extend the timer when it runs out
+                        </p>
+                      </div>
                       <Switch
                         id="can-extend"
                         checked={screen.timer_config.canExtend || false}
                         onCheckedChange={(checked) => updateTimerConfig("canExtend", checked)}
                       />
                     </div>
+
+                    {screen.timer_config.canExtend && (
+                      <div className="pl-6 space-y-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="extension-duration">Extension Duration (minutes)</Label>
+                          <Input
+                            id="extension-duration"
+                            type="number"
+                            min="1"
+                            max="30"
+                            value={screen.timer_config.extensionDuration || 5}
+                            onChange={(e) => updateTimerConfig("extensionDuration", parseInt(e.target.value) || 5)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            How many minutes to add when extended
+                          </p>
+                        </div>
+
+                        <div className="p-3 border rounded-lg bg-blue-50/50">
+                          <p className="text-xs text-muted-foreground">
+                            When the timer reaches 0:00, a button will appear allowing participants to add {screen.timer_config.extensionDuration || 5} more minutes.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

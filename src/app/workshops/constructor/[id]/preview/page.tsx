@@ -185,6 +185,16 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
     router.push(`/workshops/constructor/${id}/builder`);
   };
 
+  const handleExtendTime = () => {
+    const currentScreen = screens[currentScreenIndex];
+    if (currentScreen?.timer_config.canExtend) {
+      const extensionMinutes = currentScreen.timer_config.extensionDuration || 5;
+      const extensionSeconds = extensionMinutes * 60;
+      setTimeRemaining((prev) => (prev || 0) + extensionSeconds);
+      toast.success(`Added ${extensionMinutes} minutes to the timer`);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -295,11 +305,24 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
               </div>
 
               {timeRemaining !== null && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-background border rounded-lg">
-                  <Clock className={`h-5 w-5 ${showWarning ? 'text-orange-600' : 'text-muted-foreground'}`} />
-                  <span className={`text-lg font-mono font-semibold ${showWarning ? 'text-orange-600' : ''}`}>
-                    {formatTime(timeRemaining)}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-background border rounded-lg">
+                    <Clock className={`h-5 w-5 ${showWarning ? 'text-orange-600' : 'text-muted-foreground'}`} />
+                    <span className={`text-lg font-mono font-semibold ${showWarning ? 'text-orange-600' : ''}`}>
+                      {formatTime(timeRemaining)}
+                    </span>
+                  </div>
+                  {timeRemaining === 0 && currentScreen.timer_config.canExtend && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExtendTime}
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      +{currentScreen.timer_config.extensionDuration || 5} min
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
