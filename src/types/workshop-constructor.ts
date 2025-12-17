@@ -3,6 +3,8 @@
 export type WorkshopTemplateStatus = 'draft' | 'published' | 'archived';
 export type WorkshopTemplateCategory = 'Governance' | 'Succession' | 'Values' | 'Strategy' | 'Assessment' | 'Custom';
 
+export type WorkshopRole = 'family-member' | 'family-consul' | 'external-advisor';
+
 export type ScreenType = 'text' | 'exercise' | 'discussion' | 'assessment' | 'visualization';
 export type ContentType =
   | 'introduction' | 'rules' | 'objectives'

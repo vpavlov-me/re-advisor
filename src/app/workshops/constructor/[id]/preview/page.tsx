@@ -11,7 +11,12 @@ import {
   Sparkles,
   CheckCircle2,
   AlertCircle,
-  Home
+  Home,
+  Eye,
+  Briefcase,
+  Play,
+  Pause,
+  SkipForward
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +25,8 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import type { WorkshopTemplate, WorkshopScreen } from "@/types/workshop-constructor";
+import { RoleSelector, getRoleConfig } from "@/components/workshops/role-selector";
+import type { WorkshopTemplate, WorkshopScreen, WorkshopRole } from "@/types/workshop-constructor";
 
 export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,6 +37,8 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [selectedRole, setSelectedRole] = useState<WorkshopRole>("family-member");
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
 
   useEffect(() => {
     loadWorkshop();
@@ -205,12 +213,33 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
     return ((currentScreenIndex + 1) / screens.length) * 100;
   };
 
+  const handleRoleChange = (role: WorkshopRole) => {
+    setSelectedRole(role);
+    setShowRoleSelector(false);
+    toast.success(`Viewing as ${getRoleConfig(role).label}`);
+  };
+
+  const getRoleSpecificView = (screen: WorkshopScreen) => {
+    // Family Member: sees participant view only
+    // Family Consul: sees both facilitator controls and participant view
+    // External Advisor: sees facilitator view and participant screens (but doesn't participate)
+
+    return {
+      canParticipate: selectedRole === "family-member" || selectedRole === "family-consul",
+      canFacilitate: selectedRole === "family-consul" || selectedRole === "external-advisor",
+      canSeeParticipantView: true, // All roles can see what participants see
+      showFacilitatorControls: selectedRole === "family-consul" || selectedRole === "external-advisor",
+      participantLabel: selectedRole === "external-advisor" ? "Participant View" : null,
+    };
+  };
+
   const currentScreen = screens[currentScreenIndex];
   const isFirstScreen = currentScreenIndex === 0;
   const isLastScreen = currentScreenIndex === screens.length - 1;
   const showWarning = timeRemaining !== null &&
                      currentScreen?.timer_config.showWarning &&
                      timeRemaining <= (currentScreen.timer_config.warningAt || 0) * 60;
+  const roleView = currentScreen ? getRoleSpecificView(currentScreen) : null;
 
   if (loading) {
     return (
@@ -242,25 +271,55 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
   return (
     <div className="min-h-screen bg-muted/10 flex flex-col">
       {/* Preview Mode Banner */}
-      <div className="bg-blue-600 text-white py-2 px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-white text-blue-600">
-              Preview Mode
-            </Badge>
-            <span className="text-sm">
-              This is how participants will experience your workshop
-            </span>
+      <div className="bg-blue-600 text-white py-3 px-4">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="bg-white text-blue-600">
+                Preview Mode
+              </Badge>
+              <span className="text-sm">
+                Viewing as: <strong>{getRoleConfig(selectedRole).label}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowRoleSelector(!showRoleSelector)}
+                className="text-white hover:text-white hover:bg-blue-700"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Switch Role
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExit}
+                className="text-white hover:text-white hover:bg-blue-700"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Exit Preview
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExit}
-            className="text-white hover:text-white hover:bg-blue-700"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Exit Preview
-          </Button>
+
+          {/* Role Selector Dropdown */}
+          {showRoleSelector && (
+            <div className="mt-2 p-4 bg-white rounded-lg shadow-lg">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Select Preview Role
+              </h3>
+              <RoleSelector
+                selectedRole={selectedRole}
+                onRoleChange={handleRoleChange}
+                compact={true}
+              />
+              <p className="text-xs text-muted-foreground mt-3">
+                Switch between roles to see how each participant experiences the workshop
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -294,11 +353,38 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
       {/* Main Content */}
       <div className="flex-1 container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
+          {/* Role-specific notice for External Advisor */}
+          {selectedRole === "external-advisor" && (
+            <Alert className="mb-6 border-orange-500 bg-orange-50">
+              <Briefcase className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                <strong>Facilitator View:</strong> You are viewing what participants see. As an External Advisor, you facilitate but do not participate in exercises.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Role-specific notice for Family Consul */}
+          {selectedRole === "family-consul" && (
+            <Alert className="mb-6 border-purple-500 bg-purple-50">
+              <Users className="h-4 w-4 text-purple-600" />
+              <AlertDescription className="text-purple-800">
+                <strong>Dual Role View:</strong> As Family Consul, you both facilitate the workshop and participate in exercises.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Screen Header */}
           <div className="mb-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2">{currentScreen.name}</h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold">{currentScreen.name}</h1>
+                  {roleView?.participantLabel && (
+                    <Badge variant="outline" className="text-xs">
+                      {roleView.participantLabel}
+                    </Badge>
+                  )}
+                </div>
                 {currentScreen.description && (
                   <p className="text-muted-foreground">{currentScreen.description}</p>
                 )}
@@ -460,6 +546,90 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
               )}
             </CardContent>
           </Card>
+
+          {/* Facilitator Controls - Only for Family Consul and External Advisor */}
+          {roleView?.showFacilitatorControls && (
+            <Card className="mt-6 border-2 border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Facilitator Controls
+                </CardTitle>
+                <CardDescription>
+                  Controls visible only to workshop facilitators
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Timer Controls */}
+                {currentScreen.has_timer && (
+                  <div className="p-4 border rounded-lg bg-background">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Timer Management
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm">
+                        <Play className="h-4 w-4 mr-2" />
+                        Start Timer
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Pause className="h-4 w-4 mr-2" />
+                        Pause
+                      </Button>
+                      {currentScreen.timer_config.canExtend && (
+                        <Button variant="outline" size="sm">
+                          <Clock className="h-4 w-4 mr-2" />
+                          Extend Time
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Control the timer for all participants
+                    </p>
+                  </div>
+                )}
+
+                {/* Participant Progress */}
+                <div className="p-4 border rounded-lg bg-background">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Participant Progress
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="text-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-muted-foreground">Participants on this screen:</span>
+                        <span className="font-semibold">5/6</span>
+                      </div>
+                      <Progress value={83} className="h-2" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Monitor real-time participant progress and engagement
+                    </p>
+                  </div>
+                </div>
+
+                {/* Navigation Controls */}
+                <div className="p-4 border rounded-lg bg-background">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <SkipForward className="h-4 w-4" />
+                    Navigation
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm">
+                      Advance All Participants
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Allow Individual Progress
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Control whether participants move together or at their own pace
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8">
