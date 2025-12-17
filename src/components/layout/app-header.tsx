@@ -28,6 +28,7 @@ const navItems = [
   { label: "Consultations", href: "/consultations" },
   { label: "Families", href: "/families" },
   { label: "Workshops", href: "/workshops/vmv" },
+  { label: "Constructor", href: "/workshops/constructor" },
   { label: "Services", href: "/services" },
   { label: "Knowledge Center", href: "/knowledge" },
 ];
