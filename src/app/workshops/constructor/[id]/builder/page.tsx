@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { TemplateLibraryBrowser } from "@/components/workshops/template-library-browser";
 import type { WorkshopTemplate, WorkshopScreen, WorkshopTemplateBlock } from "@/types/workshop-constructor";
 import { VMV_MASTER_TEMPLATE } from "@/data/vmv-master-template";
+import { VMV_V1_TEMPLATE } from "@/data/vmv-v1-template";
 
 export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -90,7 +91,7 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
       // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Check if this is the VMV master template
+      // Check if this is a VMV template
       if (id === "vmv-master-template") {
         setTemplate(VMV_MASTER_TEMPLATE);
         setScreens(VMV_MASTER_TEMPLATE.screens);
@@ -98,6 +99,14 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
         // Set initial selected screen
         if (!selectedScreen && VMV_MASTER_TEMPLATE.screens.length > 0) {
           setSelectedScreen(VMV_MASTER_TEMPLATE.screens[0]);
+        }
+      } else if (id === "vmv-v1") {
+        setTemplate(VMV_V1_TEMPLATE);
+        setScreens(VMV_V1_TEMPLATE.screens);
+
+        // Set initial selected screen
+        if (!selectedScreen && VMV_V1_TEMPLATE.screens.length > 0) {
+          setSelectedScreen(VMV_V1_TEMPLATE.screens[0]);
         }
       } else {
         // Mock data for other templates

@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { WorkshopTemplateWithScreens, WorkshopTemplateCategory, WorkshopTemplateStatus } from "@/types/workshop-constructor";
 import { VMV_MASTER_TEMPLATE } from "@/data/vmv-master-template";
+import { VMV_V1_TEMPLATE } from "@/data/vmv-v1-template";
 
 export default function WorkshopConstructorPage() {
   const router = useRouter();
@@ -59,9 +60,10 @@ export default function WorkshopConstructorPage() {
       // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Mock data + VMV Master Template
+      // Mock data + VMV Templates
       setTemplates([
         VMV_MASTER_TEMPLATE,
+        VMV_V1_TEMPLATE,
         {
           id: "1",
           created_by: "user1",

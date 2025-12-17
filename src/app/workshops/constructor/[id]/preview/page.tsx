@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { RoleSelector, getRoleConfig } from "@/components/workshops/role-selector";
 import type { WorkshopTemplate, WorkshopScreen, WorkshopRole } from "@/types/workshop-constructor";
 import { VMV_MASTER_TEMPLATE } from "@/data/vmv-master-template";
+import { VMV_V1_TEMPLATE } from "@/data/vmv-v1-template";
 
 export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -77,6 +78,9 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
       if (id === "vmv-master-template") {
         setTemplate(VMV_MASTER_TEMPLATE);
         setScreens(VMV_MASTER_TEMPLATE.screens);
+      } else if (id === "vmv-v1") {
+        setTemplate(VMV_V1_TEMPLATE);
+        setScreens(VMV_V1_TEMPLATE.screens);
       } else {
         // Mock data for other templates
         setTemplate({
