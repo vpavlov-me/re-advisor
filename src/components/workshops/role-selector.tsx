@@ -46,7 +46,7 @@ const roleConfig: Record<WorkshopRole, {
 export function RoleSelector({ selectedRole, onRoleChange, compact = false }: RoleSelectorProps) {
   if (compact) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {(Object.keys(roleConfig) as WorkshopRole[]).map((role) => {
           const config = roleConfig[role];
           const Icon = config.icon;
@@ -58,7 +58,7 @@ export function RoleSelector({ selectedRole, onRoleChange, compact = false }: Ro
               variant={isSelected ? "default" : "outline"}
               size="sm"
               onClick={() => onRoleChange(role)}
-              className={`${isSelected ? "" : "hover:bg-muted"}`}
+              className={`flex-shrink-0 ${isSelected ? "bg-primary text-primary-foreground" : "bg-white text-gray-900 hover:bg-gray-100"}`}
             >
               <Icon className="h-4 w-4 mr-2" />
               {config.label}

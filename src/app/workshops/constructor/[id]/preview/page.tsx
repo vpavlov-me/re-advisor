@@ -306,7 +306,7 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
 
           {/* Role Selector Dropdown */}
           {showRoleSelector && (
-            <div className="mt-2 p-4 bg-white rounded-lg shadow-lg">
+            <div className="mt-3 p-4 bg-white rounded-lg shadow-lg border border-blue-200">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
                 Select Preview Role
               </h3>
@@ -315,7 +315,7 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
                 onRoleChange={handleRoleChange}
                 compact={true}
               />
-              <p className="text-xs text-muted-foreground mt-3">
+              <p className="text-xs text-gray-600 mt-3">
                 Switch between roles to see how each participant experiences the workshop
               </p>
             </div>
