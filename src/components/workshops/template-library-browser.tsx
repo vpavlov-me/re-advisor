@@ -24,12 +24,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { WorkshopTemplateBlock } from "@/types/workshop-constructor";
+import { VMV_WORKSHOP_BLOCKS } from "@/data/vmv-workshop-blocks";
 
 interface TemplateLibraryBrowserProps {
   onAddBlock: (block: WorkshopTemplateBlock) => void;
 }
 
-const MOCK_BLOCKS: WorkshopTemplateBlock[] = [
+const STANDARD_BLOCKS: WorkshopTemplateBlock[] = [
   {
     id: "1",
     block_key: "kickoff-welcome",
@@ -146,7 +147,9 @@ export function TemplateLibraryBrowser({ onAddBlock }: TemplateLibraryBrowserPro
       setLoading(true);
       // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 500));
-      setBlocks(MOCK_BLOCKS);
+      // Combine standard blocks with VMV workshop blocks
+      const allBlocks = [...STANDARD_BLOCKS, ...VMV_WORKSHOP_BLOCKS];
+      setBlocks(allBlocks);
     } catch (error) {
       toast.error("Failed to load template blocks");
     } finally {
@@ -233,6 +236,10 @@ export function TemplateLibraryBrowser({ onAddBlock }: TemplateLibraryBrowserPro
             <SelectItem value="wrapup">Wrap-up</SelectItem>
           </SelectContent>
         </Select>
+
+        <p className="text-xs text-muted-foreground mt-2">
+          💡 <strong>VMV Workshop:</strong> 15 blocks for complete Values, Mission & Vision workshop now available
+        </p>
       </div>
 
       {/* Tabs */}

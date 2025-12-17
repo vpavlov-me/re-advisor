@@ -14,7 +14,11 @@ export type ContentType =
   | 'governance-structure' | 'decision-matrix'
   | 'mission-draft' | 'vision-matrix' | 'values-matrix'
   | '9-box-matrix' | 'timeline'
-  | 'action-plan' | 'summary' | 'feedback' | 'next-steps';
+  | 'action-plan' | 'summary' | 'feedback' | 'next-steps'
+  | 'values-brainstorming' | 'values-consolidation' | 'values-voting' | 'values-results'
+  | 'mission-discussion' | 'mission-refinement' | 'mission-approval'
+  | 'vision-brainstorming' | 'vision-draft' | 'vision-refinement' | 'vision-approval'
+  | 'collaborative-editing' | 'voting-approval' | 'results-summary';
 
 export type ElementType = 'text' | 'question' | 'input' | 'chart' | 'image' | 'video' | 'file';
 
