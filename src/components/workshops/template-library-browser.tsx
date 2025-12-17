@@ -174,7 +174,6 @@ export function TemplateLibraryBrowser({ onAddBlock }: TemplateLibraryBrowserPro
 
   const handleAddBlock = (block: WorkshopTemplateBlock) => {
     onAddBlock(block);
-    toast.success(`Added "${block.name}" to workshop`);
   };
 
   const handlePreview = (block: WorkshopTemplateBlock) => {

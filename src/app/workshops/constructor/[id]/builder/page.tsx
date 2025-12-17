@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -49,9 +49,39 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Track the screens array reference to detect actual changes
+  const screensRef = useRef<WorkshopScreen[]>([]);
+
   useEffect(() => {
     loadTemplate();
   }, [id]);
+
+  // Sync selectedScreen when screens array changes
+  useEffect(() => {
+    // Only process if screens actually changed (not just a re-render)
+    if (screensRef.current === screens) {
+      return;
+    }
+    screensRef.current = screens;
+
+    if (selectedScreen) {
+      // Find the updated version of the currently selected screen
+      const updatedScreen = screens.find(s => s.id === selectedScreen.id);
+      if (updatedScreen) {
+        // Update selectedScreen to reflect any changes in the screens array
+        setSelectedScreen(updatedScreen);
+      } else if (screens.length > 0) {
+        // If selected screen was deleted, select the first screen
+        setSelectedScreen(screens[0]);
+      } else {
+        // No screens left
+        setSelectedScreen(null);
+      }
+    } else if (screens.length > 0) {
+      // Auto-select first screen if none is selected
+      setSelectedScreen(screens[0]);
+    }
+  }, [screens]);
 
   const loadTemplate = async () => {
     try {
@@ -79,7 +109,7 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
         published_at: null,
       });
 
-      setScreens([
+      const loadedScreens = [
         {
           id: "screen-1",
           template_id: id,
@@ -127,10 +157,13 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
-      ]);
+      ];
 
-      if (!selectedScreen) {
-        setSelectedScreen(screens[0] || null);
+      setScreens(loadedScreens);
+
+      // Set initial selected screen if none is selected
+      if (!selectedScreen && loadedScreens.length > 0) {
+        setSelectedScreen(loadedScreens[0]);
       }
     } catch (error) {
       toast.error("Failed to load template");
@@ -612,9 +645,11 @@ export default function WorkshopBuilderPage({ params }: { params: Promise<{ id: 
                   updated_at: new Date().toISOString(),
                 };
 
-                setScreens([...screens, newScreen]);
-                setSelectedScreen(newScreen);
+                const updatedScreens = [...screens, newScreen];
+                setScreens(updatedScreens);
+                // The useEffect will auto-select this new screen
                 setLibraryOpen(false);
+                toast.success(`Added "${block.name}" to workshop`);
               }}
             />
           </div>
