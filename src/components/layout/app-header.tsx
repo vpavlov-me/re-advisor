@@ -30,6 +30,7 @@ const navItems = [
   { label: "Workshops", href: "/workshops/vmv" },
   { label: "Constructor", href: "/workshops/constructor" },
   { label: "Services", href: "/services" },
+  { label: "Workshops", href: "/workshops" },
   { label: "Knowledge Center", href: "/knowledge" },
 ];
 
