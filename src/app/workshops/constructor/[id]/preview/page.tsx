@@ -606,6 +606,525 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
                 </>
               )}
 
+              {/* Values Brainstorming */}
+              {currentScreen.content_type === "values-brainstorming" && (
+                <>
+                  {currentScreen.content.instruction && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700 mb-2">{currentScreen.content.instruction.message}</p>
+                          <p className="font-semibold text-gray-900">{currentScreen.content.instruction.bold}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.timer?.display && (
+                    <div className="mb-6 p-6 bg-orange-500 text-white text-center rounded-lg">
+                      <div className="text-4xl font-bold">6:50</div>
+                    </div>
+                  )}
+
+                  <div className="space-y-4 mb-6">
+                    <p className="font-medium">Your value suggestions:</p>
+                    {currentScreen.content.fields?.map((field: any, index: number) => (
+                      <div key={field.key} className="flex items-center gap-3">
+                        <span className="text-orange-600 font-semibold text-lg">{field.label}</span>
+                        <input
+                          type="text"
+                          placeholder={field.placeholder}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
+                          disabled
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentScreen.content.progressInfo?.show && (
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700">
+                      6 out of 8 participants have already submitted their responses
+                    </div>
+                  )}
+
+                  {currentScreen.content.successMessage?.show && (
+                    <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-green-900">{currentScreen.content.successMessage.text}</p>
+                          <p className="text-sm text-green-700 mt-1">{currentScreen.content.successMessage.subtext}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Values Consolidation */}
+              {currentScreen.content_type === "values-consolidation" && (
+                <>
+                  {currentScreen.content.aiMessage && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700 mb-2">{currentScreen.content.aiMessage}</p>
+                          <p className="font-semibold text-gray-900">{currentScreen.content.hereIsWhat}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-lg mb-4">Consolidated list of values (14 items):</h3>
+                    <div className="space-y-2">
+                      {['Honesty and openness', 'Family support and unity', 'Education and self-development',
+                        'Responsibility for decisions', 'Respect for traditions', 'Financial literacy'].map((value, index) => (
+                        <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
+                          <span>{value}</span>
+                          <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-medium">
+                            {8 - index} mentions
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {currentScreen.content.importantNote && (
+                    <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                      <p className="font-semibold text-orange-900 mb-1">Important</p>
+                      <p className="text-sm text-orange-700">{currentScreen.content.importantNote}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Values Voting */}
+              {currentScreen.content_type === "values-voting" && (
+                <>
+                  {currentScreen.content.instruction && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700">{currentScreen.content.instruction}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.selectionInfo && (
+                    <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                      <p className="font-semibold text-orange-900">{currentScreen.content.selectionInfo.title}</p>
+                      <p className="text-sm text-orange-700">{currentScreen.content.selectionInfo.subtitle}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 mb-6">
+                    {['Honesty and openness', 'Family support and unity', 'Education and self-development'].map((value, index) => (
+                      <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+                        <input type="checkbox" className="w-5 h-5" disabled />
+                        <span>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentScreen.content.progressInfo && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700">
+                      7 out of 8 participants have already voted
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Values Results */}
+              {currentScreen.content_type === "values-results" && (
+                <>
+                  {currentScreen.content.completionMessage && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 mb-1">{currentScreen.content.completionMessage.title}</p>
+                          <p className="text-gray-700">{currentScreen.content.completionMessage.subtitle}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 mb-6">
+                    {[
+                      { name: 'Family support and unity', votes: 8, percent: 100, highlighted: true },
+                      { name: 'Open communication', votes: 7, percent: 88, highlighted: true },
+                      { name: 'Education and self-development', votes: 7, percent: 88, highlighted: true }
+                    ].map((value, index) => (
+                      <div key={index} className={`p-4 rounded-lg border-2 flex items-center justify-between ${
+                        value.highlighted ? 'bg-orange-50 border-orange-200' : 'bg-white border-gray-200'
+                      }`}>
+                        <span className="font-medium">{index + 1}. {value.name}</span>
+                        <span className="px-4 py-2 bg-orange-500 text-white rounded-full font-semibold">
+                          {value.votes} votes ({value.percent}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentScreen.content.topValuesMessage && (
+                    <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                      <p className="font-semibold text-green-900 mb-1">{currentScreen.content.topValuesMessage.title}</p>
+                      <p className="text-sm text-green-700">{currentScreen.content.topValuesMessage.subtitle}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.consensusCheck && (
+                    <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-lg mb-4">{currentScreen.content.consensusCheck.question}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Voting result:</span>
+                        <span className="text-green-600 font-semibold">{currentScreen.content.consensusCheck.result}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Mission/Vision Discussion screens */}
+              {(currentScreen.content_type === "mission-discussion" || currentScreen.content_type === "vision-brainstorming") && (
+                <>
+                  {currentScreen.content.instruction && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700">{currentScreen.content.instruction}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.questions && (
+                    <div className="mb-6 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-3">Think about these questions:</h4>
+                      <ul className="space-y-2 text-blue-700">
+                        {currentScreen.content.questions.map((q: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span>•</span>
+                            <span>{q}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {currentScreen.content.timer?.display && (
+                    <div className="mb-6 p-6 bg-orange-500 text-white text-center rounded-lg">
+                      <div className="text-4xl font-bold">4:54</div>
+                    </div>
+                  )}
+
+                  <div className="mb-6">
+                    <label className="block font-medium mb-2">{currentScreen.content.inputLabel}</label>
+                    <textarea
+                      className="w-full p-4 border border-gray-300 rounded-lg"
+                      rows={8}
+                      placeholder="Write your thoughts..."
+                      disabled
+                    />
+                  </div>
+
+                  {currentScreen.content.progressInfo && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center text-blue-700">
+                      5 out of 8 participants have already submitted their responses
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Mission/Vision Draft screens */}
+              {(currentScreen.content_type === "mission-draft" || currentScreen.content_type === "vision-draft") && (
+                <>
+                  {currentScreen.content.aiAnalysis && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700 mb-3">{currentScreen.content.aiAnalysis.message}</p>
+                          {currentScreen.content.aiAnalysis.themes && (
+                            <ul className="space-y-1">
+                              {currentScreen.content.aiAnalysis.themes.map((theme: string, i: number) => (
+                                <li key={i} className="text-gray-900">• {theme}</li>
+                              ))}
+                            </ul>
+                          )}
+                          {currentScreen.content.aiAnalysis.footer && (
+                            <p className="text-gray-700 mt-3">{currentScreen.content.aiAnalysis.footer}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.draftText && (
+                    <div className="mb-6 p-6 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                      <p className="text-gray-900 text-lg leading-relaxed">{currentScreen.content.draftText}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.nextStepInfo && (
+                    <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                      <p className="font-semibold text-orange-900 mb-1">{currentScreen.content.nextStepInfo.title}</p>
+                      <p className="text-sm text-orange-700">{currentScreen.content.nextStepInfo.description}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.goodVisionNote && (
+                    <div className="mt-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                      <p className="font-semibold text-orange-900 mb-1">Good vision</p>
+                      <p className="text-sm text-orange-700">{currentScreen.content.goodVisionNote}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Mission/Vision Refinement screens */}
+              {(currentScreen.content_type === "mission-refinement" || currentScreen.content_type === "vision-refinement") && (
+                <>
+                  {currentScreen.content.instruction && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700">{currentScreen.content.instruction}</p>
+                          {currentScreen.content.recommendations && (
+                            <p className="mt-2 text-gray-900"><strong>Recommendations:</strong> {currentScreen.content.recommendations}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.checklist && (
+                    <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">
+                        {currentScreen.content_type === "vision-refinement" ? "A good vision should:" : "Guidelines:"}
+                      </h4>
+                      <ul className="space-y-2">
+                        {currentScreen.content.checklist.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-gray-700">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {currentScreen.content.editableText && (
+                    <div className="mb-6 p-6 bg-white border-2 border-gray-300 rounded-lg">
+                      <p className="text-gray-900 leading-relaxed">{currentScreen.content.editableText}</p>
+                    </div>
+                  )}
+
+                  <div className="mb-6">
+                    <label className="block font-medium mb-2">Comments and suggestions:</label>
+                    <textarea
+                      className="w-full p-4 border border-gray-300 rounded-lg"
+                      rows={6}
+                      placeholder="Leave your comments or suggestions..."
+                      disabled
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Mission/Vision Approval screens */}
+              {(currentScreen.content_type === "mission-approval" || currentScreen.content_type === "vision-approval") && (
+                <>
+                  {currentScreen.content.finalText && (
+                    <div className="mb-6 p-6 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                      <p className="text-gray-900 text-lg leading-relaxed">{currentScreen.content.finalText}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.question && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 mb-2">{currentScreen.content.question.title}</p>
+                          <p className="text-gray-700">{currentScreen.content.question.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.votingResults && (
+                    <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-lg mb-4">Voting results:</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">{currentScreen.content.votingResults.label}</span>
+                        <span className="text-green-600 font-semibold text-xl">{currentScreen.content.votingResults.count}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.consensusMessage && (
+                    <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                      <p className="font-semibold text-green-900 mb-1">{currentScreen.content.consensusMessage.title}</p>
+                      <p className="text-sm text-green-700">{currentScreen.content.consensusMessage.description}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Results Summary */}
+              {currentScreen.content_type === "results-summary" && (
+                <>
+                  <div className="mb-8 p-8 bg-gradient-to-r from-green-500 to-green-600 text-white text-center rounded-lg">
+                    <h2 className="text-3xl font-bold mb-2">Congratulations! Workshop Complete</h2>
+                    <p className="text-lg text-green-50">You have successfully defined your family's values, mission, and vision</p>
+                  </div>
+
+                  {currentScreen.content.values && (
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <span>💎</span> Values
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {currentScreen.content.values.map((value: string, i: number) => (
+                          <span key={i} className="px-4 py-2 bg-orange-500 text-white rounded-full font-medium">
+                            {value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.mission && (
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <span>🎯</span> Mission
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">{currentScreen.content.mission}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.vision && (
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <span>✨</span> Vision
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">{currentScreen.content.vision}</p>
+                    </div>
+                  )}
+
+                  {currentScreen.content.thankYouMessage && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 mb-2">{currentScreen.content.thankYouMessage.title}</p>
+                          <p className="text-gray-700 mb-3">{currentScreen.content.thankYouMessage.message}</p>
+                          {currentScreen.content.thankYouMessage.recommendations && (
+                            <p className="text-gray-700 text-sm"><strong>Recommendations:</strong> {currentScreen.content.thankYouMessage.recommendations}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentScreen.content.finalApproval && (
+                    <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-lg mb-4">{currentScreen.content.finalApproval.question}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Voting result:</span>
+                        <span className="text-green-600 font-semibold">{currentScreen.content.finalApproval.result}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Next Steps */}
+              {currentScreen.content_type === "next-steps" && (
+                <>
+                  <div className="mb-6 space-y-6">
+                    {currentScreen.content.sections?.map((section: any, index: number) => (
+                      <div key={index} className="p-6 bg-white border border-gray-200 rounded-lg">
+                        <h3 className="text-lg font-semibold text-orange-600 mb-4">{section.title}</h3>
+                        {section.status && (
+                          <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                            <p className="font-semibold text-green-900">{section.status.title}</p>
+                            <p className="text-sm text-green-700">{section.status.message}</p>
+                          </div>
+                        )}
+                        {section.items && (
+                          <ul className="space-y-2">
+                            {section.items.map((item: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-gray-700">
+                                <span className="text-gray-400">📄</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {section.metadata && (
+                          <div className="mt-4 space-y-1 text-sm text-gray-600">
+                            {Object.entries(section.metadata).map(([key, value]: [string, any]) => (
+                              <div key={key}>
+                                <strong>{key}:</strong> {value}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentScreen.content.recommendations && (
+                    <div className="mb-6 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                          🧳
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 mb-3">{currentScreen.content.recommendations.title}</p>
+                          <p className="text-gray-700 mb-4">{currentScreen.content.recommendations.intro}</p>
+                          <ul className="space-y-2">
+                            {currentScreen.content.recommendations.items.map((item: string, i: number) => (
+                              <li key={i} className="flex items-start gap-2 text-gray-700">
+                                <span className="text-orange-500">→</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* AI Facilitation Notice */}
               {currentScreen.ai_config?.enabled && (
                 <>

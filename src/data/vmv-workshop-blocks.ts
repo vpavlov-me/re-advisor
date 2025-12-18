@@ -91,15 +91,30 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
     content_type: "values-brainstorming",
     default_content: {
       title: "Step 2.1: Individual Values Brainstorming",
-      description: "Let's start by defining family values. Think about what is truly important for your family. What principles and beliefs unite you?",
-      instructions: "Please list 3-5 key values that, in your opinion, should be the foundation of your family",
+      instruction: {
+        message: "Let's start by defining family values. Think about what is truly important for your family. What principles and beliefs unite you?",
+        bold: "Please list 3-5 key values that, in your opinion, should be the foundation of your family."
+      },
+      timer: {
+        duration: 7 * 60, // 7 minutes in seconds
+        display: true
+      },
       fields: [
-        { key: "value1", label: "Value 1", type: "text", placeholder: "For example: Honesty", required: true },
-        { key: "value2", label: "Value 2", type: "text", placeholder: "For example: Family support", required: true },
-        { key: "value3", label: "Value 3", type: "text", placeholder: "For example: Education", required: true },
-        { key: "value4", label: "Value 4", type: "text", placeholder: "For example: Responsibility", required: false },
-        { key: "value5", label: "Value 5", type: "text", placeholder: "For example: Traditions", required: false }
-      ]
+        { key: "value1", label: "1.", type: "text", placeholder: "For example: Honesty", required: true },
+        { key: "value2", label: "2.", type: "text", placeholder: "For example: Family support", required: true },
+        { key: "value3", label: "3.", type: "text", placeholder: "For example: Education", required: true },
+        { key: "value4", label: "4.", type: "text", placeholder: "For example: Responsibility", required: false },
+        { key: "value5", label: "5.", type: "text", placeholder: "For example: Traditions", required: false }
+      ],
+      progressInfo: {
+        show: true,
+        message: "X out of 8 participants have already submitted their responses"
+      },
+      successMessage: {
+        show: true,
+        text: "Your response has been submitted",
+        subtext: "Thank you! Please wait while other participants complete this step. The facilitator will move to the next step when everyone is ready."
+      }
     },
     default_navigation: { previous: "vmv-1", next: "vmv-3" },
     default_ai_config: { enabled: true, style: "supportive" },
