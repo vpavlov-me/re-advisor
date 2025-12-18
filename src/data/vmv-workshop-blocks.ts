@@ -335,10 +335,19 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
     content_type: "mission-approval",
     default_content: {
       title: "Step 3.4: Mission Approval",
-      description: "This is an important moment - the mission will become the cornerstone of your family constitution",
-      votingType: "yes-no-abstain",
-      showResults: true,
-      requireConsensus: true
+      finalText: "Our family exists to create an environment of mutual support and development where each generation can fulfill their potential. We strive to preserve and pass on the values of openness, education, and responsibility, manage our resources with a long-term perspective, and make a positive contribution to society through philanthropy and professionalism.",
+      question: {
+        title: "Does everyone agree with this mission statement?",
+        description: "This is an important moment - the mission will become the cornerstone of your family constitution."
+      },
+      votingResults: {
+        label: "In favor of approving the mission:",
+        count: "8 out of 8 participants"
+      },
+      consensusMessage: {
+        title: "Consensus reached!",
+        description: "The mission has been unanimously approved by all workshop participants."
+      }
     },
     default_navigation: { previous: "vmv-8", next: "vmv-10" },
     default_ai_config: { enabled: false },
