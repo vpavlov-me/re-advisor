@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, Clock, Sparkles, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Clock, Sparkles, Settings as SettingsIcon, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -166,6 +166,13 @@ export default function ScreenEditorPage({ params }: { params: Promise<{ id: str
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/workshops/constructor/${id}/screen/${screenKey}/canvas-editor`)}
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Canvas Editor
+              </Button>
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
