@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,7 +12,6 @@ import {
   Settings as SettingsIcon,
   Type,
   Image as ImageIcon,
-  List,
   CheckSquare,
   Timer,
   MessageSquare,
@@ -20,16 +19,10 @@ import {
   Layout,
   AlertCircle,
   Hash,
-  BarChart3,
   CheckCircle,
   Tag,
-  TrendingUp,
   HelpCircle,
-  Award,
   ArrowRight,
-  Users,
-  Edit3,
-  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,30 +45,20 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 // Content block types
 type ContentBlockType =
-  | "heading"
   | "text"
-  | "rich-text"
   | "image"
-  | "list"
   | "checklist"
   | "timer"
-  | "input"
-  | "textarea"
+  | "response"
   | "ai-assistant"
   | "divider"
   | "alert"
   | "numbered-inputs"
-  | "progress-bar"
   | "success-message"
   | "value-pills"
-  | "voting-results"
-  | "ranked-list"
   | "questions-box"
   | "success-banner"
-  | "arrow-list"
-  | "badge-list"
-  | "consensus-box"
-  | "editable-section";
+  | "arrow-list";
 
 interface ContentBlock {
   id: string;
@@ -88,6 +71,7 @@ interface ContentBlock {
     padding?: string;
     borderColor?: string;
     borderWidth?: string;
+    borderRadius?: string;
   };
 }
 
@@ -104,34 +88,16 @@ const BLOCK_LIBRARY: Array<{
   defaultContent: any;
 }> = [
   {
-    type: "heading",
-    icon: Type,
-    label: "Heading",
-    defaultContent: { text: "Heading Text", level: "h2" },
-  },
-  {
     type: "text",
     icon: Type,
     label: "Text",
-    defaultContent: { text: "Your text here..." },
-  },
-  {
-    type: "rich-text",
-    icon: FileText,
-    label: "Rich Text Editor",
-    defaultContent: { html: "<p>Start typing with <strong>formatting</strong>...</p>" },
+    defaultContent: { html: "<p>Your text here...</p>" },
   },
   {
     type: "image",
     icon: ImageIcon,
     label: "Image",
     defaultContent: { url: "", alt: "Image", caption: "" },
-  },
-  {
-    type: "list",
-    icon: List,
-    label: "List",
-    defaultContent: { items: ["Item 1", "Item 2", "Item 3"] },
   },
   {
     type: "checklist",
@@ -143,25 +109,26 @@ const BLOCK_LIBRARY: Array<{
     type: "timer",
     icon: Timer,
     label: "Timer",
-    defaultContent: { duration: 5, label: "Timer" },
+    defaultContent: { duration: 5, label: "Timer", mode: "countdown" },
   },
   {
-    type: "input",
+    type: "response",
     icon: MessageSquare,
-    label: "Text Input",
-    defaultContent: { label: "Your answer", placeholder: "Type here..." },
-  },
-  {
-    type: "textarea",
-    icon: MessageSquare,
-    label: "Text Area",
-    defaultContent: { label: "Your response", placeholder: "Type here...", rows: 4 },
+    label: "Response",
+    defaultContent: { label: "Your response", html: "<p>Type your response here...</p>" },
   },
   {
     type: "ai-assistant",
     icon: Sparkles,
     label: "AI Assistant",
-    defaultContent: { message: "AI will help you here...", enabled: true },
+    defaultContent: {
+      html: "<p>AI will help you here...</p>",
+      enabled: true,
+      preset: "balanced",
+      temperature: 0.7,
+      maxTokens: 1000,
+      systemPrompt: "You are a helpful assistant for family governance discussions."
+    },
   },
   {
     type: "divider",
@@ -179,13 +146,13 @@ const BLOCK_LIBRARY: Array<{
     type: "numbered-inputs",
     icon: Hash,
     label: "Numbered Inputs",
-    defaultContent: { count: 5, label: "Your answer", placeholder: "Type here..." },
-  },
-  {
-    type: "progress-bar",
-    icon: BarChart3,
-    label: "Progress Bar",
-    defaultContent: { progress: 50, label: "Progress", showPercentage: true },
+    defaultContent: {
+      items: [
+        { text: "First input label", placeholder: "Type here..." },
+        { text: "Second input label", placeholder: "Type here..." },
+        { text: "Third input label", placeholder: "Type here..." },
+      ]
+    },
   },
   {
     type: "success-message",
@@ -198,31 +165,6 @@ const BLOCK_LIBRARY: Array<{
     icon: Tag,
     label: "Value Pills",
     defaultContent: { values: ["Family", "Trust", "Transparency", "Integrity"] },
-  },
-  {
-    type: "voting-results",
-    icon: TrendingUp,
-    label: "Voting Results",
-    defaultContent: {
-      title: "Voting Results",
-      items: [
-        { text: "Option A", votes: 5, percentage: 50 },
-        { text: "Option B", votes: 3, percentage: 30 },
-        { text: "Option C", votes: 2, percentage: 20 },
-      ]
-    },
-  },
-  {
-    type: "ranked-list",
-    icon: Award,
-    label: "Ranked List",
-    defaultContent: {
-      items: [
-        { text: "First item", percentage: 45, highlighted: true },
-        { text: "Second item", percentage: 30, highlighted: false },
-        { text: "Third item", percentage: 25, highlighted: false },
-      ]
-    },
   },
   {
     type: "questions-box",
@@ -248,42 +190,10 @@ const BLOCK_LIBRARY: Array<{
     label: "Arrow List",
     defaultContent: {
       items: [
-        "First step or recommendation",
-        "Second step or recommendation",
-        "Third step or recommendation"
+        { html: "<p>First step or recommendation</p>" },
+        { html: "<p>Second step or recommendation</p>" },
+        { html: "<p>Third step or recommendation</p>" }
       ]
-    },
-  },
-  {
-    type: "badge-list",
-    icon: Users,
-    label: "Badge List",
-    defaultContent: {
-      items: [
-        { text: "Item with mentions", mentions: 3 },
-        { text: "Another item", mentions: 5 },
-        { text: "Third item", mentions: 2 },
-      ]
-    },
-  },
-  {
-    type: "consensus-box",
-    icon: CheckCircle,
-    label: "Consensus Box",
-    defaultContent: {
-      message: "Consensus reached!",
-      details: "All participants have agreed on this decision.",
-      type: "success"
-    },
-  },
-  {
-    type: "editable-section",
-    icon: Edit3,
-    label: "Editable Section",
-    defaultContent: {
-      title: "Edit this section",
-      content: "This is editable content that users can modify.",
-      showEditButton: true
     },
   },
 ];
@@ -402,55 +312,56 @@ export default function CanvasScreenEditorPage({
       padding: block.style.padding || "1rem",
       borderColor: block.style.borderColor,
       borderWidth: block.style.borderWidth,
+      borderRadius: block.style.borderRadius,
+      borderStyle: block.style.borderWidth ? "solid" : undefined,
     };
 
     switch (block.type) {
-      case "heading":
-        const HeadingTag = block.content.level || "h2";
-        const headingContent = block.content.html || block.content.text;
-        return (
-          <div style={style}>
-            {HeadingTag === "h1" && (
-              <h1 className="text-3xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
-            )}
-            {HeadingTag === "h2" && (
-              <h2 className="text-2xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
-            )}
-            {HeadingTag === "h3" && (
-              <h3 className="text-xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
-            )}
-          </div>
-        );
-
       case "text":
-        const textContent = block.content.html || `<p>${block.content.text}</p>`;
+        const textContent = block.content.html || `<p>${block.content.text || ""}</p>`;
         return (
           <div style={style} className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: textContent }} />
         );
 
-      case "rich-text":
+      case "image":
         return (
           <div style={style}>
-            <RichTextEditor
-              content={block.content.html || ""}
-              onChange={(html) =>
-                handleUpdateBlock(block.id, {
-                  content: { ...block.content, html },
-                })
-              }
-              placeholder="Start typing with formatting..."
-            />
+            {block.content.url ? (
+              <div>
+                <img
+                  src={block.content.url}
+                  alt={block.content.alt || "Image"}
+                  className="w-full h-auto rounded-lg"
+                />
+                {block.content.caption && (
+                  <p className="text-sm text-gray-600 mt-2 text-center">{block.content.caption}</p>
+                )}
+              </div>
+            ) : (
+              <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                  <p className="text-sm">No image selected</p>
+                </div>
+              </div>
+            )}
           </div>
         );
 
-      case "list":
+      case "checklist":
         return (
-          <div style={style}>
-            <ul className="list-disc list-inside space-y-1">
-              {block.content.items.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
+          <div style={style} className="space-y-2">
+            {(block.content.items || []).map((item: any, i: number) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={item.checked}
+                  disabled
+                  className="w-4 h-4"
+                />
+                <span>{item.text}</span>
+              </div>
+            ))}
           </div>
         );
 
@@ -458,34 +369,24 @@ export default function CanvasScreenEditorPage({
         return (
           <div style={style} className="p-4 bg-orange-500 text-white text-center rounded-lg">
             <Timer className="h-8 w-8 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{block.content.duration} minutes</div>
+            <div className="text-2xl font-bold">
+              {block.content.duration} minutes
+            </div>
             <div className="text-sm">{block.content.label}</div>
+            <div className="text-xs mt-1 opacity-75">
+              Mode: {block.content.mode === "countdown" ? "Countdown" : "Count Up"}
+            </div>
           </div>
         );
 
-      case "input":
+      case "response":
+        const responseContent = block.content.html || "<p>Type your response here...</p>";
         return (
           <div style={style}>
             <label className="block font-medium mb-2">{block.content.label}</label>
-            <input
-              type="text"
-              placeholder={block.content.placeholder}
-              className="w-full px-4 py-2 border rounded"
-              disabled
-            />
-          </div>
-        );
-
-      case "textarea":
-        return (
-          <div style={style}>
-            <label className="block font-medium mb-2">{block.content.label}</label>
-            <textarea
-              placeholder={block.content.placeholder}
-              rows={block.content.rows}
-              className="w-full px-4 py-2 border rounded"
-              disabled
-            />
+            <div className="prose prose-sm max-w-none border rounded-lg p-3 bg-gray-50">
+              <div dangerouslySetInnerHTML={{ __html: responseContent }} />
+            </div>
           </div>
         );
 
@@ -526,39 +427,22 @@ export default function CanvasScreenEditorPage({
       case "numbered-inputs":
         return (
           <div style={style} className="space-y-3">
-            {Array.from({ length: block.content.count || 5 }).map((_, i) => (
+            {(block.content.items || []).map((item: any, i: number) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
                   {i + 1}
                 </div>
                 <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">{item.text}</label>
                   <input
                     type="text"
-                    placeholder={block.content.placeholder}
+                    placeholder={item.placeholder}
                     className="w-full px-4 py-2 border rounded"
                     disabled
                   />
                 </div>
               </div>
             ))}
-          </div>
-        );
-
-      case "progress-bar":
-        return (
-          <div style={style} className="space-y-2">
-            {block.content.label && (
-              <div className="flex justify-between text-sm">
-                <span>{block.content.label}</span>
-                {block.content.showPercentage && <span>{block.content.progress}%</span>}
-              </div>
-            )}
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-orange-500 h-3 rounded-full transition-all"
-                style={{ width: `${block.content.progress || 0}%` }}
-              />
-            </div>
           </div>
         );
 
@@ -586,60 +470,6 @@ export default function CanvasScreenEditorPage({
           </div>
         );
 
-      case "voting-results":
-        return (
-          <div style={style} className="space-y-3">
-            {block.content.title && (
-              <h3 className="text-lg font-semibold">{block.content.title}</h3>
-            )}
-            {(block.content.items || []).map((item: any, i: number) => (
-              <div key={i} className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{item.text}</span>
-                  <span className="text-sm text-gray-600">
-                    {item.votes} votes ({item.percentage}%)
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-
-      case "ranked-list":
-        return (
-          <div style={style} className="space-y-2">
-            {(block.content.items || []).map((item: any, i: number) => (
-              <div
-                key={i}
-                className={`p-3 rounded-lg flex items-center justify-between ${
-                  item.highlighted
-                    ? "bg-orange-50 border-2 border-orange-300"
-                    : "bg-gray-50 border border-gray-200"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-lg text-gray-500">{i + 1}.</span>
-                  <span className={item.highlighted ? "font-semibold" : ""}>{item.text}</span>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    item.highlighted
-                      ? "bg-orange-500 text-white"
-                      : "bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  {item.percentage}%
-                </span>
-              </div>
-            ))}
-          </div>
-        );
 
       case "questions-box":
         return (
@@ -671,67 +501,15 @@ export default function CanvasScreenEditorPage({
       case "arrow-list":
         return (
           <div style={style} className="space-y-2">
-            {(block.content.items || []).map((item: string, i: number) => (
+            {(block.content.items || []).map((item: any, i: number) => (
               <div key={i} className="flex items-start gap-3">
                 <ArrowRight className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                <p>{item}</p>
+                <div
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: item.html || `<p>${item}</p>` }}
+                />
               </div>
             ))}
-          </div>
-        );
-
-      case "badge-list":
-        return (
-          <div style={style} className="space-y-2">
-            {(block.content.items || []).map((item: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span>{item.text}</span>
-                <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-medium">
-                  {item.mentions} mentions
-                </span>
-              </div>
-            ))}
-          </div>
-        );
-
-      case "consensus-box":
-        const consensusColors = {
-          success: "bg-green-50 border-green-300 text-green-900",
-          warning: "bg-yellow-50 border-yellow-300 text-yellow-900",
-          info: "bg-blue-50 border-blue-300 text-blue-900",
-        };
-        return (
-          <div
-            style={style}
-            className={`p-4 border-2 rounded-lg ${consensusColors[block.content.type as keyof typeof consensusColors] || consensusColors.success}`}
-          >
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-6 w-6 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-lg">{block.content.message}</p>
-                {block.content.details && (
-                  <p className="text-sm mt-1">{block.content.details}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case "editable-section":
-        return (
-          <div style={style} className="p-4 border-2 border-gray-300 rounded-lg bg-white">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold">{block.content.title}</h4>
-              {block.content.showEditButton && (
-                <Button size="sm" variant="outline">
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              )}
-            </div>
-            <div className="prose">
-              <p className="text-gray-700">{block.content.content}</p>
-            </div>
           </div>
         );
 
@@ -942,48 +720,6 @@ export default function CanvasScreenEditorPage({
                 <div>
                   <h4 className="text-sm font-medium mb-3">Content</h4>
                   <div className="space-y-3">
-                    {selectedBlock.type === "heading" && (
-                      <>
-                        <div>
-                          <Label className="mb-2 block">Text (supports rich formatting)</Label>
-                          <RichTextEditor
-                            content={selectedBlock.content.html || `<p>${selectedBlock.content.text || ""}</p>`}
-                            onChange={(html) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: {
-                                  ...selectedBlock.content,
-                                  html,
-                                  text: html.replace(/<[^>]*>/g, '') // Keep plain text for backward compatibility
-                                },
-                              })
-                            }
-                            placeholder="Enter heading text..."
-                            className="h-[300px]"
-                          />
-                        </div>
-                        <div>
-                          <Label>Level</Label>
-                          <Select
-                            value={selectedBlock.content.level}
-                            onValueChange={(value) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, level: value },
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="h1">Heading 1</SelectItem>
-                              <SelectItem value="h2">Heading 2</SelectItem>
-                              <SelectItem value="h3">Heading 3</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </>
-                    )}
-
                     {selectedBlock.type === "text" && (
                       <div>
                         <Label className="mb-2 block">Text (supports rich formatting)</Label>
@@ -994,7 +730,7 @@ export default function CanvasScreenEditorPage({
                               content: {
                                 ...selectedBlock.content,
                                 html,
-                                text: html.replace(/<[^>]*>/g, '') // Keep plain text for backward compatibility
+                                text: html.replace(/<[^>]*>/g, '')
                               },
                             })
                           }
@@ -1004,22 +740,119 @@ export default function CanvasScreenEditorPage({
                       </div>
                     )}
 
-                    {selectedBlock.type === "rich-text" && (
-                      <div>
-                        <Label className="mb-2 block">Rich Text Content</Label>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Use the editor on canvas to format text with bold, italic, underline, lists, and more.
-                        </p>
-                        <div className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm">
-                            Select the rich text block on the canvas to edit it directly with the formatting toolbar.
+                    {selectedBlock.type === "image" && (
+                      <>
+                        <div>
+                          <Label>Image URL</Label>
+                          <Input
+                            type="url"
+                            value={selectedBlock.content.url || ""}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, url: e.target.value },
+                              })
+                            }
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Paste an image URL or upload to your server
                           </p>
                         </div>
+                        <div>
+                          <Label>Alt Text</Label>
+                          <Input
+                            value={selectedBlock.content.alt || ""}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, alt: e.target.value },
+                              })
+                            }
+                            placeholder="Image description"
+                          />
+                        </div>
+                        <div>
+                          <Label>Caption (optional)</Label>
+                          <Input
+                            value={selectedBlock.content.caption || ""}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, caption: e.target.value },
+                              })
+                            }
+                            placeholder="Image caption"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "checklist" && (
+                      <div>
+                        <Label className="mb-2 block">Checklist Items</Label>
+                        {(selectedBlock.content.items || []).map((item: any, index: number) => (
+                          <div key={index} className="flex items-center gap-2 mb-2">
+                            <Input
+                              value={item.text}
+                              onChange={(e) => {
+                                const newItems = [...selectedBlock.content.items];
+                                newItems[index] = { ...item, text: e.target.value };
+                                handleUpdateBlock(selectedBlock.id, {
+                                  content: { ...selectedBlock.content, items: newItems },
+                                });
+                              }}
+                              placeholder="Task description"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => {
+                                const newItems = selectedBlock.content.items.filter((_: any, i: number) => i !== index);
+                                handleUpdateBlock(selectedBlock.id, {
+                                  content: { ...selectedBlock.content, items: newItems },
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2"
+                          onClick={() => {
+                            const newItems = [...(selectedBlock.content.items || []), { text: "New task", checked: false }];
+                            handleUpdateBlock(selectedBlock.id, {
+                              content: { ...selectedBlock.content, items: newItems },
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Item
+                        </Button>
                       </div>
                     )}
 
                     {selectedBlock.type === "timer" && (
                       <>
+                        <div>
+                          <Label>Mode</Label>
+                          <Select
+                            value={selectedBlock.content.mode || "countdown"}
+                            onValueChange={(value) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, mode: value },
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="countdown">Countdown</SelectItem>
+                              <SelectItem value="countup">Count Up</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div>
                           <Label>Duration (minutes)</Label>
                           <Input
@@ -1046,7 +879,7 @@ export default function CanvasScreenEditorPage({
                       </>
                     )}
 
-                    {(selectedBlock.type === "input" || selectedBlock.type === "textarea") && (
+                    {selectedBlock.type === "response" && (
                       <>
                         <div>
                           <Label>Label</Label>
@@ -1057,17 +890,109 @@ export default function CanvasScreenEditorPage({
                                 content: { ...selectedBlock.content, label: e.target.value },
                               })
                             }
+                            placeholder="Question or prompt"
                           />
                         </div>
                         <div>
-                          <Label>Placeholder</Label>
-                          <Input
-                            value={selectedBlock.content.placeholder}
-                            onChange={(e) =>
+                          <Label className="mb-2 block">Response Format (rich text)</Label>
+                          <RichTextEditor
+                            content={selectedBlock.content.html || "<p>Type your response here...</p>"}
+                            onChange={(html) =>
                               handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, placeholder: e.target.value },
+                                content: { ...selectedBlock.content, html },
                               })
                             }
+                            placeholder="Response format with rich text..."
+                            className="h-[250px]"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "ai-assistant" && (
+                      <>
+                        <div>
+                          <Label className="mb-2 block">Message (rich text)</Label>
+                          <RichTextEditor
+                            content={selectedBlock.content.html || "<p>AI will help you here...</p>"}
+                            onChange={(html) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, html },
+                              })
+                            }
+                            placeholder="AI assistant message..."
+                            className="h-[200px]"
+                          />
+                        </div>
+                        <Separator />
+                        <div>
+                          <Label>Agent Preset</Label>
+                          <Select
+                            value={selectedBlock.content.preset || "balanced"}
+                            onValueChange={(value) => {
+                              const presets: Record<string, any> = {
+                                creative: { temperature: 0.9, maxTokens: 1500, systemPrompt: "You are a creative and innovative assistant for family governance, helping to generate new ideas and perspectives." },
+                                balanced: { temperature: 0.7, maxTokens: 1000, systemPrompt: "You are a helpful assistant for family governance discussions, providing balanced and thoughtful responses." },
+                                precise: { temperature: 0.3, maxTokens: 800, systemPrompt: "You are a precise and analytical assistant for family governance, focusing on accuracy and clarity." },
+                              };
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, preset: value, ...presets[value] },
+                              });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="creative">Creative (More exploratory)</SelectItem>
+                              <SelectItem value="balanced">Balanced (Recommended)</SelectItem>
+                              <SelectItem value="precise">Precise (More focused)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Temperature: {selectedBlock.content.temperature || 0.7}</Label>
+                          <Input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={selectedBlock.content.temperature || 0.7}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, temperature: parseFloat(e.target.value) },
+                              })
+                            }
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Lower = more focused, Higher = more creative
+                          </p>
+                        </div>
+                        <div>
+                          <Label>Max Tokens</Label>
+                          <Input
+                            type="number"
+                            value={selectedBlock.content.maxTokens || 1000}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, maxTokens: parseInt(e.target.value) },
+                              })
+                            }
+                            min={100}
+                            max={4000}
+                          />
+                        </div>
+                        <div>
+                          <Label>System Prompt</Label>
+                          <Textarea
+                            value={selectedBlock.content.systemPrompt || ""}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, systemPrompt: e.target.value },
+                              })
+                            }
+                            rows={3}
+                            placeholder="Define the AI assistant's role and behavior..."
                           />
                         </div>
                       </>
@@ -1117,74 +1042,66 @@ export default function CanvasScreenEditorPage({
                     )}
 
                     {selectedBlock.type === "numbered-inputs" && (
-                      <>
-                        <div>
-                          <Label>Number of inputs</Label>
-                          <Input
-                            type="number"
-                            value={selectedBlock.content.count}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, count: parseInt(e.target.value) },
-                              })
-                            }
-                            min={1}
-                            max={20}
-                          />
-                        </div>
-                        <div>
-                          <Label>Placeholder</Label>
-                          <Input
-                            value={selectedBlock.content.placeholder}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, placeholder: e.target.value },
-                              })
-                            }
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {selectedBlock.type === "progress-bar" && (
-                      <>
-                        <div>
-                          <Label>Progress (%)</Label>
-                          <Input
-                            type="number"
-                            value={selectedBlock.content.progress}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, progress: parseInt(e.target.value) },
-                              })
-                            }
-                            min={0}
-                            max={100}
-                          />
-                        </div>
-                        <div>
-                          <Label>Label</Label>
-                          <Input
-                            value={selectedBlock.content.label}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, label: e.target.value },
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={selectedBlock.content.showPercentage}
-                            onCheckedChange={(checked) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, showPercentage: checked },
-                              })
-                            }
-                          />
-                          <Label>Show percentage</Label>
-                        </div>
-                      </>
+                      <div>
+                        <Label className="mb-2 block">Input Items</Label>
+                        {(selectedBlock.content.items || []).map((item: any, index: number) => (
+                          <div key={index} className="mb-3 p-3 border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">#{index + 1}</span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newItems = selectedBlock.content.items.filter((_: any, i: number) => i !== index);
+                                  handleUpdateBlock(selectedBlock.id, {
+                                    content: { ...selectedBlock.content, items: newItems },
+                                  });
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="space-y-2">
+                              <Input
+                                value={item.text}
+                                onChange={(e) => {
+                                  const newItems = [...selectedBlock.content.items];
+                                  newItems[index] = { ...item, text: e.target.value };
+                                  handleUpdateBlock(selectedBlock.id, {
+                                    content: { ...selectedBlock.content, items: newItems },
+                                  });
+                                }}
+                                placeholder="Input label"
+                              />
+                              <Input
+                                value={item.placeholder}
+                                onChange={(e) => {
+                                  const newItems = [...selectedBlock.content.items];
+                                  newItems[index] = { ...item, placeholder: e.target.value };
+                                  handleUpdateBlock(selectedBlock.id, {
+                                    content: { ...selectedBlock.content, items: newItems },
+                                  });
+                                }}
+                                placeholder="Placeholder text"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2"
+                          onClick={() => {
+                            const newItems = [...(selectedBlock.content.items || []), { text: "New input", placeholder: "Type here..." }];
+                            handleUpdateBlock(selectedBlock.id, {
+                              content: { ...selectedBlock.content, items: newItems },
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Input
+                        </Button>
+                      </div>
                     )}
 
                     {selectedBlock.type === "success-message" && (
@@ -1281,108 +1198,53 @@ export default function CanvasScreenEditorPage({
 
                     {selectedBlock.type === "arrow-list" && (
                       <div>
-                        <Label>Items (one per line)</Label>
-                        <Textarea
-                          value={(selectedBlock.content.items || []).join("\n")}
-                          onChange={(e) =>
+                        <Label className="mb-2 block">List Items</Label>
+                        {(selectedBlock.content.items || []).map((item: any, index: number) => (
+                          <div key={index} className="mb-3 p-3 border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">Item {index + 1}</span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newItems = selectedBlock.content.items.filter((_: any, i: number) => i !== index);
+                                  handleUpdateBlock(selectedBlock.id, {
+                                    content: { ...selectedBlock.content, items: newItems },
+                                  });
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <RichTextEditor
+                              content={item.html || `<p>${item}</p>`}
+                              onChange={(html) => {
+                                const newItems = [...selectedBlock.content.items];
+                                newItems[index] = { html };
+                                handleUpdateBlock(selectedBlock.id, {
+                                  content: { ...selectedBlock.content, items: newItems },
+                                });
+                              }}
+                              placeholder="Enter item text with formatting..."
+                              className="h-[150px]"
+                            />
+                          </div>
+                        ))}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2"
+                          onClick={() => {
+                            const newItems = [...(selectedBlock.content.items || []), { html: "<p>New item</p>" }];
                             handleUpdateBlock(selectedBlock.id, {
-                              content: {
-                                ...selectedBlock.content,
-                                items: e.target.value.split("\n").filter(i => i.trim())
-                              },
-                            })
-                          }
-                          rows={5}
-                          placeholder="Enter items, one per line"
-                        />
+                              content: { ...selectedBlock.content, items: newItems },
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Item
+                        </Button>
                       </div>
-                    )}
-
-                    {selectedBlock.type === "consensus-box" && (
-                      <>
-                        <div>
-                          <Label>Message</Label>
-                          <Input
-                            value={selectedBlock.content.message}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, message: e.target.value },
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Details</Label>
-                          <Textarea
-                            value={selectedBlock.content.details}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, details: e.target.value },
-                              })
-                            }
-                            rows={2}
-                          />
-                        </div>
-                        <div>
-                          <Label>Type</Label>
-                          <Select
-                            value={selectedBlock.content.type}
-                            onValueChange={(value) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, type: value },
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="success">Success</SelectItem>
-                              <SelectItem value="warning">Warning</SelectItem>
-                              <SelectItem value="info">Info</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </>
-                    )}
-
-                    {selectedBlock.type === "editable-section" && (
-                      <>
-                        <div>
-                          <Label>Title</Label>
-                          <Input
-                            value={selectedBlock.content.title}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, title: e.target.value },
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Content</Label>
-                          <Textarea
-                            value={selectedBlock.content.content}
-                            onChange={(e) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, content: e.target.value },
-                              })
-                            }
-                            rows={4}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={selectedBlock.content.showEditButton}
-                            onCheckedChange={(checked) =>
-                              handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, showEditButton: checked },
-                              })
-                            }
-                          />
-                          <Label>Show edit button</Label>
-                        </div>
-                      </>
                     )}
                   </div>
                 </div>
@@ -1437,6 +1299,69 @@ export default function CanvasScreenEditorPage({
                           <SelectItem value="2rem">Extra Large</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <Separator />
+                    <div>
+                      <Label className="mb-2 block">Border</Label>
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs">Width</Label>
+                          <Select
+                            value={selectedBlock.style.borderWidth || "0px"}
+                            onValueChange={(value) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                style: { ...selectedBlock.style, borderWidth: value },
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0px">None</SelectItem>
+                              <SelectItem value="1px">Thin (1px)</SelectItem>
+                              <SelectItem value="2px">Medium (2px)</SelectItem>
+                              <SelectItem value="3px">Thick (3px)</SelectItem>
+                              <SelectItem value="4px">Extra Thick (4px)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Color</Label>
+                          <Input
+                            type="color"
+                            value={selectedBlock.style.borderColor || "#000000"}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                style: { ...selectedBlock.style, borderColor: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Radius</Label>
+                          <Select
+                            value={selectedBlock.style.borderRadius || "0px"}
+                            onValueChange={(value) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                style: { ...selectedBlock.style, borderRadius: value },
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0px">None (Sharp corners)</SelectItem>
+                              <SelectItem value="0.25rem">Small (4px)</SelectItem>
+                              <SelectItem value="0.5rem">Medium (8px)</SelectItem>
+                              <SelectItem value="0.75rem">Large (12px)</SelectItem>
+                              <SelectItem value="1rem">Extra Large (16px)</SelectItem>
+                              <SelectItem value="9999px">Full (Pill shape)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
