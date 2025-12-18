@@ -19,6 +19,17 @@ import {
   Sparkles,
   Layout,
   AlertCircle,
+  Hash,
+  BarChart3,
+  CheckCircle,
+  Tag,
+  TrendingUp,
+  HelpCircle,
+  Award,
+  ArrowRight,
+  Users,
+  Edit3,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +61,19 @@ type ContentBlockType =
   | "textarea"
   | "ai-assistant"
   | "divider"
-  | "alert";
+  | "alert"
+  | "numbered-inputs"
+  | "progress-bar"
+  | "success-message"
+  | "value-pills"
+  | "voting-results"
+  | "ranked-list"
+  | "questions-box"
+  | "success-banner"
+  | "arrow-list"
+  | "badge-list"
+  | "consensus-box"
+  | "editable-section";
 
 interface ContentBlock {
   id: string;
@@ -143,6 +166,117 @@ const BLOCK_LIBRARY: Array<{
     icon: AlertCircle,
     label: "Alert Box",
     defaultContent: { message: "Important information", type: "info" },
+  },
+  {
+    type: "numbered-inputs",
+    icon: Hash,
+    label: "Numbered Inputs",
+    defaultContent: { count: 5, label: "Your answer", placeholder: "Type here..." },
+  },
+  {
+    type: "progress-bar",
+    icon: BarChart3,
+    label: "Progress Bar",
+    defaultContent: { progress: 50, label: "Progress", showPercentage: true },
+  },
+  {
+    type: "success-message",
+    icon: CheckCircle,
+    label: "Success Message",
+    defaultContent: { message: "Completed successfully!", showIcon: true },
+  },
+  {
+    type: "value-pills",
+    icon: Tag,
+    label: "Value Pills",
+    defaultContent: { values: ["Family", "Trust", "Transparency", "Integrity"] },
+  },
+  {
+    type: "voting-results",
+    icon: TrendingUp,
+    label: "Voting Results",
+    defaultContent: {
+      title: "Voting Results",
+      items: [
+        { text: "Option A", votes: 5, percentage: 50 },
+        { text: "Option B", votes: 3, percentage: 30 },
+        { text: "Option C", votes: 2, percentage: 20 },
+      ]
+    },
+  },
+  {
+    type: "ranked-list",
+    icon: Award,
+    label: "Ranked List",
+    defaultContent: {
+      items: [
+        { text: "First item", percentage: 45, highlighted: true },
+        { text: "Second item", percentage: 30, highlighted: false },
+        { text: "Third item", percentage: 25, highlighted: false },
+      ]
+    },
+  },
+  {
+    type: "questions-box",
+    icon: HelpCircle,
+    label: "Questions Box",
+    defaultContent: {
+      questions: [
+        "What is important for us?",
+        "What do we want to achieve?",
+        "How do we see our future?"
+      ]
+    },
+  },
+  {
+    type: "success-banner",
+    icon: CheckCircle,
+    label: "Success Banner",
+    defaultContent: { message: "Great job! Task completed.", fullWidth: true },
+  },
+  {
+    type: "arrow-list",
+    icon: ArrowRight,
+    label: "Arrow List",
+    defaultContent: {
+      items: [
+        "First step or recommendation",
+        "Second step or recommendation",
+        "Third step or recommendation"
+      ]
+    },
+  },
+  {
+    type: "badge-list",
+    icon: Users,
+    label: "Badge List",
+    defaultContent: {
+      items: [
+        { text: "Item with mentions", mentions: 3 },
+        { text: "Another item", mentions: 5 },
+        { text: "Third item", mentions: 2 },
+      ]
+    },
+  },
+  {
+    type: "consensus-box",
+    icon: CheckCircle,
+    label: "Consensus Box",
+    defaultContent: {
+      message: "Consensus reached!",
+      details: "All participants have agreed on this decision.",
+      type: "success"
+    },
+  },
+  {
+    type: "editable-section",
+    icon: Edit3,
+    label: "Editable Section",
+    defaultContent: {
+      title: "Edit this section",
+      content: "This is editable content that users can modify.",
+      showEditButton: true
+    },
   },
 ];
 
@@ -354,6 +488,218 @@ export default function CanvasScreenEditorPage({
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <p>{block.content.message}</p>
+            </div>
+          </div>
+        );
+
+      case "numbered-inputs":
+        return (
+          <div style={style} className="space-y-3">
+            {Array.from({ length: block.content.count || 5 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold">
+                  {i + 1}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder={block.content.placeholder}
+                    className="w-full px-4 py-2 border rounded"
+                    disabled
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "progress-bar":
+        return (
+          <div style={style} className="space-y-2">
+            {block.content.label && (
+              <div className="flex justify-between text-sm">
+                <span>{block.content.label}</span>
+                {block.content.showPercentage && <span>{block.content.progress}%</span>}
+              </div>
+            )}
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-orange-500 h-3 rounded-full transition-all"
+                style={{ width: `${block.content.progress || 0}%` }}
+              />
+            </div>
+          </div>
+        );
+
+      case "success-message":
+        return (
+          <div style={style} className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              {block.content.showIcon && <CheckCircle className="h-6 w-6 text-green-600" />}
+              <p className="text-green-900 font-medium">{block.content.message}</p>
+            </div>
+          </div>
+        );
+
+      case "value-pills":
+        return (
+          <div style={style} className="flex flex-wrap gap-2">
+            {(block.content.values || []).map((value: string, i: number) => (
+              <span
+                key={i}
+                className="px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium border border-orange-300"
+              >
+                {value}
+              </span>
+            ))}
+          </div>
+        );
+
+      case "voting-results":
+        return (
+          <div style={style} className="space-y-3">
+            {block.content.title && (
+              <h3 className="text-lg font-semibold">{block.content.title}</h3>
+            )}
+            {(block.content.items || []).map((item: any, i: number) => (
+              <div key={i} className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{item.text}</span>
+                  <span className="text-sm text-gray-600">
+                    {item.votes} votes ({item.percentage}%)
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-orange-500 h-2 rounded-full"
+                    style={{ width: `${item.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "ranked-list":
+        return (
+          <div style={style} className="space-y-2">
+            {(block.content.items || []).map((item: any, i: number) => (
+              <div
+                key={i}
+                className={`p-3 rounded-lg flex items-center justify-between ${
+                  item.highlighted
+                    ? "bg-orange-50 border-2 border-orange-300"
+                    : "bg-gray-50 border border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-lg text-gray-500">{i + 1}.</span>
+                  <span className={item.highlighted ? "font-semibold" : ""}>{item.text}</span>
+                </div>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    item.highlighted
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  {item.percentage}%
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "questions-box":
+        return (
+          <div style={style} className="p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+            <div className="space-y-2">
+              {(block.content.questions || []).map((question: string, i: number) => (
+                <div key={i} className="flex items-start gap-2">
+                  <HelpCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-blue-900">{question}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case "success-banner":
+        return (
+          <div
+            style={style}
+            className={`p-4 bg-green-500 text-white rounded-lg ${block.content.fullWidth ? "w-full" : ""}`}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <CheckCircle className="h-6 w-6" />
+              <p className="font-semibold text-lg">{block.content.message}</p>
+            </div>
+          </div>
+        );
+
+      case "arrow-list":
+        return (
+          <div style={style} className="space-y-2">
+            {(block.content.items || []).map((item: string, i: number) => (
+              <div key={i} className="flex items-start gap-3">
+                <ArrowRight className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                <p>{item}</p>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "badge-list":
+        return (
+          <div style={style} className="space-y-2">
+            {(block.content.items || []).map((item: any, i: number) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span>{item.text}</span>
+                <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm font-medium">
+                  {item.mentions} mentions
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+
+      case "consensus-box":
+        const consensusColors = {
+          success: "bg-green-50 border-green-300 text-green-900",
+          warning: "bg-yellow-50 border-yellow-300 text-yellow-900",
+          info: "bg-blue-50 border-blue-300 text-blue-900",
+        };
+        return (
+          <div
+            style={style}
+            className={`p-4 border-2 rounded-lg ${consensusColors[block.content.type as keyof typeof consensusColors] || consensusColors.success}`}
+          >
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-6 w-6 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-lg">{block.content.message}</p>
+                {block.content.details && (
+                  <p className="text-sm mt-1">{block.content.details}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "editable-section":
+        return (
+          <div style={style} className="p-4 border-2 border-gray-300 rounded-lg bg-white">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold">{block.content.title}</h4>
+              {block.content.showEditButton && (
+                <Button size="sm" variant="outline">
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+            <div className="prose">
+              <p className="text-gray-700">{block.content.content}</p>
             </div>
           </div>
         );
@@ -705,6 +1051,275 @@ export default function CanvasScreenEditorPage({
                               <SelectItem value="error">Error</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "numbered-inputs" && (
+                      <>
+                        <div>
+                          <Label>Number of inputs</Label>
+                          <Input
+                            type="number"
+                            value={selectedBlock.content.count}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, count: parseInt(e.target.value) },
+                              })
+                            }
+                            min={1}
+                            max={20}
+                          />
+                        </div>
+                        <div>
+                          <Label>Placeholder</Label>
+                          <Input
+                            value={selectedBlock.content.placeholder}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, placeholder: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "progress-bar" && (
+                      <>
+                        <div>
+                          <Label>Progress (%)</Label>
+                          <Input
+                            type="number"
+                            value={selectedBlock.content.progress}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, progress: parseInt(e.target.value) },
+                              })
+                            }
+                            min={0}
+                            max={100}
+                          />
+                        </div>
+                        <div>
+                          <Label>Label</Label>
+                          <Input
+                            value={selectedBlock.content.label}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, label: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={selectedBlock.content.showPercentage}
+                            onCheckedChange={(checked) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, showPercentage: checked },
+                              })
+                            }
+                          />
+                          <Label>Show percentage</Label>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "success-message" && (
+                      <>
+                        <div>
+                          <Label>Message</Label>
+                          <Input
+                            value={selectedBlock.content.message}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, message: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={selectedBlock.content.showIcon}
+                            onCheckedChange={(checked) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, showIcon: checked },
+                              })
+                            }
+                          />
+                          <Label>Show icon</Label>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "value-pills" && (
+                      <div>
+                        <Label>Values (comma-separated)</Label>
+                        <Textarea
+                          value={(selectedBlock.content.values || []).join(", ")}
+                          onChange={(e) =>
+                            handleUpdateBlock(selectedBlock.id, {
+                              content: {
+                                ...selectedBlock.content,
+                                values: e.target.value.split(",").map(v => v.trim()).filter(v => v)
+                              },
+                            })
+                          }
+                          rows={3}
+                          placeholder="Family, Trust, Transparency"
+                        />
+                      </div>
+                    )}
+
+                    {selectedBlock.type === "questions-box" && (
+                      <div>
+                        <Label>Questions (one per line)</Label>
+                        <Textarea
+                          value={(selectedBlock.content.questions || []).join("\n")}
+                          onChange={(e) =>
+                            handleUpdateBlock(selectedBlock.id, {
+                              content: {
+                                ...selectedBlock.content,
+                                questions: e.target.value.split("\n").filter(q => q.trim())
+                              },
+                            })
+                          }
+                          rows={5}
+                          placeholder="Enter questions, one per line"
+                        />
+                      </div>
+                    )}
+
+                    {selectedBlock.type === "success-banner" && (
+                      <>
+                        <div>
+                          <Label>Message</Label>
+                          <Input
+                            value={selectedBlock.content.message}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, message: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={selectedBlock.content.fullWidth}
+                            onCheckedChange={(checked) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, fullWidth: checked },
+                              })
+                            }
+                          />
+                          <Label>Full width</Label>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "arrow-list" && (
+                      <div>
+                        <Label>Items (one per line)</Label>
+                        <Textarea
+                          value={(selectedBlock.content.items || []).join("\n")}
+                          onChange={(e) =>
+                            handleUpdateBlock(selectedBlock.id, {
+                              content: {
+                                ...selectedBlock.content,
+                                items: e.target.value.split("\n").filter(i => i.trim())
+                              },
+                            })
+                          }
+                          rows={5}
+                          placeholder="Enter items, one per line"
+                        />
+                      </div>
+                    )}
+
+                    {selectedBlock.type === "consensus-box" && (
+                      <>
+                        <div>
+                          <Label>Message</Label>
+                          <Input
+                            value={selectedBlock.content.message}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, message: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Details</Label>
+                          <Textarea
+                            value={selectedBlock.content.details}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, details: e.target.value },
+                              })
+                            }
+                            rows={2}
+                          />
+                        </div>
+                        <div>
+                          <Label>Type</Label>
+                          <Select
+                            value={selectedBlock.content.type}
+                            onValueChange={(value) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, type: value },
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="success">Success</SelectItem>
+                              <SelectItem value="warning">Warning</SelectItem>
+                              <SelectItem value="info">Info</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedBlock.type === "editable-section" && (
+                      <>
+                        <div>
+                          <Label>Title</Label>
+                          <Input
+                            value={selectedBlock.content.title}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, title: e.target.value },
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Content</Label>
+                          <Textarea
+                            value={selectedBlock.content.content}
+                            onChange={(e) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, content: e.target.value },
+                              })
+                            }
+                            rows={4}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={selectedBlock.content.showEditButton}
+                            onCheckedChange={(checked) =>
+                              handleUpdateBlock(selectedBlock.id, {
+                                content: { ...selectedBlock.content, showEditButton: checked },
+                              })
+                            }
+                          />
+                          <Label>Show edit button</Label>
                         </div>
                       </>
                     )}
