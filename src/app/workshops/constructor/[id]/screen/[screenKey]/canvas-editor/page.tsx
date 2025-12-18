@@ -407,19 +407,25 @@ export default function CanvasScreenEditorPage({
     switch (block.type) {
       case "heading":
         const HeadingTag = block.content.level || "h2";
+        const headingContent = block.content.html || block.content.text;
         return (
           <div style={style}>
-            {HeadingTag === "h1" && <h1 className="text-3xl font-bold">{block.content.text}</h1>}
-            {HeadingTag === "h2" && <h2 className="text-2xl font-bold">{block.content.text}</h2>}
-            {HeadingTag === "h3" && <h3 className="text-xl font-bold">{block.content.text}</h3>}
+            {HeadingTag === "h1" && (
+              <h1 className="text-3xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
+            )}
+            {HeadingTag === "h2" && (
+              <h2 className="text-2xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
+            )}
+            {HeadingTag === "h3" && (
+              <h3 className="text-xl font-bold prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: headingContent }} />
+            )}
           </div>
         );
 
       case "text":
+        const textContent = block.content.html || `<p>${block.content.text}</p>`;
         return (
-          <div style={style}>
-            <p>{block.content.text}</p>
-          </div>
+          <div style={style} className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: textContent }} />
         );
 
       case "rich-text":
@@ -484,11 +490,12 @@ export default function CanvasScreenEditorPage({
         );
 
       case "ai-assistant":
+        const aiContent = block.content.html || `<p>${block.content.message}</p>`;
         return (
           <div style={style} className="p-4 border-2 border-purple-200 bg-purple-50 rounded-lg">
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-              <p className="text-purple-900">{block.content.message}</p>
+              <div className="text-purple-900 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: aiContent }} />
             </div>
           </div>
         );
@@ -503,6 +510,7 @@ export default function CanvasScreenEditorPage({
           success: "bg-green-50 border-green-200 text-green-900",
           error: "bg-red-50 border-red-200 text-red-900",
         };
+        const alertContent = block.content.html || `<p>${block.content.message}</p>`;
         return (
           <div
             style={style}
@@ -510,7 +518,7 @@ export default function CanvasScreenEditorPage({
           >
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <p>{block.content.message}</p>
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: alertContent }} />
             </div>
           </div>
         );
@@ -937,14 +945,20 @@ export default function CanvasScreenEditorPage({
                     {selectedBlock.type === "heading" && (
                       <>
                         <div>
-                          <Label>Text</Label>
-                          <Input
-                            value={selectedBlock.content.text}
-                            onChange={(e) =>
+                          <Label className="mb-2 block">Text (supports rich formatting)</Label>
+                          <RichTextEditor
+                            content={selectedBlock.content.html || `<p>${selectedBlock.content.text || ""}</p>`}
+                            onChange={(html) =>
                               handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, text: e.target.value },
+                                content: {
+                                  ...selectedBlock.content,
+                                  html,
+                                  text: html.replace(/<[^>]*>/g, '') // Keep plain text for backward compatibility
+                                },
                               })
                             }
+                            placeholder="Enter heading text..."
+                            className="h-[300px]"
                           />
                         </div>
                         <div>
@@ -972,15 +986,20 @@ export default function CanvasScreenEditorPage({
 
                     {selectedBlock.type === "text" && (
                       <div>
-                        <Label>Text</Label>
-                        <Textarea
-                          value={selectedBlock.content.text}
-                          onChange={(e) =>
+                        <Label className="mb-2 block">Text (supports rich formatting)</Label>
+                        <RichTextEditor
+                          content={selectedBlock.content.html || `<p>${selectedBlock.content.text || ""}</p>`}
+                          onChange={(html) =>
                             handleUpdateBlock(selectedBlock.id, {
-                              content: { ...selectedBlock.content, text: e.target.value },
+                              content: {
+                                ...selectedBlock.content,
+                                html,
+                                text: html.replace(/<[^>]*>/g, '') // Keep plain text for backward compatibility
+                              },
                             })
                           }
-                          rows={4}
+                          placeholder="Enter your text..."
+                          className="h-[400px]"
                         />
                       </div>
                     )}
@@ -1057,15 +1076,20 @@ export default function CanvasScreenEditorPage({
                     {selectedBlock.type === "alert" && (
                       <>
                         <div>
-                          <Label>Message</Label>
-                          <Textarea
-                            value={selectedBlock.content.message}
-                            onChange={(e) =>
+                          <Label className="mb-2 block">Message (supports rich formatting)</Label>
+                          <RichTextEditor
+                            content={selectedBlock.content.html || `<p>${selectedBlock.content.message || ""}</p>`}
+                            onChange={(html) =>
                               handleUpdateBlock(selectedBlock.id, {
-                                content: { ...selectedBlock.content, message: e.target.value },
+                                content: {
+                                  ...selectedBlock.content,
+                                  html,
+                                  message: html.replace(/<[^>]*>/g, '')
+                                },
                               })
                             }
-                            rows={3}
+                            placeholder="Enter alert message..."
+                            className="h-[250px]"
                           />
                         </div>
                         <div>
