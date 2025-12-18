@@ -205,7 +205,7 @@ export default function CanvasBuilderPage({ params }: { params: Promise<{ id: st
 
   const filteredBlocks = availableBlocks.filter(block =>
     block.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    block.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    block.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     block.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
