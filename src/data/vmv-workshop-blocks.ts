@@ -259,10 +259,21 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
     content_type: "mission-draft",
     default_content: {
       title: "Step 3.2: Mission Draft",
-      description: "AI has analyzed all suggestions and identified common themes",
-      showThemes: true,
-      showDraft: true,
-      editable: false
+      aiAnalysis: {
+        message: "Thank you all for your thoughtful responses! I have analyzed all suggestions and identified common themes:",
+        themes: [
+          "Preserving and passing on family values",
+          "Mutual support and development of each family member",
+          "Responsible resource management",
+          "Positive impact on society"
+        ],
+        footer: "Based on this, I have prepared a mission draft:"
+      },
+      draftText: "Our family exists to create an environment of mutual support and development where each generation can fulfill their potential. We strive to preserve and pass on the values of openness, education, and responsibility, manage our resources with a long-term perspective, and make a positive contribution to society through philanthropy and professionalism.",
+      nextStepInfo: {
+        title: "Next step",
+        description: "This is a draft version of the mission, based on your ideas and approved values. In the next stage, we will refine the wording together."
+      }
     },
     default_navigation: { previous: "vmv-6", next: "vmv-8" },
     default_ai_config: {
