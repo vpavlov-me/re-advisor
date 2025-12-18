@@ -100,11 +100,55 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
         display: true
       },
       fields: [
-        { key: "value1", label: "1.", type: "text", placeholder: "For example: Honesty", required: true },
-        { key: "value2", label: "2.", type: "text", placeholder: "For example: Family support", required: true },
-        { key: "value3", label: "3.", type: "text", placeholder: "For example: Education", required: true },
-        { key: "value4", label: "4.", type: "text", placeholder: "For example: Responsibility", required: false },
-        { key: "value5", label: "5.", type: "text", placeholder: "For example: Traditions", required: false }
+        {
+          key: "value1",
+          label: "1.",
+          type: "text",
+          placeholder: "For example: Honesty",
+          required: true,
+          maxLength: 50,
+          showCharacterCount: true,
+          helpText: "Keep it concise - one or two words work best",
+          validationHints: ["Use clear, specific terms", "Avoid vague concepts"]
+        },
+        {
+          key: "value2",
+          label: "2.",
+          type: "text",
+          placeholder: "For example: Family support",
+          required: true,
+          maxLength: 50,
+          showCharacterCount: true,
+          helpText: "Keep it concise - one or two words work best"
+        },
+        {
+          key: "value3",
+          label: "3.",
+          type: "text",
+          placeholder: "For example: Education",
+          required: true,
+          maxLength: 50,
+          showCharacterCount: true,
+          helpText: "Keep it concise - one or two words work best"
+        },
+        {
+          key: "value4",
+          label: "4.",
+          type: "text",
+          placeholder: "For example: Responsibility",
+          required: false,
+          maxLength: 50,
+          showCharacterCount: true
+        },
+        {
+          key: "value5",
+          label: "5.",
+          type: "text",
+          placeholder: "For example: Traditions",
+          required: false,
+          maxLength: 50,
+          showCharacterCount: true
+        }
       ],
       progressInfo: {
         show: true,
@@ -235,7 +279,34 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
         "What unites all members of our family?",
         "How do our values translate into our family's purpose?"
       ],
-      responseType: "long-text"
+      responseType: "long-text",
+      textGuidelines: {
+        minLength: 100,
+        maxLength: 1000,
+        showWordCount: true,
+        showCharacterCount: true,
+        helpText: "Aim for 100-300 words. Be specific and authentic.",
+        formatGuidelines: {
+          tone: "inspirational",
+          style: "detailed",
+          bestPractices: [
+            "Focus on the 'why' rather than 'what'",
+            "Be specific about your family's unique purpose",
+            "Connect back to your core values",
+            "Think long-term (generations, not just years)"
+          ],
+          examples: {
+            good: [
+              "Our family exists to create opportunities for each generation to thrive while giving back to society through education and mentorship.",
+              "We are united by our commitment to environmental stewardship and want to leave the world better than we found it."
+            ],
+            bad: [
+              "To be successful", // Too vague
+              "Make money and be happy" // Lacks depth and connection to values
+            ]
+          }
+        }
+      }
     },
     default_navigation: { previous: "vmv-5", next: "vmv-7" },
     default_ai_config: { enabled: true, style: "supportive" },
@@ -307,7 +378,37 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
         "The mission should be clear, inspiring, and based on your values",
         "Optimal length: 2-4 sentences",
         "Focus on purpose, not specific actions"
-      ]
+      ],
+      editorConfig: {
+        type: "rich-text",
+        minLength: 100,
+        maxLength: 500,
+        showWordCount: true,
+        showCharacterCount: true,
+        autoSave: true,
+        helpText: "Edit collaboratively. Changes are saved automatically.",
+        formatGuidelines: {
+          tone: "inspirational",
+          style: "concise",
+          bestPractices: [
+            "Use active voice ('We create...' not 'Our family is created...')",
+            "Be specific but not prescriptive",
+            "Include your core values naturally",
+            "Make it memorable and easy to communicate",
+            "Ensure every family member can see themselves in it"
+          ],
+          examples: {
+            good: [
+              "Our family exists to nurture each generation's potential while contributing to society through education and sustainable practices.",
+              "We preserve our heritage, support each member's growth, and create lasting positive impact through responsible stewardship."
+            ],
+            bad: [
+              "Our family will do many good things for the world and ourselves.", // Too vague
+              "The Johnson family corporation manages wealth across generations." // Too corporate/transactional
+            ]
+          }
+        }
+      }
     },
     default_navigation: { previous: "vmv-7", next: "vmv-9" },
     default_ai_config: {
@@ -380,7 +481,35 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
         "What traditions will be passed from generation to generation?",
         "What impact will our family have on the world?"
       ],
-      responseType: "long-text"
+      responseType: "long-text",
+      textGuidelines: {
+        minLength: 150,
+        maxLength: 1500,
+        showWordCount: true,
+        showCharacterCount: true,
+        helpText: "Paint a vivid picture of the future. Be specific and inspiring.",
+        formatGuidelines: {
+          tone: "inspirational",
+          style: "storytelling",
+          bestPractices: [
+            "Use vivid, concrete imagery",
+            "Be specific about measurable outcomes",
+            "Think in timeframes: 10, 20, 50 years",
+            "Include both tangible and intangible aspirations",
+            "Connect vision to mission and values"
+          ],
+          examples: {
+            good: [
+              "In 20 years, three generations actively participate in family governance. We've established an education fund that has supported 15 family members through university. Our annual family retreat brings together 50+ members from 4 continents.",
+              "By 2045, our family foundation has invested $10M in sustainable agriculture projects. Each generation has produced at least one entrepreneur and one educator, maintaining our dual commitment to innovation and knowledge."
+            ],
+            bad: [
+              "We will be happy and successful.", // Not specific or measurable
+              "Everyone will get along well." // Lacks concrete outcomes and timeframes
+            ]
+          }
+        }
+      }
     },
     default_navigation: { previous: "vmv-9", next: "vmv-11" },
     default_ai_config: { enabled: true, style: "supportive" },
@@ -443,7 +572,38 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
         "Be specific and measurable",
         "Align with mission and values",
         "Have a long-term perspective (10-50 years)"
-      ]
+      ],
+      editorConfig: {
+        type: "rich-text",
+        minLength: 200,
+        maxLength: 800,
+        showWordCount: true,
+        showCharacterCount: true,
+        autoSave: true,
+        helpText: "Refine together. Aim for clarity and inspiration.",
+        formatGuidelines: {
+          tone: "inspirational",
+          style: "storytelling",
+          bestPractices: [
+            "Paint a picture others can visualize",
+            "Include specific, measurable milestones",
+            "Use present tense as if describing the achieved future",
+            "Balance ambition with realism",
+            "Make it emotionally resonant and memorable",
+            "Include multiple time horizons (10, 20, 50 years)"
+          ],
+          examples: {
+            good: [
+              "By 2035, our family includes 40+ active members across four generations. We gather annually at our restored ancestral home, now a center for family learning and community service. Our education fund has supported 25 family members in pursuing their passions. In 2045, we celebrate 100 years of our family foundation, which has invested $50M in environmental conservation, while every family member contributes their unique talents to our shared legacy.",
+              "In 2034, three generations collaborate in family governance with equal voice. Our family businesses employ 200+ people and follow B-Corp standards. By 2050, we've created a living archive documenting five generations of family history, and established endowments ensuring each future generation can pursue education without financial barriers."
+            ],
+            bad: [
+              "In the future, we will all be successful and happy together.", // Too vague
+              "We will make lots of money and everyone will be rich." // Purely transactional, lacks values
+            ]
+          }
+        }
+      }
     },
     default_navigation: { previous: "vmv-11", next: "vmv-13" },
     default_ai_config: {

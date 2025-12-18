@@ -133,11 +133,30 @@ export interface Question {
 export interface Field {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'multi-select';
+  type: 'text' | 'textarea' | 'rich-text' | 'number' | 'date' | 'select' | 'multi-select';
   placeholder?: string;
   required?: boolean;
   validation?: ValidationRule;
   options?: string[];
+  minLength?: number;
+  maxLength?: number;
+  showCharacterCount?: boolean;
+  showWordCount?: boolean;
+  helpText?: string;
+  exampleText?: string;
+  validationHints?: string[];
+  autoSave?: boolean;
+  formatGuidelines?: TextFormatGuidelines;
+}
+
+export interface TextFormatGuidelines {
+  tone?: 'formal' | 'informal' | 'inspirational' | 'neutral';
+  style?: 'concise' | 'detailed' | 'storytelling';
+  bestPractices?: string[];
+  examples?: {
+    good: string[];
+    bad: string[];
+  };
 }
 
 export interface ValidationRule {
