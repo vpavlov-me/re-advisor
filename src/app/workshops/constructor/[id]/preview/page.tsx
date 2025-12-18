@@ -447,18 +447,93 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
           {/* Screen Content */}
           <Card>
             <CardContent className="pt-6">
-              {/* Title */}
-              {currentScreen.content.title && (
-                <h2 className="text-2xl font-semibold mb-4">
-                  {currentScreen.content.title}
-                </h2>
+              {/* Header Section with Title and Description */}
+              {currentScreen.content.title && currentScreen.content.description && (
+                <div className="mb-8 p-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-white">
+                  <h2 className="text-3xl font-bold mb-2">
+                    {currentScreen.content.title}
+                  </h2>
+                  <p className="text-lg text-orange-50">
+                    {currentScreen.content.description}
+                  </p>
+                </div>
               )}
 
-              {/* Description */}
-              {currentScreen.content.description && (
-                <p className="text-lg text-muted-foreground mb-6">
-                  {currentScreen.content.description}
-                </p>
+              {/* Welcome Section */}
+              {currentScreen.content.welcome && (
+                <div className="mb-8 p-6 border-2 border-orange-200 bg-white rounded-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+                      🧳
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-orange-600 mb-2">
+                        {currentScreen.content.welcome.title}
+                      </h3>
+                      <p className="text-gray-700 mb-3">
+                        {currentScreen.content.welcome.message}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Your role as a participant:</strong> {currentScreen.content.welcome.participantRole}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Concepts Section - Three Cards */}
+              {currentScreen.content.concepts && (
+                <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {currentScreen.content.concepts.map((concept: any, index: number) => (
+                    <div key={index} className="p-6 border-2 border-orange-200 bg-white rounded-lg">
+                      <div className="text-4xl mb-3">{concept.icon}</div>
+                      <h4 className="text-lg font-semibold text-orange-600 mb-2">
+                        {concept.title}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {concept.subtitle}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Workshop Rules Section */}
+              {currentScreen.content.workshopRules && (
+                <div className="mb-8 p-6 bg-orange-50 rounded-lg border border-orange-200">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    {currentScreen.content.workshopRules.title}
+                  </h3>
+
+                  {/* Metadata */}
+                  {currentScreen.content.workshopRules.metadata && (
+                    <div className="mb-4 p-4 bg-orange-100 rounded-lg border-l-4 border-orange-500">
+                      <div className="text-sm space-y-1">
+                        <div>
+                          <strong>Duration:</strong> {currentScreen.content.workshopRules.metadata.duration}
+                        </div>
+                        <div>
+                          <strong>Format:</strong> {currentScreen.content.workshopRules.metadata.format}
+                        </div>
+                        <div>
+                          <strong>Outcome:</strong> {currentScreen.content.workshopRules.metadata.outcome}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rules */}
+                  {currentScreen.content.workshopRules.rules && (
+                    <ul className="space-y-2">
+                      {currentScreen.content.workshopRules.rules.map((rule: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
 
               {/* Main Text */}
@@ -468,8 +543,8 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
                 </div>
               )}
 
-              {/* Objectives */}
-              {currentScreen.content.objectives && (
+              {/* Legacy Objectives (for backwards compatibility) */}
+              {currentScreen.content.objectives && !currentScreen.content.workshopRules && (
                 <>
                   <Separator className="my-6" />
                   <div>
