@@ -48,11 +48,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 // Content block types
 type ContentBlockType =
   | "heading"
   | "text"
+  | "rich-text"
   | "image"
   | "list"
   | "checklist"
@@ -112,6 +114,12 @@ const BLOCK_LIBRARY: Array<{
     icon: Type,
     label: "Text",
     defaultContent: { text: "Your text here..." },
+  },
+  {
+    type: "rich-text",
+    icon: FileText,
+    label: "Rich Text Editor",
+    defaultContent: { html: "<p>Start typing with <strong>formatting</strong>...</p>" },
   },
   {
     type: "image",
@@ -411,6 +419,21 @@ export default function CanvasScreenEditorPage({
         return (
           <div style={style}>
             <p>{block.content.text}</p>
+          </div>
+        );
+
+      case "rich-text":
+        return (
+          <div style={style}>
+            <RichTextEditor
+              content={block.content.html || ""}
+              onChange={(html) =>
+                handleUpdateBlock(block.id, {
+                  content: { ...block.content, html },
+                })
+              }
+              placeholder="Start typing with formatting..."
+            />
           </div>
         );
 
@@ -959,6 +982,20 @@ export default function CanvasScreenEditorPage({
                           }
                           rows={4}
                         />
+                      </div>
+                    )}
+
+                    {selectedBlock.type === "rich-text" && (
+                      <div>
+                        <Label className="mb-2 block">Rich Text Content</Label>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Use the editor on canvas to format text with bold, italic, underline, lists, and more.
+                        </p>
+                        <div className="p-3 bg-muted rounded-lg">
+                          <p className="text-sm">
+                            Select the rich text block on the canvas to edit it directly with the formatting toolbar.
+                          </p>
+                        </div>
                       </div>
                     )}
 
