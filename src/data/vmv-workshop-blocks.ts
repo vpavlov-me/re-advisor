@@ -25,22 +25,47 @@ export const VMV_WORKSHOP_BLOCKS: WorkshopTemplateBlock[] = [
     default_content: {
       title: "Workshop: Values, Mission and Vision",
       description: "Creating the foundation for your family's future",
+      welcome: {
+        title: "Welcome to the Workshop!",
+        message: "Welcome! Today we will work together to define the key elements of family governance: values, mission, and vision. These elements will become the foundation of your family constitution and will guide all important decisions.",
+        participantRole: "You'll share your ideas, vote on proposals, and collaborate with other family members. All responses are collected through your personal device to ensure everyone's voice is heard."
+      },
+      concepts: [
+        {
+          icon: "💎",
+          title: "Values",
+          subtitle: "Principles that guide your family. These are fundamental beliefs that define behavior and relationships between family members."
+        },
+        {
+          icon: "🎯",
+          title: "Mission",
+          subtitle: "Your family's purpose. Why does your family exist, what role does it play in society, what unites all family members."
+        },
+        {
+          icon: "✨",
+          title: "Vision",
+          subtitle: "The image of the future your family aspires to. What will your family look like in 10, 20, 50 years."
+        }
+      ],
       objectives: [
         "Define core family values through collaborative brainstorming",
         "Articulate the family's purpose and mission",
         "Create a shared vision for the family's future",
         "Build consensus through structured discussion and voting"
       ],
-      rules: [
-        "All opinions are important and will be considered",
-        "AI will analyze and synthesize your ideas",
-        "Decisions are made by consensus",
-        "You can go back and reconsider any stage"
-      ],
-      metadata: {
-        duration: "approximately 90-120 minutes",
-        format: "interactive, with individual work and collective discussion",
-        outcome: "approved family values, mission, and vision"
+      workshopRules: {
+        title: "Workshop Rules",
+        metadata: {
+          duration: "approximately 90-120 minutes",
+          format: "interactive, with individual work and collective discussion",
+          outcome: "approved family values, mission, and vision"
+        },
+        rules: [
+          "All opinions are important and will be considered",
+          "AI will analyze and synthesize your ideas",
+          "Decisions are made by consensus",
+          "You can go back and reconsider any stage"
+        ]
       }
     },
     default_navigation: { next: "vmv-2" },
