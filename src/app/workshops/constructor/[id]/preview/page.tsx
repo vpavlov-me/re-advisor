@@ -818,10 +818,10 @@ export default function WorkshopPreviewPage({ params }: { params: Promise<{ id: 
                     <div className="mb-6 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
                       <h4 className="font-semibold text-blue-900 mb-3">Think about these questions:</h4>
                       <ul className="space-y-2 text-blue-700">
-                        {currentScreen.content.questions.map((q: string, i: number) => (
+                        {currentScreen.content.questions.map((q: any, i: number) => (
                           <li key={i} className="flex items-start gap-2">
                             <span>•</span>
-                            <span>{q}</span>
+                            <span>{typeof q === 'string' ? q : q.text || q.question || ''}</span>
                           </li>
                         ))}
                       </ul>
